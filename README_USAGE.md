@@ -23,7 +23,10 @@ python3 PHASE3/analyser.py /chemin/du/depot "Analyse mon code Terraform" --moteu
   demande — **dans le catalogue des capacités uniquement** : sa sortie est
   validée contre le registre, tout échec retombe sur le déterministe et le
   repli est tracé dans le champ `moteur`. `--moteur auto` (défaut) choisit le
-  LLM si une clé est présente, sinon le déterministe — et le dit à l'écran.
+  LLM si une clé est présente, sinon le déterministe — et le dit à l'écran. Le contrat a
+  été exercé contre un vrai modèle (Groq) : c'est une preuve d'intégration, **pas** une
+  validation en production — limites de débit, file d'attente et relances restent à
+  concevoir (`PROJET_ETAT.md`, « Clarification — LLM réel testé ≠ LLM réel validé »).
 - **La confiance de cible se déclare** : `--confiance untrusted` dit « ce dépôt n'est
   pas fiable ». La politique OPA refuse alors tout plan tant que la mémoire n'est pas
   bornée (il faut cgroups v2 ou un runtime OCI) — refus rendu **avant** exécution,

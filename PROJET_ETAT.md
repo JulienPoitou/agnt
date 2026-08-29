@@ -275,6 +275,12 @@ couverture déclare maintenant l'échec d'exécution.
 **Aucun vrai modèle testé** — pas de clé, pas d'endpoint, pas d'ollama. `OpenAICompatible`
 est écrit mais **non exercé**. « 32/32 » ne veut pas dire « le LLM fonctionne ».
 
+> *[État au moment de cette section. Un fournisseur réel a été exercé depuis — Groq — et le
+> bullet de dette correspondant contredisait cette phrase sans que rien ne le dise : voir
+> « Clarification — LLM réel testé ≠ LLM réel validé en production » en fin de fichier. Le
+> premier alinéa reste vrai pour `OpenAICompatible`, qui n'est branché sur aucun chemin du
+> CLI et n'a jamais été exercé.]*
+
 Suite : 16/16 · 10/10 · 12/12 · 22/22 · 7/7 · 10/10 · 27/27 · 21/21 · 25/25 · 21/21 · **32/32**.
 Somme : 0.
 
@@ -603,8 +609,13 @@ Groupe B — actif, à attendre la couche d'autorisation
 - **Pas d'isolation mémoire.** `RLIMIT_AS` casse trivy et gitleaks. Il faut cgroups ou un
   runtime OCI. Le profil « dépôt non fiable » reste fermé.
 - **`PHASE3/test_oci.sh` n'a jamais été exécuté.** Il faut une machine avec Docker.
-- **Le LLM a été testé avec Groq** : le contrat tient, mais le fournisseur limite le débit.
-  En production il faudra une file d'attente.
+- **Le contrat d'intention a été exercé contre un vrai modèle** (Groq, API compatible
+  OpenAI) : `PHASE3/test_llm_reel.py` compare le déterministe et le modèle sur les mêmes
+  phrases et vérifie 11 points du contrat. C'est une preuve **d'intégration, pas de
+  robustesse** : ni la date du passage ni le nombre de cas verts à ce moment-là ne sont
+  rétablis ici (historique transféré en 3 commits), et le fournisseur limite les appels
+  rapprochés — file d'attente et relances à concevoir avant d'y mettre du trafic.
+  Détail et ce qui manque : « Clarification — LLM réel testé ≠ LLM réel validé en production ».
 - **Les appréciations de la matrice viennent d'une connaissance, pas d'une vérification
   dépôt par dépôt.** Marqué comme tel dans le fichier.
 - **Le classifieur automatique contient des erreurs.** Par exemple `pry0cc/axiom` classé
@@ -1246,3 +1257,157 @@ portabilité réelle demande un montage dynamique ; et la règle (3) continue de
 `/home/user/autre/foo.py` en `home/user/autre/foo.py` (hypothèse isolateur assumée) : la
 distinction est préservée donc aucun faux lien nait de là, mais la détection d'un chemin
 réellement hors cible exigerait un accès filesystem que ce module refuse par contrat.
+
+
+## Étape 6quater — couverture Go du mapping : le générateur n'apprenait aucun Go (2026-08-30)
+
+**Déclencheur.** La revue a posé le mapping Go comme un problème de **couverture de
+données**, pas de logique de clustering — périmètre :
+`golang.yaml → extraire_mapping.py → mapping_regles_genere.yaml → clusterer`, moteur de
+corrélation interdit. Tenu : `git diff` sur `PHASE3/slice/clusterer.py` = **0 ligne** sur ce
+chantier, comme sur le précédent.
+
+**Mesuré avant d'écrire du code** (dans cet ordre) :
+
+1. `slice/mapping_regles_genere.yaml` versionné n'a **pas de clé `golang.yaml`** dans
+   `regles_par_fichier` — alors que `bootstrap.sh` épingle quatre jeux depuis
+   `2026-08-29` et que `manifeste_dependances.yaml` a le sha256 de `golang.yaml`.
+2. `IGNORES` contient `"go"` et `TECHNO_VERS_PAQUET` ne contient **aucune** entrée Go.
+   Mais le point qui change la nature du chantier est ailleurs : un `golang.yaml` dont une
+   règle porterait `metadata.technology: [golang.org/x/text]` produisait quand même
+   **0 entrée** — l'ancien code ne sait que consulter sa table, une technologie inconnue
+   est jetée. Mesure directe (ancien générateur importé à côté du neuf, mêmes règles
+   synthétiques) : **AVANT 0 entrée · APRÈS 2 entrées** (`golang.org/x/text`,
+   `github.com/gin-gonic/gin`). « Régénérer le mapping sur `golang.yaml` » n'aurait donc
+   **rien** ajouté : la couverture Go était nulle par construction, pas par oubli d'un tour
+   de script.
+3. Sur les captures **réelles** de `testrepo_go` : les deux findings semgrep portent
+   `technology: [go]` — un langage, pas une dépendance — et trivy déclare
+   `golang.org/x/text` (4 CVE) depuis `go.mod`, sans ligne. Soit 6 findings, **0 paquet
+   côté semgrep**. La relation inter-outils par dépendance Go n'existe pas dans nos
+   données : elle ne doit pas être fabriquée pour faire nombre.
+
+**Pourquoi la forme du paquet est le vrai sujet.** `same_dependency_usage` compare
+`location.package` après `.strip().lower()`. Trivy écrit un **chemin de module**,
+`metadata.technology` écrit le plus souvent un **nom court** (`gin`). Deux chaînes qui ne
+se rencontrent jamais : une entrée `gin` est vivante dans le YAML et morte dans le
+clusterer — exactement le genre d'amélioration de statistiques qui ferait croire que C est
+fait. La contrainte de forme est donc posée **à la production du mapping**, jamais au
+moment du lien.
+
+**Corrections, toutes dans `PHASE3/extraire_mapping.py` :**
+
+- la liste des jeux attendus vient du **manifeste épinglé** (`regles_declarees()`) et non
+  d'un `glob` sur le cache ; un jeu épinglé manquant fait **échouer** la génération
+  (`--partiel` l'autorise, en l'écrivant dans `regles_absentes`) — une couverture perdue
+  en silence se lisait comme un choix ;
+- `regles_par_fichier` passe de `int` à `{lues, mappees}` par jeu, et un jeu **lu mais non
+  mappé reste écrit** à 0 : « 376 lues, 0 mappée » est un résultat qui s'interprète ;
+- garde-fou de forme Go (`paquet_go_valide`) : une technologie Go hors chemin de module est
+  **refusée et tracée** dans `refusees` avec son motif ; une technologie Go qui *est* un
+  chemin de module entre dans le mapping **sans écriture manuelle** — c'est le chemin par
+  lequel la couverture Go se comblera toute seule à la prochaine génération ;
+- `valider_tables()` refuse d'écrire si une entrée mappable de la table est annulée par
+  `IGNORES`. Anomalie trouvée par ce garde-fou lui-même : `"react": "react"` vivait dans la
+  table alors que `IGNORES` contenait `"react"`, testé avant — les règles React étaient
+  lues et le lien jeté dans un `continue`. Entrée morte retirée (aucun changement de
+  comportement possible, elle ne se déclenchait jamais). La réintroduire suppose de sortir
+  `react` d'`IGNORES`, ce qui change la corrélation sur tout dépôt React : **dette**, pas
+  correction de ce chantier ;
+- le comptage est par **règle** et non par clé de dictionnaire (une règle mappée écrit deux
+  clés, identifiant complet + forme courte) — les compteurs du YAML sont donc sous le
+  régime « ce que le générateur a vu », pas « ce qu'il a écrit de lignes ».
+
+**Harnais.** `PHASE3/test_mapping_go.py` (nouvelle batterie, hors ligne, aucun outil
+requis — `extraire_mapping.py` n'avait de tests nulle part, et les batteries candidates
+dépendent d'`opa`) : **17/17 cas vérifiés · 1 non évalué**. Les cas qui comptent :
+
+- A1/A2/A3 autorité du manifeste, tables incohérentes → génération refusée ;
+- B1–B4 `lues`/`mappees`, jeu à 0 mappé conservé, `regles_absentes`, échec en mode strict ;
+- C1–C5 refus du nom court, acceptation du chemin de module ;
+- **D1/D2 négatif sur données réelles** : 0 paquet sur les findings semgrep Go de
+  `testrepo_go`, donc **0 cluster inter-outils** ; F : un module vulnérable chez trivy sans
+  règle semgrep pour le nommer ne produit **aucun** cluster ;
+- **E1/E2 le critère d'acceptation** : dès qu'une règle nomme le module
+  (`go.github.gin.g15.xss` → `github.com/gin-gonic/gin`) et que l'outil de dépendances
+  déclare le même, les deux findings aboutissent sur **une seule** clé de paquet et forment
+  un cluster `cross_tool` + `same_dependency_usage`. Le mapping de cet état est produit par
+  le générateur dans un répertoire temporaire, injecté par le cache de lookup déjà existant
+  de `findings` (`F._MAPPING_GENERE`) — aucun trou ajouté au code de production.
+
+**Balayage après ce chantier :** 7 batteries vertes sur 23 (la 23e est `test_mapping_go.py`),
+et les 16 rouges gardent exactement leurs causes d'avant — `opa` absent de ce sandbox (×10),
+`artifacts/` et manifeste de mission absents faute d'une exécution préalable (×2), cache de
+règles absent pour `test_securite`, `GROQ_API_KEY` absente pour `test_llm_reel`. Aucune
+régression imputable à ce chantier : `test_chemins` 48/48, `test_go` 18/18,
+`test_rapport_humain` 18/18, `test_selection` 13/13, `test_extraction_blocs` 14/14.
+
+**Ce qui reste à faire, et c'est la seule mesure qui tranche.** Ni `semgrep.dev` ni le
+cache de règles ne sont atteignables ici (`curl` → 000), donc `golang.yaml` n'a pas pu
+être régénéré dans ce sandbox : le fichier versionné garde son ancien format (`int` par
+fichier, pas de champ de comptabilité) et **n'a pas été édité à la main**, parce que c'est
+une donnée générée. Sur la machine source :
+
+```bash
+python3 PHASE3/extraire_mapping.py      # lire « golang.yaml : N lues · M mappées »
+python3 PHASE3/test_mapping_go.py       # le cas G passe tout seul si le cache est là
+```
+
+`M = 0` ⇒ aucune règle de `p/golang` ne nomme de dépendance ⇒ **la corrélation Go n'est
+pas codable maintenant**, même verdict que le mapping npm consigné dans
+`DOGFOODING_BILAN.md`, et ce verdict est alors une fin de chantier, pas un échec.
+`M > 0` ⇒ vérifier que les paquets mappés sont des chemins de module (le garde-fou l'a déjà
+trié) puis rejouer `analyser.py PHASE3/testrepo_go` et comparer le nombre de clusters
+inter-outils avant/après — l'unique façon de dire que C a changé quelque chose.
+
+
+## Clarification — LLM réel testé ≠ LLM réel validé en production (2026-08-30)
+
+**Occasion.** Deux phrases du même fichier s'annulaient l'une l'autre, sans date ni périmètre :
+« **Aucun vrai modèle testé** » (section Phase 6) et « **Le LLM a été testé avec Groq** »
+(liste de dettes). Les deux étaient vraies à des moments différents, et le lecteur de passage
+ne pouvait pas le savoir. La correction est donc en trois temps : dater, borner, séparer
+l'intégration de la validation.
+
+**Ce qui est écrit dans le code, et vérifiable sans clé :**
+
+- le fournisseur branché sur le chemin utilisateur est `Groq` (`PHASE3/analyser.py:182,186`
+  — `moteur="auto"` ne lève `Groq()` que si `GROQ_API_KEY` est dans l'environnement ; sinon
+  repli déterministe assumé) ;
+- endpoint `https://api.groq.com/openai/v1/chat/completions`, modèle par défaut
+  `openai/gpt-oss-120b`, surchargeable par `GROQ_MODELE`, timeout 60 s ; la clé vient de
+  l'environnement, n'est jamais écrite dans un fichier et n'est jamais affichée en entier ;
+- `OpenAICompatible` est écrit et **jamais exercé** : aucun chemin du CLI ne l'instancie.
+
+**Ce qui a été réellement observé, et comment on le sait :** le commentaire de
+`slice/fournisseurs_llm.py` consigne qu'un `llama-3.3-70b-versatile` demandé sur ce compte a
+répondu **404** (modèle retiré, d'où le défaut surchargeable listé depuis
+`/openai/v1/models`), et qu'un appel sans agent normal est refusé par Cloudflare (403 code
+1010). Ce sont des réponses d'un vrai service, pas d'un mock : c'est la trace la plus solide
+d'appels réels que ce dépôt contienne. `MASTER_PROMPT.md` §6 documente la limite de débit :
+appels rapprochés = échecs intermittents, et **bascule silencieuse** vers le moteur de
+secours — c'est-à-dire, à l'époque, un risque de confusion entre « le modèle a dit non » et
+« le modèle n'a pas répondu ».
+
+**Trois états, à ne jamais mélanger :**
+
+| État | Question | Où on en est |
+|---|---|---|
+| jamais exercé | le contrat tient-il contre un vrai modèle ? | faux : il l'a été, trace ci-dessus |
+| **exercé / intégré** | le contrat tient-il sur une série de phrases, avec un fournisseur réel ? | oui, sur les 11 points de `test_llm_reel.py` — **mais non rejouable ici** : sans clé, la batterie sort en code 2 |
+| **validé en production** | tient-il sous débit, pannes, variations de modèles, entrées hostiles, à l'échelle d'une campagne ? | **non.** Rien de mesuré ne le dit |
+
+**Ce que « validé en production » exigerait et qui n'existe pas encore :** une politique de
+relance et de file d'attente avec budget de latence chiffré ; un relevé du taux de repli
+déterministe *pendant* une campagne (aujourd'hui le repli est correct mais sa fréquence n'est
+pas mesurée) ; une date et un modèle fixés par exécution, pas seulement par l'environnement ;
+et un jeu d'essais adverses sur le classifieur (demandes conçues pour faire sortir une
+capacité du catalogue ou pour faire passer une exécution refusée). Ce dernier point est le
+prochain chantier demandé par la revue.
+
+**Décision de forme.** La phrase de Phase 6 est **annotée** et non réécrite : un état du
+projet à une date est une donnée, on n'efface pas le passé, on le date. Le bullet de dette est
+en revanche réécrit, parce qu'il se donnait pour une validation ce qui n'était qu'une preuve
+d'intégration. Le docstring de `slice/fournisseurs_llm.py` portait la même confusion (« deux
+implémentations », « aucun modèle n'était accessible » avec trois classes et un fournisseur
+réel branché) : corrigé en commentaire, aucun comportement touché.
