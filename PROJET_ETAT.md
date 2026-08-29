@@ -1171,3 +1171,78 @@ absents`, `artifacts/…` non produit). Aucune nouvelle cause d'échec introduit
 `cgroups v2` / runtime OCI toujours absents — `LIMITES_A_PROUVER` reste refusé à l'usage,
 donc `--confiance=untrusted` refuse **toujours** tout scan, c'est le comportement voulu
 tant que les limites ne sont pas appliquées ; le `mode ACTIF` (étape 7) n'a pas commencé.
+
+---
+
+## Étape 6ter — identité canonique de fichier : `same_file` débloqué (2026-08-30)
+
+**Déclencheur.** Le chantier « normalisation des chemins » du 2026-08-28 relativisait
+aux racines connues, mais s'arrêtait là. Quatre formes restaient non canoniques, chacune
+vérifiée dans le code ou les artefacts capturés :
+
+```
+« ./main.go »                      inchangé  → ne rencontrait pas « main.go »
+« foo/../bar.py »                  inchangé  → ne rencontrait pas « bar.py »
+« foo\bar.py »                     inchangé  → (Windows ; aucune occurrence sous Linux)
+« /PHASE3/testrepo_iac/k8s.yaml »  → « PHASE3/testrepo_iac/k8s.yaml » alors que kics,
+                                      trivy et semgrep rendent « k8s.yaml » — 20 findings
+                                      checkov RÉELS de la fixture iac, hors corrélation
+« /.. »                            → « .. »  : une remontée aplatie en chemin « valide »
+```
+
+**Choix de placement, tenu.** La canonicisation est faite au point où le finding devient
+canonique (`findings.normalise_chemin`, avant le fingerprint) — `clusterer.py` n'a pas
+été touché d'un octet : sa règle reste bête, « mêmes chaînes de fichier → même fichier ».
+Un `clusterer` qui devine des parentés de chemins est un `clusterer` qui corrèle ce qui
+n'a pas de lien.
+
+**Règles de `normalise_chemin`** (déterministes, sans accès au filesystem) : (0) aucune
+marque de chemin → rendu tel quel — un paquet, un asset ou un dépôt n'est pas un chemin,
+`golang.org/x/text`, `pkg:npm/lodash`, `go.mod:golang.org/x/text` et `repository` sont
+intacts ; (1) séparateurs unifiés ; (2) retrait d'une racine connue **sous toutes ses
+formes** puis repli lexical de `.`/`..` ; (3) slash meneur résiduel retiré (hypothèse
+isolateur, conservée) ; (4) **remontée hors racine → refus d'aplatir** : `../x` et `/..`
+restent ce qu'ils sont, donc restent DISTINCTES de `x` ; (5) sinon tel quel. La racine
+gagnée en (2) vient de `pipeline._racines_de()` : montage + cible absolue + cible relative
+au dépôt, uniquement des racines connues, jamais une résolution filesystem.
+
+**Ce que la mesure corrige dans la revue externe.** L'exemple canonique demandé
+(« Trivy `/mt-scan/app.py:42` ↔ Semgrep `app.py:45` → same_file + ligne_proche ») est
+**impossible avec nos données** : `depuis_trivy` ne produit aucune ligne
+(`location.line = None`, vérifié à l'exécution — cas 6d). Le cas inter-outils à lignes
+proches se joue donc entre outils qui portent des lignes (semgrep ↔ gitleaks), et le
+cas trivy est gardé dans la batterie pour que cette limite ne soit jamais tenue pour
+acquise.
+
+**Preuves.** `test_chemins.py` : **48 cas évalués, 48 passés, 3 non évalués** (les deux
+premiers dépendent des logs de dogfooding, non versionnés ; ils sont passés de « crash »
+à « non évalué » — convention des trois états, et la batterie devient verte sur clone
+vierge). Dont : A/B mesuré sans dupliquer l'ancien code (8c), et **8a/8b sur les captures
+réelles de `testrepo_iac`** — 148 findings (checkov 38 + kics 110) → **5 clusters
+inter-outils**, `same_file` + `ligne_proche` sur `main.tf`, `k8s.yaml`, `Dockerfile`, et
+**zéro** cluster `same_file` mélangeant deux fichiers (le compte-rendu de clusters est
+vérifié membre par membre, pas supposé). Stabilité d'identité mesurée sur les captures
+`testrepo_go` : empreintes inchangées, clés restées `main.go` — `test_go.py` (ATTENDUS
+« main.go:22 », « main.go:33 ») passe toujours 18/18.
+
+**Conséquence à connaître :** l'identité change là où elle était fausse. Les fingerprints
+des 20 findings checkov `k8s.yaml` de la fixture iac se déplacent — donc un bundle ancien
+rejoué aujourd'hui rend un `result_digest` différent sur cette cible. C'est le but, pas un
+effet de bord ; à déclarer dans toute comparaison avant/après.
+
+**Non fait ici, à faire sur la machine source (B5/B6 complets).** Ce sandbox n'a ni les
+outils épinglés, ni réseau, ni `opa` : la mesure d'impact sur dépôts réels reste à faire.
+
+```bash
+bash PHASE3/bootstrap.sh && bash PHASE3/reconstruire_fixtures.sh
+python3 PHASE3/test_chemins.py && python3 PHASE3/test_utilisation.py && python3 PHASE3/test_go.py
+python3 PHASE3/analyser.py PHASE3/testrepo_iac        # clusters inter-outils attendus ≥ 5
+(cd PHASE3/dogfooding && python3 lancer.py)          # puis comparer les compteurs de clusters
+```
+
+**Dette observée, notée sans correction :** `Sandbox.M_SCAN` est un chemin d'hôte codé en
+dur (`/home/user/PHASE3/mt-scan`) — la canonicisation y ancre une première forme, mais la
+portabilité réelle demande un montage dynamique ; et la règle (3) continue de rendre
+`/home/user/autre/foo.py` en `home/user/autre/foo.py` (hypothèse isolateur assumée) : la
+distinction est préservée donc aucun faux lien nait de là, mais la détection d'un chemin
+réellement hors cible exigerait un accès filesystem que ce module refuse par contrat.

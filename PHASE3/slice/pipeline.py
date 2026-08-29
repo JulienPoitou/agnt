@@ -85,6 +85,24 @@ def _prepare_sortie() -> Path:
     return SORTIE
 
 
+def _racines_de(cible: Path) -> tuple:
+    """La cible sous les formes qu'un outil peut employer pour la nommer.
+
+    Le montage de l'isolateur, la cible absolue, et — depuis le 2026-08-30 — la cible
+    nommée relativement au dépôt. Occurrence mesurée sur `testrepo_iac` : checkov rend
+    « /PHASE3/testrepo_iac/k8s.yaml » (chemin construit depuis le répertoire du run)
+    là où kics, trivy et semgrep rendent « k8s.yaml » ; 20 findings de la fixture
+    ne pouvaient donc rencontrer aucun autre outil sur ce fichier. Aucune devinette :
+    uniquement des racines CONNUES, jamais une ressource filesystem.
+    """
+    formes = [Sandbox.M_SCAN, str(cible)]
+    try:
+        formes.append(str(Path(cible).resolve().relative_to(RACINE.parent)))
+    except (ValueError, OSError):
+        pass                                        # cible hors du dépôt : rien à ajouter
+    return tuple(f for f in dict.fromkeys(x for x in formes if x))
+
+
 def executer(requete: str, cible: Path, cible_autorisee: bool = True,
              confiance_cible: str = "controlled",
              avec_internes: bool = False) -> Execution:
@@ -214,10 +232,11 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         })
         exec_.couverture.append(brut.couverture.to_dict())
 
-        # Chemins relativisés aux racines CONNUES (montage isolateur + cible) avant
-        # calcul des fingerprints : identité indépendante de la machine (2026-08-28).
+        # Chemins relativisés aux racines CONNUES (montage isolateur + cible sous
+        # toutes ses formes) avant calcul des fingerprints : identité indépendante de
+        # la machine (2026-08-28), élargie aux orthographes du dépôt (2026-08-30).
         norm = F.normaliser(prov.id, brut.donnees, mani=prov.manifest,
-                            racines=(Sandbox.M_SCAN, str(cible)))
+                            racines=_racines_de(cible))
         tous_findings.extend(norm)
         MS.consigner(miss, "execution", provider=prov.id,
                      code_retour=brut.code_retour, timeout=brut.timeout,

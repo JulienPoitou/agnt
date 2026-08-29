@@ -111,6 +111,8 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
 - F5 : formulations non-expertes (plafond du matching mots-clés) — rôle du LLM réel.
 - Accents : `intent.py` ne normalise pas, `plan.requete_canonique` oui →
   « vérifie les dependances » (sans accent) → needs_clarification. Vérifié. À traiter avec F5.
+- `Sandbox.M_SCAN` est un chemin d'hôte en dur (`/home/user/PHASE3/mt-scan`) : la
+  canonicisation en connaît une forme, mais la portabilité demande un montage dynamique.
 - `cadre` checkov : dette de modèle, ne pas refaire maintenant.
 - pool.yaml STALE (empreinte 0a95593b8ceaa09b) — régénérer en dernier si le registre bouge.
 - `cible_autorisee` (pipeline.py:82) vaut `True` par défaut et n'est posé à `False`

@@ -140,7 +140,16 @@ sonde où un outil signale l'usage d'une dépendance que l'autre signale vulnér
 
 ---
 
-## Suivi de roadmap (2026-08-29)
+## Suivi de roadmap (2026-08-29, relu le 2026-08-30)
+
+**Complément 2026-08-30 — l'« autre aveuglement » est fermé.** La relativisation aux
+racines connues ne couvrait ni `./x`, ni `a/../b`, ni le dépôt nommé depuis le répertoire
+du run (`/PHASE3/testrepo_iac/k8s.yaml`, 20 findings checkov réels). Ces trois formes sont
+canonisées depuis le 2026-08-30 dans `findings.normalise_chemin` (le clusterer n'a pas été
+touché : il compare des identités, il ne les devine pas). Mesuré sur les captures de la
+fixture iac : 148 findings → 5 clusters inter-outils dont `k8s.yaml` (checkov × kics),
+et 0 cluster mêlant deux fichiers. Le mapping npm reste NON codé, pour les mêmes raisons
+qu'au 2026-08-29 : impact toujours non démontré. Détail : `PROJET_ETAT.md`, étape 6ter.
 
 Chantier « normalisation des chemins » FAIT (décision utilisateur) : chemins
 relativisés aux racines connues avant calcul des fingerprints ; batterie

@@ -147,36 +147,85 @@ def _paquet_concerne(rid: str) -> dict:
             "confidence": d.get("confiance", "none")}
 
 
-def normalise_chemin(fichier: str, racines=()) -> str:
-    """Chemin relatif à la cible, indépendant de la machine (décision 2026-08-28).
+def _replie(segs: list[str]) -> str | None:
+    """Replie « . » et « .. » LEXICALEMENT. Renvoie None si ça remonte au-dessus du
+    point d'ancrage : dans ce cas le chemin n'est PAS normalisable, et le refus est la
+    réponse — l'aplatir (« ../x » → « x ») fabrique une identité de fichier qui créera
+    un `same_file` entre deux fichiers distincts. Aucun accès au filesystem : la
+    fonction reste déterministe et reproductible hors isolateur.
+    """
+    out: list[str] = []
+    for s in segs:
+        if s in ("", "."):
+            continue
+        if s == "..":
+            if out and out[-1] != "..":
+                out.pop()
+                continue
+            return None                      # remonte hors de la racine
+        out.append(s)
+    return "/".join(out)
 
-    Les chemins émis par les outils ont trois formes selon le contexte : absolus
+
+def _segs(chemin: str) -> list[str]:
+    return [s for s in chemin.replace("\\", "/").split("/") if s not in ("", ".")]
+
+
+def normalise_chemin(fichier: str, racines=()) -> str:
+    """Chemin relatif à la cible, indépendant de la machine (décision 2026-08-28,
+    complétée le 2026-08-30).
+
+    Les chemins émis par les outils ont plusieurs formes selon le contexte : absolus
     sous le montage de l'isolateur (/…/mt-scan/docs/x.js), relatifs à slash meneur
-    (/main.tf — convention checkov), ou relatifs (docs/package-lock.json — trivy).
-    Les fingerprints et les clés de cluster sont calculés à partir du fichier :
-    sans normalisation, les identités dépendent du point de montage et de la
-    machine. Mesuré en dogfooding : 72 findings eslint en chemin absolu, 7 clés
-    de cluster concernées.
+    (/main.tf — convention checkov), relatifs (docs/package-lock.json — trivy),
+    « ./main.go » (style gosec), ou le dépôt nommé depuis le répertoire du run
+    (/PHASE3/testrepo_iac/k8s.yaml — checkov hors isolateur, 20 findings mesurés sur
+    la fixture iac). Les fingerprints et les clés de cluster sont calculés à partir du
+    fichier : sans normalisation, les identités dépendent du point de montage, du cwd
+    et du séparateur. Mesuré en dogfooding : 72 findings eslint en chemin absolu, 7 clés
+    de cluster concernées ; et, à l'envers, un `./` non replié qui empêchait deux outils
+    de parler du MÊME fichier.
 
     Règles — déterministes, SANS accès au filesystem :
-      1. une racine connue (montage, cible) est retirée → chemin relatif ;
-      2. un slash meneur résiduel est retiré : dans l'isolateur la cible est la
-         seule arborescence visible, donc un chemin à slash meneur EST relatif à
-         la cible (hypothèse documentée, testée dans test_chemins.py) ;
-      3. tout autre chemin est rendu TEL QUEL — on ne fabrique pas de relativité.
+      0. aucune marque de chemin (ni « / », ni « \\ », ni « ./ ») → RENDU TEL QUEL.
+         Un finding peut porter un paquet, un asset, un dépôt : « golang.org/x/text »
+         n'est pas un chemin et ne devient jamais un chemin local.
+      1. séparateurs unifiés (Windows → POSIX), pour que l'identité ne dépende pas du
+         séparateur. Inerte sous Linux, aucune occurrence observée.
+      2. une racine connue (montage, cible — sous TOUTES ses formes, absolue ou
+         relative) est retirée, puis les segments « . » et « .. » sont repliés ;
+      3. un slash meneur résiduel est retiré : dans l'isolateur la cible est la seule
+         arborescence visible, donc un chemin à slash meneur EST relatif à la cible
+         (hypothèse documentée, testée dans test_chemins.py) ;
+      4. si le repliement remonte AU-DESSUS de la racine (`../x`, `/..`), rien n'est
+         aplati : le chemin est rendu tel quel. Il reste donc DISTINCT du fichier du
+         même nom dans la cible — la prudence prime sur le regroupement ;
+      5. tout autre chemin est rendu TEL QUEL — on ne fabrique pas de relativité.
     """
     if not fichier:
         return fichier or ""
     f = str(fichier)
-    for r in racines:
-        r = str(r).rstrip("/")
-        if r and (f == r or f.startswith(r + "/")):
-            reste = f[len(r):].lstrip("/")
-            if reste:
-                return reste
-    if f.startswith("/") and not f.startswith("//"):
-        return f[1:]
-    return f
+    if "/" not in f and "\\" not in f and not f.startswith(("./", ".\\")):
+        return f                                     # règle 0 : pas un chemin
+
+    g = f.replace("\\", "/")                          # règle 1
+    segs = _segs(g)
+    for r in racines:                                # règle 2
+        rs = _segs(str(r))
+        if not rs or len(segs) < len(rs) or segs[:len(rs)] != rs:
+            continue
+        reste = _replie(segs[len(rs):])
+        if reste is None:
+            return f                                 # règle 4 : remontée → refus
+        if reste:
+            return reste
+    if g.startswith("//"):
+        return f                                     # « //… » : on n'y touche pas
+    replie = _replie(segs)
+    if replie is None:
+        return f                                     # règle 4
+    return replie
+
 
 
 def depuis_semgrep(brut, racines=()) -> list[Finding]:

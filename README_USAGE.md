@@ -35,6 +35,12 @@ python3 PHASE3/analyser.py /chemin/du/depot "Analyse mon code Terraform" --moteu
 
 ## Lire le résultat
 
+Les chemins de `findings.json` (et les clés de cluster) sont **relatifs à la cible**,
+quelle que soit la forme rendue par l'outil : `/…/mt-scan/docs/x.py`, `./x.py`,
+`docs\\x.py`, `/PHASE3/mon_depot/x.py` deviennent tous `docs/x.py` ou `x.py`. C'est ce qui
+rend `same_file` possible entre outils — et un chemin qui remonterait hors de la cible
+(`../x`) n'est jamais aplati : il reste distinct de `x`.
+
 Deux vues des mêmes preuves :
 
 ```
