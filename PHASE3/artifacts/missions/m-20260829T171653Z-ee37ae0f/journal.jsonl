@@ -1,0 +1,11 @@
+{"seq": 1, "ts": "2026-08-29T17:16:53+00:00", "type": "ouverture", "requete": "Analyse la sécurité de mon dépôt", "cible": "/home/user/PHASE3/testrepo_sca"}
+{"seq": 2, "ts": "2026-08-29T17:16:53+00:00", "type": "applicabilite", "ecartes": {"semgrep_go": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.go']"}}
+{"seq": 3, "ts": "2026-08-29T17:16:53+00:00", "type": "plan", "plan_id": "f8cd4c2581db4c4b", "providers": ["semgrep", "trivy", "grype", "gitleaks", "checkov", "kics"]}
+{"seq": 4, "ts": "2026-08-29T17:16:56+00:00", "type": "contexte", "run_id": "613f3cea564900d3", "contexte_empreinte": "331c2ee5fe0b55fb", "input_digest": "8e6dda61d38a20ca", "input_commit": "", "working_tree_dirty": false}
+{"seq": 5, "ts": "2026-08-29T17:17:07+00:00", "type": "execution", "provider": "semgrep", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 6, "ts": "2026-08-29T17:17:07+00:00", "type": "execution", "provider": "trivy", "code_retour": 0, "timeout": false, "findings": 62}
+{"seq": 7, "ts": "2026-08-29T17:17:18+00:00", "type": "execution", "provider": "grype", "code_retour": 0, "timeout": false, "findings": 62}
+{"seq": 8, "ts": "2026-08-29T17:17:18+00:00", "type": "execution", "provider": "gitleaks", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 9, "ts": "2026-08-29T17:17:26+00:00", "type": "execution", "provider": "checkov", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 10, "ts": "2026-08-29T17:17:26+00:00", "type": "execution", "provider": "kics", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 11, "ts": "2026-08-29T17:17:26+00:00", "type": "cloture", "findings": 124, "clusters": 6, "result_digest": "d58977b23950b425"}

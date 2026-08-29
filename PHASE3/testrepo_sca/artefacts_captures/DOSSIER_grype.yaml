@@ -1,0 +1,109 @@
+outil: grype
+meta:
+  tool: grype
+  binaire: grype
+  version_binaire_sha256: 91705979c6ccb736b87e3250831f5e1a35f13767fd2032ffa85c55b1e6f58f90
+  argv:
+  - /home/user/.cache/arena_secops/bin/grype
+  - dir:/home/user/PHASE3/mt-scan
+  - -o
+  - json
+  env:
+    GRYPE_DB_CACHE_DIR: /home/user/PHASE3/mt-db/grype
+  code_retour: 0
+  timeout: false
+  duree_ms: 12619
+  sortie_origine: stdout
+  cible: /home/user/PHASE3/testrepo_sca
+  sandbox_limites:
+    max_processus: 256
+    max_cpu_secondes: 300
+    max_fichier_octets: 536870912
+    timeout_secondes: 600
+    memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+  stderr_extrait: '[0000] ERROR failed to fetch latest version: Get "https://toolbox-data.anchore.io/grype/releases/latest/VERSION":
+    proxyconnect tcp: dial tcp 127.0.0.1:9: connect: connection refused
+
+    [0000]  WARN no explicit name and version provided for directory source, deriving artifact ID from
+    the given path (which is not ideal) from=syft
+
+    '
+stabilite:
+  identique_octet_pour_octet: false
+  taille_1: 455801
+  taille_2: 455801
+  identique_contenu_normalise: true
+attendus:
+  compte: 62
+  par_cle:
+    django:
+    - GHSA-2gwj-7jmv-h26r
+    - GHSA-2m34-jcjv-45xf
+    - GHSA-3gh2-xw74-jmcw
+    - GHSA-3h9f-r86x-qvjx
+    - GHSA-53qw-q765-4fww
+    - GHSA-68w8-qjq3-2gfm
+    - GHSA-6c3j-c64m-qhgq
+    - GHSA-6c7v-2f49-8h26
+    - GHSA-6cw3-g6wv-c2xv
+    - GHSA-6r97-cj55-9hrq
+    - GHSA-6w2r-r2m5-xq5w
+    - GHSA-7rp2-fm2h-wchj
+    - GHSA-7xr5-9hcq-chf9
+    - GHSA-8c5j-9r9f-c6w8
+    - GHSA-8cjm-8mp7-r2xf
+    - GHSA-8qcx-xf44-272x
+    - GHSA-8x94-hmjh-97hq
+    - GHSA-923m-gv2p-w5qp
+    - GHSA-95rw-fx8r-36v6
+    - GHSA-c4qh-4vgv-qc6g
+    - GHSA-crhf-3pfg-w68w
+    - GHSA-fr28-569j-53c4
+    - GHSA-frmv-pr5f-9mcr
+    - GHSA-fvgf-6h6h-3322
+    - GHSA-h5jv-4p7w-64jg
+    - GHSA-h7pc-vwp9-298g
+    - GHSA-hmr4-m2h5-33qx
+    - GHSA-hvmf-r92r-27hr
+    - GHSA-jrh2-hc4r-7jwx
+    - GHSA-m6gj-h9gm-gw44
+    - GHSA-p99v-5w3c-jqq9
+    - GHSA-qm57-vhq3-3fwf
+    - GHSA-qw25-v68c-qjf3
+    - GHSA-rrqc-c2jx-6jgv
+    - GHSA-rxjp-mfm9-w4wr
+    - GHSA-v6rh-hp5x-86rv
+    - GHSA-v9qg-3j8p-r63v
+    - GHSA-vfq6-hq5r-27r6
+    - GHSA-w24h-v9qh-8gxj
+    - GHSA-wpjr-j57x-wxfw
+    - GHSA-xgxc-v2qg-chmh
+    flask:
+    - GHSA-68rp-wp8r-4726
+    - GHSA-m2qf-hxjv-5gpq
+    lodash:
+    - GHSA-29mw-wpgm-hmr9
+    - GHSA-35jh-r3h4-6jhm
+    - GHSA-4xc9-xhrj-v574
+    - GHSA-f23m-r3pf-42rh
+    - GHSA-fvqr-27wr-82fm
+    - GHSA-jf85-cpcp-j695
+    - GHSA-p6mc-m468-83gw
+    - GHSA-r5fr-rjxr-66jc
+    - GHSA-x5rq-j2xg-h7qm
+    - GHSA-xxjr-mmjv-4gpg
+    minimist:
+    - GHSA-vh95-rmgr-6w4m
+    - GHSA-xvch-5gv4-984h
+    pyyaml:
+    - GHSA-3pqx-4fqf-j49f
+    - GHSA-6757-jp84-gxfx
+    - GHSA-8q59-q68h-6hv4
+    requests:
+    - GHSA-9hjg-9r4m-mvj7
+    - GHSA-9wx4-h78v-vm56
+    - GHSA-gc5v-m9x4-r6x2
+    - GHSA-j8r2-6x86-q33q
+note_convergence: 'grype=GHSA-* / trivy=CVE-* : convergence inter-outils par PAQUET (6 paquets communs),
+  pas par identifiant.'
+note: PREUVES de qualification — l'approbation est humaine.

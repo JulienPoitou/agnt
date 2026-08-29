@@ -1,0 +1,11 @@
+{"seq": 1, "ts": "2026-08-29T17:13:30+00:00", "type": "ouverture", "requete": "Analyse la sécurité de mon dépôt", "cible": "/home/user/PHASE3/dogfooding/cibles/mocha"}
+{"seq": 2, "ts": "2026-08-29T17:13:30+00:00", "type": "applicabilite", "ecartes": {"semgrep_go": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.go']"}}
+{"seq": 3, "ts": "2026-08-29T17:13:30+00:00", "type": "plan", "plan_id": "55666b89d65fb397", "providers": ["semgrep", "trivy", "grype", "gitleaks", "checkov", "kics"]}
+{"seq": 4, "ts": "2026-08-29T17:13:34+00:00", "type": "contexte", "run_id": "6c6da33e8bba224d", "contexte_empreinte": "331c2ee5fe0b55fb", "input_digest": "5649d47d39487d08", "input_commit": "e6b9ee773481fd739ae24caeb42f32ac0b010f95", "working_tree_dirty": false}
+{"seq": 5, "ts": "2026-08-29T17:13:47+00:00", "type": "execution", "provider": "semgrep", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 6, "ts": "2026-08-29T17:13:47+00:00", "type": "execution", "provider": "trivy", "code_retour": 0, "timeout": false, "findings": 16}
+{"seq": 7, "ts": "2026-08-29T17:13:57+00:00", "type": "execution", "provider": "grype", "code_retour": 0, "timeout": false, "findings": 16}
+{"seq": 8, "ts": "2026-08-29T17:13:58+00:00", "type": "execution", "provider": "gitleaks", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 9, "ts": "2026-08-29T17:14:07+00:00", "type": "execution", "provider": "checkov", "code_retour": 0, "timeout": false, "findings": 2}
+{"seq": 10, "ts": "2026-08-29T17:14:09+00:00", "type": "execution", "provider": "kics", "code_retour": 0, "timeout": false, "findings": 4}
+{"seq": 11, "ts": "2026-08-29T17:14:09+00:00", "type": "cloture", "findings": 38, "clusters": 12, "result_digest": "1fba9303cbf2655d"}

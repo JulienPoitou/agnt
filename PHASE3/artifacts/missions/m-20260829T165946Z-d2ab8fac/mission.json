@@ -1,0 +1,11 @@
+{
+  "mission_id": "m-20260829T165946Z-d2ab8fac",
+  "cree_le": "2026-08-29T16:59:46+00:00",
+  "requete": "Vérifie les dépendances",
+  "requete_canonique": "verifie les dependances",
+  "cible": {
+    "chemin": "/home/user/PHASE3/testrepo",
+    "type": "repertoire"
+  },
+  "format_journal": "journal.jsonl — append-only, une ligne par événement"
+}

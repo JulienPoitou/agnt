@@ -1,0 +1,12 @@
+{"seq": 1, "ts": "2026-08-29T16:59:17+00:00", "type": "ouverture", "requete": "  ANALYSE   la sécurité, de mon dépôt! ", "cible": "/home/user/PHASE3/testrepo"}
+{"seq": 2, "ts": "2026-08-29T16:59:17+00:00", "type": "applicabilite", "ecartes": {"semgrep_go": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.go']", "kics": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.tf', '*.tfvars', '*.yaml', '*.yml', 'Dockerfile', '*docker-compose*']"}}
+{"seq": 3, "ts": "2026-08-29T16:59:17+00:00", "type": "plan", "plan_id": "8504cfba17d757ec", "providers": ["semgrep", "bandit", "bandit_custom", "trivy", "grype", "gitleaks", "checkov"]}
+{"seq": 4, "ts": "2026-08-29T16:59:20+00:00", "type": "contexte", "run_id": "f6e2310672354499", "contexte_empreinte": "331c2ee5fe0b55fb", "input_digest": "b01ecd1ecf3f6f45", "input_commit": "7c72938f3c2e24dbaaa0ae7713a396bf1131d322", "working_tree_dirty": false}
+{"seq": 5, "ts": "2026-08-29T16:59:30+00:00", "type": "execution", "provider": "semgrep", "code_retour": 0, "timeout": false, "findings": 2}
+{"seq": 6, "ts": "2026-08-29T16:59:30+00:00", "type": "execution", "provider": "bandit", "code_retour": 0, "timeout": false, "findings": 5}
+{"seq": 7, "ts": "2026-08-29T16:59:30+00:00", "type": "execution", "provider": "bandit_custom", "code_retour": 0, "timeout": false, "findings": 5}
+{"seq": 8, "ts": "2026-08-29T16:59:31+00:00", "type": "execution", "provider": "trivy", "code_retour": 0, "timeout": false, "findings": 62}
+{"seq": 9, "ts": "2026-08-29T16:59:40+00:00", "type": "execution", "provider": "grype", "code_retour": 0, "timeout": false, "findings": 62}
+{"seq": 10, "ts": "2026-08-29T16:59:41+00:00", "type": "execution", "provider": "gitleaks", "code_retour": 0, "timeout": false, "findings": 1}
+{"seq": 11, "ts": "2026-08-29T16:59:46+00:00", "type": "execution", "provider": "checkov", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 12, "ts": "2026-08-29T16:59:46+00:00", "type": "cloture", "findings": 137, "clusters": 8, "result_digest": "8fcb229f194d925d"}

@@ -1,0 +1,2 @@
+{"seq": 1, "ts": "2026-08-29T15:37:55+00:00", "type": "ouverture", "requete": "Fais un truc", "cible": "/home/user/PHASE3/cible_independante"}
+{"seq": 2, "ts": "2026-08-29T15:37:55+00:00", "type": "arret", "motif": "intent_needs_clarification"}

@@ -1,0 +1,518 @@
+{
+  "clusters": [
+    {
+      "cluster_id": "CL-001",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file"
+      ],
+      "members": [
+        "ki-0029",
+        "ki-0030",
+        "ki-0031",
+        "ki-0034",
+        "ki-0035",
+        "ki-0036",
+        "ki-0037",
+        "ki-0038",
+        "ki-0039",
+        "ki-0040",
+        "ki-0042",
+        "ki-0043",
+        "ki-0044",
+        "ki-0046",
+        "ki-0047",
+        "ki-0049",
+        "ki-0050",
+        "ki-0053",
+        "ki-0054",
+        "ki-0055",
+        "ki-0056",
+        "ki-0057",
+        "ki-0058",
+        "ki-0059",
+        "ki-0061",
+        "ki-0063",
+        "ki-0064",
+        "ki-0065",
+        "ki-0067",
+        "ki-0068",
+        "ki-0070",
+        "ki-0071",
+        "ki-0072",
+        "ki-0073"
+      ],
+      "cle": "fichier:main.tf"
+    },
+    {
+      "cluster_id": "CL-002",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "ligne_proche",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0019",
+        "ch-0020",
+        "ch-0023",
+        "ch-0024",
+        "ch-0025",
+        "ch-0026",
+        "ch-0027",
+        "ch-0028",
+        "ch-0029",
+        "ch-0030",
+        "ch-0031",
+        "ch-0032",
+        "ch-0033",
+        "ch-0034",
+        "ki-0007",
+        "ki-0008",
+        "ki-0011"
+      ],
+      "cle": "fichier:main.tf#zone:ch-0019"
+    },
+    {
+      "cluster_id": "CL-003",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0039",
+        "ki-0016",
+        "ki-0017",
+        "ki-0018",
+        "ki-0020",
+        "ki-0021",
+        "ki-0022",
+        "ki-0024",
+        "ki-0026"
+      ],
+      "cle": "fichier:.github/workflows/pre-commit.yml"
+    },
+    {
+      "cluster_id": "CL-004",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file",
+        "ligne_proche"
+      ],
+      "members": [
+        "ch-0007",
+        "ch-0008",
+        "ch-0009",
+        "ch-0010",
+        "ch-0011",
+        "ch-0012",
+        "ch-0013"
+      ],
+      "cle": "fichier:modules/flow-log/main.tf#zone:ch-0007"
+    },
+    {
+      "cluster_id": "CL-005",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0014",
+        "ki-0013",
+        "ki-0028",
+        "ki-0045",
+        "ki-0062",
+        "ki-0066",
+        "ki-0069"
+      ],
+      "cle": "fichier:vpc-flow-logs.tf"
+    },
+    {
+      "cluster_id": "CL-006",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file"
+      ],
+      "members": [
+        "ki-0012",
+        "ki-0027",
+        "ki-0033",
+        "ki-0048",
+        "ki-0052",
+        "ki-0060"
+      ],
+      "cle": "fichier:modules/flow-log/main.tf"
+    },
+    {
+      "cluster_id": "CL-007",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "ligne_proche",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0002",
+        "ki-0002",
+        "ki-0003",
+        "ki-0005",
+        "ki-0006"
+      ],
+      "cle": "fichier:examples/flow-log/main.tf#zone:ch-0002"
+    },
+    {
+      "cluster_id": "CL-008",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file",
+        "ligne_proche"
+      ],
+      "members": [
+        "ch-0015",
+        "ch-0016",
+        "ch-0017",
+        "ch-0018"
+      ],
+      "cle": "fichier:modules/vpc-endpoints/main.tf#zone:ch-0015"
+    },
+    {
+      "cluster_id": "CL-009",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "ligne_proche",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0021",
+        "ch-0022",
+        "ki-0009",
+        "ki-0015"
+      ],
+      "cle": "fichier:main.tf#zone:ch-0021"
+    },
+    {
+      "cluster_id": "CL-010",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0003",
+        "ch-0004",
+        "ki-0004"
+      ],
+      "cle": "fichier:examples/flow-log/main.tf"
+    },
+    {
+      "cluster_id": "CL-011",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "ligne_proche",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0005",
+        "ch-0006",
+        "ki-0001"
+      ],
+      "cle": "fichier:main.tf#zone:ch-0005"
+    },
+    {
+      "cluster_id": "CL-012",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file"
+      ],
+      "members": [
+        "ki-0014",
+        "ki-0041",
+        "ki-0051"
+      ],
+      "cle": "fichier:modules/vpc-endpoints/main.tf"
+    },
+    {
+      "cluster_id": "CL-013",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0035",
+        "ki-0025"
+      ],
+      "cle": "fichier:.github/workflows/lock.yml"
+    },
+    {
+      "cluster_id": "CL-014",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0036",
+        "ki-0019"
+      ],
+      "cle": "fichier:.github/workflows/pr-title.yml"
+    },
+    {
+      "cluster_id": "CL-015",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0037",
+        "ki-0023"
+      ],
+      "cle": "fichier:.github/workflows/release.yml"
+    },
+    {
+      "cluster_id": "CL-016",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file",
+        "ligne_proche"
+      ],
+      "members": [
+        "ki-0010",
+        "ki-0032"
+      ],
+      "cle": "fichier:examples/flow-log/main.tf#zone:ki-0010"
+    }
+  ],
+  "clusters_inter_outils": [
+    {
+      "cluster_id": "CL-002",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "ligne_proche",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0019",
+        "ch-0020",
+        "ch-0023",
+        "ch-0024",
+        "ch-0025",
+        "ch-0026",
+        "ch-0027",
+        "ch-0028",
+        "ch-0029",
+        "ch-0030",
+        "ch-0031",
+        "ch-0032",
+        "ch-0033",
+        "ch-0034",
+        "ki-0007",
+        "ki-0008",
+        "ki-0011"
+      ],
+      "cle": "fichier:main.tf#zone:ch-0019"
+    },
+    {
+      "cluster_id": "CL-003",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0039",
+        "ki-0016",
+        "ki-0017",
+        "ki-0018",
+        "ki-0020",
+        "ki-0021",
+        "ki-0022",
+        "ki-0024",
+        "ki-0026"
+      ],
+      "cle": "fichier:.github/workflows/pre-commit.yml"
+    },
+    {
+      "cluster_id": "CL-005",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0014",
+        "ki-0013",
+        "ki-0028",
+        "ki-0045",
+        "ki-0062",
+        "ki-0066",
+        "ki-0069"
+      ],
+      "cle": "fichier:vpc-flow-logs.tf"
+    },
+    {
+      "cluster_id": "CL-007",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "ligne_proche",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0002",
+        "ki-0002",
+        "ki-0003",
+        "ki-0005",
+        "ki-0006"
+      ],
+      "cle": "fichier:examples/flow-log/main.tf#zone:ch-0002"
+    },
+    {
+      "cluster_id": "CL-009",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "ligne_proche",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0021",
+        "ch-0022",
+        "ki-0009",
+        "ki-0015"
+      ],
+      "cle": "fichier:main.tf#zone:ch-0021"
+    },
+    {
+      "cluster_id": "CL-010",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0003",
+        "ch-0004",
+        "ki-0004"
+      ],
+      "cle": "fichier:examples/flow-log/main.tf"
+    },
+    {
+      "cluster_id": "CL-011",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "ligne_proche",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0005",
+        "ch-0006",
+        "ki-0001"
+      ],
+      "cle": "fichier:main.tf#zone:ch-0005"
+    },
+    {
+      "cluster_id": "CL-013",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0035",
+        "ki-0025"
+      ],
+      "cle": "fichier:.github/workflows/lock.yml"
+    },
+    {
+      "cluster_id": "CL-014",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0036",
+        "ki-0019"
+      ],
+      "cle": "fichier:.github/workflows/pr-title.yml"
+    },
+    {
+      "cluster_id": "CL-015",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0037",
+        "ki-0023"
+      ],
+      "cle": "fichier:.github/workflows/release.yml"
+    }
+  ],
+  "non_regroupe": [
+    "ch-0001",
+    "ch-0038"
+  ],
+  "stats": {
+    "findings_en_entree": 112,
+    "clusters": 16,
+    "findings_regroupes": 110,
+    "findings_non_regroupes": 2,
+    "reduction": "112 → 18"
+  }
+}

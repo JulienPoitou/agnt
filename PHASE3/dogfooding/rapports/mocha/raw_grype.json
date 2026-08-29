@@ -1,0 +1,2746 @@
+{
+  "matches": [
+    {
+      "vulnerability": {
+        "id": "GHSA-rgw5-rvv9-x895",
+        "dataSource": "https://github.com/advisories/GHSA-rgw5-rvv9-x895",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/juliangruber/brace-expansion/security/advisories/GHSA-rgw5-rvv9-x895",
+          "https://github.com/juliangruber/brace-expansion/commit/139d015104e71433ad52a41d19467c48ecbb2c7d",
+          "https://github.com/juliangruber/brace-expansion/commit/1e30c930238d7162802d88a94189182def178dac",
+          "https://github.com/juliangruber/brace-expansion/commit/688a99eeaab02627c2b89ba8ba4821fecfa659cf",
+          "https://github.com/juliangruber/brace-expansion/commit/cb4b9e47cc2ec777c14b2b4492fb431a56f6a031",
+          "https://nvd.nist.gov/vuln/detail/CVE-2026-69152"
+        ],
+        "description": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+            "metrics": {
+              "baseScore": 7.5,
+              "exploitabilityScore": 3.9,
+              "impactScore": 3.6
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-69152",
+            "epss": 0.00623,
+            "percentile": 0.47102,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-69152",
+            "cwe": "CWE-400",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          },
+          {
+            "cve": "CVE-2026-69152",
+            "cwe": "CWE-770",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "5.0.9"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "5.0.9",
+              "date": "2026-08-03",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.46725000000000005
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-69152",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-69152",
+          "namespace": "nvd:cpe",
+          "severity": "High",
+          "urls": [
+            "https://github.com/juliangruber/brace-expansion/commit/139d015104e71433ad52a41d19467c48ecbb2c7d",
+            "https://github.com/juliangruber/brace-expansion/commit/1e30c930238d7162802d88a94189182def178dac",
+            "https://github.com/juliangruber/brace-expansion/commit/688a99eeaab02627c2b89ba8ba4821fecfa659cf",
+            "https://github.com/juliangruber/brace-expansion/commit/cb4b9e47cc2ec777c14b2b4492fb431a56f6a031",
+            "https://github.com/juliangruber/brace-expansion/security/advisories/GHSA-rgw5-rvv9-x895"
+          ],
+          "description": "The brace-expansion library generates arbitrary strings containing a common prefix and suffix. Prior to 1.1.18, 2.1.4, 3.0.6, and 5.0.9, expand() does not apply maxLength while constructing comma-alternative intermediate arrays or padded sequences, allowing attacker-controlled input to exhaust memory or block the event loop. The fix for CVE-2026-14257 is bypassed by the vulnerability. This issue is fixed in versions 1.1.18, 2.1.4, 3.0.6, and 5.0.9.",
+          "cvss": [
+            {
+              "source": "security-advisories@github.com",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "metrics": {
+                "baseScore": 7.5,
+                "exploitabilityScore": 3.9,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-69152",
+              "epss": 0.00623,
+              "percentile": 0.47102,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-69152",
+              "cwe": "CWE-400",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            },
+            {
+              "cve": "CVE-2026-69152",
+              "cwe": "CWE-770",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "brace-expansion",
+              "version": "5.0.8"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-rgw5-rvv9-x895",
+            "versionConstraint": ">=4.0.0,<5.0.9 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "5.0.9"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "b9dc346f1431f840",
+        "name": "brace-expansion",
+        "version": "5.0.8",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/package-lock.json",
+            "accessPath": "/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "MIT"
+        ],
+        "cpes": [
+          "cpe:2.3:a:juliangruber:brace-expansion:5.0.8:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/brace-expansion@5.0.8",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-52cp-r559-cp3m",
+        "dataSource": "https://github.com/advisories/GHSA-52cp-r559-cp3m",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/nodeca/js-yaml/security/advisories/GHSA-52cp-r559-cp3m",
+          "https://nvd.nist.gov/vuln/detail/CVE-2026-59869",
+          "https://github.com/nodeca/js-yaml/commit/24f13e79ee1343a7e30bd6f6c9d9cdbf0ac9b2b7",
+          "https://github.com/nodeca/js-yaml/commit/59423c6f8cdc78742ac00e25a4dd39ef16b702e4",
+          "https://github.com/nodeca/js-yaml/releases/tag/3.15.0",
+          "https://github.com/nodeca/js-yaml/releases/tag/4.3.0"
+        ],
+        "description": "js-yaml: YAML merge-key chains can force quadratic CPU consumption",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+            "metrics": {
+              "baseScore": 7.5,
+              "exploitabilityScore": 3.9,
+              "impactScore": 3.6
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-59869",
+            "epss": 0.00544,
+            "percentile": 0.43266,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-59869",
+            "cwe": "CWE-407",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "4.3.0"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "4.3.0",
+              "date": "2026-07-21",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.40800000000000003
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-59869",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-59869",
+          "namespace": "nvd:cpe",
+          "severity": "High",
+          "urls": [
+            "https://github.com/nodeca/js-yaml/commit/24f13e79ee1343a7e30bd6f6c9d9cdbf0ac9b2b7",
+            "https://github.com/nodeca/js-yaml/commit/59423c6f8cdc78742ac00e25a4dd39ef16b702e4",
+            "https://github.com/nodeca/js-yaml/releases/tag/3.15.0",
+            "https://github.com/nodeca/js-yaml/releases/tag/4.3.0",
+            "https://github.com/nodeca/js-yaml/security/advisories/GHSA-52cp-r559-cp3m"
+          ],
+          "description": "js-yaml is a JavaScript YAML parser and dumper. From 3.0.0 before 3.15.0 and from 4.0.0 before 4.3.0, js-yaml can spend quadratic CPU time parsing a document whose size grows only linearly when a chain of mappings uses merge keys where each mapping merges the previous one. This issue is fixed in versions 3.15.0 and 4.3.0.",
+          "cvss": [
+            {
+              "source": "security-advisories@github.com",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "metrics": {
+                "baseScore": 7.5,
+                "exploitabilityScore": 3.9,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-59869",
+              "epss": 0.00544,
+              "percentile": 0.43266,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-59869",
+              "cwe": "CWE-407",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "js-yaml",
+              "version": "4.2.0"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-52cp-r559-cp3m",
+            "versionConstraint": ">=4.0.0,<4.3.0 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "4.3.0"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "d962b6d9e5b1097d",
+        "name": "js-yaml",
+        "version": "4.2.0",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "MIT"
+        ],
+        "cpes": [
+          "cpe:2.3:a:nodeca:js-yaml:4.2.0:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/js-yaml@4.2.0",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-v2hh-gcrm-f6hx",
+        "dataSource": "https://github.com/advisories/GHSA-v2hh-gcrm-f6hx",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/fastify/fast-uri/security/advisories/GHSA-v2hh-gcrm-f6hx",
+          "https://nvd.nist.gov/vuln/detail/CVE-2026-16221",
+          "https://github.com/fastify/fast-uri/commit/0542a216860fd70c062a4730e620576f62ded057",
+          "https://github.com/fastify/fast-uri/commit/2d50fbabc80e4d0884fe0f6a98fe118ce6faa353",
+          "https://github.com/fastify/fast-uri/commit/9438266d6a7ded688c8bc7c4ba506da17f44a17b",
+          "https://cna.openjsf.org/security-advisories.html",
+          "https://github.com/fastify/fast-uri/releases/tag/v2.4.3",
+          "https://github.com/fastify/fast-uri/releases/tag/v3.1.4",
+          "https://github.com/fastify/fast-uri/releases/tag/v4.1.1"
+        ],
+        "description": "fast-uri vulnerable to host confusion via literal backslash authority delimiter",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+            "metrics": {
+              "baseScore": 7.5,
+              "exploitabilityScore": 3.9,
+              "impactScore": 3.6
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-16221",
+            "epss": 0.00436,
+            "percentile": 0.36218,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-16221",
+            "cwe": "CWE-436",
+            "source": "ce714d77-add3-4f53-aff5-83d477b104bb",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "3.1.4"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "3.1.4",
+              "date": "2026-07-22",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.327
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-16221",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-16221",
+          "namespace": "nvd:cpe",
+          "severity": "High",
+          "urls": [
+            "https://cna.openjsf.org/security-advisories.html",
+            "https://github.com/fastify/fast-uri/security/advisories/GHSA-v2hh-gcrm-f6hx"
+          ],
+          "description": "Impact: fast-uri versions from 2.3.1 through 4.1.0 (including the 3.x line up to 3.1.3 and the 2.x line up to 2.4.2) do not treat a literal backslash character (U+005C) as an authority delimiter. Node's native WHATWG URL parser, used by fetch, undici, and Node's http and https clients, normalizes the backslash to a forward slash for special schemes such as http, https, ws, wss, ftp, and file. As a result, the two parsers extract different hosts from the same input string. Applications that use fast-uri to enforce host-based policy such as allowlists, denylists, loopback or SSRF filtering, redirect validation, or outbound proxy routing before passing the same URL into Node's URL or fetch consumers can be steered to an unintended destination, including cloud metadata endpoints, loopback, or internal hosts. \n\nPatches: upgrade to fast-uri 4.1.1, 3.1.4, or 2.4.3.\n\nWorkarounds: none.",
+          "cvss": [
+            {
+              "source": "ce714d77-add3-4f53-aff5-83d477b104bb",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+              "metrics": {
+                "baseScore": 7.5,
+                "exploitabilityScore": 3.9,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-16221",
+              "epss": 0.00436,
+              "percentile": 0.36218,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-16221",
+              "cwe": "CWE-436",
+              "source": "ce714d77-add3-4f53-aff5-83d477b104bb",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "fast-uri",
+              "version": "3.1.2"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-v2hh-gcrm-f6hx",
+            "versionConstraint": ">=3.0.0,<=3.1.3 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "3.1.4"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "02a94c27aa03ea75",
+        "name": "fast-uri",
+        "version": "3.1.2",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "BSD-3-Clause"
+        ],
+        "cpes": [
+          "cpe:2.3:a:openjsf:fast-uri:3.1.2:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/fast-uri@3.1.2",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-8r6m-32jq-jx6q",
+        "dataSource": "https://github.com/advisories/GHSA-8r6m-32jq-jx6q",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/NaturalIntelligence/fast-xml-parser/security/advisories/GHSA-8r6m-32jq-jx6q",
+          "https://github.com/NaturalIntelligence/fast-xml-parser/commit/4e546e03987662de5495d050b5fba26bea65383f",
+          "https://github.com/NaturalIntelligence/fast-xml-parser/releases/tag/v5.10.1"
+        ],
+        "description": "fast-xml-parser: Repeated DOCTYPE declarations reset entity expansion limits",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "4.0",
+            "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+            "metrics": {
+              "baseScore": 8.7
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-73569",
+            "epss": 0.00372,
+            "percentile": 0.29963,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-73569",
+            "cwe": "CWE-776",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "5.10.1"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "5.10.1",
+              "date": "2026-07-22",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.30132000000000003
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-73569",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-73569",
+          "namespace": "nvd:cpe",
+          "severity": "High",
+          "urls": [
+            "https://github.com/NaturalIntelligence/fast-xml-parser/commit/4e546e03987662de5495d050b5fba26bea65383f",
+            "https://github.com/NaturalIntelligence/fast-xml-parser/releases/tag/v5.10.1",
+            "https://github.com/NaturalIntelligence/fast-xml-parser/security/advisories/GHSA-8r6m-32jq-jx6q"
+          ],
+          "description": "fast-xml-parser allows users to process XML from JS object without C/C++ based libraries or callbacks. From 5.9.3 until 5.10.1, src/xmlparser/OrderedObjParser.js processes multiple DOCTYPE declarations within a single XML document and passes each declaration's entities through addInputEntities(). addInputEntities() resets maxTotalExpansions and maxExpandedLength every time it is called, allowing additional DOCTYPE declarations to repeatedly reset the configured entity-expansion limits during one parse operation. A crafted XML document can then cause excessive CPU use, event-loop blocking, memory exhaustion, and process termination. This issue is fixed in version 5.10.1.",
+          "cvss": [
+            {
+              "source": "security-advisories@github.com",
+              "type": "Secondary",
+              "version": "4.0",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "metrics": {
+                "baseScore": 8.7
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-73569",
+              "epss": 0.00372,
+              "percentile": 0.29963,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-73569",
+              "cwe": "CWE-776",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "fast-xml-parser",
+              "version": "5.9.3"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-8r6m-32jq-jx6q",
+            "versionConstraint": ">=5.9.3,<5.10.1 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "5.10.1"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "6e5eeb3282081a22",
+        "name": "fast-xml-parser",
+        "version": "5.9.3",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "MIT"
+        ],
+        "cpes": [
+          "cpe:2.3:a:naturalintelligence:fast-xml-parser:5.9.3:*:*:*:*:*:*:*"
+        ],
+        "purl": "pkg:npm/fast-xml-parser@5.9.3",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-4c8g-83qw-93j6",
+        "dataSource": "https://github.com/advisories/GHSA-4c8g-83qw-93j6",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/fastify/fast-uri/security/advisories/GHSA-4c8g-83qw-93j6",
+          "https://nvd.nist.gov/vuln/detail/CVE-2026-13676",
+          "https://github.com/fastify/fast-uri/pull/188",
+          "https://github.com/fastify/fast-uri/commit/2a6d357a18a68e6d812824379fd3388a1ae50d05",
+          "https://github.com/fastify/fast-uri/commit/21ea1f9d70495c931f55dff893a8fa38f4f2e6bd",
+          "https://github.com/fastify/fast-uri/commit/01db48010f594b98f7b323be18b393791c66ed1d",
+          "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-13676.json",
+          "https://github.com/fastify/fast-uri/releases/tag/v4.0.1",
+          "https://github.com/fastify/fast-uri/releases/tag/v3.1.3",
+          "https://github.com/fastify/fast-uri/releases/tag/v2.4.2",
+          "https://cna.openjsf.org/security-advisories.html",
+          "https://bugzilla.redhat.com/show_bug.cgi?id=2494197",
+          "https://access.redhat.com/security/cve/CVE-2026-13676",
+          "https://access.redhat.com/errata/RHSA-2026:41929",
+          "https://access.redhat.com/errata/RHSA-2026:41928",
+          "https://access.redhat.com/errata/RHSA-2026:41066",
+          "https://access.redhat.com/errata/RHSA-2026:40945",
+          "https://access.redhat.com/errata/RHSA-2026:40262",
+          "https://access.redhat.com/errata/RHSA-2026:40118",
+          "https://access.redhat.com/errata/RHSA-2026:37628",
+          "https://access.redhat.com/errata/RHSA-2026:37585",
+          "https://access.redhat.com/errata/RHSA-2026:37186",
+          "https://access.redhat.com/errata/RHSA-2026:43038",
+          "https://access.redhat.com/errata/RHSA-2026:42815",
+          "https://access.redhat.com/errata/RHSA-2026:40765",
+          "https://access.redhat.com/errata/RHSA-2026:44239",
+          "https://access.redhat.com/errata/RHSA-2026:44268",
+          "https://access.redhat.com/errata/RHSA-2026:48126",
+          "https://access.redhat.com/errata/RHSA-2026:48124",
+          "https://access.redhat.com/errata/RHSA-2026:49642",
+          "https://access.redhat.com/errata/RHSA-2026:50479",
+          "https://access.redhat.com/errata/RHSA-2026:50340",
+          "https://access.redhat.com/errata/RHSA-2026:47728",
+          "https://access.redhat.com/errata/RHSA-2026:51196",
+          "https://access.redhat.com/errata/RHSA-2026:51197",
+          "https://access.redhat.com/errata/RHSA-2026:51342",
+          "https://access.redhat.com/errata/RHSA-2026:51348",
+          "https://access.redhat.com/errata/RHSA-2026:51349",
+          "https://access.redhat.com/errata/RHSA-2026:50758",
+          "https://access.redhat.com/errata/RHSA-2026:54760",
+          "https://access.redhat.com/errata/RHSA-2026:56366",
+          "https://access.redhat.com/errata/RHSA-2026:56431",
+          "https://access.redhat.com/errata/RHSA-2026:57013",
+          "https://access.redhat.com/errata/RHSA-2026:57191",
+          "https://access.redhat.com/errata/RHSA-2026:57194",
+          "https://access.redhat.com/errata/RHSA-2026:57590",
+          "https://access.redhat.com/errata/RHSA-2026:59593",
+          "https://access.redhat.com/errata/RHSA-2026:60386",
+          "https://access.redhat.com/errata/RHSA-2026:60520"
+        ],
+        "description": "fast-uri vulnerable to host confusion via failed IDN canonicalization",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+            "metrics": {
+              "baseScore": 7.5,
+              "exploitabilityScore": 3.9,
+              "impactScore": 3.6
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-13676",
+            "epss": 0.00384,
+            "percentile": 0.31274,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-13676",
+            "cwe": "CWE-436",
+            "source": "ce714d77-add3-4f53-aff5-83d477b104bb",
+            "type": "Secondary"
+          },
+          {
+            "cve": "CVE-2026-13676",
+            "cwe": "CWE-551",
+            "source": "0b0ca135-0b70-47e7-9f44-1890c2a1c46c",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "3.1.3"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "3.1.3",
+              "date": "2026-07-22",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.28800000000000003
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-13676",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-13676",
+          "namespace": "nvd:cpe",
+          "severity": "High",
+          "urls": [
+            "https://cna.openjsf.org/security-advisories.html",
+            "https://github.com/fastify/fast-uri/security/advisories/GHSA-4c8g-83qw-93j6",
+            "https://access.redhat.com/errata/RHSA-2026:37186",
+            "https://access.redhat.com/errata/RHSA-2026:37585",
+            "https://access.redhat.com/errata/RHSA-2026:37628",
+            "https://access.redhat.com/errata/RHSA-2026:40118",
+            "https://access.redhat.com/errata/RHSA-2026:40262",
+            "https://access.redhat.com/errata/RHSA-2026:40765",
+            "https://access.redhat.com/errata/RHSA-2026:40945",
+            "https://access.redhat.com/errata/RHSA-2026:41066",
+            "https://access.redhat.com/errata/RHSA-2026:41928",
+            "https://access.redhat.com/errata/RHSA-2026:41929",
+            "https://access.redhat.com/errata/RHSA-2026:42815",
+            "https://access.redhat.com/errata/RHSA-2026:43038",
+            "https://access.redhat.com/errata/RHSA-2026:44239",
+            "https://access.redhat.com/errata/RHSA-2026:44268",
+            "https://access.redhat.com/errata/RHSA-2026:47728",
+            "https://access.redhat.com/errata/RHSA-2026:48124",
+            "https://access.redhat.com/errata/RHSA-2026:48126",
+            "https://access.redhat.com/errata/RHSA-2026:49642",
+            "https://access.redhat.com/errata/RHSA-2026:50340",
+            "https://access.redhat.com/errata/RHSA-2026:50479",
+            "https://access.redhat.com/errata/RHSA-2026:50758",
+            "https://access.redhat.com/errata/RHSA-2026:51196",
+            "https://access.redhat.com/errata/RHSA-2026:51197",
+            "https://access.redhat.com/errata/RHSA-2026:51342",
+            "https://access.redhat.com/errata/RHSA-2026:51348",
+            "https://access.redhat.com/errata/RHSA-2026:51349",
+            "https://access.redhat.com/errata/RHSA-2026:54760",
+            "https://access.redhat.com/errata/RHSA-2026:56366",
+            "https://access.redhat.com/errata/RHSA-2026:56431",
+            "https://access.redhat.com/errata/RHSA-2026:57013",
+            "https://access.redhat.com/errata/RHSA-2026:57191",
+            "https://access.redhat.com/errata/RHSA-2026:57194",
+            "https://access.redhat.com/errata/RHSA-2026:57590",
+            "https://access.redhat.com/errata/RHSA-2026:59593",
+            "https://access.redhat.com/errata/RHSA-2026:60386",
+            "https://access.redhat.com/errata/RHSA-2026:60520",
+            "https://access.redhat.com/security/cve/CVE-2026-13676",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=2494197",
+            "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-13676.json"
+          ],
+          "description": "fast-uri versions 2.3.1 through 3.1.2 and 4.0.0 fail to canonicalize Unicode (IDN) hostnames for HTTP-family URLs. The IDN conversion path calls a helper that does not exist on the global URL constructor, silently leaving the host in its original Unicode form while normalize() and equal() still return values that differ from a WHATWG-compatible URL parser. Applications that use fast-uri to enforce host-based policy (denylists, loopback filtering, redirect validation, outbound proxy routing) before passing the same URL to Node's URL or fetch can be bypassed when the two implementations resolve the same input to different hosts. Patches: upgrade to fast-uri 3.1.3 for the 3.x line or 4.0.1 for the 4.x line. Workarounds: enforce host policy using the same URL parser used for the actual request, or reject non-ASCII hosts before policy checks.",
+          "cvss": [
+            {
+              "source": "0b0ca135-0b70-47e7-9f44-1890c2a1c46c",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+              "metrics": {
+                "baseScore": 7.5,
+                "exploitabilityScore": 3.9,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            },
+            {
+              "source": "ce714d77-add3-4f53-aff5-83d477b104bb",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+              "metrics": {
+                "baseScore": 7.5,
+                "exploitabilityScore": 3.9,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-13676",
+              "epss": 0.00384,
+              "percentile": 0.31274,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-13676",
+              "cwe": "CWE-436",
+              "source": "ce714d77-add3-4f53-aff5-83d477b104bb",
+              "type": "Secondary"
+            },
+            {
+              "cve": "CVE-2026-13676",
+              "cwe": "CWE-551",
+              "source": "0b0ca135-0b70-47e7-9f44-1890c2a1c46c",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "fast-uri",
+              "version": "3.1.2"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-4c8g-83qw-93j6",
+            "versionConstraint": ">=3.0.0,<3.1.3 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "3.1.3"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "02a94c27aa03ea75",
+        "name": "fast-uri",
+        "version": "3.1.2",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "BSD-3-Clause"
+        ],
+        "cpes": [
+          "cpe:2.3:a:openjsf:fast-uri:3.1.2:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/fast-uri@3.1.2",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-pm4m-ph32-ghv5",
+        "dataSource": "https://github.com/advisories/GHSA-pm4m-ph32-ghv5",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/nodeca/js-yaml/security/advisories/GHSA-pm4m-ph32-ghv5",
+          "https://github.com/nodeca/js-yaml/commit/3e5240f9cbe645ce5afb58524954a13c8539c853",
+          "https://github.com/nodeca/js-yaml/releases/tag/5.2.2"
+        ],
+        "description": "js-yaml: Exponential parsing time in flow collections leads to denial of service",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+            "metrics": {
+              "baseScore": 7.5,
+              "exploitabilityScore": 3.9,
+              "impactScore": 3.6
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-73643",
+            "epss": 0.00344,
+            "percentile": 0.26991,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-73643",
+            "cwe": "CWE-407",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "5.2.2"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "5.2.2",
+              "date": "2026-07-25",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.258
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-73643",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-73643",
+          "namespace": "nvd:cpe",
+          "severity": "High",
+          "urls": [
+            "https://github.com/nodeca/js-yaml/commit/3e5240f9cbe645ce5afb58524954a13c8539c853",
+            "https://github.com/nodeca/js-yaml/security/advisories/GHSA-pm4m-ph32-ghv5"
+          ],
+          "description": "js-yaml is a JavaScript YAML parser and dumper. From 5.0.0 until 5.2.2, parsing a small YAML document can take exponential time when an application calls load() or loadAll() on untrusted input. In src/parser/parser.ts, readFlowCollection uses restoreState and calls parseNode a second time when a flow-sequence entry is recognized as a key: value pair. If the key is a nested flow sequence of the same shape, every level is parsed twice, causing O(2^n) work and allowing an input under 200 bytes to keep one CPU busy for minutes, block the Node.js event loop, and stall the process. No anchors, aliases, merges, tags, or nondefault options are required. This issue is fixed in version 5.2.2.",
+          "cvss": [
+            {
+              "source": "security-advisories@github.com",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "metrics": {
+                "baseScore": 7.5,
+                "exploitabilityScore": 3.9,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-73643",
+              "epss": 0.00344,
+              "percentile": 0.26991,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-73643",
+              "cwe": "CWE-407",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "js-yaml",
+              "version": "5.2.1"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-pm4m-ph32-ghv5",
+            "versionConstraint": ">=5.0.0,<=5.2.1 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "5.2.2"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "87ac0a29c6a374e8",
+        "name": "js-yaml",
+        "version": "5.2.1",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/package-lock.json",
+            "accessPath": "/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "MIT"
+        ],
+        "cpes": [
+          "cpe:2.3:a:nodeca:js-yaml:5.2.1:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/js-yaml@5.2.1",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-qj8w-gfj5-8c6v",
+        "dataSource": "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v",
+        "namespace": "github:language:javascript",
+        "severity": "Medium",
+        "urls": [
+          "https://github.com/yahoo/serialize-javascript/security/advisories/GHSA-qj8w-gfj5-8c6v",
+          "https://github.com/yahoo/serialize-javascript/commit/f147e90269b58bb6e539cfdf3d0e20d6ad14204b",
+          "https://github.com/yahoo/serialize-javascript/releases/tag/v7.0.5",
+          "https://nvd.nist.gov/vuln/detail/CVE-2026-34043",
+          "https://github.com/yahoo/serialize-javascript/releases/tag/v5.0.0"
+        ],
+        "description": "Serialize JavaScript has CPU Exhaustion Denial of Service via crafted array-like objects",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+            "metrics": {
+              "baseScore": 5.9,
+              "exploitabilityScore": 2.3,
+              "impactScore": 3.6
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-34043",
+            "epss": 0.00472,
+            "percentile": 0.38837,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-34043",
+            "cwe": "CWE-400",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          },
+          {
+            "cve": "CVE-2026-34043",
+            "cwe": "CWE-834",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "7.0.5"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "7.0.5",
+              "date": "2026-03-28",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.25724
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-34043",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-34043",
+          "namespace": "nvd:cpe",
+          "severity": "High",
+          "urls": [
+            "https://github.com/yahoo/serialize-javascript/commit/f147e90269b58bb6e539cfdf3d0e20d6ad14204b",
+            "https://github.com/yahoo/serialize-javascript/releases/tag/v7.0.5",
+            "https://github.com/yahoo/serialize-javascript/security/advisories/GHSA-qj8w-gfj5-8c6v"
+          ],
+          "description": "Serialize JavaScript to a superset of JSON that includes regular expressions and functions. Prior to version 7.0.5, there is a Denial of Service (DoS) vulnerability caused by CPU exhaustion. When serializing a specially crafted \"array-like\" object (an object that inherits from Array.prototype but has a very large length property), the process enters an intensive loop that consumes 100% CPU and hangs indefinitely. This issue has been patched in version 7.0.5.",
+          "cvss": [
+            {
+              "source": "nvd@nist.gov",
+              "type": "Primary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "metrics": {
+                "baseScore": 7.5,
+                "exploitabilityScore": 3.9,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            },
+            {
+              "source": "security-advisories@github.com",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "metrics": {
+                "baseScore": 5.9,
+                "exploitabilityScore": 2.3,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-34043",
+              "epss": 0.00472,
+              "percentile": 0.38837,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-34043",
+              "cwe": "CWE-400",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            },
+            {
+              "cve": "CVE-2026-34043",
+              "cwe": "CWE-834",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "serialize-javascript",
+              "version": "7.0.2"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-qj8w-gfj5-8c6v",
+            "versionConstraint": ">=5.0.0,<7.0.5 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "7.0.5"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "f7a5678f31e64b47",
+        "name": "serialize-javascript",
+        "version": "7.0.2",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/package-lock.json",
+            "accessPath": "/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "BSD-3-Clause"
+        ],
+        "cpes": [
+          "cpe:2.3:a:verizon:serialize-javascript:7.0.2:*:*:*:*:node.js:*:*",
+          "cpe:2.3:a:yahoo:serialize_javascript:7.0.2:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/serialize-javascript@7.0.2",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-fxqj-rqcc-2cmp",
+        "dataSource": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp",
+        "namespace": "github:language:javascript",
+        "severity": "Medium",
+        "urls": [
+          "https://github.com/postcss/postcss/security/advisories/GHSA-fxqj-rqcc-2cmp",
+          "https://github.com/postcss/postcss/commit/7beca139e70f9075c6b19700fcb00dd8033e5da8",
+          "https://github.com/postcss/postcss/releases/tag/8.5.19"
+        ],
+        "description": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "4.0",
+            "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+            "metrics": {
+              "baseScore": 6.3
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-69153",
+            "epss": 0.00451,
+            "percentile": 0.37408,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-69153",
+            "cwe": "CWE-22",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          },
+          {
+            "cve": "CVE-2026-69153",
+            "cwe": "CWE-200",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "8.5.23"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "8.5.23",
+              "date": "2026-08-04",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.254815
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-69153",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-69153",
+          "namespace": "nvd:cpe",
+          "severity": "Medium",
+          "urls": [
+            "https://github.com/postcss/postcss/commit/7beca139e70f9075c6b19700fcb00dd8033e5da8",
+            "https://github.com/postcss/postcss/releases/tag/8.5.19",
+            "https://github.com/postcss/postcss/security/advisories/GHSA-fxqj-rqcc-2cmp"
+          ],
+          "description": "PostCSS takes a CSS file and provides an API to analyze and modify its rules by transforming the rules into an Abstract Syntax Tree. Prior to 8.5.19, if from is unset, an attacker can cause PreviousMap.loadFile() to read an unintended source-map file by supplying an absolute or directory-traversal sourceMappingURL. The resulting map’s sources and sourcesContent may then be exposed to the application. This issue is fixed in version 8.5.19.",
+          "cvss": [
+            {
+              "source": "nvd@nist.gov",
+              "type": "Primary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+              "metrics": {
+                "baseScore": 5.3,
+                "exploitabilityScore": 3.9,
+                "impactScore": 1.5
+              },
+              "vendorMetadata": {}
+            },
+            {
+              "source": "security-advisories@github.com",
+              "type": "Secondary",
+              "version": "4.0",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "metrics": {
+                "baseScore": 6.3
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-69153",
+              "epss": 0.00451,
+              "percentile": 0.37408,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-69153",
+              "cwe": "CWE-22",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            },
+            {
+              "cve": "CVE-2026-69153",
+              "cwe": "CWE-200",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "postcss",
+              "version": "8.5.19"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-fxqj-rqcc-2cmp",
+            "versionConstraint": "<=8.5.22 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "8.5.23"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "c92f971404d53e87",
+        "name": "postcss",
+        "version": "8.5.19",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "MIT"
+        ],
+        "cpes": [
+          "cpe:2.3:a:postcss:postcss:8.5.19:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/postcss@8.5.19",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-2v37-7h3g-55p8",
+        "dataSource": "https://github.com/advisories/GHSA-2v37-7h3g-55p8",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://nvd.nist.gov/vuln/detail/CVE-2026-67213",
+          "https://github.com/ai/nanoid/commit/cb3626d0f3342fdf179cd425fd9c4fbb92c7d0e7",
+          "https://github.com/ai/nanoid/releases/tag/5.1.6",
+          "https://www.vulncheck.com/advisories/nanoid-before-infinite-loop-via-zero-size-in-customalphabet-and-customrandom",
+          "https://github.com/ai/nanoid/commit/f9d13f150847d117877adee3460a46eceb0cf49b",
+          "https://github.com/ai/nanoid/releases/tag/3.3.17",
+          "https://github.com/ai/nanoid/commit/e10f8d40ce9d1ab47f66d65a16b48086432730d0",
+          "https://github.com/ai/nanoid/releases/tag/3.3.18"
+        ],
+        "description": "nanoid: custom generators can loop indefinitely when size is zero",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+            "metrics": {
+              "baseScore": 5.9,
+              "exploitabilityScore": 2.3,
+              "impactScore": 3.6
+            },
+            "vendorMetadata": {}
+          },
+          {
+            "type": "Secondary",
+            "version": "4.0",
+            "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+            "metrics": {
+              "baseScore": 8.2
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-67213",
+            "epss": 0.00319,
+            "percentile": 0.2421,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-67213",
+            "cwe": "CWE-835",
+            "source": "disclosure@vulncheck.com",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "3.3.18"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "3.3.18",
+              "date": "2026-08-13",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.23207250000000001
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-67213",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-67213",
+          "namespace": "nvd:cpe",
+          "severity": "High",
+          "urls": [
+            "https://github.com/ai/nanoid/commit/cb3626d0f3342fdf179cd425fd9c4fbb92c7d0e7",
+            "https://github.com/ai/nanoid/releases/tag/5.1.6",
+            "https://www.vulncheck.com/advisories/nanoid-before-infinite-loop-via-zero-size-in-customalphabet-and-customrandom"
+          ],
+          "description": "nanoid (Nano ID) before 5.1.6 contains an infinite loop in the customAlphabet and customRandom functions. When these functions are configured with a size of 0, the internal generation loop never satisfies its exit condition and spins indefinitely, hanging the calling thread. An application that passes an unvalidated, attacker-controlled size of 0 to these functions is exposed to a denial-of-service condition.",
+          "cvss": [
+            {
+              "source": "nvd@nist.gov",
+              "type": "Primary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "metrics": {
+                "baseScore": 7.5,
+                "exploitabilityScore": 3.9,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            },
+            {
+              "source": "disclosure@vulncheck.com",
+              "type": "Secondary",
+              "version": "4.0",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "metrics": {
+                "baseScore": 8.2
+              },
+              "vendorMetadata": {}
+            },
+            {
+              "source": "disclosure@vulncheck.com",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "metrics": {
+                "baseScore": 5.9,
+                "exploitabilityScore": 2.3,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-67213",
+              "epss": 0.00319,
+              "percentile": 0.2421,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-67213",
+              "cwe": "CWE-835",
+              "source": "disclosure@vulncheck.com",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "nanoid",
+              "version": "3.3.16"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-2v37-7h3g-55p8",
+            "versionConstraint": "<3.3.18 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "3.3.18"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "7d76ff81f29be82c",
+        "name": "nanoid",
+        "version": "3.3.16",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "MIT"
+        ],
+        "cpes": [
+          "cpe:2.3:a:nanoid_project:nanoid:3.3.16:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/nanoid@3.3.16",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-48c2-rrv3-qjmp",
+        "dataSource": "https://github.com/advisories/GHSA-48c2-rrv3-qjmp",
+        "namespace": "github:language:javascript",
+        "severity": "Medium",
+        "urls": [
+          "https://github.com/eemeli/yaml/security/advisories/GHSA-48c2-rrv3-qjmp",
+          "https://github.com/eemeli/yaml/commit/1e84ebbea7ec35011a4c61bbb820a529ee4f359b",
+          "https://github.com/eemeli/yaml/releases/tag/v1.10.3",
+          "https://github.com/eemeli/yaml/releases/tag/v2.8.3",
+          "https://nvd.nist.gov/vuln/detail/CVE-2026-33532"
+        ],
+        "description": "yaml is vulnerable to Stack Overflow via deeply nested YAML collections",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L",
+            "metrics": {
+              "baseScore": 4.3,
+              "exploitabilityScore": 2.9,
+              "impactScore": 1.5
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-33532",
+            "epss": 0.0047,
+            "percentile": 0.38652,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-33532",
+            "cwe": "CWE-674",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "2.8.3"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "2.8.3",
+              "date": "2026-03-26",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.21855
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-33532",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-33532",
+          "namespace": "nvd:cpe",
+          "severity": "Medium",
+          "urls": [
+            "https://github.com/eemeli/yaml/commit/1e84ebbea7ec35011a4c61bbb820a529ee4f359b",
+            "https://github.com/eemeli/yaml/releases/tag/v1.10.3",
+            "https://github.com/eemeli/yaml/releases/tag/v2.8.3",
+            "https://github.com/eemeli/yaml/security/advisories/GHSA-48c2-rrv3-qjmp"
+          ],
+          "description": "`yaml` is a YAML parser and serialiser for JavaScript. Parsing a YAML document with a version of `yaml` on the 1.x branch prior to 1.10.3 or on the 2.x branch prior to 2.8.3 may throw a RangeError due to a stack overflow. The node resolution/composition phase uses recursive function calls without a depth bound. An attacker who can supply YAML for parsing can trigger a `RangeError: Maximum call stack size exceeded` with a small payload (~2–10 KB). The `RangeError` is not a `YAMLParseError`, so applications that only catch YAML-specific errors will encounter an unexpected exception type. Depending on the host application's exception handling, this can fail requests or terminate the Node.js process. Flow sequences allow deep nesting with minimal bytes (2 bytes per level: one `[` and one `]`). On the default Node.js stack, approximately 1,000–5,000 levels of nesting (2–10 KB input) exhaust the call stack. The exact threshold is environment-dependent (Node.js version, stack size, call stack depth at invocation). Note: the library's `Parser` (CST phase) uses a stack-based iterative approach and is not affected. Only the compose/resolve phase uses actual call-stack recursion. All three public parsing APIs are affected: `YAML.parse()`, `YAML.parseDocument()`, and `YAML.parseAllDocuments()`. Versions 1.10.3 and 2.8.3 contain a patch.",
+          "cvss": [
+            {
+              "source": "security-advisories@github.com",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L",
+              "metrics": {
+                "baseScore": 4.3,
+                "exploitabilityScore": 2.9,
+                "impactScore": 1.5
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-33532",
+              "epss": 0.0047,
+              "percentile": 0.38652,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-33532",
+              "cwe": "CWE-674",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "yaml",
+              "version": "2.7.1"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-48c2-rrv3-qjmp",
+            "versionConstraint": ">=2.0.0,<2.8.3 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "2.8.3"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "1b1265ae037e0151",
+        "name": "yaml",
+        "version": "2.7.1",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "ISC"
+        ],
+        "cpes": [
+          "cpe:2.3:a:eemeli:yaml:2.7.1:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/yaml@2.7.1",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-2p49-hgcm-8545",
+        "dataSource": "https://github.com/advisories/GHSA-2p49-hgcm-8545",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/svg/svgo/security/advisories/GHSA-2p49-hgcm-8545",
+          "https://github.com/svg/svgo/commit/628e3bc7336625a30365d0a9b60185307d852466",
+          "https://github.com/svg/svgo/commit/72a23886b4698b27624b936f3a15a80afd36d75f",
+          "https://github.com/svg/svgo/commit/f529cfccc6c154d6f6eabe276ec637a8c5db6763",
+          "https://github.com/svg/svgo/releases/tag/v2.8.3",
+          "https://github.com/svg/svgo/releases/tag/v3.3.4",
+          "https://github.com/svg/svgo/releases/tag/v4.0.2"
+        ],
+        "description": "SVGO removeScripts plugin leaves some executable scripts intact",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:L/A:N",
+            "metrics": {
+              "baseScore": 8.2,
+              "exploitabilityScore": 2.9,
+              "impactScore": 4.8
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-73650",
+            "epss": 0.00242,
+            "percentile": 0.15222,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-73650",
+            "cwe": "CWE-79",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          },
+          {
+            "cve": "CVE-2026-73650",
+            "cwe": "CWE-184",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "4.0.2"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "4.0.2",
+              "date": "2026-07-22",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.18996999999999997
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-73650",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-73650",
+          "namespace": "nvd:cpe",
+          "severity": "High",
+          "urls": [
+            "https://github.com/svg/svgo/commit/628e3bc7336625a30365d0a9b60185307d852466",
+            "https://github.com/svg/svgo/commit/72a23886b4698b27624b936f3a15a80afd36d75f",
+            "https://github.com/svg/svgo/commit/f529cfccc6c154d6f6eabe276ec637a8c5db6763",
+            "https://github.com/svg/svgo/releases/tag/v2.8.3",
+            "https://github.com/svg/svgo/releases/tag/v3.3.4",
+            "https://github.com/svg/svgo/releases/tag/v4.0.2",
+            "https://github.com/svg/svgo/security/advisories/GHSA-2p49-hgcm-8545"
+          ],
+          "description": "SVGO, short for SVG Optimizer, is a Node.js library and command-line application for optimizing SVG files. From version 1.0.0 until versions 2.8.3, 3.3.4, and 4.0.2, the removeScripts plugin, named removeScriptElement in versions 1 through 3, can leave executable content in optimized SVGs because it does not remove namespaced or prefixed script elements such as <svg:script> and, in versions 3 and 4, matches JavaScript URIs case sensitively. Applications that process untrusted SVG input with this plugin enabled and serve the result can allow scripts to execute when another user opens the SVG, exposing local storage or cookies. This issue is fixed in versions 2.8.3, 3.3.4, and 4.0.2.",
+          "cvss": [
+            {
+              "source": "security-advisories@github.com",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:L/A:N",
+              "metrics": {
+                "baseScore": 8.2,
+                "exploitabilityScore": 2.9,
+                "impactScore": 4.8
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-73650",
+              "epss": 0.00242,
+              "percentile": 0.15222,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-73650",
+              "cwe": "CWE-79",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            },
+            {
+              "cve": "CVE-2026-73650",
+              "cwe": "CWE-184",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "svgo",
+              "version": "4.0.1"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-2p49-hgcm-8545",
+            "versionConstraint": ">=4.0.0,<4.0.2 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "4.0.2"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "866c3aa84de50068",
+        "name": "svgo",
+        "version": "4.0.1",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "MIT"
+        ],
+        "cpes": [
+          "cpe:2.3:a:svgo:svgo:4.0.1:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/svgo@4.0.1",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-7p8r-x3mc-p8w7",
+        "dataSource": "https://github.com/advisories/GHSA-7p8r-x3mc-p8w7",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/fastify/fast-uri/security/advisories/GHSA-7p8r-x3mc-p8w7",
+          "https://nvd.nist.gov/vuln/detail/CVE-2026-18446",
+          "https://github.com/fastify/fast-uri/commit/f3c6c905f47831007490f466c5945012e905cc52",
+          "https://cna.openjsf.org/security-advisories.html",
+          "https://github.com/fastify/fast-uri/releases/tag/v4.1.2"
+        ],
+        "description": "fast-uri vulnerable to host confusion via backslash authority introducer",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+            "metrics": {
+              "baseScore": 7.5,
+              "exploitabilityScore": 3.9,
+              "impactScore": 3.6
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-18446",
+            "epss": 0.00221,
+            "percentile": 0.12533,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-18446",
+            "cwe": "CWE-436",
+            "source": "ce714d77-add3-4f53-aff5-83d477b104bb",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "3.1.5"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "3.1.5",
+              "date": "2026-08-04",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.16575
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-18446",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-18446",
+          "namespace": "nvd:cpe",
+          "severity": "High",
+          "urls": [
+            "https://cna.openjsf.org/security-advisories.html",
+            "https://github.com/fastify/fast-uri/security/advisories/GHSA-7p8r-x3mc-p8w7"
+          ],
+          "description": "fast-uri before 4.1.2, 3.1.5, and 2.4.4 requires a literal double forward slash to recognize a URI authority, so a reference that uses a backslash based introducer in place of it (backslash backslash, forward slash backslash, or backslash forward slash) is parsed with no authority and folds into the path. Node's native WHATWG URL parser instead treats a backslash as interchangeable with a forward slash for special schemes, so the two parsers extract different hosts from the same input. Applications that use fast-uri to enforce host based policy such as allowlists, SSRF filtering, or redirect validation before passing the same URL into Node's URL or fetch consumers can be steered to an unintended host. Upgrade to fast-uri 4.1.2, 3.1.5, or 2.4.4.",
+          "cvss": [
+            {
+              "source": "ce714d77-add3-4f53-aff5-83d477b104bb",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+              "metrics": {
+                "baseScore": 7.5,
+                "exploitabilityScore": 3.9,
+                "impactScore": 3.6
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-18446",
+              "epss": 0.00221,
+              "percentile": 0.12533,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-18446",
+              "cwe": "CWE-436",
+              "source": "ce714d77-add3-4f53-aff5-83d477b104bb",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "fast-uri",
+              "version": "3.1.2"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-7p8r-x3mc-p8w7",
+            "versionConstraint": ">=3.0.0,<3.1.5 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "3.1.5"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "02a94c27aa03ea75",
+        "name": "fast-uri",
+        "version": "3.1.2",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "BSD-3-Clause"
+        ],
+        "cpes": [
+          "cpe:2.3:a:openjsf:fast-uri:3.1.2:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/fast-uri@3.1.2",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-8j5q-mfj2-5q9q",
+        "dataSource": "https://github.com/advisories/GHSA-8j5q-mfj2-5q9q",
+        "namespace": "github:language:javascript",
+        "severity": "Medium",
+        "urls": [
+          "https://github.com/withastro/astro/security/advisories/GHSA-8j5q-mfj2-5q9q",
+          "https://github.com/withastro/astro/pull/17209",
+          "https://github.com/withastro/astro/commit/fbcfa039dfe3d700b239f595a6c55ee35e45bd06",
+          "https://github.com/withastro/astro/releases/tag/@astrojs/rss@4.0.19",
+          "https://nvd.nist.gov/vuln/detail/CVE-2026-59728"
+        ],
+        "description": "@astrojs/rss: XML Injection via Unescaped RSS Feed Fields",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+            "metrics": {
+              "baseScore": 4.3,
+              "exploitabilityScore": 2.9,
+              "impactScore": 1.5
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2026-59728",
+            "epss": 0.00265,
+            "percentile": 0.18106,
+            "date": "2026-08-28"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2026-59728",
+            "cwe": "CWE-91",
+            "source": "security-advisories@github.com",
+            "type": "Secondary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "4.0.19"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "4.0.19",
+              "date": "2026-07-21",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0.12322499999999999
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2026-59728",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2026-59728",
+          "namespace": "nvd:cpe",
+          "severity": "Medium",
+          "urls": [
+            "https://github.com/withastro/astro/commit/fbcfa039dfe3d700b239f595a6c55ee35e45bd06",
+            "https://github.com/withastro/astro/pull/17209",
+            "https://github.com/withastro/astro/releases/tag/@astrojs/rss@4.0.19",
+            "https://github.com/withastro/astro/security/advisories/GHSA-8j5q-mfj2-5q9q"
+          ],
+          "description": "Astro is a web framework for content-driven websites. In versions 1.0.0 through 4.0.18, the source.title and enclosure.type item fields in packages/astro-rss/src/index.ts are interpolated directly into XML template strings without XML-character escaping before being parsed by fast-xml-parser. Both fields are validated only as z.string(), placing no restriction on XML special characters. An attacker who controls these values can inject arbitrary XML into the generated RSS feed: a value containing \" can break out of an attribute (as with enclosure.type), and a value containing </source> can close an element early and inject additional nodes (as with source.title). This corrupts feed structure, injects false metadata (for example, a fake <link> pointing to a malicious URL), and can cause feed readers to misparse or display attacker-controlled content. In SSR mode (output: 'server'), the poisoned feed is served on every request to all subscribers. This issue has been fixed in version 4.0.19.",
+          "cvss": [
+            {
+              "source": "security-advisories@github.com",
+              "type": "Secondary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+              "metrics": {
+                "baseScore": 4.3,
+                "exploitabilityScore": 2.9,
+                "impactScore": 1.5
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2026-59728",
+              "epss": 0.00265,
+              "percentile": 0.18106,
+              "date": "2026-08-28"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2026-59728",
+              "cwe": "CWE-91",
+              "source": "security-advisories@github.com",
+              "type": "Secondary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "@astrojs/rss",
+              "version": "4.0.18"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-8j5q-mfj2-5q9q",
+            "versionConstraint": ">=1.0.0,<4.0.19 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "4.0.19"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "3a950a04e829d968",
+        "name": "@astrojs/rss",
+        "version": "4.0.18",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "MIT"
+        ],
+        "cpes": [
+          "cpe:2.3:a:\\@astrojs\\/rss:\\@astrojs\\/rss:4.0.18:*:*:*:*:*:*:*"
+        ],
+        "purl": "pkg:npm/%40astrojs/rss@4.0.18",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-5p4m-2wfm-xmqj",
+        "dataSource": "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/nodeca/js-yaml/security/advisories/GHSA-5p4m-2wfm-xmqj"
+        ],
+        "description": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+            "metrics": {
+              "baseScore": 7.5,
+              "exploitabilityScore": 3.9,
+              "impactScore": 3.6
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "fix": {
+          "versions": [
+            "4.3.1"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "4.3.1",
+              "date": "2026-08-07",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0
+      },
+      "relatedVulnerabilities": [],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "js-yaml",
+              "version": "4.2.0"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-5p4m-2wfm-xmqj",
+            "versionConstraint": ">=4.0.0,<4.3.1 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "4.3.1"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "d962b6d9e5b1097d",
+        "name": "js-yaml",
+        "version": "4.2.0",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "MIT"
+        ],
+        "cpes": [
+          "cpe:2.3:a:nodeca:js-yaml:4.2.0:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/js-yaml@4.2.0",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-5c6j-r48x-rmvq",
+        "dataSource": "https://github.com/advisories/GHSA-5c6j-r48x-rmvq",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/yahoo/serialize-javascript/security/advisories/GHSA-5c6j-r48x-rmvq",
+          "https://nvd.nist.gov/vuln/detail/CVE-2020-7660",
+          "https://github.com/yahoo/serialize-javascript/commit/2e609d0a9f4f5b097f0945af88bd45b9c7fb48d9",
+          "https://github.com/advisories/GHSA-hxcc-f52p-wc94",
+          "https://github.com/yahoo/serialize-javascript/releases/tag/v7.0.3"
+        ],
+        "description": "Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString()",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            "metrics": {
+              "baseScore": 8.1,
+              "exploitabilityScore": 2.3,
+              "impactScore": 5.9
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "fix": {
+          "versions": [
+            "7.0.3"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "7.0.3",
+              "date": "2026-02-28",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0
+      },
+      "relatedVulnerabilities": [],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "serialize-javascript",
+              "version": "7.0.2"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-5c6j-r48x-rmvq",
+            "versionConstraint": "<=7.0.2 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "7.0.3"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "f7a5678f31e64b47",
+        "name": "serialize-javascript",
+        "version": "7.0.2",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/package-lock.json",
+            "accessPath": "/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "BSD-3-Clause"
+        ],
+        "cpes": [
+          "cpe:2.3:a:verizon:serialize-javascript:7.0.2:*:*:*:*:node.js:*:*",
+          "cpe:2.3:a:yahoo:serialize_javascript:7.0.2:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/serialize-javascript@7.0.2",
+        "upstreams": []
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-f88m-g3jw-g9cj",
+        "dataSource": "https://github.com/advisories/GHSA-f88m-g3jw-g9cj",
+        "namespace": "github:language:javascript",
+        "severity": "High",
+        "urls": [
+          "https://github.com/libvips/libvips/security/advisories/GHSA-2fcj-gj27-279x",
+          "https://github.com/libvips/libvips/security/advisories/GHSA-523x-vhfw-6r76",
+          "https://github.com/libvips/libvips/security/advisories/GHSA-jmwm-wc68-mhwm",
+          "https://github.com/libvips/libvips/security/advisories/GHSA-r98w-4fp7-m9c7",
+          "https://github.com/lovell/sharp/security/advisories/GHSA-f88m-g3jw-g9cj"
+        ],
+        "description": "sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
+        "cvss": [
+          {
+            "type": "Secondary",
+            "version": "4.0",
+            "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:L/VI:H/VA:H/SC:N/SI:N/SA:N",
+            "metrics": {
+              "baseScore": 7
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "fix": {
+          "versions": [
+            "0.35.0"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "0.35.0",
+              "date": "2026-07-22",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 0
+      },
+      "relatedVulnerabilities": [],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "javascript-matcher",
+          "searchedBy": {
+            "language": "javascript",
+            "namespace": "github:language:javascript",
+            "package": {
+              "name": "sharp",
+              "version": "0.34.5"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "GHSA-f88m-g3jw-g9cj",
+            "versionConstraint": "<0.35.0 (semantic)"
+          },
+          "fix": {
+            "suggestedVersion": "0.35.0"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "3de5becfcc20591a",
+        "name": "sharp",
+        "version": "0.34.5",
+        "type": "npm",
+        "locations": [
+          {
+            "path": "/docs/package-lock.json",
+            "accessPath": "/docs/package-lock.json",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "javascript",
+        "licenses": [
+          "Apache-2.0"
+        ],
+        "cpes": [
+          "cpe:2.3:a:sharp_project:sharp:0.34.5:*:*:*:*:node.js:*:*"
+        ],
+        "purl": "pkg:npm/sharp@0.34.5",
+        "upstreams": []
+      }
+    }
+  ],
+  "source": {
+    "type": "directory",
+    "target": "/home/user/PHASE3/mt-scan"
+  },
+  "distro": {
+    "name": "",
+    "version": "",
+    "idLike": null
+  },
+  "descriptor": {
+    "name": "grype",
+    "version": "0.118.0",
+    "configuration": {
+      "output": [
+        "json"
+      ],
+      "file": "",
+      "pretty": false,
+      "distro": "",
+      "add-cpes-if-none": false,
+      "output-template-file": "",
+      "check-for-app-update": true,
+      "only-fixed": false,
+      "only-notfixed": false,
+      "ignore-wontfix": "",
+      "platform": "",
+      "search": {
+        "scope": "squashed",
+        "unindexed-archives": false,
+        "indexed-archives": true
+      },
+      "ignore": [
+        {
+          "vulnerability": "",
+          "include-aliases": false,
+          "reason": "",
+          "namespace": "",
+          "fix-state": "",
+          "package": {
+            "name": "kernel-headers",
+            "version": "",
+            "language": "",
+            "type": "rpm",
+            "location": "",
+            "upstream-name": "kernel"
+          },
+          "vex-status": "",
+          "vex-justification": "",
+          "match-type": "exact-indirect-match"
+        },
+        {
+          "vulnerability": "",
+          "include-aliases": false,
+          "reason": "",
+          "namespace": "",
+          "fix-state": "",
+          "package": {
+            "name": "linux(-.*)?-headers-.*",
+            "version": "",
+            "language": "",
+            "type": "deb",
+            "location": "",
+            "upstream-name": "linux.*"
+          },
+          "vex-status": "",
+          "vex-justification": "",
+          "match-type": "exact-indirect-match"
+        },
+        {
+          "vulnerability": "",
+          "include-aliases": false,
+          "reason": "",
+          "namespace": "",
+          "fix-state": "",
+          "package": {
+            "name": "linux-libc-dev",
+            "version": "",
+            "language": "",
+            "type": "deb",
+            "location": "",
+            "upstream-name": "linux"
+          },
+          "vex-status": "",
+          "vex-justification": "",
+          "match-type": "exact-indirect-match"
+        },
+        {
+          "vulnerability": "",
+          "include-aliases": false,
+          "reason": "",
+          "namespace": "",
+          "fix-state": "",
+          "package": {
+            "name": "linux-kbuild-.*",
+            "version": "",
+            "language": "",
+            "type": "deb",
+            "location": "",
+            "upstream-name": "linux.*"
+          },
+          "vex-status": "",
+          "vex-justification": "",
+          "match-type": "exact-indirect-match"
+        }
+      ],
+      "exclude": [],
+      "externalSources": {
+        "enable": false,
+        "maven": {
+          "searchUpstreamBySha1": true,
+          "baseUrl": "https://search.maven.org/solrsearch/select",
+          "rateLimit": 300000000
+        }
+      },
+      "match": {
+        "java": {
+          "using-cpes": false
+        },
+        "jvm": {
+          "using-cpes": true
+        },
+        "dotnet": {
+          "using-cpes": false
+        },
+        "golang": {
+          "using-cpes": false,
+          "always-use-cpe-for-stdlib": false,
+          "allow-main-module-pseudo-version-comparison": false
+        },
+        "javascript": {
+          "using-cpes": false
+        },
+        "python": {
+          "using-cpes": false
+        },
+        "ruby": {
+          "using-cpes": false
+        },
+        "rust": {
+          "using-cpes": false
+        },
+        "hex": {
+          "using-cpes": false
+        },
+        "stock": {
+          "using-cpes": true
+        },
+        "dpkg": {
+          "using-cpes": false,
+          "missing-epoch-strategy": "zero",
+          "use-cpes-for-eol": false
+        },
+        "rpm": {
+          "using-cpes": false,
+          "missing-epoch-strategy": "auto",
+          "use-cpes-for-eol": false
+        }
+      },
+      "fail-on-severity": "",
+      "registry": {
+        "insecure-skip-tls-verify": false,
+        "insecure-use-http": false,
+        "ca-cert": ""
+      },
+      "show-suppressed": false,
+      "by-cve": false,
+      "SortBy": {
+        "sort-by": "risk"
+      },
+      "name": "",
+      "default-image-pull-source": "",
+      "from": null,
+      "vex-documents": [],
+      "vex-add": [],
+      "match-upstream-kernel-headers": false,
+      "fix-channel": {
+        "redhat-eus": {
+          "apply": "auto",
+          "versions": ">= 8.0"
+        },
+        "ubuntu-esm": {
+          "apply": "auto",
+          "versions": ""
+        }
+      },
+      "timestamp": true,
+      "alerts": {
+        "enable-eol-distro-warnings": true
+      },
+      "db": {
+        "cache-dir": "/home/user/PHASE3/mt-db/grype",
+        "update-url": "https://grype.anchore.io/databases",
+        "ca-cert": "",
+        "auto-update": true,
+        "validate-by-hash-on-start": true,
+        "validate-age": true,
+        "max-allowed-built-age": 432000000000000,
+        "require-update-check": false,
+        "update-available-timeout": 30000000000,
+        "update-download-timeout": 300000000000,
+        "max-update-check-frequency": 7200000000000
+      },
+      "exp": {},
+      "dev": {
+        "db": {
+          "debug": false
+        }
+      }
+    },
+    "db": {
+      "status": {
+        "schemaVersion": "v6.1.9",
+        "from": "https://grype.anchore.io/databases/v6/vulnerability-db_v6.1.9_2026-08-29T00:29:37Z_1787984797.tar.zst?checksum=sha256%3A4642c2baaef4b11ac2eaf2929d8a2740dd449a47ff892a22dbfce1e4a49fb1f1",
+        "built": "2026-08-29T06:26:37Z",
+        "path": "/home/user/PHASE3/mt-db/grype/6/vulnerability.db",
+        "valid": true
+      },
+      "providers": {
+        "alma": {
+          "captured": "2026-08-29T00:29:45Z",
+          "input": "xxh64:81c54362c4723cee"
+        },
+        "alpine": {
+          "captured": "2026-08-29T00:30:06Z",
+          "input": "xxh64:a5afcaae094b1649"
+        },
+        "amazon": {
+          "captured": "2026-08-29T00:30:07Z",
+          "input": "xxh64:edae4023040400f2"
+        },
+        "arch": {
+          "captured": "2026-08-29T00:30:06Z",
+          "input": "xxh64:937e9ce5e5c1fbd9"
+        },
+        "bitnami": {
+          "captured": "2026-08-29T00:29:53Z",
+          "input": "xxh64:b3841f2aa518bdb0"
+        },
+        "chainguard": {
+          "captured": "2026-08-29T00:29:40Z",
+          "input": "xxh64:ca16ab31d3768026"
+        },
+        "chainguard-libraries": {
+          "captured": "2026-08-29T00:30:02Z",
+          "input": "xxh64:1c49b96952ea47cc"
+        },
+        "debian": {
+          "captured": "2026-08-29T00:29:55Z",
+          "input": "xxh64:04bed26d3fdf5ee7"
+        },
+        "echo": {
+          "captured": "2026-08-29T00:29:54Z",
+          "input": "xxh64:f6d6d6a75de283dd"
+        },
+        "eol": {
+          "captured": "2026-08-29T00:30:21Z",
+          "input": "xxh64:f20cf861d395f29c"
+        },
+        "epss": {
+          "captured": "2026-08-29T00:30:04Z",
+          "input": "xxh64:3cd284de65de3977"
+        },
+        "fedora": {
+          "captured": "2026-08-29T00:30:08Z",
+          "input": "xxh64:925941c218120add"
+        },
+        "github": {
+          "captured": "2026-08-29T00:29:55Z",
+          "input": "xxh64:23d60513fe93ea9a"
+        },
+        "govulndb": {
+          "captured": "2026-08-29T00:29:49Z",
+          "input": "xxh64:5afaede7e3930ca5"
+        },
+        "hummingbird": {
+          "captured": "2026-08-29T02:12:14Z",
+          "input": "xxh64:1bdfced1e172f25d"
+        },
+        "kev": {
+          "captured": "2026-08-29T00:30:03Z",
+          "input": "xxh64:98b26d358849b12c"
+        },
+        "mariner": {
+          "captured": "2026-08-29T00:29:44Z",
+          "input": "xxh64:b91fd7d0e01935c4"
+        },
+        "minimos": {
+          "captured": "2026-08-29T00:30:09Z",
+          "input": "xxh64:88f01cab117b11a8"
+        },
+        "nvd": {
+          "captured": "2026-08-29T00:30:41Z",
+          "input": "xxh64:eac720ed7b02f4dc"
+        },
+        "oracle": {
+          "captured": "2026-08-29T00:30:10Z",
+          "input": "xxh64:affe917ad6c5195c"
+        },
+        "photon": {
+          "captured": "2026-08-29T00:30:06Z",
+          "input": "xxh64:ef818522e35276f4"
+        },
+        "rhel": {
+          "captured": "2026-08-29T00:30:49Z",
+          "input": "xxh64:d9d4c944d00a2e16"
+        },
+        "secureos": {
+          "captured": "2026-08-29T00:30:03Z",
+          "input": "xxh64:a600fbcda117ae24"
+        },
+        "sles": {
+          "captured": "2026-08-29T02:10:47Z",
+          "input": "xxh64:d40364885a0925ea"
+        },
+        "ubuntu": {
+          "captured": "2026-08-29T00:31:38Z",
+          "input": "xxh64:30dbf3dbb0b52779"
+        },
+        "wolfi": {
+          "captured": "2026-08-29T00:29:37Z",
+          "input": "xxh64:fcbde4e8bd8df8ad"
+        }
+      }
+    },
+    "timestamp": "2026-08-29T17:13:57.471189354Z"
+  }
+}

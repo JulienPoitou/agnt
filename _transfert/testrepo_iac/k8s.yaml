@@ -1,0 +1,15 @@
+# Fixture Kubernetes — pod privilégié, VOLONTAIREMENT non conforme.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-priviligie
+  namespace: default
+spec:
+  containers:
+    - name: app
+      image: nginx:latest
+      securityContext:
+        privileged: true
+        runAsUser: 0
+      ports:
+        - containerPort: 80

@@ -1,0 +1,206 @@
+--- a/PHASE1/08_FICHES_PROVIDERS.csv
++++ b/PHASE1/08_FICHES_PROVIDERS.csv
+@@ -17,10 +17,10 @@
+ neptune1212/MCP_servers_cybersecurity,3,NETWORK_DISCOVERY,EXPLOITATION,,mcp_server,à évaluer,2,EXPLOITATION | NETWORK_DISCOVERY,à évaluer,,2025-05-31,faible,non documenté
+ rapid7/metasploit-framework,38893,EXPLOITATION,,"hôtes, services",api,aucun,1,EXPLOITATION,"exploitation, exige une autorisation explicite",BSD-style,2026-08-27,élevée,connaissance (non vérifié dépôt par dépôt)
+ aquasecurity/trivy,37652,DEPENDENCY_ANALYSIS,CONTAINER_SCAN | CLOUD_POSTURE | IAC_SCAN,,cli,à évaluer,1,IAC_SCAN,à évaluer,Apache-2.0,2026-08-21,élevée,non documenté
+-projectdiscovery/nuclei,30872,WEB_VULN_SCAN,CLOUD_POSTURE,"web, réseau, configurations",api,partiel avec zap,1,WEB_VULN_SCAN,"scan par modèles, très large, mais ACTIF",MIT,2026-08-26,élevée,connaissance (non vérifié dépôt par dépôt)
++projectdiscovery/nuclei,30872,WEB_VULN_SCAN,CLOUD_POSTURE,"web, réseau, configurations",cli,partiel avec zap,1,WEB_VULN_SCAN,"scan par modèles, très large, mais ACTIF",MIT,2026-08-26,élevée,connaissance (non vérifié dépôt par dépôt)
+ RustScan/RustScan,20334,DEPENDENCY_ANALYSIS,NETWORK_DISCOVERY,,api,à évaluer,1,NETWORK_DISCOVERY,à évaluer,GPL-3.0,2026-06-10,élevée,non documenté
+ ffuf/ffuf,16597,WEB_ENDPOINT_DISCOVERY,,"URL, chemins, paramètres",cli,aucun,1,WEB_ENDPOINT_DISCOVERY,"découverte de chemins cachés, simple et rapide",MIT,2026-08-20,élevée,connaissance (non vérifié dépôt par dépôt)
+-sullo/nikto,10688,WEB_VULN_SCAN,,serveurs web,api,partiel avec zap,1,WEB_VULN_SCAN,ancien mais utile sur les serveurs web,,2026-08-15,élevée,connaissance (non vérifié dépôt par dépôt)
++sullo/nikto,10688,WEB_VULN_SCAN,,serveurs web,cli,partiel avec zap,1,WEB_VULN_SCAN,ancien mais utile sur les serveurs web,,2026-08-15,élevée,connaissance (non vérifié dépôt par dépôt)
+ bridgecrewio/checkov,8973,IAC_SCAN,CLOUD_POSTURE,"Terraform, CloudFormation, Kubernetes, Dockerfile",cli,partiel avec trivy,1,IAC_SCAN,"IaC, capacité où on n'a RIEN",Apache-2.0,2026-08-27,élevée,connaissance (non vérifié dépôt par dépôt)
+ aquasecurity/tfsec,7035,IAC_SCAN,,Terraform uniquement,cli,FORT avec checkov,1,IAC_SCAN,"Terraform seulement, checkov est plus large",MIT,2025-05-02,élevée,connaissance (non vérifié dépôt par dépôt)
+ AutoRecon/AutoRecon,6093,NETWORK_DISCOVERY,,,api,à évaluer,1,NETWORK_DISCOVERY,à évaluer,GPL-3.0,2025-11-16,élevée,non documenté
+--- a/PHASE3/bootstrap.sh
++++ b/PHASE3/bootstrap.sh
+@@ -19,6 +19,7 @@
+ TRIVY_DB="$C/trivy-cache"
+ TRIVY_VERSION=0.74.0
+ GITLEAKS_VERSION=8.30.1
++OPA_VERSION=1.20.0
+ 
+ log(){ printf '\033[36m==>\033[0m %s\n' "$1"; }
+ err(){ printf '\033[31mERREUR\033[0m %s\n' "$1" >&2; }
+@@ -81,8 +82,8 @@
+   rm -f /tmp/gl.tgz
+ }
+ [ -x "$BIN/opa" ] || {
+-  log "opa"
+-  curl -sL -o "$BIN/opa" "https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static"
++  log "opa $OPA_VERSION"
++  curl -sL -o "$BIN/opa" "https://openpolicyagent.org/downloads/v$OPA_VERSION/opa_linux_amd64_static"
+ }
+ chmod +x "$BIN"/* 2>/dev/null || true
+ command -v semgrep >/dev/null || { log "semgrep"; pip install --quiet semgrep; }
+@@ -90,9 +91,12 @@
+ # providers déclaratifs (bandit et bandit_custom) ne produisent rien — et le pipeline
+ # ne disait rien, ce qui est le pire mode d'échec.
+ command -v bandit >/dev/null || { log "bandit"; pip install --quiet bandit; }
++# checkov : provider IAC_SCAN (Phase 5A, décision du 2026-08-28). pip n'est pas
++# persistant — même raison que bandit. Empreinte RECORD dans le manifeste.
++command -v checkov >/dev/null || { log "checkov"; pip install --quiet checkov; }
+ 
+ # ---------------------------------------------------------------- règles Semgrep
+-for r in python security-audit; do
++for r in python security-audit javascript; do
+   [ -s "$RULES/$r.yaml" ] || {
+     log "règles Semgrep p/$r"
+     curl -sL -o "$RULES/$r.yaml" "https://semgrep.dev/c/p/$r"
+@@ -129,7 +133,7 @@
+ # Les règles viennent de semgrep.dev et ÉVOLUENT. Une divergence n'est pas une erreur de
+ # sécurité, mais elle change ce qui est détecté : elle doit être signalée, pas ignorée.
+ if [ -f "$MANIFESTE" ]; then
+-  for r in python.yaml security-audit.yaml; do
++  for r in python.yaml security-audit.yaml javascript.yaml; do
+     [ -f "$RULES/$r" ] || continue
+     attendu=$(sha_attendu regles "$r")
+     reel=$(sha256sum "$RULES/$r" | cut -d' ' -f1)
+@@ -142,8 +146,11 @@
+ log "environnement prêt"
+ echo "    cache      : $C   ($(du -sh "$C" 2>/dev/null | cut -f1))"
+ echo "    workspace  : $(du -sh --exclude=.cache "$B/.." 2>/dev/null | cut -f1)  (hors cache)"
+-"$BIN/trivy" --version | head -1
+-"$BIN/gitleaks" version
+-"$BIN/opa" version | head -1
+-semgrep --version | tail -1
++# Affichages de version : capture complète puis extraction de la ligne — aucun tube,
++# donc aucune course SIGPIPE avec `set -o pipefail` (le 141 intermittent du
++# 2026-08-28, que de simples `|| true` ne feraient que masquer).
++_v=$("$BIN/trivy" --version 2>/dev/null) && printf '%s\n' "${_v%%$'\n'*}" || true
++"$BIN/gitleaks" version || true
++_v=$("$BIN/opa" version 2>/dev/null) && printf '%s\n' "${_v%%$'\n'*}" || true
++_v=$(semgrep --version 2>/dev/null) && printf '%s\n' "${_v##*$'\n'}" || true
+ 
+--- a/PHASE3/manifeste_dependances.yaml
++++ b/PHASE3/manifeste_dependances.yaml
+@@ -54,6 +54,18 @@
+       (format custom CSV, niveau 2). Si cette empreinte change, les deux doivent être
+       re-testés.
+ 
++  checkov:
++    package: checkov
++    version: "3.3.15"
++    source: https://pypi.org/project/checkov/
++    distribution: pip
++    distribution_hash: "5173f1f56427ac03d61b8dc9465f7865e1ee35e076d77c58bf07bc5bfcba2f4f"
++    verification: >
++      Empreinte SHA-256 du fichier RECORD de la distribution installée (même principe
++      que bandit — pas de binaire unique à figer). Ajouté le 2026-08-28 : provider
++      IAC_SCAN niveau 1, vérifié avec et sans réseau sur PHASE3/testrepo_iac
++      (38 findings identiques, aucune fuite du faux secret).
++
+   semgrep:
+     version: "1.175.0"
+     sha256: null
+@@ -72,6 +84,12 @@
+   security-audit.yaml:
+     source: https://semgrep.dev/c/p/security-audit
+     sha256: b109a039df712f30c6d3e25e1e8358053fd0f1c91b92d0e8d2871cd141fe602f
++  # Ajouté le 2026-08-28 : capabilities.yaml déclarait javascript.yaml sans que le
++  # bootstrap le télécharge — Semgrep sortait en code 7 avec zéro finding, et la
++  # corrélation inter-outils perdait un de ses deux outils (test_correlation 2/7).
++  javascript.yaml:
++    source: https://semgrep.dev/c/p/javascript
++    sha256: e65e8449157ef5d587f2c2a0c17ed388910ca90336e514d27941ccd25543cf4e
+   note: >
+     Les règles sont téléchargées depuis semgrep.dev et ÉVOLUENT. L'empreinte ci-dessus
+     est celle qui a servi aux tests. Une divergence n'est pas une erreur de sécurité,
+--- a/PHASE3/slice/capabilities.yaml
++++ b/PHASE3/slice/capabilities.yaml
+@@ -225,3 +225,69 @@
+           cibles: [repo]
+           historique_git: requis
+ 
++  - id: IAC_SCAN
++    description: >
++      Analyse des fichiers d'infrastructure-as-code (Terraform) : mauvaises
++      configurations de sécurité détectées avant déploiement — bucket public,
++      volume non chiffré, réseau ouvert sur tout Internet.
++    domaines: [cloud, iac]
++    entree: [cible]
++    sortie: finding/iac-issue
++    providers:
++      # ------------------------------------------------------------------ CHECKOV
++      # Provider ajouté par manifest (niveau 1) le 2026-08-28.
++      # Vérifié par exécution : résultats identiques avec et sans réseau
++      # (bwrap --unshare-net, 38 findings sur testrepo_iac) ; la sortie n'écho
++      # pas le faux secret de la fixture (leçon #1).
++      - id: checkov
++        kind: tool
++        mode: CLI
++        risque: PASSIVE
++        cout: moyen
++        commande: ["checkov"]
++        manifest:
++          id: checkov
++          kind: tool
++          mode: cli
++          binaire: checkov
++          # LISTE d'arguments, jamais une chaîne shell.
++          argv:
++            - "{BIN}"
++            - "-d"
++            - "{TARGET}"
++            - "--framework"
++            - "terraform"
++            - "--output"
++            - "json"
++            - "--quiet"
++          output:
++            format: json
++          extraction:
++            modele: plat
++            items_from: results.failed_checks
++            champs:
++              regle: check_id
++              nom_regle: check_name
++              fichier: file_path
++              ligne: file_line_range[0]
++              # description et short_description sont TOUJOURS null dans la sortie OSS
++              # (mesuré : 0/15 le 2026-08-28). check_name est le seul texte lisible :
++              # dupliqué en message plutôt que de laisser le rapport humain vide.
++              message: check_name
++              severite: severity
++              reference: guideline
++            # Aucune fuite mesurée sur la fixture, mais déclaré par précaution :
++            # description est du texte libre, même principe que issue_text (Bandit).
++            masquer_large: [message]
++          risk: PASSIVE
++          target_types: [repository]
++          # checkov sort en 1 quand il trouve des non-conformités : pas une erreur.
++          code_succes: [0, 1]
++          limite: >
++            Framework terraform uniquement dans cette déclaration : avec plusieurs
++            frameworks, checkov produit une racine JSON en liste que le modèle plat
++            ne lit pas — kubernetes et dockerfile ne sont donc PAS couverts ici
++            (une déclaration sœur peut les ajouter sans toucher au cœur).
++            severity est null dans la sortie OSS (mesuré le 2026-08-28) : la gravité
++            remontera « indéterminée », jamais inventée (leçon #4).
++
+--- a/PHASE3/slice/intent.py
++++ b/PHASE3/slice/intent.py
+@@ -38,6 +38,11 @@
+     # UNIQUEMENT par manifest : c'est le test de la Phase 5A.
+     "CODE_STATIC_ANALYSIS_SUITE": ("code", "statique", "sast", "source", "qualité",
+                                    "injection", "bug", "faille"),
++    # Marqueurs de PÉRIMÈTRE (noms de domaine), jamais des verbes — leçon de Phase 6 :
++    # « vérifie » ne dit rien du périmètre et faisait tout remonter.
++    "IAC_SCAN": ("infrastructure", "infrastructures", "terraform", "iac",
++                 "cloudformation", "mauvaise configuration", "mauvaises configurations",
++                 "checkov"),
+ }
+ 
+ # Une demande générique couvre toutes les capacités disponibles.
+--- a/PHASE3/slice/provider_manifest.py
++++ b/PHASE3/slice/provider_manifest.py
+@@ -35,7 +35,7 @@
+ 
+ # Binaires autorisés. Un manifest ne peut pas introduire un binaire arbitraire :
+ # c'est le trusted core qui décide ce qui peut être exécuté.
+-BINAIRES_AUTORISES = ("semgrep", "trivy", "gitleaks", "bandit")
++BINAIRES_AUTORISES = ("semgrep", "trivy", "gitleaks", "bandit", "checkov")
+ 
+ FORMATS_SORTIE = ("json", "sarif", "custom")
+ 

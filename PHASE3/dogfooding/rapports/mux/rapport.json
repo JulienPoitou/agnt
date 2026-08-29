@@ -1,0 +1,118 @@
+{
+  "requete": "Analyse la sécurité de mon dépôt",
+  "capacites_demandees": [
+    "CODE_STATIC_ANALYSIS",
+    "CODE_STATIC_ANALYSIS_GO",
+    "DEPENDENCY_ANALYSIS",
+    "SECRET_DETECTION",
+    "IAC_SCAN"
+  ],
+  "motifs_intent": {
+    "CODE_STATIC_ANALYSIS": "demande générique",
+    "CODE_STATIC_ANALYSIS_GO": "demande générique",
+    "DEPENDENCY_ANALYSIS": "demande générique",
+    "SECRET_DETECTION": "demande générique",
+    "IAC_SCAN": "demande générique"
+  },
+  "plan_id": "57bee9c26081801b",
+  "plan_empreinte": "57bee9c26081801beab207e55e6e497c57c1cf2063b200d4523e43cb9ff57b55",
+  "autorisation": {
+    "allow": true,
+    "motifs": []
+  },
+  "findings": 5,
+  "clustering": {
+    "findings_en_entree": 5,
+    "clusters": 1,
+    "findings_regroupes": 2,
+    "findings_non_regroupes": 3,
+    "reduction": "5 → 4"
+  },
+  "clusters": [
+    {
+      "cluster_id": "CL-001",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file"
+      ],
+      "members": [
+        "ki-0001",
+        "ki-0004"
+      ],
+      "cle": "fichier:.github/workflows/security.yml"
+    }
+  ],
+  "non_regroupe": [
+    "ch-0001",
+    "ki-0002",
+    "ki-0003"
+  ],
+  "couverture": {
+    "semgrep": {
+      "analysé": [],
+      "non_analysé": [
+        {
+          "cible": "/home/user/PHASE3/mt-scan",
+          "etat": "not_scanned",
+          "raison": "aucune règle n'a porté sur ce dépôt"
+        }
+      ],
+      "limites": [
+        "le jeu de règles est épinglé sur python/security-audit : un dépôt d'un autre langage ressortirait vide sans erreur"
+      ]
+    },
+    "semgrep_go": {
+      "analysé": [],
+      "non_analysé": [
+        {
+          "cible": "/home/user/PHASE3/mt-scan",
+          "etat": "not_scanned",
+          "raison": "aucun résultat produit par l'outil"
+        }
+      ],
+      "limites": [
+        "provider déclaratif : les résultats sont extraits selon la spécification du manifest, sans connaissance de l'outil par le cœur"
+      ]
+    },
+    "trivy": {
+      "analysé": [
+        "go.mod"
+      ],
+      "non_analysé": [],
+      "limites": [
+        "base de vulnérabilités figée au pré-chauffage : les CVE publiées depuis ne sont pas détectées"
+      ]
+    },
+    "gitleaks": {
+      "analysé": [
+        "historique git"
+      ],
+      "non_analysé": [],
+      "limites": [
+        "valeur des secrets masquée à la source (--redact) : jamais stockée",
+        "détection dépendante des règles : une clé AWS réaliste peut être classée generic-api-key, et les exemples de documentation sont sur liste blanche"
+      ]
+    },
+    "checkov": {
+      "analysé": [
+        "/home/user/PHASE3/mt-scan"
+      ],
+      "non_analysé": [],
+      "limites": [
+        "severity est null dans la sortie OSS (mesuré le 2026-08-28) : la gravité remonte « indéterminée », jamais inventée (leçon #4). file_path n'a pas la même base selon le framework (module Terraform vs dépôt) : les chemins sont conservés tels que l'outil les émet, non réécrits. Les frameworks détectés dépendent du contenu de la cible ; un framework absent n'est pas un échec.\n",
+        "provider déclaratif : les résultats sont extraits selon la spécification du manifest, sans connaissance de l'outil par le cœur"
+      ]
+    },
+    "kics": {
+      "analysé": [
+        "/home/user/PHASE3/mt-scan"
+      ],
+      "non_analysé": [],
+      "limites": [
+        "Bibliothèque de requêtes v2.1.20 pré-installée sous {REGLES}/kics ; sans elle, kics échoue (« unable to find queries »). Les formats IaC en JSON (CloudFormation, ARM) ne sont pas couverts par les globes (collision avec package.json). similarity_id et ordre d'énumération varient entre deux exécutions (mesuré) — l'ensemble des détections, non. severity est portée par la requête, pas par le fichier.\n",
+        "provider déclaratif : les résultats sont extraits selon la spécification du manifest, sans connaissance de l'outil par le cœur"
+      ]
+    }
+  }
+}

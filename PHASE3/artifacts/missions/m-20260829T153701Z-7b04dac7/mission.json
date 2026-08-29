@@ -1,0 +1,11 @@
+{
+  "mission_id": "m-20260829T153701Z-7b04dac7",
+  "cree_le": "2026-08-29T15:37:01+00:00",
+  "requete": "Fais un truc",
+  "requete_canonique": "fais un truc",
+  "cible": {
+    "chemin": "/home/user/PHASE3/testrepo",
+    "type": "repertoire"
+  },
+  "format_journal": "journal.jsonl — append-only, une ligne par événement"
+}

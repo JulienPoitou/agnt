@@ -1,0 +1,115 @@
+genere_le: '2026-08-28'
+genere_par: checkov 3.3.15 (pip)
+methode: 'EXTRAIT d''une exécution réelle sur cette fixture — résultats identiques avec et sans réseau
+  (bwrap --unshare-net). Ne pas éditer à la main : régénérer via genere_attendus.py depuis artefacts_captures/.'
+attendus_provider:
+  terraform:
+    /main.tf:
+      checks:
+      - CKV2_AWS_5
+      - CKV2_AWS_6
+      - CKV2_AWS_61
+      - CKV2_AWS_62
+      - CKV_AWS_144
+      - CKV_AWS_145
+      - CKV_AWS_18
+      - CKV_AWS_189
+      - CKV_AWS_20
+      - CKV_AWS_21
+      - CKV_AWS_23
+      - CKV_AWS_24
+      - CKV_AWS_25
+      - CKV_AWS_260
+      - CKV_AWS_3
+      compte: 15
+  kubernetes:
+    /PHASE3/testrepo_iac/k8s.yaml:
+      checks:
+      - CKV2_K8S_6
+      - CKV_K8S_10
+      - CKV_K8S_11
+      - CKV_K8S_12
+      - CKV_K8S_13
+      - CKV_K8S_14
+      - CKV_K8S_16
+      - CKV_K8S_20
+      - CKV_K8S_21
+      - CKV_K8S_22
+      - CKV_K8S_23
+      - CKV_K8S_28
+      - CKV_K8S_29
+      - CKV_K8S_31
+      - CKV_K8S_37
+      - CKV_K8S_38
+      - CKV_K8S_40
+      - CKV_K8S_43
+      - CKV_K8S_8
+      - CKV_K8S_9
+      compte: 20
+  dockerfile:
+    /Dockerfile:
+      checks:
+      - CKV_DOCKER_2
+      - CKV_DOCKER_3
+      - CKV_DOCKER_7
+      compte: 3
+note_perimetre: 'Depuis le 2026-08-28 la déclaration checkov est MULTI-FRAMEWORK (plus de --framework
+  terraform) : attendus_provider couvre tous les frameworks que l''outil détecte sur cette cible. terraform_plan
+  est détecté mais vide (aucun fichier .plan.json dans la fixture) : son absence de findings est un résultat,
+  pas un oubli.'
+verification_secret: La valeur de mot_de_passe_admin (main.tf) n'apparaît dans aucune sortie checkov —
+  vérifié le 2026-08-28 sur les JSON réseau et hors ligne.
+attendus_kics:
+  genere_le: '2026-08-29'
+  genere_par: harnais_grype_kics.py (kics 2.1.20)
+  compte: 110
+  par_cle:
+    Dockerfile:
+    - APT-GET Not Avoiding Additional Packages
+    - Apt Get Install Lists Were Not Deleted
+    - Apt Get Install Pin Version Not Defined
+    - Healthcheck Instruction Missing
+    - Image Version Using 'latest'
+    - Missing User Instruction
+    k8s.yaml:
+    - CPU Limits Not Set
+    - CPU Requests Not Set
+    - Container Is Privileged
+    - Container Running As Root
+    - Container Running With Low UID
+    - Ensure Administrative Boundaries Between Resources
+    - Image Without Digest
+    - Invalid Image Tag
+    - Liveness Probe Is Not Defined
+    - Memory Limits Not Defined
+    - Memory Requests Not Defined
+    - Missing AppArmor Profile
+    - NET_RAW Capabilities Not Being Dropped
+    - No Drop Capabilities for Containers
+    - Pod or Container Without LimitRange
+    - Pod or Container Without ResourceQuota
+    - Pod or Container Without Security Context
+    - Privilege Escalation Allowed
+    - Readiness Probe Is Not Configured
+    - Root Container Not Mounted Read-only
+    - Seccomp Profile Is Not Configured
+    - Service Account Name Undefined Or Empty
+    - Service Account Token Automount Not Disabled
+    - Using Unrecommended Namespace
+    main.tf:
+    - EBS Volume Encryption Disabled
+    - HTTP Port Open To Internet
+    - IAM Access Analyzer Not Enabled
+    - Remote Desktop Port Open To Internet
+    - Resource Not Using Tags
+    - S3 Bucket ACL Allows Read Or Write to All Users
+    - S3 Bucket Logging Disabled
+    - S3 Bucket Without Versioning
+    - SQL Analysis Services Port 2383 (TCP) Is Publicly Accessible
+    - Security Group Not Used
+    - Security Group Rule Without Description
+    - Security Group With Unrestricted Access To SSH
+    - Sensitive Port Is Exposed To Entire Network
+    - Unknown Port Exposed To Internet
+    - Unrestricted Security Group Ingress
+    - Variable Without Type

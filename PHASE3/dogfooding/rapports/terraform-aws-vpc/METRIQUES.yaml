@@ -1,0 +1,88 @@
+cible: terraform-aws-vpc
+commit: cf0e3ca46fd5
+duree_s: 136.5
+erreur: null
+mem_dispo_avant_mo: 1059
+mem_dispo_apres_mo: 1050
+arret: ''
+providers:
+- semgrep
+- trivy
+- gitleaks
+- checkov
+- kics
+codes_retour:
+  semgrep: 0
+  trivy: 0
+  gitleaks: 0
+  checkov: 0
+  kics: 0
+findings: 112
+findings_par_outil:
+  checkov: 39
+  kics: 73
+clusters:
+  findings_en_entree: 112
+  clusters: 16
+  findings_regroupes: 110
+  findings_non_regroupes: 2
+  reduction: 112 → 18
+clusters_inter_outils: 10
+applicabilite_ecartes:
+  semgrep_go: 'non applicable à cette cible : aucun fichier ne correspond aux globs
+    déclarés [''*.go'']'
+  grype: 'non applicable à cette cible : aucun fichier ne correspond aux globs déclarés
+    [''*package-lock.json'', ''*yarn.lock'', ''*pnpm-lock.yaml'', ''*requirements.txt'',
+    ''*Pipfile.lock'', ''*poetry.lock'', ''*go.sum'', ''*Gemfile.lock'', ''*pom.xml'',
+    ''*build.gradle*'']'
+couverture:
+  semgrep:
+    cibles: 1
+    etats:
+    - not_scanned
+    limites_connues:
+    - 'le jeu de règles est épinglé sur python/security-audit : un dépôt d''un autre
+      langage ressortirait vide sans erreur'
+  trivy:
+    cibles: 1
+    etats:
+    - not_scanned
+    limites_connues:
+    - 'base de vulnérabilités figée au pré-chauffage : les CVE publiées depuis ne
+      sont pas détectées'
+  gitleaks:
+    cibles: 1
+    etats:
+    - scanned_successfully
+    limites_connues:
+    - 'valeur des secrets masquée à la source (--redact) : jamais stockée'
+    - 'détection dépendante des règles : une clé AWS réaliste peut être classée generic-api-key,
+      et les exemples de documentation sont sur liste blanche'
+  checkov:
+    cibles: 1
+    etats:
+    - scanned_successfully
+    limites_connues:
+    - 'severity est null dans la sortie OSS (mesuré le 2026-08-28) : la gravité remonte
+      « indéterminée », jamais inventée (leçon #4). file_path n''a pas la même base
+      selon le framework (module Terraform vs dépôt) : les chemins sont conservés
+      tels que l''outil les émet, non réécrits. Les frameworks détectés dépendent
+      du contenu de la cible ; un framework absent n''est pas un échec.
+
+      '
+    - 'provider déclaratif : les résultats sont extraits selon la spécification du
+      manifest, sans connaissance de l''outil par le cœur'
+  kics:
+    cibles: 1
+    etats:
+    - scanned_successfully
+    limites_connues:
+    - 'Bibliothèque de requêtes v2.1.20 pré-installée sous {REGLES}/kics ; sans elle,
+      kics échoue (« unable to find queries »). Les formats IaC en JSON (CloudFormation,
+      ARM) ne sont pas couverts par les globes (collision avec package.json). similarity_id
+      et ordre d''énumération varient entre deux exécutions (mesuré) — l''ensemble
+      des détections, non. severity est portée par la requête, pas par le fichier.
+
+      '
+    - 'provider déclaratif : les résultats sont extraits selon la spécification du
+      manifest, sans connaissance de l''outil par le cœur'

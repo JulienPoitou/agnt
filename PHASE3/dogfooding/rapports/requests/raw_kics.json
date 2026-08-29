@@ -1,0 +1,30 @@
+{
+  "kics_version": "2.1.20",
+  "files_scanned": 9,
+  "lines_scanned": 416,
+  "files_parsed": 8,
+  "lines_parsed": 370,
+  "lines_ignored": 27,
+  "files_failed_to_scan": 0,
+  "queries_total": 291,
+  "queries_failed_to_execute": 0,
+  "queries_failed_to_compute_similarity_id": 0,
+  "scan_id": "console",
+  "severity_counters": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "INFO": 0,
+    "LOW": 0,
+    "MEDIUM": 0,
+    "TRACE": 0
+  },
+  "total_counter": 0,
+  "total_bom_resources": 0,
+  "start": "2026-08-29T16:55:07.340403276Z",
+  "end": "2026-08-29T16:55:20.457064329Z",
+  "paths": [
+    "/home/user/PHASE3/mt-scan",
+    "/home/user/PHASE3/mt-regles/kics/queries"
+  ],
+  "queries": []
+}

@@ -1,0 +1,164 @@
+# Manifeste des dépendances externes — Phase 3.1
+#
+# POURQUOI CE FICHIER EXISTE
+#   Les binaires et la base Trivy vivent hors du workspace (~/.cache/arena_secops) pour ne
+#   pas exploser son budget. Mais un cache externe non vérifié n'est pas une reconstruction
+#   reproductible : il peut contenir un binaire inattendu, ou une version différente de
+#   celle qui a servi à valider les tests.
+#
+#   Ce manifeste rend la dépendance TRAÇABLE. Le bootstrap vérifie version et SHA-256, et
+#   REFUSE un binaire inattendu au lieu de l'utiliser.
+#
+#   Sans ce fichier, l'affirmation « reconstruction depuis zéro » serait fausse.
+#
+# Les empreintes ci-dessous ont été relevées sur les binaires ayant servi à valider
+# les suites de tests de Phase 3.1 (16/16, 10/10, 12/12, 22/22, 7+1, 10/10).
+
+version: 1
+
+binaires:
+  trivy:
+    version: "0.74.0"
+    sha256: d89bcc6510a267f11b773398cbf1be5520ce39f9e8b6633178c4487f05b7d791
+    source: https://github.com/aquasecurity/trivy/releases
+    licence: Apache-2.0
+    taille_approx: 161M
+
+  gitleaks:
+    version: "8.30.1"
+    sha256: 88f91962aa2f93ac6ab281d553b9e125f5197bbbce38f9f2437f7299c32e5509
+    source: https://github.com/gitleaks/gitleaks/releases
+    licence: MIT
+    taille_approx: 21M
+
+  opa:
+    version: "1.20.0"
+    sha256: 4e4c65be08ed27e7375d816d446a444e65ba101806014c7a51b2a7652c2a942a
+    source: https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static
+    licence: Apache-2.0
+    taille_approx: 59M
+    role: moteur
+    note: >
+      Empreinte de la branche « latest » au 2026-08-27. Elle changera à chaque nouvelle
+      release d'OPA : c'est attendu, mais alors ce manifeste doit être mis à jour
+      explicitement, et les suites de tests relancées.
+
+  bandit:
+    package: bandit
+    version: "1.9.4"
+    source: https://pypi.org/project/bandit/
+    licence: Apache-2.0
+    distribution: pip
+    distribution_hash: "9e7243122bf141ee55c31127efb175e0"
+    verification: >
+      Empreinte SHA-256 du fichier RECORD de la distribution installée. Ce n'est pas le
+      SHA d'un binaire autonome — bandit est installé par pip, il n'y a pas de binaire
+      unique à figer. Cette empreinte identifie le paquet Python réellement utilisé.
+    note: >
+      Deux providers l'utilisent : « bandit » (format json, niveau 1) et « bandit_custom »
+      (format custom CSV, niveau 2). Si cette empreinte change, les deux doivent être
+      re-testés.
+
+  checkov:
+    package: checkov
+    version: "3.3.15"
+    source: https://pypi.org/project/checkov/
+    licence: Apache-2.0
+    distribution: pip
+    distribution_hash: "5173f1f56427ac03d61b8dc9465f7865e1ee35e076d77c58bf07bc5bfcba2f4f"
+    verification: >
+      Empreinte SHA-256 du fichier RECORD de la distribution installée (même principe
+      que bandit — pas de binaire unique à figer). Ajouté le 2026-08-28 : provider
+      IAC_SCAN niveau 1, vérifié avec et sans réseau sur PHASE3/testrepo_iac
+      (38 findings identiques, aucune fuite du faux secret).
+
+  grype:
+    version: "0.118.0"
+    # sha256 = empreinte du BINAIRE installé (vérifiée par verifier_binaire).
+    sha256: 91705979c6ccb736b87e3250831f5e1a35f13767fd2032ffa85c55b1e6f58f90
+    # Audit : empreinte du tarball de la release (mesurée au téléchargement).
+    tarball_sha256: 6a9208e42c8c99a13011b4b98e6e2438990563043700036c732a829812c22c93
+    source: https://github.com/anchore/grype/releases
+    licence: Apache-2.0
+    taille_approx: 90M
+    note: >
+      Ajouté le 2026-08-29 (étape 4) : 2e provider DEPENDENCY_ANALYSIS (fan-out
+      trivy × grype). Base de vulnérabilités séparée, pré-téléchargée sous
+      trivy-cache/grype (~2 Go, hors workspace).
+
+  kics:
+    version: "2.1.20"
+    # sha256 = empreinte du BINAIRE installé. Faits du 2026-08-29 : le premier
+    # téléchargement du tarball avait une taille anormale (96,9 Mo contre 30 Mo
+    # pour l'asset officiel listé dans checksums.txt) ; la ré-extraction depuis
+    # le tarball officiel vérifié a donné un binaire d'empreinte IDENTIQUE à
+    # celle déjà épinglée. L'empreinte du binaire fait foi ; tarball_sha256 est
+    # l'audit du canal de distribution.
+    sha256: d3bb1923713df3fb8f96522a359801d7fe310b908cada541f627cc0e940eff39
+    tarball_sha256: 8a5aa375ccfdc0ddd1114eddf1f9638ad7f6122e98d12a592207509dbe6d81f8
+    # Bibliothèque de requêtes (1810 fichiers OPA) : asset officiel séparé.
+    rules_asset: extracted-info.zip
+    rules_asset_sha256: 305fd652d9291fb5f0a3437a4f0a2c953fffa7d2827bb4fd4907c82c1a8cbad9
+    source: https://github.com/Checkmarx/kics/releases
+    licence: Apache-2.0
+    taille_approx: 97M
+    note: >
+      Ajouté le 2026-08-29 (étape 4) : 2e provider IAC_SCAN (fan-out checkov ×
+      kics). ÉPINGLÉ SUR v2.1.20 : la release v2.1.21 a été publiée SANS
+      binaires (0 assets, mesuré) — le harnais qualifie des artefacts, pas des
+      annonces.
+
+  semgrep:
+    version: "1.175.0"
+    sha256: null
+    source: https://pypi.org/project/semgrep/
+    distribution: pip
+    licence: LGPL-2.1 (cœur)
+    note: >
+      Installé par pip, donc pas un binaire unique vérifiable par SHA-256 ici —
+      même régime que bandit/checkov, mais SANS distribution_hash relevé : la
+      traçabilité de ce tool est plus faible (version épinglée par le bootstrap
+      seulement). À durcir (hash RECORD) si Semgrep devient un composant de
+      production.
+
+regles:
+  # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
+  # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
+  python.yaml:
+    source: https://semgrep.dev/c/p/python
+    sha256: 31c1dfa46e8ddd97f9ac98c607ddd77b20a2c3356d7ec987359961d47ec27035
+  security-audit.yaml:
+    source: https://semgrep.dev/c/p/security-audit
+    sha256: b109a039df712f30c6d3e25e1e8358053fd0f1c91b92d0e8d2871cd141fe602f
+  # Ajouté le 2026-08-28 : capabilities.yaml déclarait javascript.yaml sans que le
+  # bootstrap le télécharge — Semgrep sortait en code 7 avec zéro finding, et la
+  # corrélation inter-outils perdait un de ses deux outils (test_correlation 2/7).
+  javascript.yaml:
+    source: https://semgrep.dev/c/p/javascript
+    sha256: e65e8449157ef5d587f2c2a0c17ed388910ca90336e514d27941ccd25543cf4e
+  # Ajouté le 2026-08-29 (chantier largeur-Go) : règles du provider semgrep_go.
+  # gosec (plus profond) exige le toolchain Go dans l'isolateur — reporté, documenté.
+  golang.yaml:
+    source: https://semgrep.dev/c/p/golang
+    sha256: 7c08b9532607dc6f7c78a0e09829f11becead6f4bd293ed7a2fd48b3fe1d3697
+  note: >
+    Les règles sont téléchargées depuis semgrep.dev et ÉVOLUENT. L'empreinte ci-dessus
+    est celle qui a servi aux tests. Une divergence n'est pas une erreur de sécurité,
+    mais elle change les résultats : elle doit être signalée, pas ignorée.
+
+base_trivy:
+  source: mirror.gcr.io/aquasec/trivy-db:2
+  taille_approx: 1.3G
+  sha256: null
+  note: >
+    Base mise à jour en continu par Aqua ; une empreinte figée la rendrait obsolète.
+    Son digest est donc capturé À CHAQUE EXÉCUTION dans execution_context_digest,
+    ce qui permet d'expliquer une divergence entre deux rejeux.
+
+cibles_de_test:
+  Config-Portal:
+    url: https://github.com/anotherik/Config-Portal
+    commit: 0ae503e6b6b37f11ed1bed5e917e19cb631ed041
+    role: test indépendant de généralisation
+    note: clone épinglé, scan passif, aucun exploit exécuté
+

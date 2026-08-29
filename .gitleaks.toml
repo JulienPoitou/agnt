@@ -1,0 +1,15 @@
+# Configuration gitleaks du dépôt — auto-scan avant push.
+# Étend la configuration par défaut (aucune règle retirée) : uniquement une
+# allowlist pour le FAUX secret des fixtures, documenté ci-dessous.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = """
+Faux token des fixtures de test (testrepo/app.py, testrepo_go/main.go et les
+tests qui vérifient qu'il ne fuit JAMAIS en clair dans les sorties).
+Valeur fictive créée pour le projet, liée à aucun compte. Sa présence dans le
+dépôt est intentionnelle — voir README.md.
+"""
+regexes = ['''ghp_16C7e42F292c6912E7710c838347Ae178B4a''']

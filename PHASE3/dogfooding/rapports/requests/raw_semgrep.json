@@ -1,0 +1,683 @@
+{
+  "version": "1.175.0",
+  "results": [
+    {
+      "check_id": "home.user.PHASE3.mt-regles.generic.html-templates.security.var-in-href.var-in-href",
+      "path": "/home/user/PHASE3/mt-scan/docs/_templates/sidebar.html",
+      "start": {
+        "line": 2,
+        "col": 6,
+        "offset": 22
+      },
+      "end": {
+        "line": 2,
+        "col": 35,
+        "offset": 51
+      },
+      "extra": {
+        "message": "Detected a template variable used in an anchor tag with the 'href' attribute. This allows a malicious actor to input the 'javascript:' URI and is subject to cross- site scripting (XSS) attacks. If using Flask, use 'url_for()' to safely generate a URL. If using Django, use the 'url' filter to safely generate a URL. If using Mustache, use a URL encoding library, or prepend a slash '/' to the variable for relative links (`href=\"/{{link}}\"`). You may also consider setting the Content Security Policy (CSP) header.",
+        "metadata": {
+          "cwe": [
+            "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+          ],
+          "owasp": [
+            "A07:2017 - Cross-Site Scripting (XSS)",
+            "A03:2021 - Injection",
+            "A05:2025 - Injection"
+          ],
+          "references": [
+            "https://flask.palletsprojects.com/en/1.1.x/security/#cross-site-scripting-xss#:~:text=javascript:%20URI",
+            "https://docs.djangoproject.com/en/3.1/ref/templates/builtins/#url",
+            "https://github.com/pugjs/pug/issues/2952",
+            "https://content-security-policy.com/"
+          ],
+          "category": "security",
+          "technology": [
+            "html-templates"
+          ],
+          "confidence": "LOW",
+          "cwe2022-top25": true,
+          "cwe2021-top25": true,
+          "subcategory": [
+            "audit"
+          ],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": [
+            "Cross-Site-Scripting (XSS)"
+          ],
+          "source": "https://semgrep.dev/r/generic.html-templates.security.var-in-href.var-in-href",
+          "shortlink": "https://sg.run/x1kP"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "home.user.PHASE3.mt-regles.generic.html-templates.security.var-in-href.var-in-href",
+      "path": "/home/user/PHASE3/mt-scan/docs/_templates/sidebar.html",
+      "start": {
+        "line": 18,
+        "col": 10,
+        "offset": 543
+      },
+      "end": {
+        "line": 18,
+        "col": 48,
+        "offset": 581
+      },
+      "extra": {
+        "message": "Detected a template variable used in an anchor tag with the 'href' attribute. This allows a malicious actor to input the 'javascript:' URI and is subject to cross- site scripting (XSS) attacks. If using Flask, use 'url_for()' to safely generate a URL. If using Django, use the 'url' filter to safely generate a URL. If using Mustache, use a URL encoding library, or prepend a slash '/' to the variable for relative links (`href=\"/{{link}}\"`). You may also consider setting the Content Security Policy (CSP) header.",
+        "metadata": {
+          "cwe": [
+            "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+          ],
+          "owasp": [
+            "A07:2017 - Cross-Site Scripting (XSS)",
+            "A03:2021 - Injection",
+            "A05:2025 - Injection"
+          ],
+          "references": [
+            "https://flask.palletsprojects.com/en/1.1.x/security/#cross-site-scripting-xss#:~:text=javascript:%20URI",
+            "https://docs.djangoproject.com/en/3.1/ref/templates/builtins/#url",
+            "https://github.com/pugjs/pug/issues/2952",
+            "https://content-security-policy.com/"
+          ],
+          "category": "security",
+          "technology": [
+            "html-templates"
+          ],
+          "confidence": "LOW",
+          "cwe2022-top25": true,
+          "cwe2021-top25": true,
+          "subcategory": [
+            "audit"
+          ],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": [
+            "Cross-Site-Scripting (XSS)"
+          ],
+          "source": "https://semgrep.dev/r/generic.html-templates.security.var-in-href.var-in-href",
+          "shortlink": "https://sg.run/x1kP"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "home.user.PHASE3.mt-regles.generic.html-templates.security.var-in-href.var-in-href",
+      "path": "/home/user/PHASE3/mt-scan/docs/_templates/sidebar.html",
+      "start": {
+        "line": 19,
+        "col": 10,
+        "offset": 622
+      },
+      "end": {
+        "line": 19,
+        "col": 46,
+        "offset": 658
+      },
+      "extra": {
+        "message": "Detected a template variable used in an anchor tag with the 'href' attribute. This allows a malicious actor to input the 'javascript:' URI and is subject to cross- site scripting (XSS) attacks. If using Flask, use 'url_for()' to safely generate a URL. If using Django, use the 'url' filter to safely generate a URL. If using Mustache, use a URL encoding library, or prepend a slash '/' to the variable for relative links (`href=\"/{{link}}\"`). You may also consider setting the Content Security Policy (CSP) header.",
+        "metadata": {
+          "cwe": [
+            "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+          ],
+          "owasp": [
+            "A07:2017 - Cross-Site Scripting (XSS)",
+            "A03:2021 - Injection",
+            "A05:2025 - Injection"
+          ],
+          "references": [
+            "https://flask.palletsprojects.com/en/1.1.x/security/#cross-site-scripting-xss#:~:text=javascript:%20URI",
+            "https://docs.djangoproject.com/en/3.1/ref/templates/builtins/#url",
+            "https://github.com/pugjs/pug/issues/2952",
+            "https://content-security-policy.com/"
+          ],
+          "category": "security",
+          "technology": [
+            "html-templates"
+          ],
+          "confidence": "LOW",
+          "cwe2022-top25": true,
+          "cwe2021-top25": true,
+          "subcategory": [
+            "audit"
+          ],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": [
+            "Cross-Site-Scripting (XSS)"
+          ],
+          "source": "https://semgrep.dev/r/generic.html-templates.security.var-in-href.var-in-href",
+          "shortlink": "https://sg.run/x1kP"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "home.user.PHASE3.mt-regles.generic.html-templates.security.var-in-href.var-in-href",
+      "path": "/home/user/PHASE3/mt-scan/docs/_templates/sidebar.html",
+      "start": {
+        "line": 20,
+        "col": 10,
+        "offset": 703
+      },
+      "end": {
+        "line": 20,
+        "col": 36,
+        "offset": 729
+      },
+      "extra": {
+        "message": "Detected a template variable used in an anchor tag with the 'href' attribute. This allows a malicious actor to input the 'javascript:' URI and is subject to cross- site scripting (XSS) attacks. If using Flask, use 'url_for()' to safely generate a URL. If using Django, use the 'url' filter to safely generate a URL. If using Mustache, use a URL encoding library, or prepend a slash '/' to the variable for relative links (`href=\"/{{link}}\"`). You may also consider setting the Content Security Policy (CSP) header.",
+        "metadata": {
+          "cwe": [
+            "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+          ],
+          "owasp": [
+            "A07:2017 - Cross-Site Scripting (XSS)",
+            "A03:2021 - Injection",
+            "A05:2025 - Injection"
+          ],
+          "references": [
+            "https://flask.palletsprojects.com/en/1.1.x/security/#cross-site-scripting-xss#:~:text=javascript:%20URI",
+            "https://docs.djangoproject.com/en/3.1/ref/templates/builtins/#url",
+            "https://github.com/pugjs/pug/issues/2952",
+            "https://content-security-policy.com/"
+          ],
+          "category": "security",
+          "technology": [
+            "html-templates"
+          ],
+          "confidence": "LOW",
+          "cwe2022-top25": true,
+          "cwe2021-top25": true,
+          "subcategory": [
+            "audit"
+          ],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": [
+            "Cross-Site-Scripting (XSS)"
+          ],
+          "source": "https://semgrep.dev/r/generic.html-templates.security.var-in-href.var-in-href",
+          "shortlink": "https://sg.run/x1kP"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "home.user.PHASE3.mt-regles.generic.html-templates.security.var-in-href.var-in-href",
+      "path": "/home/user/PHASE3/mt-scan/docs/_templates/sidebar.html",
+      "start": {
+        "line": 21,
+        "col": 10,
+        "offset": 773
+      },
+      "end": {
+        "line": 21,
+        "col": 71,
+        "offset": 834
+      },
+      "extra": {
+        "message": "Detected a template variable used in an anchor tag with the 'href' attribute. This allows a malicious actor to input the 'javascript:' URI and is subject to cross- site scripting (XSS) attacks. If using Flask, use 'url_for()' to safely generate a URL. If using Django, use the 'url' filter to safely generate a URL. If using Mustache, use a URL encoding library, or prepend a slash '/' to the variable for relative links (`href=\"/{{link}}\"`). You may also consider setting the Content Security Policy (CSP) header.",
+        "metadata": {
+          "cwe": [
+            "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+          ],
+          "owasp": [
+            "A07:2017 - Cross-Site Scripting (XSS)",
+            "A03:2021 - Injection",
+            "A05:2025 - Injection"
+          ],
+          "references": [
+            "https://flask.palletsprojects.com/en/1.1.x/security/#cross-site-scripting-xss#:~:text=javascript:%20URI",
+            "https://docs.djangoproject.com/en/3.1/ref/templates/builtins/#url",
+            "https://github.com/pugjs/pug/issues/2952",
+            "https://content-security-policy.com/"
+          ],
+          "category": "security",
+          "technology": [
+            "html-templates"
+          ],
+          "confidence": "LOW",
+          "cwe2022-top25": true,
+          "cwe2021-top25": true,
+          "subcategory": [
+            "audit"
+          ],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": [
+            "Cross-Site-Scripting (XSS)"
+          ],
+          "source": "https://semgrep.dev/r/generic.html-templates.security.var-in-href.var-in-href",
+          "shortlink": "https://sg.run/x1kP"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "home.user.PHASE3.mt-regles.generic.html-templates.security.var-in-href.var-in-href",
+      "path": "/home/user/PHASE3/mt-scan/docs/_templates/sidebar.html",
+      "start": {
+        "line": 22,
+        "col": 10,
+        "offset": 880
+      },
+      "end": {
+        "line": 22,
+        "col": 49,
+        "offset": 919
+      },
+      "extra": {
+        "message": "Detected a template variable used in an anchor tag with the 'href' attribute. This allows a malicious actor to input the 'javascript:' URI and is subject to cross- site scripting (XSS) attacks. If using Flask, use 'url_for()' to safely generate a URL. If using Django, use the 'url' filter to safely generate a URL. If using Mustache, use a URL encoding library, or prepend a slash '/' to the variable for relative links (`href=\"/{{link}}\"`). You may also consider setting the Content Security Policy (CSP) header.",
+        "metadata": {
+          "cwe": [
+            "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+          ],
+          "owasp": [
+            "A07:2017 - Cross-Site Scripting (XSS)",
+            "A03:2021 - Injection",
+            "A05:2025 - Injection"
+          ],
+          "references": [
+            "https://flask.palletsprojects.com/en/1.1.x/security/#cross-site-scripting-xss#:~:text=javascript:%20URI",
+            "https://docs.djangoproject.com/en/3.1/ref/templates/builtins/#url",
+            "https://github.com/pugjs/pug/issues/2952",
+            "https://content-security-policy.com/"
+          ],
+          "category": "security",
+          "technology": [
+            "html-templates"
+          ],
+          "confidence": "LOW",
+          "cwe2022-top25": true,
+          "cwe2021-top25": true,
+          "subcategory": [
+            "audit"
+          ],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": [
+            "Cross-Site-Scripting (XSS)"
+          ],
+          "source": "https://semgrep.dev/r/generic.html-templates.security.var-in-href.var-in-href",
+          "shortlink": "https://sg.run/x1kP"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "home.user.PHASE3.mt-regles.generic.html-templates.security.var-in-href.var-in-href",
+      "path": "/home/user/PHASE3/mt-scan/docs/_templates/sidebar.html",
+      "start": {
+        "line": 26,
+        "col": 10,
+        "offset": 980
+      },
+      "end": {
+        "line": 26,
+        "col": 54,
+        "offset": 1024
+      },
+      "extra": {
+        "message": "Detected a template variable used in an anchor tag with the 'href' attribute. This allows a malicious actor to input the 'javascript:' URI and is subject to cross- site scripting (XSS) attacks. If using Flask, use 'url_for()' to safely generate a URL. If using Django, use the 'url' filter to safely generate a URL. If using Mustache, use a URL encoding library, or prepend a slash '/' to the variable for relative links (`href=\"/{{link}}\"`). You may also consider setting the Content Security Policy (CSP) header.",
+        "metadata": {
+          "cwe": [
+            "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+          ],
+          "owasp": [
+            "A07:2017 - Cross-Site Scripting (XSS)",
+            "A03:2021 - Injection",
+            "A05:2025 - Injection"
+          ],
+          "references": [
+            "https://flask.palletsprojects.com/en/1.1.x/security/#cross-site-scripting-xss#:~:text=javascript:%20URI",
+            "https://docs.djangoproject.com/en/3.1/ref/templates/builtins/#url",
+            "https://github.com/pugjs/pug/issues/2952",
+            "https://content-security-policy.com/"
+          ],
+          "category": "security",
+          "technology": [
+            "html-templates"
+          ],
+          "confidence": "LOW",
+          "cwe2022-top25": true,
+          "cwe2021-top25": true,
+          "subcategory": [
+            "audit"
+          ],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": [
+            "Cross-Site-Scripting (XSS)"
+          ],
+          "source": "https://semgrep.dev/r/generic.html-templates.security.var-in-href.var-in-href",
+          "shortlink": "https://sg.run/x1kP"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "home.user.PHASE3.mt-regles.python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1",
+      "path": "/home/user/PHASE3/mt-scan/src/requests/auth.py",
+      "start": {
+        "line": 187,
+        "col": 24,
+        "offset": 6047
+      },
+      "end": {
+        "line": 187,
+        "col": 62,
+        "offset": 6085
+      },
+      "extra": {
+        "message": "Detected SHA1 hash algorithm which is considered insecure. SHA1 is not collision resistant and is therefore not suitable as a cryptographic signature. Use SHA256 or SHA3 instead.",
+        "fix": "hashlib.sha256(x, usedforsecurity=False)",
+        "metadata": {
+          "source-rule-url": "https://github.com/PyCQA/bandit/blob/d5f8fa0d89d7b11442fc6ec80ca42953974354c8/bandit/blacklists/calls.py#L59",
+          "cwe": [
+            "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"
+          ],
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "bandit-code": "B303",
+          "asvs": {
+            "control_id": "6.2.2 Insecure Custom Algorithm",
+            "control_url": "https://github.com/OWASP/ASVS/blob/master/4.0/en/0x14-V6-Cryptography.md#v62-algorithms",
+            "section": "V6 Stored Cryptography Verification Requirements",
+            "version": "4"
+          },
+          "references": [
+            "https://www.schneier.com/blog/archives/2012/10/when_will_we_se.html",
+            "https://www.trendmicro.com/vinfo/us/security/news/vulnerabilities-and-exploits/sha-1-collision-signals-the-end-of-the-algorithm-s-viability",
+            "http://2012.sharcs.org/slides/stevens.pdf",
+            "https://pycryptodome.readthedocs.io/en/latest/src/hash/sha3_256.html"
+          ],
+          "category": "security",
+          "technology": [
+            "python"
+          ],
+          "subcategory": [
+            "vuln"
+          ],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": [
+            "Cryptographic Issues"
+          ],
+          "source": "https://semgrep.dev/r/python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1",
+          "shortlink": "https://sg.run/ydYx"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "home.user.PHASE3.mt-regles.python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1",
+      "path": "/home/user/PHASE3/mt-scan/src/requests/auth.py",
+      "start": {
+        "line": 237,
+        "col": 18,
+        "offset": 7660
+      },
+      "end": {
+        "line": 237,
+        "col": 56,
+        "offset": 7698
+      },
+      "extra": {
+        "message": "Detected SHA1 hash algorithm which is considered insecure. SHA1 is not collision resistant and is therefore not suitable as a cryptographic signature. Use SHA256 or SHA3 instead.",
+        "fix": "hashlib.sha256(s, usedforsecurity=False)",
+        "metadata": {
+          "source-rule-url": "https://github.com/PyCQA/bandit/blob/d5f8fa0d89d7b11442fc6ec80ca42953974354c8/bandit/blacklists/calls.py#L59",
+          "cwe": [
+            "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"
+          ],
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "bandit-code": "B303",
+          "asvs": {
+            "control_id": "6.2.2 Insecure Custom Algorithm",
+            "control_url": "https://github.com/OWASP/ASVS/blob/master/4.0/en/0x14-V6-Cryptography.md#v62-algorithms",
+            "section": "V6 Stored Cryptography Verification Requirements",
+            "version": "4"
+          },
+          "references": [
+            "https://www.schneier.com/blog/archives/2012/10/when_will_we_se.html",
+            "https://www.trendmicro.com/vinfo/us/security/news/vulnerabilities-and-exploits/sha-1-collision-signals-the-end-of-the-algorithm-s-viability",
+            "http://2012.sharcs.org/slides/stevens.pdf",
+            "https://pycryptodome.readthedocs.io/en/latest/src/hash/sha3_256.html"
+          ],
+          "category": "security",
+          "technology": [
+            "python"
+          ],
+          "subcategory": [
+            "vuln"
+          ],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": [
+            "Cryptographic Issues"
+          ],
+          "source": "https://semgrep.dev/r/python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1",
+          "shortlink": "https://sg.run/ydYx"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    }
+  ],
+  "errors": [],
+  "paths": {
+    "scanned": [
+      "/home/user/PHASE3/mt-scan/.coveragerc",
+      "/home/user/PHASE3/mt-scan/.git-blame-ignore-revs",
+      "/home/user/PHASE3/mt-scan/.github/AI_POLICY.md",
+      "/home/user/PHASE3/mt-scan/.github/CODEOWNERS",
+      "/home/user/PHASE3/mt-scan/.github/CODE_OF_CONDUCT.md",
+      "/home/user/PHASE3/mt-scan/.github/CONTRIBUTING.md",
+      "/home/user/PHASE3/mt-scan/.github/FUNDING.yml",
+      "/home/user/PHASE3/mt-scan/.github/ISSUE_TEMPLATE/Bug_report.md",
+      "/home/user/PHASE3/mt-scan/.github/ISSUE_TEMPLATE/Custom.md",
+      "/home/user/PHASE3/mt-scan/.github/ISSUE_TEMPLATE/Feature_request.md",
+      "/home/user/PHASE3/mt-scan/.github/ISSUE_TEMPLATE.md",
+      "/home/user/PHASE3/mt-scan/.github/SECURITY.md",
+      "/home/user/PHASE3/mt-scan/.github/dependabot.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/close-issues.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/codeql-analysis.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/lint.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/lock-issues.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/publish.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/run-tests.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/typecheck.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/zizmor.yml",
+      "/home/user/PHASE3/mt-scan/.gitignore",
+      "/home/user/PHASE3/mt-scan/.pre-commit-config.yaml",
+      "/home/user/PHASE3/mt-scan/.readthedocs.yaml",
+      "/home/user/PHASE3/mt-scan/AUTHORS.rst",
+      "/home/user/PHASE3/mt-scan/HISTORY.md",
+      "/home/user/PHASE3/mt-scan/LICENSE",
+      "/home/user/PHASE3/mt-scan/MANIFEST.in",
+      "/home/user/PHASE3/mt-scan/Makefile",
+      "/home/user/PHASE3/mt-scan/NOTICE",
+      "/home/user/PHASE3/mt-scan/README.md",
+      "/home/user/PHASE3/mt-scan/docs/.nojekyll",
+      "/home/user/PHASE3/mt-scan/docs/Makefile",
+      "/home/user/PHASE3/mt-scan/docs/_static/custom.css",
+      "/home/user/PHASE3/mt-scan/docs/_templates/sidebar.html",
+      "/home/user/PHASE3/mt-scan/docs/_themes/.gitignore",
+      "/home/user/PHASE3/mt-scan/docs/_themes/LICENSE",
+      "/home/user/PHASE3/mt-scan/docs/_themes/flask_theme_support.py",
+      "/home/user/PHASE3/mt-scan/docs/api.rst",
+      "/home/user/PHASE3/mt-scan/docs/community/faq.rst",
+      "/home/user/PHASE3/mt-scan/docs/community/out-there.rst",
+      "/home/user/PHASE3/mt-scan/docs/community/recommended.rst",
+      "/home/user/PHASE3/mt-scan/docs/community/release-process.rst",
+      "/home/user/PHASE3/mt-scan/docs/community/support.rst",
+      "/home/user/PHASE3/mt-scan/docs/community/updates.rst",
+      "/home/user/PHASE3/mt-scan/docs/community/vulnerabilities.rst",
+      "/home/user/PHASE3/mt-scan/docs/conf.py",
+      "/home/user/PHASE3/mt-scan/docs/dev/authors.rst",
+      "/home/user/PHASE3/mt-scan/docs/dev/contributing.rst",
+      "/home/user/PHASE3/mt-scan/docs/index.rst",
+      "/home/user/PHASE3/mt-scan/docs/make.bat",
+      "/home/user/PHASE3/mt-scan/docs/requirements.txt",
+      "/home/user/PHASE3/mt-scan/docs/user/advanced.rst",
+      "/home/user/PHASE3/mt-scan/docs/user/authentication.rst",
+      "/home/user/PHASE3/mt-scan/docs/user/install.rst",
+      "/home/user/PHASE3/mt-scan/docs/user/quickstart.rst",
+      "/home/user/PHASE3/mt-scan/ext/LICENSE",
+      "/home/user/PHASE3/mt-scan/ext/requests-logo.svg",
+      "/home/user/PHASE3/mt-scan/pyproject.toml",
+      "/home/user/PHASE3/mt-scan/requirements-dev.txt",
+      "/home/user/PHASE3/mt-scan/setup.py",
+      "/home/user/PHASE3/mt-scan/src/requests/__init__.py",
+      "/home/user/PHASE3/mt-scan/src/requests/__version__.py",
+      "/home/user/PHASE3/mt-scan/src/requests/_internal_utils.py",
+      "/home/user/PHASE3/mt-scan/src/requests/_types.py",
+      "/home/user/PHASE3/mt-scan/src/requests/adapters.py",
+      "/home/user/PHASE3/mt-scan/src/requests/api.py",
+      "/home/user/PHASE3/mt-scan/src/requests/auth.py",
+      "/home/user/PHASE3/mt-scan/src/requests/certs.py",
+      "/home/user/PHASE3/mt-scan/src/requests/compat.py",
+      "/home/user/PHASE3/mt-scan/src/requests/cookies.py",
+      "/home/user/PHASE3/mt-scan/src/requests/exceptions.py",
+      "/home/user/PHASE3/mt-scan/src/requests/help.py",
+      "/home/user/PHASE3/mt-scan/src/requests/hooks.py",
+      "/home/user/PHASE3/mt-scan/src/requests/models.py",
+      "/home/user/PHASE3/mt-scan/src/requests/packages.py",
+      "/home/user/PHASE3/mt-scan/src/requests/py.typed",
+      "/home/user/PHASE3/mt-scan/src/requests/sessions.py",
+      "/home/user/PHASE3/mt-scan/src/requests/status_codes.py",
+      "/home/user/PHASE3/mt-scan/src/requests/structures.py",
+      "/home/user/PHASE3/mt-scan/src/requests/utils.py",
+      "/home/user/PHASE3/mt-scan/tox.ini"
+    ]
+  },
+  "time": {
+    "rules": [],
+    "rules_parse_time": 0.23200702667236328,
+    "profiling_times": {
+      "config_time": 7.082304954528809,
+      "core_time": 2.886219024658203,
+      "ignores_time": 0.0007274150848388672,
+      "total_time": 9.97756290435791
+    },
+    "parsing_time": {
+      "total_time": 0.0,
+      "per_file_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_files": []
+    },
+    "scanning_time": {
+      "total_time": 4.392589807510376,
+      "per_file_time": {
+        "mean": 0.04183418864295597,
+        "std_dev": 0.02290111963191189
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_files": []
+    },
+    "matching_time": {
+      "total_time": 0.0,
+      "per_file_and_rule_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_rules_on_files": []
+    },
+    "tainting_time": {
+      "total_time": 0.0,
+      "per_def_and_rule_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_rules_on_defs": []
+    },
+    "fixpoint_timeouts": [],
+    "prefiltering": {
+      "project_level_time": 0.0,
+      "file_level_time": 0.0,
+      "rules_with_project_prefilters_ratio": 0.0,
+      "rules_with_file_prefilters_ratio": 0.9851999116412635,
+      "rules_selected_ratio": 0.08173183123481334,
+      "rules_matched_ratio": 0.08173183123481334
+    },
+    "targets": [],
+    "total_bytes": 0,
+    "max_memory_bytes": 660880576
+  },
+  "engine_requested": "OSS",
+  "skipped_rules": [],
+  "profiling_results": []
+}

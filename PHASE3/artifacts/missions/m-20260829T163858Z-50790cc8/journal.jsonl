@@ -1,0 +1,10 @@
+{"seq": 1, "ts": "2026-08-29T16:38:58+00:00", "type": "ouverture", "requete": "Analyse la sécurité de mon dépôt", "cible": "/home/user/PHASE3/dogfooding/cibles/terraform-aws-vpc"}
+{"seq": 2, "ts": "2026-08-29T16:38:58+00:00", "type": "applicabilite", "ecartes": {"semgrep_go": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.go']", "grype": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*package-lock.json', '*yarn.lock', '*pnpm-lock.yaml', '*requirements.txt', '*Pipfile.lock', '*poetry.lock', '*go.sum', '*Gemfile.lock', '*pom.xml', '*build.gradle*']"}}
+{"seq": 3, "ts": "2026-08-29T16:38:58+00:00", "type": "plan", "plan_id": "22cd89223255cf1b", "providers": ["semgrep", "trivy", "gitleaks", "checkov", "kics"]}
+{"seq": 4, "ts": "2026-08-29T16:39:01+00:00", "type": "contexte", "run_id": "56e4f112f22186fb", "contexte_empreinte": "331c2ee5fe0b55fb", "input_digest": "7ab781de0c88663f", "input_commit": "cf0e3ca46fd51f47bf095957f2a6ac6127c89045", "working_tree_dirty": false}
+{"seq": 5, "ts": "2026-08-29T16:39:13+00:00", "type": "execution", "provider": "semgrep", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 6, "ts": "2026-08-29T16:39:13+00:00", "type": "execution", "provider": "trivy", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 7, "ts": "2026-08-29T16:39:14+00:00", "type": "execution", "provider": "gitleaks", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 8, "ts": "2026-08-29T16:40:43+00:00", "type": "execution", "provider": "checkov", "code_retour": 0, "timeout": false, "findings": 39}
+{"seq": 9, "ts": "2026-08-29T16:41:11+00:00", "type": "execution", "provider": "kics", "code_retour": 0, "timeout": false, "findings": 73}
+{"seq": 10, "ts": "2026-08-29T16:41:11+00:00", "type": "cloture", "findings": 112, "clusters": 16, "result_digest": "f660831d7bef8061"}

@@ -1,0 +1,38 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a04e6f-3b2c-7e0e-ac42-0e3c37d1b029",
+  "CreatedAt": "2026-08-29T16:51:47.628922213Z",
+  "ArtifactID": "sha256:a634fb2266085f496bab42e7dfc30240eca74ea70cb336afe957fbcd9b188b2b",
+  "ArtifactName": "/home/user/PHASE3/mt-scan",
+  "ArtifactType": "repository",
+  "Metadata": {
+    "RepoURL": "https://github.com/gorilla/mux.git",
+    "Branch": "main",
+    "Commit": "db9d1d0073d27a0a2d9a8c1bc52aa0af4374d265",
+    "CommitMsg": "added test for router in context",
+    "Author": "Corné de Jong <5366568-cornedejong@users.noreply.gitlab.com>",
+    "Committer": "Alex Vulaj <ajvulaj@gmail.com>"
+  },
+  "Results": [
+    {
+      "Target": "go.mod",
+      "Class": "lang-pkgs",
+      "Type": "gomod",
+      "Packages": [
+        {
+          "ID": "github.com/gorilla/mux",
+          "Name": "github.com/gorilla/mux",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/gorilla/mux",
+            "UID": "4d0c113dac5bea80"
+          },
+          "Relationship": "root",
+          "AnalyzedBy": "gomod"
+        }
+      ]
+    }
+  ]
+}

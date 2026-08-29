@@ -1,0 +1,62 @@
+{
+  "clusters": [
+    {
+      "cluster_id": "CL-001",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file",
+        "ligne_proche"
+      ],
+      "members": [
+        "sg-0002",
+        "sg-0003",
+        "sg-0004",
+        "sg-0005",
+        "sg-0006"
+      ],
+      "cle": "fichier:docs/_templates/sidebar.html#zone:sg-0002"
+    },
+    {
+      "cluster_id": "CL-002",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file"
+      ],
+      "members": [
+        "sg-0001",
+        "sg-0007"
+      ],
+      "cle": "fichier:docs/_templates/sidebar.html"
+    },
+    {
+      "cluster_id": "CL-003",
+      "confidence": "high",
+      "reason": [
+        "same_package",
+        "related_dependency"
+      ],
+      "members": [
+        "sg-0008",
+        "sg-0009"
+      ],
+      "cle": "paquet:pycryptodome"
+    }
+  ],
+  "clusters_inter_outils": [],
+  "non_regroupe": [
+    "gl-0001",
+    "gl-0002",
+    "gl-0003",
+    "gl-0004",
+    "ch-0001"
+  ],
+  "stats": {
+    "findings_en_entree": 14,
+    "clusters": 3,
+    "findings_regroupes": 9,
+    "findings_non_regroupes": 5,
+    "reduction": "14 → 8"
+  }
+}

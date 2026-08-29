@@ -1,0 +1,30 @@
+tool: kics
+binaire: kics
+version_binaire_sha256: d3bb1923713df3fb8f96522a359801d7fe310b908cada541f627cc0e940eff39
+argv:
+- /home/user/.cache/arena_secops/bin/kics
+- scan
+- -p
+- /home/user/PHASE3/mt-scan
+- --report-formats
+- json
+- --output-path
+- /home/user/PHASE3/mt-out
+- --output-name
+- kics
+- -q
+- /home/user/PHASE3/mt-regles/kics/queries
+- --no-progress
+env: {}
+code_retour: 60
+timeout: false
+duree_ms: 30477
+sortie_origine: fichier:kics.json
+cible: /home/user/PHASE3/testrepo_iac
+sandbox_limites:
+  max_processus: 256
+  max_cpu_secondes: 300
+  max_fichier_octets: 536870912
+  timeout_secondes: 600
+  memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+stderr_extrait: ''

@@ -1,0 +1,160 @@
+{
+  "requete": "Analyse la sécurité de mon dépôt",
+  "capacites_demandees": [
+    "CODE_STATIC_ANALYSIS",
+    "CODE_STATIC_ANALYSIS_GO",
+    "DEPENDENCY_ANALYSIS",
+    "SECRET_DETECTION",
+    "IAC_SCAN"
+  ],
+  "motifs_intent": {
+    "CODE_STATIC_ANALYSIS": "demande générique",
+    "CODE_STATIC_ANALYSIS_GO": "demande générique",
+    "DEPENDENCY_ANALYSIS": "demande générique",
+    "SECRET_DETECTION": "demande générique",
+    "IAC_SCAN": "demande générique"
+  },
+  "plan_id": "3a8fd0fb5f536e54",
+  "plan_empreinte": "3a8fd0fb5f536e54983a4a9f90e99a71b90c17da78fc3d913e4bb5f951a69a8a",
+  "autorisation": {
+    "allow": true,
+    "motifs": []
+  },
+  "findings": 14,
+  "clustering": {
+    "findings_en_entree": 14,
+    "clusters": 3,
+    "findings_regroupes": 9,
+    "findings_non_regroupes": 5,
+    "reduction": "14 → 8"
+  },
+  "clusters": [
+    {
+      "cluster_id": "CL-001",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file",
+        "ligne_proche"
+      ],
+      "members": [
+        "sg-0002",
+        "sg-0003",
+        "sg-0004",
+        "sg-0005",
+        "sg-0006"
+      ],
+      "cle": "fichier:docs/_templates/sidebar.html#zone:sg-0002"
+    },
+    {
+      "cluster_id": "CL-002",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file"
+      ],
+      "members": [
+        "sg-0001",
+        "sg-0007"
+      ],
+      "cle": "fichier:docs/_templates/sidebar.html"
+    },
+    {
+      "cluster_id": "CL-003",
+      "confidence": "high",
+      "reason": [
+        "same_package",
+        "related_dependency"
+      ],
+      "members": [
+        "sg-0008",
+        "sg-0009"
+      ],
+      "cle": "paquet:pycryptodome"
+    }
+  ],
+  "non_regroupe": [
+    "gl-0001",
+    "gl-0002",
+    "gl-0003",
+    "gl-0004",
+    "ch-0001"
+  ],
+  "couverture": {
+    "semgrep": {
+      "analysé": [
+        "/home/user/PHASE3/mt-scan/docs/_templates/sidebar.html",
+        "/home/user/PHASE3/mt-scan/src/requests/auth.py"
+      ],
+      "non_analysé": [],
+      "limites": [
+        "le jeu de règles est épinglé sur python/security-audit : un dépôt d'un autre langage ressortirait vide sans erreur"
+      ]
+    },
+    "trivy": {
+      "analysé": [],
+      "non_analysé": [
+        {
+          "cible": "/home/user/PHASE3/mt-scan",
+          "etat": "not_scanned",
+          "raison": "aucun manifeste de dépendances exploitable"
+        }
+      ],
+      "limites": [
+        "base de vulnérabilités figée au pré-chauffage : les CVE publiées depuis ne sont pas détectées"
+      ]
+    },
+    "grype": {
+      "analysé": [],
+      "non_analysé": [
+        {
+          "cible": "/home/user/PHASE3/mt-scan",
+          "etat": "not_scanned",
+          "raison": "aucun résultat produit par l'outil"
+        }
+      ],
+      "limites": [
+        "grype identifie en GHSA-* (mesuré : 62/62 sur testrepo_sca), trivy en CVE-* : convergence inter-outils par PAQUET (6/6 paquets communs mesurés), pas par identifiant de règle. La base grype (~2 Go) est pré-téléchargée sous {DB}/grype ; sans elle, grype tenterait un téléchargement — impossible dans la sandbox (pas de réseau).\n",
+        "provider déclaratif : les résultats sont extraits selon la spécification du manifest, sans connaissance de l'outil par le cœur"
+      ]
+    },
+    "gitleaks": {
+      "analysé": [
+        "historique git",
+        "tests/certs/expired/ca/ca-private.key",
+        "tests/certs/expired/server/server.key",
+        "tests/certs/mtls/client/client.key",
+        "tests/certs/valid/server/server.key"
+      ],
+      "non_analysé": [],
+      "limites": [
+        "valeur des secrets masquée à la source (--redact) : jamais stockée",
+        "détection dépendante des règles : une clé AWS réaliste peut être classée generic-api-key, et les exemples de documentation sont sur liste blanche"
+      ]
+    },
+    "checkov": {
+      "analysé": [
+        "/home/user/PHASE3/mt-scan"
+      ],
+      "non_analysé": [],
+      "limites": [
+        "severity est null dans la sortie OSS (mesuré le 2026-08-28) : la gravité remonte « indéterminée », jamais inventée (leçon #4). file_path n'a pas la même base selon le framework (module Terraform vs dépôt) : les chemins sont conservés tels que l'outil les émet, non réécrits. Les frameworks détectés dépendent du contenu de la cible ; un framework absent n'est pas un échec.\n",
+        "provider déclaratif : les résultats sont extraits selon la spécification du manifest, sans connaissance de l'outil par le cœur"
+      ]
+    },
+    "kics": {
+      "analysé": [],
+      "non_analysé": [
+        {
+          "cible": "/home/user/PHASE3/mt-scan",
+          "etat": "not_scanned",
+          "raison": "aucun résultat produit par l'outil"
+        }
+      ],
+      "limites": [
+        "Bibliothèque de requêtes v2.1.20 pré-installée sous {REGLES}/kics ; sans elle, kics échoue (« unable to find queries »). Les formats IaC en JSON (CloudFormation, ARM) ne sont pas couverts par les globes (collision avec package.json). similarity_id et ordre d'énumération varient entre deux exécutions (mesuré) — l'ensemble des détections, non. severity est portée par la requête, pas par le fichier.\n",
+        "provider déclaratif : les résultats sont extraits selon la spécification du manifest, sans connaissance de l'outil par le cœur"
+      ]
+    }
+  }
+}

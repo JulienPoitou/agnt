@@ -1,0 +1,104 @@
+cible: mocha
+commit: e6b9ee773481
+duree_s: 38.7
+erreur: null
+mem_dispo_avant_mo: 1052
+mem_dispo_apres_mo: 1059
+arret: ''
+providers:
+- semgrep
+- trivy
+- grype
+- gitleaks
+- checkov
+- kics
+codes_retour:
+  semgrep: 0
+  trivy: 0
+  grype: 0
+  gitleaks: 0
+  checkov: 0
+  kics: 0
+findings: 38
+findings_par_outil:
+  trivy: 16
+  grype: 16
+  checkov: 2
+  kics: 4
+clusters:
+  findings_en_entree: 38
+  clusters: 12
+  findings_regroupes: 34
+  findings_non_regroupes: 4
+  reduction: 38 → 16
+clusters_inter_outils: 12
+applicabilite_ecartes:
+  semgrep_go: 'non applicable à cette cible : aucun fichier ne correspond aux globs
+    déclarés [''*.go'']'
+couverture:
+  semgrep:
+    cibles: 1
+    etats:
+    - not_scanned
+    limites_connues:
+    - 'le jeu de règles est épinglé sur python/security-audit : un dépôt d''un autre
+      langage ressortirait vide sans erreur'
+  trivy:
+    cibles: 2
+    etats:
+    - not_scanned
+    - scanned_successfully
+    limites_connues:
+    - 'package.json présent mais non analysé : dépendances nodejs/npm non couvertes'
+    - 'base de vulnérabilités figée au pré-chauffage : les CVE publiées depuis ne
+      sont pas détectées'
+  grype:
+    cibles: 1
+    etats:
+    - not_scanned
+    limites_connues:
+    - 'grype identifie en GHSA-* (mesuré : 62/62 sur testrepo_sca), trivy en CVE-*
+      : convergence inter-outils par PAQUET (6/6 paquets communs mesurés), pas par
+      identifiant de règle. La base grype (~2 Go) est pré-téléchargée sous {DB}/grype
+      ; sans elle, grype tenterait un téléchargement — impossible dans la sandbox
+      (pas de réseau).
+
+      '
+    - 'provider déclaratif : les résultats sont extraits selon la spécification du
+      manifest, sans connaissance de l''outil par le cœur'
+  gitleaks:
+    cibles: 1
+    etats:
+    - scanned_successfully
+    limites_connues:
+    - 'valeur des secrets masquée à la source (--redact) : jamais stockée'
+    - 'détection dépendante des règles : une clé AWS réaliste peut être classée generic-api-key,
+      et les exemples de documentation sont sur liste blanche'
+  checkov:
+    cibles: 1
+    etats:
+    - scanned_successfully
+    limites_connues:
+    - 'severity est null dans la sortie OSS (mesuré le 2026-08-28) : la gravité remonte
+      « indéterminée », jamais inventée (leçon #4). file_path n''a pas la même base
+      selon le framework (module Terraform vs dépôt) : les chemins sont conservés
+      tels que l''outil les émet, non réécrits. Les frameworks détectés dépendent
+      du contenu de la cible ; un framework absent n''est pas un échec.
+
+      '
+    - 'provider déclaratif : les résultats sont extraits selon la spécification du
+      manifest, sans connaissance de l''outil par le cœur'
+  kics:
+    cibles: 1
+    etats:
+    - scanned_successfully
+    limites_connues:
+    - 'Bibliothèque de requêtes v2.1.20 pré-installée sous {REGLES}/kics ; sans elle,
+      kics échoue (« unable to find queries »). Les formats IaC en JSON (CloudFormation,
+      ARM) ne sont pas couverts par les globes (collision avec package.json). similarity_id
+      et ordre d''énumération varient entre deux exécutions (mesuré) — l''ensemble
+      des détections, non. severity est portée par la requête, pas par le fichier.
+
+      '
+    - 'provider déclaratif : les résultats sont extraits selon la spécification du
+      manifest, sans connaissance de l''outil par le cœur'

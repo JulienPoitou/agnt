@@ -1,0 +1,32 @@
+tool: trivy_sca
+binaire: trivy
+version_binaire_sha256: d89bcc6510a267f11b773398cbf1be5520ce39f9e8b6633178c4487f05b7d791
+argv:
+- /home/user/.cache/arena_secops/bin/trivy
+- fs
+- --scanners=vuln
+- --skip-db-update
+- --skip-java-db-update
+- --disable-telemetry
+- --format=json
+- --no-progress
+- --cache-dir
+- /home/user/PHASE3/mt-db/trivy
+- /home/user/PHASE3/mt-scan
+env: {}
+code_retour: 0
+timeout: false
+duree_ms: 849
+sortie_origine: stdout
+cible: /home/user/PHASE3/testrepo_sca
+sandbox_limites:
+  max_processus: 256
+  max_cpu_secondes: 300
+  max_fichier_octets: 536870912
+  timeout_secondes: 600
+  memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+stderr_extrait: "2026-08-29T16:44:07Z\tINFO\t[vuln] Vulnerability scanning is enabled\n\
+  2026-08-29T16:44:07Z\tINFO\t[npm] Run \"npm install\" to collect the license information\
+  \ of packages\tdir=\"node_modules\"\n2026-08-29T16:44:07Z\tINFO\tNumber of language-specific\
+  \ files\tnum=2\n2026-08-29T16:44:07Z\tINFO\t[npm] Detecting vulnerabilities...\n\
+  2026-08-29T16:44:07Z\tINFO\t[pip] Detecting vulnerabilities...\n"

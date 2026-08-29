@@ -1,0 +1,77 @@
+# Mapping règle → paquet — VERSIONNÉ.
+#
+# Ce fichier existe pour une raison précise : déduire un paquet du NOM d'une règle est une
+# heuristique. Elle fonctionne pour `avoid-pyyaml-load`, mais elle est fragile à long terme.
+# La règle de conception est donc :
+#
+#   · l'identifiant ORIGINAL de la règle est toujours conservé ;
+#   · le canonical id est défini ici ou dans les métadonnées de la règle, pas deviné ;
+#   · le paquet est déclaré avec sa MÉTHODE et sa CONFIANCE, jamais implicite.
+#
+# Méthodes possibles, de la plus fiable à la moins fiable :
+#   rule_metadata   → la règle elle-même déclare le paquet (le plus fiable)
+#   mapping_versionné → ce fichier
+#   import_detecté  → déduit des imports du code analysé
+#   lockfile        → déduit du gestionnaire de paquets
+#   inconnu         → on ne devine pas
+#
+# Si une règle n'est pas listée ici et ne déclare rien, le paquet reste `null`.
+# Un paquet inconnu ne bloque rien : il empêche seulement le regroupement par paquet.
+
+version: 1
+
+regles:
+  # --- désérialisation ---
+  - motif: "deserialization.avoid-pyyaml-load"
+    paquet: pyyaml
+    methode: mapping_versionné
+    confiance: high
+  - motif: "deserialization.avoid-unsafe-ruamel"
+    paquet: ruamel.yaml
+    methode: mapping_versionné
+    confiance: high
+  - motif: "deserialization.pickle.avoid-cPickle"
+    paquet: stdlib
+    methode: mapping_versionné
+    confiance: high
+  - motif: "deserialization.pickle.avoid-shelve"
+    paquet: stdlib
+    methode: mapping_versionné
+    confiance: high
+
+  # --- frameworks et bibliothèques ---
+  - motif: "python.django."
+    paquet: django
+    methode: mapping_versionné
+    confiance: medium
+  - motif: "python.flask."
+    paquet: flask
+    methode: mapping_versionné
+    confiance: medium
+  - motif: "python.requests."
+    paquet: requests
+    methode: mapping_versionné
+    confiance: medium
+  - motif: "python.jwt."
+    paquet: pyjwt
+    methode: mapping_versionné
+    confiance: medium
+  - motif: "python.sqlalchemy."
+    paquet: sqlalchemy
+    methode: mapping_versionné
+    confiance: medium
+  - motif: "python.boto3."
+    paquet: boto3
+    methode: mapping_versionné
+    confiance: medium
+  - motif: "python.aws-lambda."
+    paquet: boto3
+    methode: mapping_versionné
+    confiance: low
+
+# Tout ce qui n'est pas listé : paquet inconnu. On ne généralise PAS à partir du nom.
+defaut:
+  paquet: null
+  methode: inconnu
+  confiance: none
+

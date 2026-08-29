@@ -1,0 +1,71 @@
+owner_repo,etoiles,capacite_principale,capacites_secondaires,cibles_langages,forme_execution,chevauchement,nouvelles_capacites,lesquelles,interet_fonctionnel,licence,dernier_commit,maturite,source_appreciation
+pry0cc/axiom,4415,DEPENDENCY_ANALYSIS,CLOUD_POSTURE | NETWORK_DISCOVERY | WEB_ENDPOINT_DISCOVERY | WEB_VULN_SCAN,,cli,à évaluer,3,NETWORK_DISCOVERY | WEB_ENDPOINT_DISCOVERY | WEB_VULN_SCAN,à évaluer,MIT,2024-09-30,moyenne,non documenté
+0xSojalSec/PentestAgent,696,NETWORK_DISCOVERY,WEB_ENDPOINT_DISCOVERY | EXPLOITATION,,mcp_server,à évaluer,3,EXPLOITATION | NETWORK_DISCOVERY | WEB_ENDPOINT_DISCOVERY,à évaluer,MIT,2025-06-05,faible,non documenté
+smicallef/spiderfoot,21459,THREAT_INTEL,WEB_ENDPOINT_DISCOVERY,"domaines, IPs, emails",cli,partiel avec theHarvester,2,THREAT_INTEL | WEB_ENDPOINT_DISCOVERY,"OSINT très large, mais lent",MIT,2023-11-05,élevée,connaissance (non vérifié dépôt par dépôt)
+laramies/theHarvester,17211,THREAT_INTEL,WEB_ENDPOINT_DISCOVERY,"domaines, emails, sous-domaines",cli,aucun,2,THREAT_INTEL | WEB_ENDPOINT_DISCOVERY,"OSINT passif, simple et utile",,2026-08-27,élevée,connaissance (non vérifié dépôt par dépôt)
+wazuh/wazuh,16696,LOG_ANALYSIS,ENDPOINT_COLLECTION,"hôtes, journaux",cli,aucun,2,ENDPOINT_COLLECTION | LOG_ANALYSIS,"plateforme complète, pas un simple scanner",BSD,2026-08-24,élevée,connaissance (non vérifié dépôt par dépôt)
+shadow1ng/fscan,14460,NETWORK_DISCOVERY,EXPLOITATION,"hôtes, ports, services Windows",cli,partiel avec nmap,2,EXPLOITATION | NETWORK_DISCOVERY,"orienté Windows/AD, complémentaire de nmap",MIT,2026-08-25,élevée,connaissance (non vérifié dépôt par dépôt)
+nmap/nmap,13469,NETWORK_DISCOVERY,WEB_ENDPOINT_DISCOVERY,"hôtes, ports, services",cli,aucun,2,NETWORK_DISCOVERY | WEB_ENDPOINT_DISCOVERY,"découverte réseau, base de tout scan d'infrastructure",,2026-08-27,élevée,connaissance (non vérifié dépôt par dépôt)
+SigmaHQ/sigma,10948,DETECTION_RULES,LOG_ANALYSIS,règles de détection,cli,aucun,2,DETECTION_RULES | LOG_ANALYSIS,"règles, pas un scanner : produit des requêtes",,2026-08-18,élevée,connaissance (non vérifié dépôt par dépôt)
+mandiant/flare-vm,8968,MALWARE_ANALYSIS,INCIDENT_RESPONSE,,cli,à évaluer,2,INCIDENT_RESPONSE | MALWARE_ANALYSIS,à évaluer,Apache-2.0,2026-06-23,élevée,non documenté
+zeek/zeek,7911,LOG_ANALYSIS,NETWORK_DISCOVERY,trafic réseau,cli,aucun,2,LOG_ANALYSIS | NETWORK_DISCOVERY,"analyse de trafic, riche mais lourd",BSD,2026-08-27,élevée,connaissance (non vérifié dépôt par dépôt)
+DefectDojo/django-DefectDojo,4910,CODE_STATIC_ANALYSIS,DEPENDENCY_ANALYSIS | WEB_VULN_SCAN | VULN_MANAGEMENT,,cli,à évaluer,2,VULN_MANAGEMENT | WEB_VULN_SCAN,à évaluer,BSD-3-Clause,2026-08-24,moyenne,non documenté
+intelowlproject/IntelOwl,4684,THREAT_INTEL,MALWARE_ANALYSIS,"fichiers, domaines, URLs",api,aucun,2,MALWARE_ANALYSIS | THREAT_INTEL,"agrège des analyses, dépend d'API tierces",AGPL-3.0,2026-07-02,moyenne,connaissance (non vérifié dépôt par dépôt)
+velocidex/velociraptor,4208,ENDPOINT_COLLECTION,INCIDENT_RESPONSE,"hôtes, agents déployés",cli,aucun,2,ENDPOINT_COLLECTION | INCIDENT_RESPONSE,puissant mais exige des agents déployés,,2026-08-25,moyenne,connaissance (non vérifié dépôt par dépôt)
+Neo23x0/Loki,3784,DEPENDENCY_ANALYSIS,THREAT_INTEL | MALWARE_ANALYSIS,,cli,à évaluer,2,MALWARE_ANALYSIS | THREAT_INTEL,à évaluer,GPL-3.0,2026-01-09,moyenne,non documenté
+f1tz/mcp-for-security-python,41,DEPENDENCY_ANALYSIS,NETWORK_DISCOVERY | WEB_ENDPOINT_DISCOVERY,,mcp_server,à évaluer,2,NETWORK_DISCOVERY | WEB_ENDPOINT_DISCOVERY,à évaluer,MIT,2025-06-22,faible,non documenté
+neptune1212/MCP_servers_cybersecurity,3,NETWORK_DISCOVERY,EXPLOITATION,,mcp_server,à évaluer,2,EXPLOITATION | NETWORK_DISCOVERY,à évaluer,,2025-05-31,faible,non documenté
+rapid7/metasploit-framework,38893,EXPLOITATION,,"hôtes, services",api,aucun,1,EXPLOITATION,"exploitation, exige une autorisation explicite",BSD-style,2026-08-27,élevée,connaissance (non vérifié dépôt par dépôt)
+aquasecurity/trivy,37652,DEPENDENCY_ANALYSIS,CONTAINER_SCAN | CLOUD_POSTURE | IAC_SCAN,,cli,à évaluer,1,IAC_SCAN,à évaluer,Apache-2.0,2026-08-21,élevée,non documenté
+projectdiscovery/nuclei,30872,WEB_VULN_SCAN,CLOUD_POSTURE,"web, réseau, configurations",cli,partiel avec zap,1,WEB_VULN_SCAN,"scan par modèles, très large, mais ACTIF",MIT,2026-08-26,élevée,connaissance (non vérifié dépôt par dépôt)
+RustScan/RustScan,20334,DEPENDENCY_ANALYSIS,NETWORK_DISCOVERY,,api,à évaluer,1,NETWORK_DISCOVERY,à évaluer,GPL-3.0,2026-06-10,élevée,non documenté
+ffuf/ffuf,16597,WEB_ENDPOINT_DISCOVERY,,"URL, chemins, paramètres",cli,aucun,1,WEB_ENDPOINT_DISCOVERY,"découverte de chemins cachés, simple et rapide",MIT,2026-08-20,élevée,connaissance (non vérifié dépôt par dépôt)
+sullo/nikto,10688,WEB_VULN_SCAN,,serveurs web,cli,partiel avec zap,1,WEB_VULN_SCAN,ancien mais utile sur les serveurs web,,2026-08-15,élevée,connaissance (non vérifié dépôt par dépôt)
+bridgecrewio/checkov,8973,IAC_SCAN,CLOUD_POSTURE,"Terraform, CloudFormation, Kubernetes, Dockerfile",cli,partiel avec trivy,1,IAC_SCAN,"IaC, capacité où on n'a RIEN",Apache-2.0,2026-08-27,élevée,connaissance (non vérifié dépôt par dépôt)
+aquasecurity/tfsec,7035,IAC_SCAN,,Terraform uniquement,cli,FORT avec checkov,1,IAC_SCAN,"Terraform seulement, checkov est plus large",MIT,2025-05-02,élevée,connaissance (non vérifié dépôt par dépôt)
+AutoRecon/AutoRecon,6093,NETWORK_DISCOVERY,,,api,à évaluer,1,NETWORK_DISCOVERY,à évaluer,GPL-3.0,2025-11-16,élevée,non documenté
+lanmaster53/recon-ng,5873,THREAT_INTEL,,"domaines, APIs",cli,partiel,1,THREAT_INTEL,OSINT modulaire,GPL-3.0,2024-11-01,élevée,connaissance (non vérifié dépôt par dépôt)
+deepfence/ThreatMapper,5318,SECRET_DETECTION,DEPENDENCY_ANALYSIS | CLOUD_POSTURE | EXPLOITATION,,cli,à évaluer,1,EXPLOITATION,à évaluer,Apache-2.0,2026-05-13,élevée,non documenté
+NullArray/AutoSploit,5253,EXPLOITATION,,,api,à évaluer,1,EXPLOITATION,à évaluer,GPL-3.0,2020-03-30,élevée,non documenté
+DependencyTrack/dependency-track,4148,DEPENDENCY_ANALYSIS,VULN_MANAGEMENT,"SBOM, suivi dans le temps",cli,partiel avec trivy,1,VULN_MANAGEMENT,"plateforme de suivi, pas un scanner",Apache-2.0,2026-08-27,moyenne,connaissance (non vérifié dépôt par dépôt)
+elastic/detection-rules,2695,DETECTION_RULES,,,cli,à évaluer,1,DETECTION_RULES,à évaluer,,2026-08-27,moyenne,non documenté
+Checkmarx/kics,2695,DEPENDENCY_ANALYSIS,IAC_SCAN,,cli,à évaluer,1,IAC_SCAN,à évaluer,Apache-2.0,2026-08-25,moyenne,non documenté
+samanhappy/mcphub,2337,ENDPOINT_COLLECTION,,,mcp_server,à évaluer,1,ENDPOINT_COLLECTION,à évaluer,Apache-2.0,2026-08-26,moyenne,non documenté
+splunk/security_content,1679,DETECTION_RULES,,,cli,à évaluer,1,DETECTION_RULES,à évaluer,Apache-2.0,2026-08-26,moyenne,non documenté
+TheHive-Project/Cortex,1618,INCIDENT_RESPONSE,,,api,à évaluer,1,INCIDENT_RESPONSE,à évaluer,AGPL-3.0,2026-06-30,moyenne,non documenté
+rfxn/linux-malware-detect,1490,DEPENDENCY_ANALYSIS,MALWARE_ANALYSIS,,cli,à évaluer,1,MALWARE_ANALYSIS,à évaluer,GPL-2.0,2026-04-26,moyenne,non documenté
+reconmap/reconmap,975,NETWORK_DISCOVERY,,,cli,à évaluer,1,NETWORK_DISCOVERY,à évaluer,Apache-2.0,2026-08-20,faible,non documenté
+GH05TCREW/MetasploitMCP,719,EXPLOITATION,,,mcp_server,à évaluer,1,EXPLOITATION,à évaluer,Apache-2.0,2026-02-05,faible,non documenté
+TIGMINT/TIGMINT,263,THREAT_INTEL,,,cli,à évaluer,1,THREAT_INTEL,à évaluer,MIT,2021-07-29,faible,non documenté
+REMnux/REMnux,120,MALWARE_ANALYSIS,,,cli,à évaluer,1,MALWARE_ANALYSIS,à évaluer,,2026-08-18,faible,non documenté
+GitHub/github-mcp-server,32552,SECRET_DETECTION,DEPENDENCY_ANALYSIS,,mcp_server,à évaluer,0,,à évaluer,MIT,2026-08-27,élevée,non documenté
+gitleaks/gitleaks,28977,SECRET_DETECTION,,"git, fichiers",cli,déjà intégré,0,,déjà intégré,MIT,2026-07-22,élevée,connaissance (non vérifié dépôt par dépôt)
+trufflesecurity/trufflehog,27604,SECRET_DETECTION,,"git, fichiers, API, S3",api,FORT avec gitleaks,0,,"vérifie si les secrets sont ACTIFS, pas juste présents",AGPL-3.0,2026-08-26,élevée,connaissance (non vérifié dépôt par dépôt)
+semgrep/semgrep,16416,CODE_STATIC_ANALYSIS,,30+ langages,api,déjà intégré,0,,déjà intégré,LGPL-2.1,2026-08-25,élevée,connaissance (non vérifié dépôt par dépôt)
+anchore/grype,12791,DEPENDENCY_ANALYSIS,CONTAINER_SCAN,"SBOM, images, filesystem",cli,FORT avec trivy,0,,"recouvre trivy, meilleur sur les SBOM",Apache-2.0,2026-08-27,élevée,connaissance (non vérifié dépôt par dépôt)
+future-architect/vuls,12244,DEPENDENCY_ANALYSIS,,"serveurs Linux, paquets système",cli,partiel avec trivy,0,,"scan de serveurs, pas de conteneurs",GPL-3.0,2026-08-27,élevée,connaissance (non vérifié dépôt par dépôt)
+kubescape/kubescape,11693,CLOUD_POSTURE,CONTAINER_SCAN,Kubernetes,cli,partiel avec trivy,0,,conformité Kubernetes,Apache-2.0,2026-08-27,élevée,connaissance (non vérifié dépôt par dépôt)
+PyCQA/bandit,8242,CODE_STATIC_ANALYSIS,,Python,cli,FORT avec semgrep,0,,"recouvre largement semgrep sur Python, apport faible",Apache-2.0,2026-08-04,élevée,connaissance (non vérifié dépôt par dépôt)
+nccgroup/ScoutSuite,7802,CLOUD_POSTURE,,"AWS, Azure, GCP",cli,partiel avec trivy,0,,audit de configuration cloud,GPL-2.0,2024-05-10,élevée,connaissance (non vérifié dépôt par dépôt)
+greenbone/openvas-scanner,4797,DEPENDENCY_ANALYSIS,,,cli,à évaluer,0,,à évaluer,GPL-2.0,2026-08-26,moyenne,non documenté
+Yelp/detect-secrets,4629,SECRET_DETECTION,,fichiers,cli,FORT avec gitleaks,0,,apport faible face à gitleaks,Apache-2.0,2026-04-02,moyenne,connaissance (non vérifié dépôt par dépôt)
+TracecatHQ/tracecat,3781,DEPENDENCY_ANALYSIS,,,cli,à évaluer,0,,à évaluer,AGPL-3.0,2026-08-27,moyenne,non documenté
+aquasecurity/cloudsploit,3768,CLOUD_POSTURE,,,cli,à évaluer,0,,à évaluer,GPL-3.0,2026-07-28,moyenne,non documenté
+deepfence/SecretScanner,3382,SECRET_DETECTION,DEPENDENCY_ANALYSIS | CONTAINER_SCAN,,cli,à évaluer,0,,à évaluer,MIT,2026-03-07,moyenne,non documenté
+SpecterOps/BloodHound,3355,CLOUD_POSTURE,,,cli,à évaluer,0,,à évaluer,Apache-2.0,2026-08-27,moyenne,non documenté
+sa7mon/S3Scanner,3165,DEPENDENCY_ANALYSIS,CLOUD_POSTURE,,cli,à évaluer,0,,à évaluer,MIT,2026-07-14,moyenne,non documenté
+invariantlabs-ai/mcp-scan,2964,DEPENDENCY_ANALYSIS,,,mcp_server,à évaluer,0,,à évaluer,Apache-2.0,2026-08-26,moyenne,non documenté
+Bearer/bearer,2739,CODE_STATIC_ANALYSIS,,,cli,à évaluer,0,,à évaluer,,2026-08-24,moyenne,non documenté
+archerysec/archerysec,2471,DEPENDENCY_ANALYSIS,,,cli,à évaluer,0,,à évaluer,GPL-3.0,2024-10-08,moyenne,non documenté
+GitGuardian/ggshield,1992,SECRET_DETECTION,,,cli,à évaluer,0,,à évaluer,MIT,2026-08-27,moyenne,non documenté
+mongodb/kingfisher,1215,SECRET_DETECTION,DEPENDENCY_ANALYSIS | CLOUD_POSTURE,,cli,à évaluer,0,,à évaluer,Apache-2.0,2026-08-23,moyenne,non documenté
+cisco-ai-defense/mcp-scanner,1051,DEPENDENCY_ANALYSIS,,,mcp_server,à évaluer,0,,à évaluer,Apache-2.0,2026-08-17,moyenne,non documenté
+secureCodeBox/secureCodeBox,986,CODE_STATIC_ANALYSIS,,,cli,à évaluer,0,,à évaluer,Apache,2026-08-25,faible,non documenté
+carlospolop/PurplePanda,720,DEPENDENCY_ANALYSIS,CLOUD_POSTURE,,cli,à évaluer,0,,à évaluer,,2026-07-11,faible,non documenté
+riseandignite/mcp-shield,554,DEPENDENCY_ANALYSIS,,,mcp_server,à évaluer,0,,à évaluer,MIT,2025-04-26,faible,non documenté
+deadbits/vigil-llm,496,DEPENDENCY_ANALYSIS,,,cli,à évaluer,0,,à évaluer,Apache-2.0,2024-01-31,faible,non documenté
+securityfortech/secops-mcp,207,DEPENDENCY_ANALYSIS,,,mcp_server,à évaluer,0,,à évaluer,MIT,2025-09-17,faible,non documenté
+padok-team/git-secret-scanner,69,SECRET_DETECTION,DEPENDENCY_ANALYSIS,,cli,à évaluer,0,,à évaluer,Apache-2.0,2026-08-20,faible,non documenté
+grab/secret-scanner,56,SECRET_DETECTION,DEPENDENCY_ANALYSIS,,api,à évaluer,0,,à évaluer,MIT,2019-12-19,faible,non documenté
+cookpad/deepalert,51,DEPENDENCY_ANALYSIS,,,api,à évaluer,0,,à évaluer,MIT,2026-05-27,faible,non documenté
+

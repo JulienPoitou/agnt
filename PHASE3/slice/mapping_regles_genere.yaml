@@ -1,0 +1,1471 @@
+genere_par: PHASE3/extraire_mapping.py
+source: metadata.technology des règles Semgrep
+note: 'Fichier GÉNÉRÉ, ne pas éditer à la main. Le mapping règle → paquet est extrait
+  des règles elles-mêmes : l''écrire à la main produisait une table d''une ligne et
+  rendait la corrélation aveugle. metadata.packages est vide dans ces jeux de règles
+  ; c''est metadata.technology qui porte le paquet.'
+regles_par_fichier:
+  javascript.yaml: 100
+  python.yaml: 191
+  security-audit.yaml: 118
+paquets_couverts:
+- angular
+- aws-cdk
+- boto3
+- cryptography
+- django
+- express
+- flask
+- jinja2
+- jose
+- knex
+- psycopg2
+- pycryptodome
+- pyjwt
+- pymongo
+- pyramid
+- pyyaml
+- requests
+- sequelize
+- sqlalchemy
+regles:
+  javascript.argon2.security.unsafe-argon2-config.unsafe-argon2-config:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  unsafe-argon2-config:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  express-jwt-hardcoded-secret:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.express-jwt-hardcoded-secret.express-jwt-hardcoded-secret:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.cors-misconfiguration.cors-misconfiguration:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  cors-misconfiguration:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-vm2-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.express-vm2-injection.express-vm2-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.express-xml2json-xxe.express-xml2json-xxe:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-xml2json-xxe:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.express-phantom-injection.express-phantom-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-phantom-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.express-vm-injection.express-vm-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-vm-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-expat-xxe:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.express-expat-xxe.express-expat-xxe:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  x-frame-options-misconfiguration:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.x-frame-options-misconfiguration.x-frame-options-misconfiguration:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  require-request:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.require-request.require-request:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.express-insecure-template-usage.express-insecure-template-usage:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-insecure-template-usage:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-puppeteer-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.express-puppeteer-injection.express-puppeteer-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.express-sandbox-injection.express-sandbox-code-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-sandbox-code-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-third-party-object-deserialization.express-third-party-object-deserialization:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-third-party-object-deserialization:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-ssrf.express-ssrf:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-ssrf:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-res-sendfile.express-res-sendfile:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-res-sendfile:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-check-directory-listing.express-check-directory-listing:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-check-directory-listing:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-open-redirect:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-open-redirect.express-open-redirect:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-session-hardcoded-secret.express-session-hardcoded-secret:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-session-hardcoded-secret:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-expires:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-cookie-session-no-expires:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-path-join-resolve-traversal:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.res-render-injection.res-render-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  res-render-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-libxml-noent:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-libxml-noent.express-libxml-noent:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-xml2json-xxe-event.express-xml2json-xxe-event:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-xml2json-xxe-event:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-jwt-not-revoked:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-jwt-not-revoked.express-jwt-not-revoked:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  direct-response-write:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.xss.direct-response-write.direct-response-write:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.injection.raw-html-format.raw-html-format:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  raw-html-format:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  javascript.jsonwebtoken.security.jwt-none-alg.jwt-none-alg:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  jwt-none-alg:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  hardcoded-jwt-secret:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  detect-angular-trust-as-method:
+    paquet: angular
+    methode: metadata_semgrep
+    confiance: high
+  javascript.angular.security.detect-angular-trust-as-method.detect-angular-trust-as-method:
+    paquet: angular
+    methode: metadata_semgrep
+    confiance: high
+  javascript.angular.security.detect-angular-sce-disabled.detect-angular-sce-disabled:
+    paquet: angular
+    methode: metadata_semgrep
+    confiance: high
+  detect-angular-sce-disabled:
+    paquet: angular
+    methode: metadata_semgrep
+    confiance: high
+  sequelize-sqli:
+    paquet: sequelize
+    methode: metadata_semgrep
+    confiance: high
+  javascript.aws-lambda.security.sequelize-sqli.sequelize-sqli:
+    paquet: sequelize
+    methode: metadata_semgrep
+    confiance: high
+  javascript.aws-lambda.security.knex-sqli.knex-sqli:
+    paquet: knex
+    methode: metadata_semgrep
+    confiance: high
+  knex-sqli:
+    paquet: knex
+    methode: metadata_semgrep
+    confiance: high
+  javascript.jose.security.jwt-none-alg.jwt-none-alg:
+    paquet: jose
+    methode: metadata_semgrep
+    confiance: high
+  javascript.jose.security.jwt-hardcode.hardcoded-jwt-secret:
+    paquet: jose
+    methode: metadata_semgrep
+    confiance: high
+  code-string-concat:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.lang.security.audit.code-string-concat.code-string-concat:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  node-knex-sqli:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.lang.security.audit.sqli.node-knex-sqli.node-knex-sqli:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.sequelize.security.audit.sequelize-injection-express.express-sequelize-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-sequelize-injection:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  hardcoded-passport-secret:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  javascript.passport-jwt.security.passport-hardcode.hardcoded-passport-secret:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  angular-bypasssecuritytrust:
+    paquet: angular
+    methode: metadata_semgrep
+    confiance: high
+  typescript.angular.security.audit.angular-domsanitizer.angular-bypasssecuritytrust:
+    paquet: angular
+    methode: metadata_semgrep
+    confiance: high
+  typescript.aws-cdk.security.awscdk-codebuild-project-public.awscdk-codebuild-project-public:
+    paquet: aws-cdk
+    methode: metadata_semgrep
+    confiance: high
+  awscdk-codebuild-project-public:
+    paquet: aws-cdk
+    methode: metadata_semgrep
+    confiance: high
+  awscdk-bucket-grantpublicaccessmethod:
+    paquet: aws-cdk
+    methode: metadata_semgrep
+    confiance: high
+  typescript.aws-cdk.security.awscdk-bucket-grantpublicaccessmethod.awscdk-bucket-grantpublicaccessmethod:
+    paquet: aws-cdk
+    methode: metadata_semgrep
+    confiance: high
+  aws-cdk-bucket-enforcessl:
+    paquet: aws-cdk
+    methode: metadata_semgrep
+    confiance: high
+  typescript.aws-cdk.security.audit.awscdk-bucket-enforcessl.aws-cdk-bucket-enforcessl:
+    paquet: aws-cdk
+    methode: metadata_semgrep
+    confiance: high
+  awscdk-bucket-encryption:
+    paquet: aws-cdk
+    methode: metadata_semgrep
+    confiance: high
+  typescript.aws-cdk.security.audit.awscdk-bucket-encryption.awscdk-bucket-encryption:
+    paquet: aws-cdk
+    methode: metadata_semgrep
+    confiance: high
+  typescript.aws-cdk.security.audit.awscdk-sqs-unencryptedqueue.awscdk-sqs-unencryptedqueue:
+    paquet: aws-cdk
+    methode: metadata_semgrep
+    confiance: high
+  awscdk-sqs-unencryptedqueue:
+    paquet: aws-cdk
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-path:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-cookie-session-no-path:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-httponly:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-cookie-session-no-httponly:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-cookie-session-no-domain:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-domain:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-secure:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-cookie-session-no-secure:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.express-cookie-settings.express-cookie-session-default-name:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  express-cookie-session-default-name:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  jwt-simple-noverify:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  javascript.jwt-simple.security.jwt-simple-noverify.jwt-simple-noverify:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  python.boto3.security.hardcoded-token.hardcoded-token:
+    paquet: boto3
+    methode: metadata_semgrep
+    confiance: high
+  hardcoded-token:
+    paquet: boto3
+    methode: metadata_semgrep
+    confiance: high
+  insecure-cipher-algorithm-idea:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.insecure-cipher-algorithms.insecure-cipher-algorithm-idea:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.insecure-cipher-mode-ecb.insecure-cipher-mode-ecb:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  insecure-cipher-mode-ecb:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  insecure-hash-algorithm-sha1:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.insufficient-dsa-key-size.insufficient-dsa-key-size:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  insufficient-dsa-key-size:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.insufficient-ec-key-size.insufficient-ec-key-size:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  insufficient-ec-key-size:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  insufficient-rsa-key-size:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.insufficient-rsa-key-size.insufficient-rsa-key-size:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  avoid-insecure-deserialization:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.avoid-insecure-deserialization.avoid-insecure-deserialization:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.open-redirect.open-redirect:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  open-redirect:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  reflected-data-httpresponse:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.reflected-data-httpresponse.reflected-data-httpresponse:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  reflected-data-httpresponsebadrequest:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.reflected-data-httpresponsebadrequest.reflected-data-httpresponsebadrequest:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.request-data-fileresponse.request-data-fileresponse:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  request-data-fileresponse:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.request-data-write.request-data-write:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  request-data-write:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.code.user-eval-format-string.user-eval-format-string:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  user-eval-format-string:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.code.user-eval.user-eval:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  user-eval:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  user-exec-format-string:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.code.user-exec-format-string.user-exec-format-string:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  user-exec:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.code.user-exec.user-exec:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.command.command-injection-os-system.command-injection-os-system:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  command-injection-os-system:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  xss-html-email-body:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.email.xss-html-email-body.xss-html-email-body:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.email.xss-send-mail-html-message.xss-send-mail-html-message:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  xss-send-mail-html-message:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.path-traversal.path-traversal-open.path-traversal-open:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  path-traversal-open:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  sql-injection-using-extra-where:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.sql.sql-injection-extra.sql-injection-using-extra-where:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  sql-injection-using-rawsql:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.sql.sql-injection-rawsql.sql-injection-using-rawsql:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  sql-injection-db-cursor-execute:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.sql.sql-injection-using-db-cursor-execute.sql-injection-db-cursor-execute:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.sql.sql-injection-using-raw.sql-injection-using-raw:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  sql-injection-using-raw:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.ssrf.ssrf-injection-requests.ssrf-injection-requests:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  ssrf-injection-requests:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  ssrf-injection-urllib:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.ssrf.ssrf-injection-urllib.ssrf-injection-urllib:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  password-empty-string:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.passwords.password-empty-string.password-empty-string:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  use-none-for-password-default:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.passwords.use-none-for-password-default.use-none-for-password-default:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  avoid_app_run_with_bad_host:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.app-run-param-config.avoid_app_run_with_bad_host:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  avoid_using_app_run_directly:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.app-run-security-config.avoid_using_app_run_directly:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.debug-enabled.debug-enabled:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  debug-enabled:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.directly-returned-format-string.directly-returned-format-string:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  directly-returned-format-string:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.os-system-injection.os-system-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  os-system-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.path-traversal-open.path-traversal-open:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.ssrf-requests.ssrf-requests:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  ssrf-requests:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  eval-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.user-eval.eval-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  exec-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.user-exec.exec-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  jwt-python-hardcoded-secret:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  python.jwt.security.jwt-hardcode.jwt-python-hardcoded-secret:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  jwt-python-none-alg:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  python.jwt.security.jwt-none-alg.jwt-python-none-alg:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  unverified-jwt-decode:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  python.jwt.security.unverified-jwt-decode.unverified-jwt-decode:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  request-session-http-in-with-context:
+    paquet: requests
+    methode: metadata_semgrep
+    confiance: high
+  ? python.lang.security.audit.insecure-transport.requests.request-session-http-in-with-context.request-session-http-in-with-context
+  : paquet: requests
+    methode: metadata_semgrep
+    confiance: high
+  python.lang.security.audit.insecure-transport.requests.request-session-with-http.request-session-with-http:
+    paquet: requests
+    methode: metadata_semgrep
+    confiance: high
+  request-session-with-http:
+    paquet: requests
+    methode: metadata_semgrep
+    confiance: high
+  request-with-http:
+    paquet: requests
+    methode: metadata_semgrep
+    confiance: high
+  python.lang.security.audit.insecure-transport.requests.request-with-http.request-with-http:
+    paquet: requests
+    methode: metadata_semgrep
+    confiance: high
+  avoid-pyyaml-load:
+    paquet: pyyaml
+    methode: metadata_semgrep
+    confiance: high
+  python.lang.security.deserialization.avoid-pyyaml-load.avoid-pyyaml-load:
+    paquet: pyyaml
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insecure-cipher-algorithm.insecure-cipher-algorithm-xor:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  insecure-cipher-algorithm-xor:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insecure-hash-algorithm.insecure-hash-algorithm-sha1:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insufficient-dsa-key-size.insufficient-dsa-key-size:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insufficient-rsa-key-size.insufficient-rsa-key-size:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.sqlalchemy.security.sqlalchemy-sql-injection.sqlalchemy-sql-injection:
+    paquet: sqlalchemy
+    methode: metadata_semgrep
+    confiance: high
+  sqlalchemy-sql-injection:
+    paquet: sqlalchemy
+    methode: metadata_semgrep
+    confiance: high
+  python.pymongo.security.mongodb.mongo-client-bad-auth:
+    paquet: pymongo
+    methode: metadata_semgrep
+    confiance: high
+  mongo-client-bad-auth:
+    paquet: pymongo
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.raw-html-format.raw-html-format:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.raw-html-concat.raw-html-format:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.tainted-url-host.tainted-url-host:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  tainted-url-host:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.tainted-sql-string.tainted-sql-string:
+    paquet: sqlalchemy
+    methode: metadata_semgrep
+    confiance: high
+  tainted-sql-string:
+    paquet: sqlalchemy
+    methode: metadata_semgrep
+    confiance: high
+  python.lang.security.audit.md5-used-as-password.md5-used-as-password:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  md5-used-as-password:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  avoid-sqlalchemy-text:
+    paquet: sqlalchemy
+    methode: metadata_semgrep
+    confiance: high
+  python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text:
+    paquet: sqlalchemy
+    methode: metadata_semgrep
+    confiance: high
+  python.aws-lambda.security.psycopg-sqli.psycopg-sqli:
+    paquet: psycopg2
+    methode: metadata_semgrep
+    confiance: high
+  psycopg-sqli:
+    paquet: psycopg2
+    methode: metadata_semgrep
+    confiance: high
+  sqlalchemy-sqli:
+    paquet: sqlalchemy
+    methode: metadata_semgrep
+    confiance: high
+  python.aws-lambda.security.sqlalchemy-sqli.sqlalchemy-sqli:
+    paquet: sqlalchemy
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.nan-injection.nan-injection:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  nan-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.nan-injection.nan-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.jinja2.security.audit.autoescape-disabled-false.incorrect-autoescape-disabled:
+    paquet: jinja2
+    methode: metadata_semgrep
+    confiance: high
+  incorrect-autoescape-disabled:
+    paquet: jinja2
+    methode: metadata_semgrep
+    confiance: high
+  missing-autoescape-disabled:
+    paquet: jinja2
+    methode: metadata_semgrep
+    confiance: high
+  python.jinja2.security.audit.missing-autoescape-disabled.missing-autoescape-disabled:
+    paquet: jinja2
+    methode: metadata_semgrep
+    confiance: high
+  dynamodb-filter-injection:
+    paquet: boto3
+    methode: metadata_semgrep
+    confiance: high
+  python.aws-lambda.security.dynamodb-filter-injection.dynamodb-filter-injection:
+    paquet: boto3
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-authtkt-cookie-httponly-unsafe-default:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.authtkt-cookie-httponly-unsafe-default.pyramid-authtkt-cookie-httponly-unsafe-default:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-authtkt-cookie-httponly-unsafe-value:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.authtkt-cookie-httponly-unsafe-value.pyramid-authtkt-cookie-httponly-unsafe-value:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.authtkt-cookie-samesite.pyramid-authtkt-cookie-samesite:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-authtkt-cookie-samesite:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.authtkt-cookie-secure-unsafe-default.pyramid-authtkt-cookie-secure-unsafe-default:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-authtkt-cookie-secure-unsafe-default:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.authtkt-cookie-secure-unsafe-value.pyramid-authtkt-cookie-secure-unsafe-value:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-authtkt-cookie-secure-unsafe-value:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.csrf-origin-check-disabled-globally.pyramid-csrf-origin-check-disabled-globally:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-csrf-origin-check-disabled-globally:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.csrf-origin-check-disabled.pyramid-csrf-origin-check-disabled:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-csrf-origin-check-disabled:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.set-cookie-httponly-unsafe-default.pyramid-set-cookie-httponly-unsafe-default:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-set-cookie-httponly-unsafe-default:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-set-cookie-httponly-unsafe-value:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.set-cookie-httponly-unsafe-value.pyramid-set-cookie-httponly-unsafe-value:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-set-cookie-samesite-unsafe-default:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.set-cookie-samesite-unsafe-default.pyramid-set-cookie-samesite-unsafe-default:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.set-cookie-samesite-unsafe-value.pyramid-set-cookie-samesite-unsafe-value:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-set-cookie-samesite-unsafe-value:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-set-cookie-secure-unsafe-default:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.set-cookie-secure-unsafe-default.pyramid-set-cookie-secure-unsafe-default:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.audit.set-cookie-secure-unsafe-value.pyramid-set-cookie-secure-unsafe-value:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-set-cookie-secure-unsafe-value:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.security.csrf-check-disabled-globally.pyramid-csrf-check-disabled-globally:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-csrf-check-disabled-globally:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-direct-use-of-response:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.security.direct-use-of-response.pyramid-direct-use-of-response:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.pyramid.security.sqlalchemy-sql-injection.pyramid-sqlalchemy-sql-injection:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  pyramid-sqlalchemy-sql-injection:
+    paquet: pyramid
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.command.subprocess-injection.subprocess-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  subprocess-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  csv-writer-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.csv-writer-injection.csv-writer-injection:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.csv-writer-injection.csv-writer-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.injection.subprocess-injection.subprocess-injection:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  crypto-mode-without-authentication:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.mode-without-authentication.crypto-mode-without-authentication:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.mode-without-authentication.crypto-mode-without-authentication:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  insecure-cipher-algorithm-arc4:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.insecure-cipher-algorithms-arc4.insecure-cipher-algorithm-arc4:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  insecure-cipher-algorithm-blowfish:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.insecure-cipher-algorithms-blowfish.insecure-cipher-algorithm-blowfish:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.insecure-hash-algorithms-md5.insecure-hash-algorithm-md5:
+    paquet: cryptography
+    methode: metadata_semgrep
+    confiance: high
+  insecure-hash-algorithm-md5:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insecure-cipher-algorithm-blowfish.insecure-cipher-algorithm-blowfish:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  insecure-cipher-algorithm-des:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insecure-cipher-algorithm-des.insecure-cipher-algorithm-des:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insecure-cipher-algorithm-rc2.insecure-cipher-algorithm-rc2:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  insecure-cipher-algorithm-rc2:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insecure-cipher-algorithm-rc4.insecure-cipher-algorithm-rc4:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  insecure-cipher-algorithm-rc4:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insecure-hash-algorithm-md2.insecure-hash-algorithm-md2:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  insecure-hash-algorithm-md2:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insecure-hash-algorithm-md4.insecure-hash-algorithm-md4:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  insecure-hash-algorithm-md4:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.pycryptodome.security.insecure-hash-algorithm-md5.insecure-hash-algorithm-md5:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  python.cryptography.security.empty-aes-key.empty-aes-key:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  empty-aes-key:
+    paquet: pycryptodome
+    methode: metadata_semgrep
+    confiance: high
+  hashids-with-django-secret:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.hashids-with-django-secret.hashids-with-django-secret:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.hashids-with-flask-secret.hashids-with-flask-secret:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  hashids-with-flask-secret:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  django-using-request-post-after-is-valid:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.django-using-request-post-after-is-valid.django-using-request-post-after-is-valid:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  flask-url-for-external-true:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.flask-url-for-external-true.flask-url-for-external-true:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  go.jwt-go.security.jwt.hardcoded-jwt-key:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  hardcoded-jwt-key:
+    paquet: pyjwt
+    methode: metadata_semgrep
+    confiance: high
+  javascript.express.security.audit.possible-user-input-redirect.unknown-value-in-redirect:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  unknown-value-in-redirect:
+    paquet: express
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.avoid-mark-safe.avoid-mark-safe:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  avoid-mark-safe:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.csrf-exempt.no-csrf-exempt:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  no-csrf-exempt:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  custom-expression-as-sql:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.custom-expression-as-sql.custom-expression-as-sql:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.extends-custom-expression.extends-custom-expression:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  extends-custom-expression:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.query-set-extra.avoid-query-set-extra:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  avoid-query-set-extra:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.raw-query.avoid-raw-sql:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  avoid-raw-sql:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.secure-cookies.django-secure-set-cookie:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  django-secure-set-cookie:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.unvalidated-password.unvalidated-password:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  unvalidated-password:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  globals-misuse-code-execution:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.code.globals-misuse-code-execution.globals-misuse-code-execution:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  mass-assignment:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.mass-assignment.mass-assignment:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  path-traversal-file-name:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.injection.path-traversal.path-traversal-file-name.path-traversal-file-name:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  context-autoescape-off:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.xss.context-autoescape-off.context-autoescape-off:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.xss.global-autoescape-off.global-autoescape-off:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  global-autoescape-off:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  template-autoescape-off:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.xss.template-autoescape-off.template-autoescape-off:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.xss.template-blocktranslate-no-escape.template-blocktranslate-no-escape:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  template-blocktranslate-no-escape:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.xss.template-translate-as-no-escape.template-translate-as-no-escape:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  template-translate-as-no-escape:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.django.security.audit.xss.template-var-unescaped-with-safeseq.template-var-unescaped-with-safeseq:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  template-var-unescaped-with-safeseq:
+    paquet: django
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.hardcoded-config.avoid_hardcoded_config_DEBUG:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  avoid_hardcoded_config_DEBUG:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.hardcoded-config.avoid_hardcoded_config_ENV:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  avoid_hardcoded_config_ENV:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.hardcoded-config.avoid_hardcoded_config_SECRET_KEY:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  avoid_hardcoded_config_SECRET_KEY:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  avoid_hardcoded_config_TESTING:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.hardcoded-config.avoid_hardcoded_config_TESTING:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.render-template-string.render-template-string:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  render-template-string:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  secure-set-cookie:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.secure-set-cookie.secure-set-cookie:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  flask-wtf-csrf-disabled:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.audit.wtf-csrf-disabled.flask-wtf-csrf-disabled:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.dangerous-template-string.dangerous-template-string:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  dangerous-template-string:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  insecure-deserialization:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.insecure-deserialization.insecure-deserialization:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.open-redirect.open-redirect:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  avoid_send_file_without_path_sanitization:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.secure-static-file-serve.avoid_send_file_without_path_sanitization:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  unescaped-template-extension:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.unescaped-template-extension.unescaped-template-extension:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.unsanitized-input.response-contains-unsanitized-input:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  response-contains-unsanitized-input:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.xss.audit.template-autoescape-off.template-autoescape-off:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  python.flask.security.xss.audit.template-unescaped-with-safe.template-unescaped-with-safe:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  template-unescaped-with-safe:
+    paquet: flask
+    methode: metadata_semgrep
+    confiance: high
+  disabled-cert-validation:
+    paquet: requests
+    methode: metadata_semgrep
+    confiance: high
+  python.requests.security.disabled-cert-validation.disabled-cert-validation:
+    paquet: requests
+    methode: metadata_semgrep
+    confiance: high
+  no-auth-over-http:
+    paquet: requests
+    methode: metadata_semgrep
+    confiance: high
+  python.requests.security.no-auth-over-http.no-auth-over-http:
+    paquet: requests
+    methode: metadata_semgrep
+    confiance: high

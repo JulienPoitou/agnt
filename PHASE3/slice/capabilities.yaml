@@ -1,0 +1,545 @@
+# Registre de capacités — Phase 3 (minimal)
+#
+# Ce fichier est la SEULE source de vérité sur les outils. Le moteur ne contient aucun
+# nom d'outil en dur : ajouter un outil dont la forme d'exécution est déjà supportée
+# (kind: cli) consiste à ajouter un bloc ici, sans toucher au code.
+#
+# Les jetons {BIN}, {SCAN}, {REGLES}, {DB}, {OUT} sont substitués par l'adaptateur au moment de
+# l'exécution. Le registre ne connaît donc AUCUN chemin du sandbox : c'est ce qui permet
+# de déplacer les montages sans toucher aux déclarations d'outils.
+#
+# Les args_obligatoires ne sont pas décoratifs. Chacun vient d'un comportement vérifié
+# par exécution — voir PHASE3/RESULTATS_TESTS.md :
+#   · gitleaks renvoie le secret EN CLAIR sans --redact
+#   · trivy envoie de la télémétrie à Aqua par défaut
+#   · trivy échoue sans base pré-peuplée (« cannot be specified on the first run »)
+#   · semgrep échoue sans réseau si les règles ne sont pas locales
+#   · semgrep avec le jeu p/ci ne détecte RIEN sur notre fixture (160 règles, 0 résultat)
+
+version: 1
+
+capabilities:
+
+  - id: CODE_STATIC_ANALYSIS
+    description: >
+      Analyse statique du code source : injection de commande, hachages faibles,
+      appels dangereux, motifs d'insécurité.
+    domaines: [code, appsec]
+    entree: [cible]
+    sortie: finding/code-issue
+    providers:
+      - id: semgrep
+        kind: cli
+        mode: CLI
+        risque: PASSIVE
+        cout: moyen
+        priorite: 100
+        commande: ["{BIN}/semgrep", "scan"]
+        # Le jeu de règles est ÉPINGLÉ (décision D1). p/ci produirait un scan vide
+        # sans erreur : c'est le pire mode d'échec d'un outil de sécurité.
+        args_obligatoires:
+          - "--config={REGLES}/python.yaml"
+          - "--config={REGLES}/security-audit.yaml"
+          - "--config={REGLES}/javascript.yaml"
+          - "--metrics=off"
+          - "--disable-version-check"
+          - "--json"
+          - "--quiet"
+          - "--output={sortie}"
+        sorties: ["semgrep.json"]
+        preconditions:
+          cibles: [repo, filesystem]
+          langues: [python]
+
+  - id: CODE_STATIC_ANALYSIS_SUITE
+    # INTERNE : capacité de test des providers déclaratifs. Elle décrit le MÊME besoin
+    # utilisateur que CODE_STATIC_ANALYSIS. La laisser visible fausse la sélection —
+    # un moteur qui choisit par capacité sur-sélectionne. Exclue de descr(), donc
+    # jamais proposée au LLM.
+    interne: true
+    description: >
+      Analyse statique complémentaire du code Python : appels dangereux, credentials
+      en dur, hachages faibles. Fournie par un provider ajouté UNIQUEMENT par manifest,
+      sans modification du cœur Python.
+    domaines: [code, appsec]
+    entree: [cible]
+    sortie: finding/code-issue
+    providers:
+      # ------------------------------------------------------------------ BANDIT
+      # Ce bloc est la preuve de la Phase 5A : ajouté dans un fichier YAML, exécuté
+      # par l'adaptateur générique, sans une ligne de Python spécifique à bandit.
+      - id: bandit
+        kind: tool
+        mode: CLI
+        risque: PASSIVE
+        cout: faible
+        priorite: 100
+        commande: ["bandit"]
+        manifest:
+          id: bandit
+          kind: tool
+          mode: cli
+          binaire: bandit
+          tool_id: bandit
+          applicabilite:
+            globs: ["*.py"]
+          # LISTE d'arguments, jamais une chaîne shell.
+          argv:
+            - "{BIN}"
+            - "-f"
+            - "json"
+            - "-r"
+            - "{TARGET}"
+          output:
+            format: json
+          extraction:
+            modele: plat
+            items_from: results
+            champs:
+              regle: test_id
+              nom_regle: test_name
+              fichier: filename
+              ligne: line_number
+              message: issue_text
+              severite: issue_severity
+              confiance: issue_confidence
+              cwe: issue_cwe.id
+              reference: more_info
+            # Bandit met la VALEUR RÉELLE du credential dans issue_text. Ce champ est
+            # donc du texte libre à risque : masquage large déclaré ici, pas deviné
+            # par le cœur.
+            masquer_large: [message]
+          risk: PASSIVE
+          target_types: [repository]
+          # bandit renvoie 1 quand il trouve des problèmes : ce n'est pas une erreur.
+          code_succes: [0, 1]
+          coverage:
+            declares_files: true
+          limite: >
+            bandit renvoie la valeur réelle d'un credential dans son message ; elle est
+            masquée à l'extraction, avant tout stockage.
+
+  - id: CODE_STATIC_ANALYSIS_CUSTOM
+    # INTERNE : capacité de test du parser spécifique (niveau 2). Même besoin utilisateur
+    # que CODE_STATIC_ANALYSIS.
+    interne: true
+    description: >
+      Analyse statique du code via un FORMAT NON STANDARD (CSV). Fournie par un provider
+      déclaré par manifest avec un PARSER SPÉCIFIQUE : second niveau de la promesse.
+    domaines: [code, appsec]
+    entree: [cible]
+    sortie: finding/code-issue
+    providers:
+      - id: bandit_custom
+        kind: tool
+        mode: CLI
+        risque: PASSIVE
+        cout: faible
+        priorite: 100
+        commande: ["bandit"]
+        manifest:
+          id: bandit_custom
+          kind: tool
+          mode: cli
+          binaire: bandit
+          tool_id: bandit
+          applicabilite:
+            globs: ["*.py"]
+          argv:
+            - "{BIN}"
+            - "-f"
+            - "custom"
+            - "--msg-template"
+            - "{relpath},{line},{test_id},{msg}"
+            - "-r"
+            - "{TARGET}"
+          output:
+            format: custom
+          extraction:
+            # Le parser est référencé par son NOM. Le cœur ne connaît ni Bandit ni le CSV.
+            parser: bandit_custom
+            # L'adaptateur stocke les items parsés sous cette clé ; c'est là que
+            # l'extraction générique doit les reprendre.
+            items_from: items
+            # Jetons propres à bandit : le cœur les autorise mais ne les résout PAS,
+            # c'est bandit qui les interprète. Déclarés explicitement, pas devinés.
+            jetons_outil: ["{relpath}", "{line}", "{test_id}", "{msg}"]
+            champs:
+              regle: regle
+              fichier: fichier
+              ligne: ligne
+              message: message
+          risk: PASSIVE
+          target_types: [repository]
+          code_succes: [0, 1]
+          coverage:
+            declares_files: true
+          limite: >
+            format CSV non standard : lu par un parser spécifique enregistré sous le nom
+            « bandit_custom ». Le cœur du pipeline ne connaît ni l'outil ni le format.
+
+  # ---------------------------------------------------------------- Go (2026-08-29)
+  # Chantier « largeur-Go » : besoin mesuré en dogfooding (mux : 0 règle semgrep ne
+  # porte sur du Go — cécité totale sur le langage). Capacité PUBLIQUE : les requêtes
+  # génériques l'incluent ; sur dépôt non-Go le provider rend honnêtement
+  # « not_scanned : aucune règle n'a porté ».
+  #
+  # POURQUOI PAS GOSEC (pourquoi semgrep_go) : gosec est l'outil de référence, mais il
+  # exige le TOOLCHAIN GO dans l'isolateur (« go command required », mesuré le
+  # 2026-08-29 sur gosec 2.29.0) — c'est un chantier d'isolateur, pas de déclaration,
+  # reporté et documenté. semgrep parse le Go nativement : zéro binaire nouveau,
+  # règles p/golang épinglées comme les autres packs.
+  #
+  # POURQUOI PAS un 2e provider sur CODE_STATIC_ANALYSIS : la sélection prend le
+  # premier provider PASSIF éligible (passifs[0]) — un 2e provider sur une même
+  # capacité sans fan-out construit serait du décoratif. Nouvelle capacité =
+  # sélection intacte, requêtes génériques enrichies.
+  - id: CODE_STATIC_ANALYSIS_GO
+    description: >
+      Analyse statique du code Go : crypto faible, TLS non vérifié, constructions
+      dangereuses (règles p/golang épinglées). Couverture limitée : gosec (analyse
+      de flux, plus profond) exige le toolchain Go dans l'isolateur — reporté.
+    domaines: [code, appsec, go]
+    entree: [cible]
+    sortie: finding/code-issue
+    providers:
+      - id: semgrep_go
+        kind: cli
+        mode: CLI
+        risque: PASSIVE
+        cout: moyen
+        commande: ["semgrep", "scan"]        # pour information (même usage que semgrep)
+        priorite: 68
+        manifest:
+          id: semgrep_go
+          binaire: semgrep
+          tool_id: semgrep
+          applicabilite:
+            globs: ["*.go"]
+          argv:
+            - "{BIN}"
+            - "scan"
+            - "--config={REGLES}/golang.yaml"
+            - "--json"
+            - "--quiet"
+            - "{TARGET}"
+          entree:
+            kind: fichier
+            chemin: "{IN_SCAN}"
+          sortie:
+            format: json
+            chemin: null
+          code_succes: [0, 1]
+          delai_s: 300
+          extraction:
+            modele: plat
+            items_from: results
+            # semgrep préfixe les ids de règles locales avec le chemin du fichier de
+            # règles — non déterministe selon le montage. Nettoyage déclaré par nom.
+            nettoyage_regle: semgrep
+            champs:
+              regle: check_id
+              nom_regle: extra.metadata.name
+              fichier: path
+              ligne: start.line
+              message: extra.message
+              severite: extra.severity
+              confiance: extra.metadata.confidence
+            masquer_large: [message]
+
+  - id: DEPENDENCY_ANALYSIS
+    description: >
+      Détection des vulnérabilités connues dans les dépendances déclarées,
+      à partir des manifests et lockfiles.
+    domaines: [dépendances, sca, supply-chain]
+    entree: [cible]
+    sortie: finding/vulnerability
+    # Étape 4 (2026-08-29) : premier fan-out RÉEL. Deux providers passifs, bases de
+    # vulnérabilités indépendantes (trivy-db vs grype-db) — les désaccords sont une
+    # information, pas un bruit. Sélection : trivy d'abord (priorité 100), grype en
+    # second (110). max_providers=2 : le pool peut grandir, la sélection reste bornée.
+    mode_selection: fan_out
+    max_providers: 2
+    providers:
+      - id: trivy
+        kind: cli
+        mode: CLI
+        risque: PASSIVE
+        cout: moyen
+        priorite: 100
+        commande: ["{BIN}/trivy", "fs"]
+        args_obligatoires:
+          - "--scanners=vuln"
+          - "--skip-db-update"          # la base est pré-peuplée hors sandbox
+          - "--skip-java-db-update"
+          - "--disable-telemetry"       # télémétrie Aqua active par défaut
+          - "--format=json"
+          - "--no-progress"
+          - "--cache-dir={DB}/trivy"   # {DB} = parent commun des bases (trivy/, grype/)
+          - "--output={sortie}"
+        sorties: ["trivy.json"]
+        preconditions:
+          cibles: [repo, filesystem]
+          # Vérifié par exécution : sans lockfile, Trivy ignore SILENCIEUSEMENT les
+          # dépendances npm. C'est exactement ce que la couverture doit signaler.
+          lockfile_requis_pour: [npm]
+      # --------------------------------------------------------------------- GRYPE
+      # 2e provider DEPENDENCY_ANALYSIS — qualifié par le harnais le 2026-08-29
+      # (PHASE3/testrepo_sca/artefacts_captures/DOSSIER_grype.yaml) : 62 findings,
+      # code 0, 5,8 s, contenu stable entre deux exécutions (les octets varient :
+      # horodatages — mesuré et documenté).
+      - id: grype
+        kind: tool
+        mode: CLI
+        risque: PASSIVE
+        cout: moyen
+        priorite: 110
+        commande: ["grype"]
+        manifest:
+          id: grype
+          kind: tool
+          mode: cli
+          binaire: grype
+          tool_id: grype
+          argv:
+            - "{BIN}"
+            - "dir:{TARGET}"
+            - "-o"
+            - "json"
+          # grype 0.118 n'a AUCUN flag pour son cache de base : uniquement la
+          # variable d'environnement (mesuré : --db-cache-dir → « unknown flag »).
+          # D'où le champ déclaratif `env` — validé comme argv, résolu par le cœur.
+          env:
+            GRYPE_DB_CACHE_DIR: "{DB}/grype"
+          output:
+            format: json
+          extraction:
+            # Modèle PLAT : matches[] en racine. Les matches sont au niveau PAQUET
+            # (artifact.name/version) — aucun fichier. L'alias `paquet` est DÉCLARÉ :
+            # sans lui, package=None et la convergence avec trivy est impossible.
+            modele: plat
+            items_from: matches
+            champs:
+              regle: vulnerability.id
+              paquet: artifact.name
+              severite: vulnerability.severity
+              message: vulnerability.description
+            masquer_large: [message]
+          risk: PASSIVE
+          target_types: [repository]
+          # Mesuré : code 0 même avec 62 findings (pas de --fail-on).
+          code_succes: [0]
+          applicabilite:
+            # Pas de lockfile/manifest de dépendances → grype ne trouve rien. Les
+            # globes préfixés par * traversent les sous-répertoires (fnmatch).
+            globs:
+              - "*package-lock.json"
+              - "*yarn.lock"
+              - "*pnpm-lock.yaml"
+              - "*requirements.txt"
+              - "*Pipfile.lock"
+              - "*poetry.lock"
+              - "*go.sum"
+              - "*Gemfile.lock"
+              - "*pom.xml"
+              - "*build.gradle*"
+          limite: >
+            grype identifie en GHSA-* (mesuré : 62/62 sur testrepo_sca), trivy en
+            CVE-* : convergence inter-outils par PAQUET (6/6 paquets communs
+            mesurés), pas par identifiant de règle. La base grype (~2 Go) est
+            pré-téléchargée sous {DB}/grype ; sans elle, grype tenterait un
+            téléchargement — impossible dans la sandbox (pas de réseau).
+
+  - id: SECRET_DETECTION
+    description: >
+      Détection des secrets, credentials et tokens exposés dans le code
+      ou dans l'historique de version.
+    domaines: [secrets, code]
+    entree: [cible]
+    sortie: finding/secret-exposure
+    providers:
+      - id: gitleaks
+        kind: cli
+        mode: CLI
+        risque: PASSIVE
+        cout: faible
+        priorite: 100
+        commande: ["{BIN}/gitleaks", "git"]
+        # Sans --redact, le champ Secret contient la VALEUR RÉELLE du credential.
+        # Décision actée : la valeur d'un secret n'entre jamais dans notre base.
+        args_obligatoires:
+          - "--redact"
+          - "--report-format=json"
+          - "--no-banner"
+          - "--report-path={sortie}"
+        sorties: ["gitleaks.json"]
+        preconditions:
+          cibles: [repo]
+          historique_git: requis
+
+  - id: IAC_SCAN
+    description: >
+      Analyse des fichiers d'infrastructure-as-code (Terraform) : mauvaises
+      configurations de sécurité détectées avant déploiement — bucket public,
+      volume non chiffré, réseau ouvert sur tout Internet.
+    domaines: [cloud, iac]
+    entree: [cible]
+    sortie: finding/iac-issue
+    # Étape 4 (2026-08-29) : fan-out checkov × kics — moteurs de règles
+    # indépendants (checkov : checks Python ; kics : 1810 requêtes OPA). Les
+    # désaccords de couverture sont une information mesurable.
+    mode_selection: fan_out
+    max_providers: 2
+    providers:
+      # ------------------------------------------------------------------ CHECKOV
+      # Provider ajouté par manifest (niveau 1) le 2026-08-28.
+      # Vérifié par exécution : résultats identiques avec et sans réseau
+      # (bwrap --unshare-net, 38 findings sur testrepo_iac) ; la sortie n'écho
+      # pas le faux secret de la fixture (leçon #1).
+      - id: checkov
+        kind: tool
+        mode: CLI
+        risque: PASSIVE
+        cout: moyen
+        priorite: 100
+        commande: ["checkov"]
+        manifest:
+          id: checkov
+          kind: tool
+          mode: cli
+          binaire: checkov
+          tool_id: checkov
+          # LISTE d'arguments, jamais une chaîne shell.
+          argv:
+            - "{BIN}"
+            - "-d"
+            - "{TARGET}"
+            - "--output"
+            - "json"
+            - "--quiet"
+          output:
+            format: json
+          extraction:
+            # MULTI-FRAMEWORK (2026-08-28) : sans --framework, checkov émet une LISTE
+            # de blocs en racine, un par framework détecté dans la cible. Le modèle
+            # « imbriqué » la lit via le jeton '$' (racine) et un nested_key pointé —
+            # extension générique d'extraction.py, sans parser spécifique ni code
+            # propre à l'outil. Avant : --framework terraform + modèle plat, qui
+            # laissait kubernetes et dockerfile hors couverture.
+            modele: imbriqué
+            nested_from: "$"
+            nested_key: results.failed_checks
+            contexte:
+              cadre: check_type
+            champs:
+              regle: check_id
+              nom_regle: check_name
+              fichier: file_path
+              ligne: file_line_range[0]
+              # cadre est injecté par contexte (check_type du bloc) : déclaré ici
+              # pour que le finding normalisé porte son framework d'origine.
+              cadre: cadre
+              # description et short_description sont TOUJOURS null dans la sortie OSS
+              # (mesuré : 0/15 le 2026-08-28). check_name est le seul texte lisible :
+              # dupliqué en message plutôt que de laisser le rapport humain vide.
+              message: check_name
+              severite: severity
+              reference: guideline
+            # Aucune fuite mesurée sur la fixture, mais déclaré par précaution :
+            # message est du texte libre, même principe que issue_text (Bandit).
+            masquer_large: [message]
+          risk: PASSIVE
+          target_types: [repository]
+          # checkov sort en 1 quand il trouve des non-conformités : pas une erreur.
+          code_succes: [0, 1]
+          limite: >
+            severity est null dans la sortie OSS (mesuré le 2026-08-28) : la gravité
+            remonte « indéterminée », jamais inventée (leçon #4). file_path n'a pas la
+            même base selon le framework (module Terraform vs dépôt) : les chemins sont
+            conservés tels que l'outil les émet, non réécrits. Les frameworks détectés
+            dépendent du contenu de la cible ; un framework absent n'est pas un échec.
+      # ---------------------------------------------------------------------- KICS
+      # 2e provider IAC_SCAN — qualifié par le harnais le 2026-08-29
+      # (PHASE3/testrepo_iac/artefacts_captures/DOSSIER_kics.yaml) : 46 requêtes,
+      # 110 findings, code 60 (= « détections présentes », convention kics), 32,5 s,
+      # contenu stable (octets non : horodatages + ordre d'énumération Go — mesuré).
+      - id: kics
+        kind: tool
+        mode: CLI
+        risque: PASSIVE
+        cout: moyen
+        priorite: 110
+        commande: ["kics"]
+        manifest:
+          id: kics
+          kind: tool
+          mode: cli
+          binaire: kics
+          tool_id: kics
+          argv:
+            - "{BIN}"
+            - "scan"
+            - "-p"
+            - "{TARGET}"
+            - "--report-formats"
+            - "json"
+            # {OUT_DIR} (et non {OUT}) : kics --output-path exige un RÉPERTOIRE
+            # existant ; --output-name aligne le fichier écrit (kics.json) sur ce
+            # que le cœur attend de lire.
+            - "--output-path"
+            - "{OUT_DIR}"
+            - "--output-name"
+            - "kics"
+            # La bibliothèque de requêtes (1810 fichiers OPA) n'est PAS dans le
+            # tarball binaire : elle vient de l'asset officiel extracted-info.zip,
+            # installée sous {REGLES}/kics/queries (bootstrap.sh, sha256 épinglé).
+            - "-q"
+            - "{REGLES}/kics/queries"
+            - "--no-progress"
+          output:
+            format: json
+          extraction:
+            # Modèle IMBRIQUÉ : queries[].files[] — severite/query_name vivent au
+            # niveau query, file_name/line au niveau file. contexte recopie le
+            # parent dans chaque item (API existante d'extraction.py).
+            modele: imbriqué
+            nested_from: queries
+            nested_key: files
+            contexte:
+              regle_q: query_name
+              severite_q: severity
+              message_q: description
+            champs:
+              regle: regle_q
+              fichier: file_name
+              ligne: line
+              severite: severite_q
+              message: message_q
+            masquer_large: [message]
+          risk: PASSIVE
+          target_types: [repository]
+          # Convention kics (mesurée le 2026-08-29 sur DEUX cibles + documentation) :
+          # 0 = aucun résultat ; puis ÉCHELLE DE SÉVÉRITÉ (défaut --fail-on = toutes) :
+          # 20=INFO, 30=LOW (mesuré sur gorilla/mux), 40=MEDIUM, 50=HIGH,
+          # 60=CRITICAL (mesuré sur testrepo_iac). Un premier manifest déclarait
+          # [0, 60] d'après une seule observation — mesure fausse corrigée.
+          code_succes: [0, 20, 30, 40, 50, 60]
+          applicabilite:
+            # PAS de *.json : il matcherait package.json et lancerait un scan de
+            # 30 s pour rien. Les formats JSON d'IaC (CloudFormation, ARM) restent
+            # hors couverture — limite documentée, pas une exclusion devinée.
+            globs:
+              - "*.tf"
+              - "*.tfvars"
+              - "*.yaml"
+              - "*.yml"
+              - "Dockerfile"
+              - "*docker-compose*"
+          limite: >
+            Bibliothèque de requêtes v2.1.20 pré-installée sous {REGLES}/kics ;
+            sans elle, kics échoue (« unable to find queries »). Les formats IaC
+            en JSON (CloudFormation, ARM) ne sont pas couverts par les globes
+            (collision avec package.json). similarity_id et ordre d'énumération
+            varient entre deux exécutions (mesuré) — l'ensemble des détections,
+            non. severity est portée par la requête, pas par le fichier.
+

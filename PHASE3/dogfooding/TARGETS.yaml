@@ -1,0 +1,37 @@
+# Étape 5 — cibles de dogfooding (2026-08-29)
+# Cibles CONTRÔLÉES : dépôts publics, clonés en shallow, commit figé au clonage.
+# Aucune donnée sensible, aucun système tiers contacté — scans PASSIFS en sandbox
+# sans réseau (garde-fou n°3 de l'étape 5).
+#
+# Choix : quatre profils complémentaires qui exercent des chemins DIFFÉRENTS du
+# système (pas quatre fois le même cas).
+
+cibles:
+  mux:
+    repo: https://github.com/gorilla/mux
+    commit_clonage: db9d1d0
+    profil: bibliothèque Go — go.mod SANS go.sum (pas de dépendances épinglées)
+    attendu_honnete: semgrep_go s'applique ; grype écarté (pas de go.sum) ; trivy
+      sans lockfile Go ne remonte rien — la couverture doit le dire, pas le cacher.
+  terraform-aws-vpc:
+    repo: https://github.com/terraform-aws-modules/terraform-aws-vpc
+    commit_clonage: cf0e3ca
+    profil: module Terraform réel (77 .tf) — fan-out checkov × kics à échelle réelle
+    attendu_honnete: les deux providers IaC s'appliquent ; désaccords de couverture
+      entre moteurs possibles et attendus (c'est une information).
+  requests:
+    repo: https://github.com/psf/requests
+    commit_clonage: 5460f46
+    profil: bibliothèque Python (37 .py) — requirements-DEV.txt, pas de lockfile
+      de production
+    attendu_honnete: semgrep + bandit s'appliquent ; divergence trivy/grype
+      possible (trivy lit requirements*.txt, le glob grype déclaré vise
+      *requirements.txt) — à observer, pas à corriger sans mesure.
+  mocha:
+    repo: https://github.com/mochajs/mocha
+    commit_clonage: e6b9ee7
+    profil: projet JavaScript (243 .js) AVEC package-lock.json — SCA réel
+      (trivy × grype) + semgrep javascript ; la plus grosse cible (contrainte
+      mémoire de la machine : 2 Go de RAM)
+    attendu_honnete: fan-out SCA réel sur lockfile de production ; temps et
+      mémoire à mesurer.

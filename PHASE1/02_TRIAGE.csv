@@ -1,0 +1,325 @@
+owner_repo,nom,statut,niveau,motif,categorie,importance,licence_connue,url_resolue,section
+projectdiscovery/nuclei,Nuclei,SHORTLIST,analyse approfondie,30872 étoiles; dernier commit 2026-08-26; licence MIT,Scanner de vulnérabilités basé sur des modèles,⭐ Haute,oui,oui,(sans section)
+rapid7/metasploit-framework,Metasploit Framework,TRIAGE-HAUTE,triage obligatoire,38893 étoiles; dernier commit 2026-08-27; licence BSD-style,Pentesting & Exploit Framework,⭐ Haute,oui,oui,(sans section)
+zaproxy/zaproxy,OWASP ZAP,TRIAGE-HAUTE,triage obligatoire,15692 étoiles; dernier commit 2026-08-27; licence Apache-2.0,DAST / Proxy de sécurité web,⭐ Haute,oui,oui,(sans section)
+SpecterOps/BloodHound,BloodHound,TRIAGE-MINIMAL,triage minimal,3355 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Active Directory / Attack Path Analysis,🟡 Moyenne,oui,oui,(sans section)
+wazuh/wazuh,Wazuh,TRIAGE-HAUTE,triage obligatoire,16696 étoiles; dernier commit 2026-08-24; licence BSD,SIEM / XDR / Host Security,⭐ Haute,oui,oui,🔵 Defensive / Blue Team
+velocidex/velociraptor,Velociraptor,SHORTLIST,analyse approfondie,4208 étoiles; dernier commit 2026-08-25; licence inconnue,Endpoint Visibility & DFIR,⭐ Haute,non,oui,🔵 Defensive / Blue Team
+zeek/zeek,Zeek,TRIAGE-HAUTE,triage obligatoire,7911 étoiles; dernier commit 2026-08-27; licence BSD,Network Security Monitoring,⭐ Haute,oui,oui,🔵 Defensive / Blue Team
+OISF/suricata,Suricata,TRIAGE-HAUTE,triage obligatoire,6573 étoiles; dernier commit 2026-08-26; licence GPL-2.0,IDS / IPS / Network Threat Detection,⭐ Haute,oui,oui,🔵 Defensive / Blue Team
+modelcontextprotocol/servers,Model Context Protocol Servers,TRIAGE-HAUTE,triage obligatoire,89909 étoiles; dernier commit 2026-08-18; licence Apache,MCP Registre & Serveurs Officiels,⭐ Haute,oui,oui,🟣 MCP / Tool Aggregation
+punkpeye/awesome-mcp-servers,Awesome MCP Servers,TRIAGE-HAUTE,triage obligatoire,92883 étoiles; dernier commit 2026-08-26; licence MIT,MCP Discovery / Catalog,⭐ Haute,oui,oui,🟣 MCP / Tool Aggregation
+smithery-ai/cli,Smithery CLI,TRIAGE-HAUTE,triage obligatoire,826 étoiles; dernier commit 2026-05-31; licence AGPL-3.0,MCP Gateway / Registry & Package Manager,⭐ Haute,oui,oui,🟣 MCP / Tool Aggregation
+usestrix/strix,Strix,SHORTLIST,analyse approfondie,58766 étoiles; dernier commit 2026-08-26; licence Apache-2.0,AI Pentesting Agent,⭐ Haute,oui,oui,🟢 AI Security Agents
+GreyDGL/PentestGPT,PentestGPT,IGNORE,écarté,15105 étoiles; dernier commit 2026-07-14; licence MIT,AI Pentesting Assistant,⭐ Haute,oui,oui,🟢 AI Security Agents
+kyuupichan/gpt-pentest,GPT-Pentest,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),AI Security Agent,🟡 Moyenne,non,non,🟢 AI Security Agents
+Shuffle/Shuffle,Shuffle,TRIAGE-HAUTE,triage obligatoire,2423 étoiles; dernier commit 2026-05-14; licence AGPL-3.0,Open Source SOAR,⭐ Haute,oui,oui,🟠 Security Orchestration / Automation
+n8n-io/n8n,n8n,TRIAGE-HAUTE,triage obligatoire,202606 étoiles; dernier commit 2026-08-27; licence inconnue,Workflow Automation Engine,⭐ Haute,non,oui,🟠 Security Orchestration / Automation
+TheHive-Project/Cortex,Cortex,SHORTLIST,analyse approfondie,1618 étoiles; dernier commit 2026-06-30; licence AGPL-3.0,Security Analysis & Response Engine,⭐ Haute,oui,oui,🟠 Security Orchestration / Automation
+DefectDojo/django-DefectDojo,DefectDojo,SHORTLIST,analyse approfondie,4910 étoiles; dernier commit 2026-08-24; licence BSD-3-Clause,Vulnerability Management & Aggregation,⭐ Haute,oui,oui,🟡 Vulnerability Management
+infobyte/faraday,Faraday,SHORTLIST,analyse approfondie,6696 étoiles; dernier commit 2026-08-19; licence GPL-3.0,Vulnerability Management Platform,⭐ Haute,oui,oui,🟡 Vulnerability Management
+archerysec/archerysec,ArcherySec,TRIAGE-MINIMAL,triage minimal,2471 étoiles; inactif depuis 23 mois; licence GPL-3.0,Vulnerability Assessment Orchestration,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+OpenCTI-Platform/opencti,OpenCTI,TRIAGE-HAUTE,triage obligatoire,9858 étoiles; dernier commit 2026-08-27; licence inconnue,Threat Intelligence Platform (TIP),⭐ Haute,non,oui,🟤 Threat Intelligence / OSINT
+MISP/MISP,MISP,TRIAGE-HAUTE,triage obligatoire,6490 étoiles; dernier commit 2026-08-25; licence AGPL-3.0,Threat Sharing Platform,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+smicallef/spiderfoot,SpiderFoot,TRIAGE-HAUTE,triage obligatoire,21459 étoiles; inactif depuis 34 mois; licence MIT,OSINT Automation Framework,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+aquasecurity/trivy,Trivy,SHORTLIST,analyse approfondie,37652 étoiles; dernier commit 2026-08-21; licence Apache-2.0,All-in-One Cloud & Container Scanner,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+prowler-cloud/prowler,Prowler,SHORTLIST,analyse approfondie,14696 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Cloud Security Posture Management (CSPM),⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+falcosecurity/falco,Falco,SHORTLIST,analyse approfondie,9310 étoiles; dernier commit 2026-07-31; licence Apache-2.0,Container Runtime Security,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+semgrep/semgrep,Semgrep,SHORTLIST,analyse approfondie,16416 étoiles; dernier commit 2026-08-25; licence LGPL-2.1,SAST / Static Code Analysis,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+bridgecrewio/checkov,Checkov,TRIAGE-MINIMAL,triage minimal,8973 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Infrastructure as Code (IaC) Security,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+gitleaks/gitleaks,Gitleaks,TRIAGE-HAUTE,triage obligatoire,28977 étoiles; dernier commit 2026-07-22; licence MIT,Secrets Detection,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+TheHive-Project/TheHive,TheHive,SHORTLIST,analyse approfondie,3947 étoiles; dernier commit 2025-07-25; archivé; licence AGPL-3.0,Incident Response Platform,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+kevoreilly/CAPEv2,CAPEv2,TRIAGE-MINIMAL,triage minimal,3454 étoiles; dernier commit 2026-08-23; licence inconnue,Automated Malware Analysis (Sandbox),🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+log2timeline/plaso,Plaso (log2timeline),TRIAGE-MINIMAL,triage minimal,2140 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Forensic Timeline Generator,⚪ Faible,oui,oui,🟤 Threat Intelligence / OSINT
+langchain-ai/langgraph,LangGraph,SHORTLIST,analyse approfondie,40558 étoiles; dernier commit 2026-08-26; licence MIT,Agentic Workflow Framework,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+BerriAI/litellm,LiteLLM,TRIAGE-HAUTE,triage obligatoire,57403 étoiles; dernier commit 2026-08-27; licence inconnue,AI Model Gateway & Proxy,⭐ Haute,non,oui,🟤 Threat Intelligence / OSINT
+open-policy-agent/opa,Open Policy Agent (OPA),SHORTLIST,analyse approfondie,12171 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Policy Engine / Governance,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+elastic/kibana,Elastic Security (Kibana),TRIAGE-MINIMAL,triage minimal,21265 étoiles; dernier commit 2026-08-27; licence inconnue,SIEM & Visualization Platform,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+Security-Onion-Solutions/securityonion,Security Onion,TRIAGE-HAUTE,triage obligatoire,4848 étoiles; dernier commit 2026-07-29; licence inconnue,Network Security Platform,⭐ Haute,non,oui,🟤 Threat Intelligence / OSINT
+sbilly/awesome-security,Awesome Security,TRIAGE-HAUTE,triage obligatoire,14800 étoiles; dernier commit 2026-01-11; licence MIT,Curated List / Security Discovery,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+hslatman/awesome-threat-intelligence,Awesome Threat Intelligence,TRIAGE-MINIMAL,triage minimal,10580 étoiles; dernier commit 2026-05-31; licence Apache-2.0,Curated List / CTI,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+devsecops/awesome-devsecops,Awesome DevSecOps,TRIAGE-MINIMAL,triage minimal,5460 étoiles; inactif depuis 59 mois; licence CC0-1.0,Curated List / DevSecOps,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+vxcontrol/pentagi,PentAGI,SHORTLIST,analyse approfondie,22056 étoiles; dernier commit 2026-08-06; licence MIT,AI Pentesting Agent,⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+GaneshKrishnaReddy/PentestCode,PentestCode,TRIAGE-HAUTE,triage obligatoire,1 étoiles; dernier commit 2026-07-19; licence MIT,AI Pentesting Agent,⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+KeygraphHQ/shannon,Shannon,SHORTLIST,analyse approfondie,47248 étoiles; dernier commit 2026-08-27; licence AGPL-3.0,AI Pentesting Agent,⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+zakirkun/guardian-cli,Guardian CLI,TRIAGE-HAUTE,triage obligatoire,1853 étoiles; dernier commit 2026-06-27; licence MIT,AI Pentesting Agent,⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+SHAdd0WTAka/zen-ai-pentest,Zen AI Pentest,TRIAGE-MINIMAL,triage minimal,441 étoiles; dernier commit 2026-08-01; licence MIT,AI Pentesting Agent,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+GH05TCREW/pentestagent,PentestAgent,IGNORE,écarté,3014 étoiles; dernier commit 2026-08-04; licence MIT,AI Pentesting Agent,⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+samugit83/redamon,Redamon,SHORTLIST,analyse approfondie,2356 étoiles; dernier commit 2026-08-23; licence MIT,AI Red Team Agent,⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+ahmetdrak/drakben,Drakben,TRIAGE-MINIMAL,triage minimal,21 étoiles; dernier commit 2026-02-16; licence MIT,AI Pentesting Agent,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+Armur-Ai/Pentest-Swarm-AI,Pentest Swarm AI,TRIAGE-HAUTE,triage obligatoire,2389 étoiles; dernier commit 2026-08-27; licence AGPL-3.0,AI Pentesting Agent,⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+Ed1s0nZ/CyberStrikeAI,CyberStrikeAI,SHORTLIST,analyse approfondie,6013 étoiles; dernier commit 2026-08-26; licence Apache-2.0,AI Pentesting Platform,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+Agnuxo1/EnigmAgent,EnigmAgent,TRIAGE-MINIMAL,triage minimal,4 étoiles; dernier commit 2026-06-05; licence MIT,AI Security Agent,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+yz9yt/BugTrace-AI,BugTrace-AI,TRIAGE-MINIMAL,triage minimal,251 étoiles; dernier commit 2026-02-11; archivé; licence MIT,AI Pentesting Agent,⚪ Faible,oui,oui,🔴 Offensive / Pentesting
+wudidike/pentest_skill,Pentest Skill,TRIAGE-MINIMAL,triage minimal,27 étoiles; dernier commit 2026-08-12; licence inconnue,AI Pentesting Agent,⚪ Faible,non,oui,🔴 Offensive / Pentesting
+antoninoLorenzo/AI-OPS,AI-OPS,TRIAGE-MINIMAL,triage minimal,156 étoiles; dernier commit 2026-08-10; licence MIT,AI Pentesting Assistant,⚪ Faible,oui,oui,🔴 Offensive / Pentesting
+NeoTheCapt/RedteamAgent,RedteamAgent,TRIAGE-MINIMAL,triage minimal,121 étoiles; dernier commit 2026-05-10; licence inconnue,AI Red Team Agent,🟡 Moyenne,non,oui,🔴 Offensive / Pentesting
+0xSteph/pentest-ai-agents,Pentest-AI-Agents,TRIAGE-HAUTE,triage obligatoire,2169 étoiles; dernier commit 2026-08-16; licence MIT,AI Pentesting Agents Collection,⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+marzekan/MASAPT,MASAPT,TRIAGE-MINIMAL,triage minimal,30 étoiles; inactif depuis 57 mois; licence GPL-2.0,Multi-Agent Pentesting System,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+hardenedlinux/agentic-ai-pentest,Agentic AI Pentest,TRIAGE-MINIMAL,triage minimal,10 étoiles; dernier commit 2026-02-27; licence GPL-3.0,AI Pentesting Agent,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+ashishpatel26/500-AI-Agents-Projects,Vibe Hacking Agent,TRIAGE-MINIMAL,triage minimal,37066 étoiles; dernier commit 2026-07-27; licence MIT,AI Red Team Agent,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+topics/soc-dashboard,Sentinel (SOC Dashboard),TRIAGE-MINIMAL,triage minimal,licence inconnue,SOC Dashboard,🟡 Moyenne,non,oui,🔵 Defensive / Blue Team
+invincible-jha/QuasarCyberdefenseAI-multi-agent-cybersecurity-ai-system,QuasarCyberdefenseAI,TRIAGE-MINIMAL,triage minimal,3 étoiles; inactif depuis 22 mois; licence MIT,Multi-Agent Cyber Defense,🟡 Moyenne,oui,oui,🔵 Defensive / Blue Team
+requie/AI-Red-Teaming-Guide,Gideon,TRIAGE-MINIMAL,triage minimal,845 étoiles; dernier commit 2026-08-04; licence MIT,AI Defensive Agent,🟡 Moyenne,oui,oui,🔵 Defensive / Blue Team
+Tencent/AI-Infra-Guard,AI-Infra-Guard,SHORTLIST,analyse approfondie,6003 étoiles; dernier commit 2026-08-27; licence Apache-2.0,AI Security Scanner,⭐ Haute,oui,oui,🔵 Defensive / Blue Team
+agentfence/agentfence,AgentFence,TRIAGE-HAUTE,triage obligatoire,61 étoiles; dernier commit 2026-08-06; licence MIT,AI Security Testing Framework,⭐ Haute,oui,oui,🔵 Defensive / Blue Team
+SuperagenticAI/superclaw,SuperClaw,TRIAGE-MINIMAL,triage minimal,400 étoiles; dernier commit 2026-02-02; licence Apache-2.0,AI Agent Security Testing,🟡 Moyenne,oui,oui,🔵 Defensive / Blue Team
+AKiileX/Valk,Valk,TRIAGE-MINIMAL,triage minimal,dernier commit 2026-04-09; licence inconnue,LLM Red Team Framework,🟡 Moyenne,non,oui,🔵 Defensive / Blue Team
+confident-ai/deepteam,DeepTeam,TRIAGE-MINIMAL,triage minimal,2624 étoiles; dernier commit 2026-08-21; licence Apache-2.0,LLM Red Teaming Framework,🟡 Moyenne,oui,oui,🔵 Defensive / Blue Team
+vectara/red-teaming-agent,Red-Teaming-Agent (Vectara),TRIAGE-MINIMAL,triage minimal,21 étoiles; dernier commit 2025-10-15; licence inconnue,AI Red Team Agent,🟡 Moyenne,non,oui,🔵 Defensive / Blue Team
+tbh-ai/SecureAgents,SecureAgents,TRIAGE-MINIMAL,triage minimal,1 étoiles; dernier commit 2025-06-12; licence Apache,Secure Multi-Agent Framework,🟡 Moyenne,oui,oui,🔵 Defensive / Blue Team
+FuzzingLabs/mcp-security-hub,MCP Security Hub,TRIAGE-HAUTE,triage obligatoire,769 étoiles; dernier commit 2026-04-08; licence MIT,MCP Security Servers Collection,⭐ Haute,oui,oui,🟣 MCP / Tool Aggregation
+hackersatyamrastogi/pentesting-cyber-mcp,Pentesting Cyber MCP,TRIAGE-HAUTE,triage obligatoire,27 étoiles; dernier commit 2026-01-27; licence MIT,MCP Security Servers Collection,⭐ Haute,oui,oui,🟣 MCP / Tool Aggregation
+cyproxio/mcp-for-security,MCP for Security (Cyproxio),TRIAGE-HAUTE,triage obligatoire,633 étoiles; dernier commit 2026-03-30; archivé; licence MIT,MCP Security Servers Collection,⭐ Haute,oui,oui,🟣 MCP / Tool Aggregation
+f1tz/mcp-for-security-python,MCP for Security (f1tz),TRIAGE-MINIMAL,triage minimal,41 étoiles; dernier commit 2025-06-22; licence MIT,MCP Security Servers Collection,🟡 Moyenne,oui,oui,🟣 MCP / Tool Aggregation
+0x4m4/hexstrike-ai,HexStrike AI MCP Agents,IGNORE,écarté,11394 étoiles; dernier commit 2026-08-03; licence MIT,MCP Security Server,⭐ Haute,oui,oui,🟣 MCP / Tool Aggregation
+bhavsec/autopentest-ai,Autopentest-AI,TRIAGE-HAUTE,triage obligatoire,218 étoiles; dernier commit 2026-02-22; licence Apache-2.0,MCP Pentesting Server,⭐ Haute,oui,oui,🟣 MCP / Tool Aggregation
+0xSojalSec/PentestAgent,PentestAgent MCP,TRIAGE-MINIMAL,triage minimal,696 étoiles; dernier commit 2025-06-05; licence MIT,MCP Offensive Security Server,🟡 Moyenne,oui,oui,🟣 MCP / Tool Aggregation
+GitHub/github-mcp-server,GitHub Security MCP,TRIAGE-MINIMAL,triage minimal,32552 étoiles; dernier commit 2026-08-27; licence MIT,MCP Security Server,🟡 Moyenne,oui,oui,🟣 MCP / Tool Aggregation
+OpenOSINT/OpenOSINT,OpenOSINT,TRIAGE-HAUTE,triage obligatoire,1475 étoiles; dernier commit 2026-08-26; licence MIT,AI OSINT Agent,⭐ Haute,oui,oui,🟢 AI Security Agents
+crewaiinc/crewai,CrewAI,TRIAGE-HAUTE,triage obligatoire,57675 étoiles; dernier commit 2026-08-27; licence MIT,Multi-Agent Framework,⭐ Haute,oui,oui,🟢 AI Security Agents
+microsoft/autogen,AutoGen,TRIAGE-HAUTE,triage obligatoire,60652 étoiles; dernier commit 2026-04-06; licence CC-BY-4.0,Multi-Agent Framework,⭐ Haute,oui,oui,🟢 AI Security Agents
+microsoft/agent-framework,Microsoft Agent Framework,TRIAGE-MINIMAL,triage minimal,13149 étoiles; dernier commit 2026-08-27; licence MIT,Multi-Agent Framework,🟡 Moyenne,oui,oui,🟢 AI Security Agents
+agentuniverse-ai/agentuniverse,Agent Universe,TRIAGE-MINIMAL,triage minimal,2345 étoiles; dernier commit 2026-07-28; licence Apache-2.0,Multi-Agent Framework,🟡 Moyenne,oui,oui,🟢 AI Security Agents
+manusagents/ManusClaw,ManusClaw,TRIAGE-MINIMAL,triage minimal,2 étoiles; dernier commit 2026-08-05; licence MIT,AI Agent Framework,🟡 Moyenne,oui,oui,🟢 AI Security Agents
+bearclaw-ai/bearclaw,BearClaw,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),AI Agent Framework,🟡 Moyenne,non,non,🟢 AI Security Agents
+microsoft/agent-governance-toolkit,Agent Governance Toolkit,SHORTLIST,analyse approfondie,6135 étoiles; dernier commit 2026-08-25; licence MIT,AI Agent Security Toolkit,⭐ Haute,oui,oui,🟢 AI Security Agents
+OWASP/secure-agent-playbook,OWASP Secure Agent Playbook,TRIAGE-MINIMAL,triage minimal,156 étoiles; dernier commit 2026-06-02; licence inconnue,AI Agent Security Playbook,🟡 Moyenne,non,oui,🟢 AI Security Agents
+TracecatHQ/tracecat,Tracecat,SHORTLIST,analyse approfondie,3781 étoiles; dernier commit 2026-08-27; licence AGPL-3.0,SOAR Platform,⭐ Haute,oui,oui,🟠 Security Orchestration / Automation
+COSSAS/SOARCA,SOARCA,TRIAGE-HAUTE,triage obligatoire,107 étoiles; dernier commit 2026-07-17; licence Apache-2.0,SOAR Platform,⭐ Haute,oui,oui,🟠 Security Orchestration / Automation
+SecurityBrewery/catalyst,Catalyst,TRIAGE-MINIMAL,triage minimal,535 étoiles; dernier commit 2026-07-18; archivé; licence AGPL-3.0,SOAR / Incident Response Platform,🟡 Moyenne,oui,oui,🟠 Security Orchestration / Automation
+z1pti3/jimi,Jimi,TRIAGE-MINIMAL,triage minimal,172 étoiles; inactif depuis 27 mois; archivé; licence Apache-2.0,IT/Security Automation Platform,🟡 Moyenne,oui,oui,🟠 Security Orchestration / Automation
+cookpad/deepalert,DeepAlert,TRIAGE-MINIMAL,triage minimal,51 étoiles; dernier commit 2026-05-27; licence MIT,Serverless SOAR Framework,🟡 Moyenne,oui,oui,🟠 Security Orchestration / Automation
+swiftbird07/IRIS-SOAR,IRIS-SOAR,TRIAGE-MINIMAL,triage minimal,17 étoiles; inactif depuis 30 mois; licence MIT,SOAR Platform,🟡 Moyenne,oui,oui,🟠 Security Orchestration / Automation
+nsacyber/WALKOFF,WALKOFF,IGNORE,écarté,1237 étoiles; inactif depuis 72 mois; archivé; licence inconnue,Security Automation Framework,🟡 Moyenne,non,oui,🟠 Security Orchestration / Automation
+ShipSecAI/studio,ShipSec Studio,TRIAGE-MINIMAL,triage minimal,376 étoiles; dernier commit 2026-02-25; licence Apache-2.0,Security Workflow Orchestration,🟡 Moyenne,oui,oui,🟠 Security Orchestration / Automation
+mmmalfares/SuperPlaybooks,SuperPlaybooks,TRIAGE-MINIMAL,triage minimal,dernier commit 2025-06-08; licence inconnue,Security Playbooks Collection,🟡 Moyenne,non,oui,🟠 Security Orchestration / Automation
+AbH-cS/SOAR-EDR-PLAYBOOK,SOAR-EDR-Playbook,TRIAGE-MINIMAL,triage minimal,inactif depuis 21 mois; licence inconnue,SOAR EDR Integration,⚪ Faible,non,oui,🟠 Security Orchestration / Automation
+OpenSecOps-Org/SOAR,OpenSecOps SOAR,TRIAGE-MINIMAL,triage minimal,6 étoiles; dernier commit 2026-05-13; licence MPL-2.0,SOAR Platform (AWS),🟡 Moyenne,oui,oui,🟠 Security Orchestration / Automation
+FunnyWolf/agentic-soc-platform,Agentic SOC Platform,TRIAGE-MINIMAL,triage minimal,1162 étoiles; dernier commit 2026-08-05; licence inconnue,AI SOC Platform,🟡 Moyenne,non,oui,🟠 Security Orchestration / Automation
+gapilongo/SOC,SOC (LangGraph),TRIAGE-MINIMAL,triage minimal,14 étoiles; dernier commit 2025-10-25; licence MIT,AI SOC Framework,🟡 Moyenne,oui,oui,🟠 Security Orchestration / Automation
+DependencyTrack/dependency-track,Dependency-Track,SHORTLIST,analyse approfondie,4148 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Vulnerability Management Platform,⭐ Haute,oui,oui,🟡 Vulnerability Management
+nccgroup/ScoutSuite,ScoutSuite,TRIAGE-MINIMAL,triage minimal,7802 étoiles; inactif depuis 28 mois; licence GPL-2.0,Multi-Cloud Security Auditing,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+carlospolop/PurplePanda,PurplePanda,TRIAGE-MINIMAL,triage minimal,720 étoiles; dernier commit 2026-07-11; licence inconnue,Cloud Privilege Escalation,🟡 Moyenne,non,oui,🟡 Vulnerability Management
+deepfence/ThreatMapper,ThreatMapper,TRIAGE-MINIMAL,triage minimal,5318 étoiles; dernier commit 2026-05-13; licence Apache-2.0,Vulnerability Scanner,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+deepfence/SecretScanner,SecretScanner,TRIAGE-MINIMAL,triage minimal,3382 étoiles; dernier commit 2026-03-07; licence MIT,Secrets Detection,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+trufflesecurity/trufflehog,TruffleHog,TRIAGE-HAUTE,triage obligatoire,27604 étoiles; dernier commit 2026-08-26; licence AGPL-3.0,Secrets Detection,⭐ Haute,oui,oui,🟡 Vulnerability Management
+GitGuardian/ggshield,ggshield (GitGuardian),TRIAGE-HAUTE,triage obligatoire,1992 étoiles; dernier commit 2026-08-27; licence MIT,Secrets Detection,⭐ Haute,oui,oui,🟡 Vulnerability Management
+Yelp/detect-secrets,detect-secrets,TRIAGE-MINIMAL,triage minimal,4629 étoiles; dernier commit 2026-04-02; licence Apache-2.0,Secrets Detection,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+mongodb/kingfisher,Kingfisher,TRIAGE-MINIMAL,triage minimal,1215 étoiles; dernier commit 2026-08-23; licence Apache-2.0,Secrets Detection + Validation,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+grab/secret-scanner,Git Secret Scanner,TRIAGE-MINIMAL,triage minimal,56 étoiles; inactif depuis 81 mois; licence MIT,Secrets Detection,⚪ Faible,oui,oui,🟡 Vulnerability Management
+padok-team/git-secret-scanner,Git Secret Scanner (Padok),TRIAGE-MINIMAL,triage minimal,69 étoiles; dernier commit 2026-08-20; licence Apache-2.0,Secrets Detection,⚪ Faible,oui,oui,🟡 Vulnerability Management
+intelowlproject/IntelOwl,IntelOwl,SHORTLIST,analyse approfondie,4684 étoiles; dernier commit 2026-07-02; licence AGPL-3.0,OSINT / CTI Platform,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+yeti-platform/yeti,Yeti,TRIAGE-MINIMAL,triage minimal,2020 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Threat Intelligence Repository,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+gosintframework/gosint,GOSINT,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),IOC Collection Framework,🟡 Moyenne,non,non,🟤 Threat Intelligence / OSINT
+OSTrICa/OSTrICa,OSTrICa,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),Threat Intelligence Framework,⚪ Faible,non,non,🟤 Threat Intelligence / OSINT
+OpenIOC/OpenIOC,OpenIOC,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),Threat Intelligence Framework,⚪ Faible,non,non,🟤 Threat Intelligence / OSINT
+typedb-osi/typedb-cti,TypeDB CTI,TRIAGE-MINIMAL,triage minimal,170 étoiles; dernier commit 2026-01-08; licence inconnue,CTI Platform,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+PickupSTIX/pickupstix,PickupSTIX,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),Threat Intelligence Feed,⚪ Faible,non,non,🟤 Threat Intelligence / OSINT
+dev-lu/osint_toolkit,OSINT Toolkit,TRIAGE-MINIMAL,triage minimal,937 étoiles; dernier commit 2026-04-28; licence AGPL-3.0,OSINT Platform,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+TIGMINT/TIGMINT,TIGMINT,TRIAGE-MINIMAL,triage minimal,263 étoiles; inactif depuis 62 mois; licence MIT,OSINT Framework,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+jivoi/awesome-osint,Awesome OSINT,TRIAGE-MINIMAL,triage minimal,28460 étoiles; dernier commit 2026-08-25; archivé; licence inconnue,OSINT Tools List,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+gmh5225/awesome-ai-security,Awesome AI Security,TRIAGE-HAUTE,triage obligatoire,44 étoiles; dernier commit 2026-08-22; licence MIT,AI Security Resources,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+ProjectRecon/awesome-ai-agents-security,Awesome AI Agents Security,TRIAGE-HAUTE,triage obligatoire,67 étoiles; dernier commit 2026-06-12; licence inconnue,AI Agent Security Resources,⭐ Haute,non,oui,🟤 Threat Intelligence / OSINT
+0xh3xa/awesome-cyber-security-tools,Awesome Cybersecurity Tools,TRIAGE-MINIMAL,triage minimal,9 étoiles; dernier commit 2026-07-18; licence CC0-1.0,Cybersecurity Tools List,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+landoncrabtree/awesome-cyber,Awesome Cyber,TRIAGE-MINIMAL,triage minimal,111 étoiles; inactif depuis 20 mois; licence inconnue,Cybersecurity Tools List,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+bst04/CyberSources,CyberSources,TRIAGE-MINIMAL,triage minimal,2398 étoiles; dernier commit 2026-08-27; licence MIT,Cybersecurity Resources List,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+CaledoniaProject/awesome-opensource-security,Awesome Opensource Security,TRIAGE-MINIMAL,triage minimal,660 étoiles; dernier commit 2026-06-06; licence inconnue,Security Tools List,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+securitytoolkit/securitytoolkit.github.io,Security Toolkit,TRIAGE-MINIMAL,triage minimal,71 étoiles; dernier commit 2026-07-09; licence inconnue,Security Tools Directory,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+VoidAccess/VoidAccess,VoidAccess,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),Dark Web Threat Intelligence,🟡 Moyenne,non,non,🟤 Threat Intelligence / OSINT
+sa7mon/S3Scanner,S3Scanner,TRIAGE-MINIMAL,triage minimal,3165 étoiles; dernier commit 2026-07-14; licence MIT,Cloud Storage Security,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+secureCodeBox/secureCodeBox,secureCodeBox,SHORTLIST,analyse approfondie,986 étoiles; dernier commit 2026-08-25; licence Apache,SAST / Continuous Security,⭐ Haute (normalisation + orchestration K8s-native),oui,oui,🟤 Threat Intelligence / OSINT
+MobSF/Mobile-Security-Framework-MobSF,MobSF,TRIAGE-MINIMAL,triage minimal,21657 étoiles; dernier commit 2026-08-21; licence GPL-3.0,Mobile Security Framework,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+cuckoosandbox/cuckoo,Cuckoo Sandbox,SHORTLIST,analyse approfondie,5965 étoiles; inactif depuis 65 mois; archivé; licence inconnue,Malware Analysis System,⭐ Haute,non,oui,🟤 Threat Intelligence / OSINT
+REMnux/REMnux,REMnux,TRIAGE-MINIMAL,triage minimal,120 étoiles; dernier commit 2026-08-18; licence inconnue,Malware Analysis Toolkit,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+mandiant/flare-vm,FlareVM,TRIAGE-MINIMAL,triage minimal,8968 étoiles; dernier commit 2026-06-23; licence Apache-2.0,Malware Analysis Distribution,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+Neo23x0/Loki,LOKI,TRIAGE-MINIMAL,triage minimal,3784 étoiles; dernier commit 2026-01-09; licence GPL-3.0,IOC Scanner,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+Cisco-Talos/clamav,ClamAV,TRIAGE-MINIMAL,triage minimal,7177 étoiles; dernier commit 2026-08-19; licence GPL-2.0,Antivirus Engine,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+dfir-db/fastfinder,Fastfinder,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),Suspicious File Finder,⚪ Faible,non,non,🟤 Threat Intelligence / OSINT
+rfxn/linux-malware-detect,Linux Malware Detect,TRIAGE-MINIMAL,triage minimal,1490 étoiles; dernier commit 2026-04-26; licence GPL-2.0,Malware Scanner,⚪ Faible,oui,oui,🟤 Threat Intelligence / OSINT
+jtkl/rkhunter,rkhunter,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),Rootkit Detector,⚪ Faible,non,non,🟤 Threat Intelligence / OSINT
+agentic-community/mcp-gateway-registry,MCP Gateway & Registry (agentic-community),SHORTLIST,analyse approfondie,880 étoiles; dernier commit 2026-08-27; licence Apache-2.0,MCP Gateway / Registry,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+microsoft/mcp-gateway,MCP Gateway (Microsoft),TRIAGE-HAUTE,triage obligatoire,801 étoiles; dernier commit 2026-08-25; licence MIT,MCP Gateway,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+aarora79/mcp-gateway,MCP Gateway (aarora79),TRIAGE-MINIMAL,triage minimal,81 étoiles; dernier commit 2025-10-17; archivé; licence MIT-0,MCP Gateway / Registry,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+jrmatherly/mcp-registry-gateway,MCP Registry Gateway (jrmatherly),TRIAGE-MINIMAL,triage minimal,dernier commit 2026-01-26; licence Apache-2.0,MCP Gateway / Registry,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+MikkoParkkola/mcp-gateway,Universal MCP Gateway (MikkoParkkola),TRIAGE-HAUTE,triage obligatoire,56 étoiles; dernier commit 2026-08-18; licence MIT,MCP Gateway / Meta-MCP,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+docker/mcp-gateway,Docker MCP Gateway,TRIAGE-MINIMAL,triage minimal,1545 étoiles; dernier commit 2026-08-26; licence MIT,MCP Gateway,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+lasso-security/mcp-gateway,Lasso MCP Gateway,TRIAGE-MINIMAL,triage minimal,385 étoiles; dernier commit 2026-01-22; licence MIT,MCP Gateway,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+IBM/mcp-context-forge,IBM ContextForge,SHORTLIST,analyse approfondie,4376 étoiles; dernier commit 2026-08-27; licence Apache-2.0,MCP Gateway / Registry / Proxy,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+agentgateway/agentgateway,Solo.io AgentGateway,SHORTLIST,analyse approfondie,4584 étoiles; dernier commit 2026-08-27; licence Apache-2.0,MCP Gateway,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+envoyproxy/ai-gateway,Envoy AI Gateway,TRIAGE-MINIMAL,triage minimal,1965 étoiles; dernier commit 2026-08-26; licence Apache-2.0,AI Gateway,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+cisco-ai-defense/mcp-scanner,MCP Scanner (Cisco),SHORTLIST,analyse approfondie,1051 étoiles; dernier commit 2026-08-17; licence Apache-2.0,MCP Security Scanner,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+riseandignite/mcp-shield,MCP-Shield,TRIAGE-MINIMAL,triage minimal,554 étoiles; dernier commit 2025-04-26; licence MIT,MCP Security Scanner,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+invariantlabs-ai/mcp-scan,mcp-scan (Snyk/Invariant Labs),SHORTLIST,analyse approfondie,2964 étoiles; dernier commit 2026-08-26; licence Apache-2.0,MCP Security Scanner,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+stacklok/toolhive,ToolHive,SHORTLIST,analyse approfondie,2047 étoiles; dernier commit 2026-08-27; licence Apache-2.0,MCP Server Manager,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+MCP-Manager/MCP-Checklists,MCP Checklists,TRIAGE-MINIMAL,triage minimal,195 étoiles; dernier commit 2025-10-23; licence AGPL-3.0,MCP Security Resources,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+msaleme/red-team-blue-team-agent-fabric,Red-Team-Blue-Team-Agent-Fabric,TRIAGE-HAUTE,triage obligatoire,28 étoiles; dernier commit 2026-08-26; licence Apache-2.0,AI Agent Security Testing,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+sandboxai/sandboxai,SandboxAI,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),AI Code Execution Sandbox,🟡 Moyenne,non,non,🟤 Threat Intelligence / OSINT
+kubernetes-sigs/agent-sandbox,Kubernetes Agent Sandbox,TRIAGE-MINIMAL,triage minimal,3657 étoiles; dernier commit 2026-08-27; licence Apache-2.0,AI Agent Sandbox,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+immunity-agent/immunity-agent,Immunity Agent,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),AI Agent Runtime Security,🟡 Moyenne,non,non,🟤 Threat Intelligence / OSINT
+wazuh/wazuh-dashboard,Wazuh Dashboard,TRIAGE-HAUTE,triage obligatoire,70 étoiles; dernier commit 2026-08-21; licence Apache-2.0,SIEM Dashboard,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+eric-dev-soft/siem-dashboard,SIEM Dashboard,TRIAGE-MINIMAL,triage minimal,1 étoiles; inactif depuis 19 mois; licence BSD,SIEM Dashboard,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+Hack-with-Github/Awesome-Hacking,Awesome Hacking,TRIAGE-HAUTE,triage obligatoire,119170 étoiles; dernier commit 2026-07-26; licence CC0-1.0,Hacking Tools List,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+danielmiessler/SecLists,SecLists,TRIAGE-HAUTE,triage obligatoire,73122 étoiles; dernier commit 2026-08-27; licence MIT,Security Wordlists,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+swisskyrepo/PayloadsAllTheThings,PayloadAllTheThings,TRIAGE-HAUTE,triage obligatoire,80428 étoiles; dernier commit 2026-08-27; licence MIT,Security Payloads,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+cyver-core/ultimate-pentest-tools-list,Ultimate Pentest Tools List,TRIAGE-MINIMAL,triage minimal,68 étoiles; dernier commit 2026-07-09; licence inconnue,Pentest Tools List,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+arch3rpro/PentestTools,PentestTools,TRIAGE-MINIMAL,triage minimal,1765 étoiles; dernier commit 2026-04-13; licence inconnue,Pentest Tools Collection,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+paulveillard/cybersecurity-tools,Cybersecurity Tools (paulveillard),TRIAGE-MINIMAL,triage minimal,25 étoiles; inactif depuis 56 mois; licence MIT,Cybersecurity Resources List,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+paulveillard/cybersecurity-SOAR,Cybersecurity SOAR,TRIAGE-MINIMAL,triage minimal,123 étoiles; inactif depuis 44 mois; licence Apache-2.0,SOAR Resources List,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+chaosync-org/awesome-ai-agent-testing,Awesome AI Agent Testing,TRIAGE-MINIMAL,triage minimal,46 étoiles; dernier commit 2025-05-28; licence CC0-1.0,AI Agent Testing Resources,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+mb-mal/awesome-ai-agents-frameworks,Awesome AI Agents Frameworks,TRIAGE-MINIMAL,triage minimal,69 étoiles; dernier commit 2026-08-27; licence inconnue,AI Agent Frameworks List,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+bh-rat/awesome-mcp-enterprise,Awesome MCP Enterprise,TRIAGE-MINIMAL,triage minimal,119 étoiles; dernier commit 2026-08-15; licence inconnue,MCP Enterprise Tools List,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+njmulsqb/Awesome-Security-Repos,Awesome Security Repos,TRIAGE-MINIMAL,triage minimal,57 étoiles; inactif depuis 47 mois; licence inconnue,Security Repositories List,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+JambaAcademy/OSINT,OSINT (JambaAcademy),TRIAGE-MINIMAL,triage minimal,128 étoiles; dernier commit 2026-07-29; licence MIT,OSINT Resources,⚪ Faible,oui,oui,🟤 Threat Intelligence / OSINT
+topics/ai-osint,AI OSINT Resources,TRIAGE-MINIMAL,triage minimal,licence inconnue,AI OSINT Resources,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+raphabot/awesome-cybersecurity-agentic-ai,Cybersecurity Agentic AI,TRIAGE-HAUTE,triage obligatoire,539 étoiles; dernier commit 2026-08-26; licence MIT,AI Cybersecurity Resources,⭐ Haute,oui,oui,🟤 Threat Intelligence / OSINT
+neptune1212/MCP_servers_cybersecurity,MCP Servers Cybersecurity (neptune1212),TRIAGE-HAUTE,triage obligatoire,3 étoiles; dernier commit 2025-05-31; licence inconnue,MCP Security Platform,⭐ Haute,non,oui,🟣 MCP / Tool Aggregation
+MorDavid/awesome-cyber-security-mcp,Awesome Cyber Security MCP (MorDavid),TRIAGE-HAUTE,triage obligatoire,97 étoiles; dernier commit 2026-02-28; licence inconnue,Curated MCP List / Discovery,⭐ Haute (méta-ressource),non,oui,🟣 MCP / Tool Aggregation
+Puliczek/awesome-mcp-security,Awesome MCP Security (Puliczek),TRIAGE-HAUTE,triage obligatoire,733 étoiles; dernier commit 2026-03-03; licence inconnue,MCP Security Knowledge Base,⭐ Haute (méta-ressource),non,oui,🟣 MCP / Tool Aggregation
+xalgorix/xalgorix,Xalgorix,TRIAGE-HAUTE,triage obligatoire,932 étoiles; dernier commit 2026-08-27; licence Apache-2.0,AI Pentesting Platform,⭐ Haute,oui,oui,🟢 AI Security Agents
+Threadlinee/AI-Powered,AI-Powered Autonomous Penetration Testing Agent,TRIAGE-MINIMAL,triage minimal,8 étoiles; dernier commit 2025-07-13; licence MIT,AI Pentesting Agent (RL),🟡 Moyenne,oui,oui,🟢 AI Security Agents
+shannonai/shannon,Shannon,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),AI Pentesting Agent (Web),🟡 Moyenne,non,non,🟢 AI Security Agents
+anthropics/codeguard,Project CodeGuard,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),AI Code Security Agent,🟡 Moyenne,non,non,🟢 AI Security Agents
+opensoar-hq/opensoar-core,OpenSOAR,TRIAGE-MINIMAL,triage minimal,18 étoiles; dernier commit 2026-07-17; licence Apache-2.0,SOAR Platform (AI-Native Python),🟡 Moyenne,oui,oui,🟠 Security Orchestration / Automation
+Admyral-Security/admyral,Admyral,TRIAGE-MINIMAL,triage minimal,340 étoiles; inactif depuis 21 mois; licence Apache-2.0,Security Hyperautomation,🟡 Moyenne,oui,oui,🟠 Security Orchestration / Automation
+Sorsnce/Open-SOAR,Open-SOAR (Sorsnce),TRIAGE-MINIMAL,triage minimal,8 étoiles; inactif depuis 64 mois; licence inconnue,SOAR (Containerized),⚪ Faible,non,oui,🟠 Security Orchestration / Automation
+StackStorm/st2,StackStorm,SHORTLIST,analyse approfondie,6527 étoiles; dernier commit 2026-08-22; licence Apache-2.0,Event-Driven Automation,🟡 Moyenne,oui,oui,🟠 Security Orchestration / Automation
+SigmaHQ/sigma,Sigma,TRIAGE-HAUTE,triage obligatoire,10948 étoiles; dernier commit 2026-08-18; licence inconnue,Detection Rule Format,⭐ Haute,non,oui,🔵 Defensive / Blue Team
+VirusTotal/yara,YARA,TRIAGE-HAUTE,triage obligatoire,9833 étoiles; dernier commit 2026-08-25; licence BSD-3-Clause,Malware Pattern Matching,⭐ Haute,oui,oui,🔵 Defensive / Blue Team
+fail2ban/fail2ban,Fail2Ban,TRIAGE-MINIMAL,triage minimal,18483 étoiles; dernier commit 2026-08-26; licence inconnue,Intrusion Prevention,⚪ Faible,non,oui,🔵 Defensive / Blue Team
+crowdsecurity/crowdsec,CrowdSec,TRIAGE-MINIMAL,triage minimal,14657 étoiles; dernier commit 2026-08-26; licence MIT,Collaborative IPS,🟡 Moyenne,oui,oui,🔵 Defensive / Blue Team
+arkime/arkime,Arkime (anciennement Moloch),TRIAGE-MINIMAL,triage minimal,7459 étoiles; dernier commit 2026-08-26; licence Apache-2.0,Full Packet Capture,🟡 Moyenne,oui,oui,🔵 Defensive / Blue Team
+mitre-attack/attack-navigator,MITRE ATT&CK Navigator,TRIAGE-MINIMAL,triage minimal,2448 étoiles; dernier commit 2026-06-12; licence Apache-2.0,Threat Framework Visualization,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+laramies/theHarvester,theHarvester,TRIAGE-MINIMAL,triage minimal,17211 étoiles; dernier commit 2026-08-27; licence inconnue,OSINT / Reconnaissance,⚪ Faible,non,oui,🟤 Threat Intelligence / OSINT
+lanmaster53/recon-ng,Recon-ng,TRIAGE-MINIMAL,triage minimal,5873 étoiles; inactif depuis 22 mois; licence GPL-3.0,OSINT / Web Reconnaissance,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+achillean/shodan-python,Shodan (Python client),TRIAGE-MINIMAL,triage minimal,2951 étoiles; inactif depuis 33 mois; licence inconnue,Internet Device Search,🟡 Moyenne,non,oui,🟤 Threat Intelligence / OSINT
+owasp-amass/amass,Amass (OWASP),TRIAGE-MINIMAL,triage minimal,15049 étoiles; dernier commit 2026-04-07; licence Apache,Attack Surface Mapping,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+,Maltego (CE),N/A,non applicable,licence inconnue; repo non exploitable (hors-perimetre),OSINT / Link Analysis,⚪ Faible,non,non,🟤 Threat Intelligence / OSINT
+nmap/nmap,Nmap,TRIAGE-HAUTE,triage obligatoire,13469 étoiles; dernier commit 2026-08-27; licence inconnue,Network Scanner,⭐ Haute (brique fondamentale),non,oui,🔴 Offensive / Pentesting
+sqlmapproject/sqlmap,SQLMap,TRIAGE-MINIMAL,triage minimal,38279 étoiles; dernier commit 2026-08-26; licence inconnue,SQL Injection Tool,🟡 Moyenne,non,oui,🔴 Offensive / Pentesting
+stevenaldinger/decker,Decker,TRIAGE-MINIMAL,triage minimal,296 étoiles; inactif depuis 90 mois; licence MPL-2.0,Pentesting Orchestrator,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+GoVanguard/legion,Legion,TRIAGE-MINIMAL,triage minimal,1057 étoiles; inactif depuis 22 mois; archivé; licence GPL-3.0,Pentesting Framework,⚪ Faible,oui,oui,🔴 Offensive / Pentesting
+reconmap/reconmap,Reconmap,TRIAGE-MINIMAL,triage minimal,975 étoiles; dernier commit 2026-08-20; licence Apache-2.0,Pentesting Management Platform,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+owtf/owtf,OWTF (OWASP),TRIAGE-MINIMAL,triage minimal,1950 étoiles; dernier commit 2026-08-22; licence BSD-3-Clause,Web Testing Framework,⚪ Faible,oui,oui,🔴 Offensive / Pentesting
+1N3/Sn1per,Sn1per,TRIAGE-MINIMAL,triage minimal,11092 étoiles; dernier commit 2026-07-04; licence inconnue,Automated Pentest Recon,🟡 Moyenne,non,oui,🔴 Offensive / Pentesting
+NullArray/AutoSploit,AutoSploit,TRIAGE-MINIMAL,triage minimal,5253 étoiles; inactif depuis 78 mois; licence GPL-3.0,Automated Exploitation,⚪ Faible,oui,oui,🔴 Offensive / Pentesting
+,Burp Suite (Extensions),N/A,non applicable,licence inconnue; repo non exploitable (organisation-pas-un-repo),Web Security Testing,🟡 Moyenne (extensions uniquement),non,non,🔴 Offensive / Pentesting
+sullo/nikto,Nikto,TRIAGE-MINIMAL,triage minimal,10688 étoiles; dernier commit 2026-08-15; licence inconnue,Web Server Scanner,⚪ Faible,non,oui,🔴 Offensive / Pentesting
+OJ/gobuster,Gobuster,TRIAGE-MINIMAL,triage minimal,14043 étoiles; dernier commit 2026-01-13; licence Apache-2.0,Directory/DNS Bruteforcer,⚪ Faible,oui,oui,🔴 Offensive / Pentesting
+ffuf/ffuf,ffuf,TRIAGE-MINIMAL,triage minimal,16597 étoiles; dernier commit 2026-08-20; licence MIT,Web Fuzzer,⚪ Faible,oui,oui,🔴 Offensive / Pentesting
+hashcat/hashcat,Hashcat,TRIAGE-MINIMAL,triage minimal,26635 étoiles; dernier commit 2026-08-27; licence MIT,Password Recovery,⚪ Faible,oui,oui,🔴 Offensive / Pentesting
+mitre/caldera,Caldera (MITRE),TRIAGE-HAUTE,triage obligatoire,7215 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Adversary Emulation,⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+redcanaryco/atomic-red-team,Atomic Red Team,TRIAGE-MINIMAL,triage minimal,12459 étoiles; dernier commit 2026-08-24; licence MIT,TTPs Testing Library,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+future-architect/vuls,Vuls,TRIAGE-MINIMAL,triage minimal,12244 étoiles; dernier commit 2026-08-27; licence GPL-3.0,Vulnerability Scanner (Agentless),🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+greenbone/openvas-scanner,GVM / OpenVAS,TRIAGE-HAUTE,triage obligatoire,4797 étoiles; dernier commit 2026-08-26; licence GPL-2.0,Vulnerability Scanner,⭐ Haute,oui,oui,🟡 Vulnerability Management
+google/osv.dev,OSV (Google),TRIAGE-MINIMAL,triage minimal,2902 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Vulnerability Database,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+aquasecurity/kube-bench,kube-bench (Aqua Security),TRIAGE-MINIMAL,triage minimal,8157 étoiles; dernier commit 2026-08-18; licence Apache-2.0,Kubernetes CIS Benchmark,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+aquasecurity/kube-hunter,kube-hunter (Aqua Security),TRIAGE-MINIMAL,triage minimal,5080 étoiles; inactif depuis 30 mois; licence Apache-2.0,Kubernetes Penetration Testing,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+kubescape/kubescape,Kubescape (ARMO),TRIAGE-HAUTE,triage obligatoire,11693 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Kubernetes Security Platform,⭐ Haute,oui,oui,🟡 Vulnerability Management
+aquasecurity/cloudsploit,CloudSploit (Aqua),TRIAGE-MINIMAL,triage minimal,3768 étoiles; dernier commit 2026-07-28; licence GPL-3.0,Cloud Security Audit,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+turbot/steampipe,Steampipe,TRIAGE-HAUTE,triage obligatoire,7935 étoiles; dernier commit 2026-08-18; licence AGPL-3.0,Cloud Query Engine,⭐ Haute,oui,oui,🟡 Vulnerability Management
+lyft/cartography,Cartography (Lyft),TRIAGE-MINIMAL,triage minimal,4028 étoiles; dernier commit 2026-08-26; licence Apache-2.0,Infrastructure Graph,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+SonarSource/sonarqube,SonarQube (Community),TRIAGE-MINIMAL,triage minimal,10932 étoiles; dernier commit 2026-08-26; licence LGPL-3.0,Code Quality & Security,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+PyCQA/bandit,Bandit,TRIAGE-MINIMAL,triage minimal,8242 étoiles; dernier commit 2026-08-04; licence Apache-2.0,Python SAST,⚪ Faible,oui,oui,🟡 Vulnerability Management
+Bearer/bearer,Bearer,TRIAGE-MINIMAL,triage minimal,2739 étoiles; dernier commit 2026-08-24; licence inconnue,SAST / Data Flow Security,⚪ Faible,non,oui,🟡 Vulnerability Management
+anchore/grype,Grype (Anchore),TRIAGE-MINIMAL,triage minimal,12791 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Vulnerability Scanner (Container/SBOM),🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+anchore/syft,Syft (Anchore),TRIAGE-MINIMAL,triage minimal,9465 étoiles; dernier commit 2026-08-27; licence Apache-2.0,SBOM Generator,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+dfir-iris/iris-web,DFIR-IRIS,TRIAGE-HAUTE,triage obligatoire,1549 étoiles; dernier commit 2025-02-27; licence LGPL-3.0,Incident Response Platform,⭐ Haute,oui,oui,🟡 Vulnerability Management
+google/grr,GRR Rapid Response (Google),TRIAGE-MINIMAL,triage minimal,5088 étoiles; dernier commit 2026-05-12; licence Apache-2.0,Remote Live Forensics,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+volatilityfoundation/volatility3,Volatility,TRIAGE-MINIMAL,triage minimal,4357 étoiles; dernier commit 2026-08-19; licence inconnue,Memory Forensics,🟡 Moyenne,non,oui,🟡 Vulnerability Management
+VirusTotal/yara-x,YARA-X,TRIAGE-MINIMAL,triage minimal,1261 étoiles; dernier commit 2026-08-27; licence BSD-3-Clause,Malware Pattern Matching (Next Gen),🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+NationalSecurityAgency/ghidra,Ghidra (NSA),TRIAGE-MINIMAL,triage minimal,72949 étoiles; dernier commit 2026-08-25; licence Apache-2.0,Reverse Engineering,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+radareorg/radare2,Radare2,TRIAGE-MINIMAL,triage minimal,24658 étoiles; dernier commit 2026-08-27; licence inconnue,Reverse Engineering,⚪ Faible,non,oui,🟡 Vulnerability Management
+grafana/grafana,Grafana,TRIAGE-MINIMAL,triage minimal,76451 étoiles; dernier commit 2026-08-27; licence AGPL-3.0,Observability Dashboard,🟡 Moyenne (infrastructure),oui,oui,🟡 Vulnerability Management
+opensearch-project/OpenSearch-Dashboards,Kibana / OpenSearch Dashboards,TRIAGE-MINIMAL,triage minimal,2115 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Log Analysis Dashboard,🟡 Moyenne (infrastructure),oui,oui,🟡 Vulnerability Management
+,SOC Prime / Agentic SOC Platforms,N/A,non applicable,licence inconnue; repo non exploitable (hors-perimetre),AI-Powered SOC Platform,⭐ Haute,non,non,🟡 Vulnerability Management
+malwarekid/SOAR-Flow,SOAR-Flow,TRIAGE-MINIMAL,triage minimal,138 étoiles; inactif depuis 18 mois; licence MIT,SOC Reference Architecture,🟡 Moyenne (architecture de référence),oui,oui,🟡 Vulnerability Management
+modelcontextprotocol/modelcontextprotocol,MCP Protocol (Anthropic),TRIAGE-HAUTE,triage obligatoire,9066 étoiles; dernier commit 2026-08-26; licence MIT,Protocol / Standard,⭐ Haute (fondation),oui,oui,🟡 Vulnerability Management
+jlowin/fastmcp,FastMCP,SHORTLIST,analyse approfondie,27406 étoiles; dernier commit 2026-08-27; licence Apache-2.0,MCP Framework,⭐ Haute (infrastructure),oui,oui,🟡 Vulnerability Management
+pomerium/pomerium,Pomerium,TRIAGE-MINIMAL,triage minimal,4979 étoiles; dernier commit 2026-08-25; licence Apache-2.0,Identity-Aware Proxy,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+langchain-ai/langchain,LangChain,TRIAGE-HAUTE,triage obligatoire,145131 étoiles; dernier commit 2026-08-27; licence MIT,AI Orchestration Framework,⭐ Haute (infrastructure IA),oui,oui,🟡 Vulnerability Management
+openai/openai-agents-python,OpenAI Agents SDK,TRIAGE-MINIMAL,triage minimal,29010 étoiles; dernier commit 2026-08-27; licence MIT,AI Agent Framework,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+temporalio/temporal,Temporal,SHORTLIST,analyse approfondie,22564 étoiles; dernier commit 2026-08-27; licence MIT,Workflow Engine,🟡 Moyenne (infrastructure),oui,oui,🟡 Vulnerability Management
+PrefectHQ/prefect,Prefect,TRIAGE-MINIMAL,triage minimal,23698 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Workflow Orchestration,⚪ Faible (infrastructure),oui,oui,🟡 Vulnerability Management
+moby/moby,Docker / Podman,TRIAGE-HAUTE,triage obligatoire,72001 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Container Runtime,⭐ Haute (infrastructure fondamentale),oui,oui,🟡 Vulnerability Management
+google/gvisor,gVisor (Google),SHORTLIST,analyse approfondie,19171 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Container Sandbox,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+kata-containers/kata-containers,Kata Containers,TRIAGE-MINIMAL,triage minimal,8612 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Secure Container Runtime,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+kyverno/kyverno,Kyverno,TRIAGE-MINIMAL,triage minimal,8076 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Kubernetes Policy Engine,🟡 Moyenne,oui,oui,🟡 Vulnerability Management
+hashicorp/vault,HashiCorp Vault,TRIAGE-HAUTE,triage obligatoire,36180 étoiles; dernier commit 2026-08-27; licence inconnue,Secrets Management,⭐ Haute (infrastructure),non,oui,🟡 Vulnerability Management
+keycloak/keycloak,Keycloak,TRIAGE-MINIMAL,triage minimal,36450 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Identity & Access Management,🟡 Moyenne (infrastructure),oui,oui,🟡 Vulnerability Management
+enaqx/awesome-pentest,Awesome Pentest,TRIAGE-HAUTE,triage obligatoire,27027 étoiles; dernier commit 2026-07-25; licence inconnue,Curated List,⭐ Haute (méta-ressource),non,oui,🟡 Vulnerability Management
+,Awesome Cybersecurity Agentic AI,N/A,non applicable,licence inconnue; repo non exploitable (hors-perimetre),Curated List (AI Agents),⭐ Haute (méta-ressource ciblée),non,non,🟡 Vulnerability Management
+cyberguideme/Tools,Cyber Security Tools List (cyberguideme),TRIAGE-MINIMAL,triage minimal,436 étoiles; inactif depuis 91 mois; licence GPL-3.0,Curated List,🟡 Moyenne (méta-ressource),oui,oui,🟡 Vulnerability Management
+,SOC Knowledge Base,N/A,non applicable,licence inconnue; repo non exploitable (hors-perimetre),SOC Reference Architecture,🟡 Moyenne (méta-ressource),non,non,🟡 Vulnerability Management
+guardicore/monkey,Infection Monkey (Guardicore),TRIAGE-MINIMAL,triage minimal,7076 étoiles; dernier commit 2025-02-28; licence GPL-3.0,Breach & Attack Simulation,🟡 Moyenne,oui,oui,🔴 Red Team / Adversary Emulation (Compléments)
+BishopFox/sliver,Sliver,TRIAGE-MINIMAL,triage minimal,11731 étoiles; dernier commit 2026-08-26; licence GPL-3.0,C2 Framework,🟡 Moyenne,oui,oui,🔴 Red Team / Adversary Emulation (Compléments)
+HavocFramework/Havoc,Havoc,TRIAGE-MINIMAL,triage minimal,8506 étoiles; dernier commit 2025-12-18; archivé; licence GPL-3.0,C2 Framework,⚪ Faible,oui,oui,🔴 Red Team / Adversary Emulation (Compléments)
+its-a-feature/Mythic,Mythic,TRIAGE-MINIMAL,triage minimal,4727 étoiles; dernier commit 2026-07-16; licence inconnue,C2 Framework,⚪ Faible,non,oui,🔴 Red Team / Adversary Emulation (Compléments)
+CyberCX-STA/PurpleOps,Purple Knight / PurpleOps,TRIAGE-MINIMAL,triage minimal,313 étoiles; dernier commit 2026-07-06; licence inconnue,Purple Team Operations,⚪ Faible,non,oui,🔴 Red Team / Adversary Emulation (Compléments)
+elastic/detection-rules,Elastic Security (Detection Rules),TRIAGE-MINIMAL,triage minimal,2695 étoiles; dernier commit 2026-08-27; licence inconnue,Detection Rules Library,🟡 Moyenne,non,oui,🔵 Defensive / Blue Team (Compléments)
+splunk/security_content,Splunk Security Content,TRIAGE-MINIMAL,triage minimal,1679 étoiles; dernier commit 2026-08-26; licence Apache-2.0,Detection Rules Library,⚪ Faible,oui,oui,🔵 Defensive / Blue Team (Compléments)
+osquery/osquery,Osquery,TRIAGE-MINIMAL,triage minimal,23525 étoiles; dernier commit 2026-08-25; licence Apache-2.0,Endpoint Visibility,🟡 Moyenne,oui,oui,🔵 Defensive / Blue Team (Compléments)
+activecm/rita,RITA,TRIAGE-MINIMAL,triage minimal,629 étoiles; dernier commit 2026-06-17; licence GPL-3.0,Network Traffic Analysis,⚪ Faible,oui,oui,🔵 Defensive / Blue Team (Compléments)
+AlienVault-OTX/OTX-Python-SDK,OTX DirectConnect,TRIAGE-MINIMAL,triage minimal,402 étoiles; inactif depuis 66 mois; licence inconnue,Threat Intelligence Feed,⚪ Faible,non,oui,🟤 Threat Intelligence (Compléments)
+abusech/URLhaus,"Abuse.ch (URLhaus, MalBazaar, ThreatFox)",TRIAGE-MINIMAL,triage minimal,70 étoiles; inactif depuis 22 mois; licence inconnue,Threat Intelligence Feeds,⚪ Faible,non,oui,🟤 Threat Intelligence (Compléments)
+,AI Agent Runtime Security (from topic mcp-security),N/A,non applicable,licence inconnue; repo non exploitable (hors-perimetre),AI Agent Security,⭐ Haute,non,non,🟤 Threat Intelligence (Compléments)
+guardrails-ai/guardrails,Guardrails AI,TRIAGE-MINIMAL,triage minimal,7325 étoiles; dernier commit 2026-08-26; licence Apache-2.0,LLM Output Validation,🟡 Moyenne,oui,oui,🟤 Threat Intelligence (Compléments)
+protectai/llm-guard,LLM Guard,TRIAGE-MINIMAL,triage minimal,3204 étoiles; dernier commit 2026-07-08; archivé; licence MIT,LLM Security,🟡 Moyenne,oui,oui,🟤 Threat Intelligence (Compléments)
+protectai/rebuff,Rebuff,TRIAGE-MINIMAL,triage minimal,1521 étoiles; inactif depuis 32 mois; archivé; licence Apache-2.0,Prompt Injection Detection,⚪ Faible,oui,oui,🟤 Threat Intelligence (Compléments)
+,OWASP LLM Top 10 Vulnerable App,N/A,non applicable,licence inconnue; repo non exploitable (hors-perimetre),AI Security Training,🟡 Moyenne,non,non,🟤 Threat Intelligence (Compléments)
+,Dastardly (PortSwigger),N/A,non applicable,licence inconnue; repo non exploitable (hors-perimetre),DAST CI/CD,⚪ Faible,non,non,🟠 DevSecOps / CI-CD Security
+Checkmarx/kics,KICS (Checkmarx),TRIAGE-MINIMAL,triage minimal,2695 étoiles; dernier commit 2026-08-25; licence Apache-2.0,IaC Security Scanner,🟡 Moyenne,oui,oui,🟠 DevSecOps / CI-CD Security
+aquasecurity/tfsec,tfsec,TRIAGE-MINIMAL,triage minimal,7035 étoiles; dernier commit 2025-05-02; licence MIT,Terraform Security Scanner,⚪ Faible,oui,oui,🟠 DevSecOps / CI-CD Security
+,ProjectDiscovery (Suite),N/A,non applicable,licence inconnue; repo non exploitable (organisation-pas-un-repo),Security Scanning Suite,⭐ Haute (écosystème complet),non,non,🟠 DevSecOps / CI-CD Security
+shadow1ng/fscan,Fscan,TRIAGE-MINIMAL,triage minimal,14460 étoiles; dernier commit 2026-08-25; licence MIT,Internal Network Scanner,⚪ Faible,oui,oui,🟠 DevSecOps / CI-CD Security
+RustScan/RustScan,RustScan,TRIAGE-MINIMAL,triage minimal,20334 étoiles; dernier commit 2026-06-10; licence GPL-3.0,Fast Port Scanner,⚪ Faible,oui,oui,🟠 DevSecOps / CI-CD Security
+,Caido,N/A,non applicable,licence inconnue; repo non exploitable (organisation-pas-un-repo),Web Security Testing (Modern),🟡 Moyenne,non,non,🟠 DevSecOps / CI-CD Security
+OAI/OpenAPI-Specification,OpenAPI / Swagger,TRIAGE-MINIMAL,triage minimal,31187 étoiles; dernier commit 2026-08-20; licence Apache-2.0,API Specification Standard,🟡 Moyenne (standard d'intégration),oui,oui,🟠 DevSecOps / CI-CD Security
+oasis-open/cti-stix2-json-schemas,STIX/TAXII,TRIAGE-MINIMAL,triage minimal,144 étoiles; dernier commit 2026-01-19; licence BSD-3-Clause,Threat Intelligence Standards,🟡 Moyenne (standard),oui,oui,🟠 DevSecOps / CI-CD Security
+,CACAO (OASIS),N/A,non applicable,licence inconnue; repo non exploitable (organisation-pas-un-repo),Security Playbook Standard,🟡 Moyenne (standard),non,non,🟠 DevSecOps / CI-CD Security
+,OpenC2,N/A,non applicable,licence inconnue; repo non exploitable (organisation-pas-un-repo),Security Command Standard,⚪ Faible (standard),non,non,🟠 DevSecOps / CI-CD Security
+opensearch-project/OpenSearch,Elasticsearch / OpenSearch,TRIAGE-MINIMAL,triage minimal,13586 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Search & Analytics Engine,🟡 Moyenne (infrastructure),oui,oui,🟠 DevSecOps / CI-CD Security
+neo4j/neo4j,Neo4j,TRIAGE-MINIMAL,triage minimal,17147 étoiles; dernier commit 2026-08-05; licence GPL-3.0,Graph Database,⚪ Faible (infrastructure),oui,oui,🟠 DevSecOps / CI-CD Security
+ClickHouse/ClickHouse,ClickHouse,TRIAGE-MINIMAL,triage minimal,49484 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Analytics Database,⚪ Faible (infrastructure),oui,oui,🟠 DevSecOps / CI-CD Security
+FuzzingLabs/secpipe,SecPipe / FuzzForge AI,N/A,non applicable,licence inconnue; repo non exploitable (404-introuvable),Meta-MCP (offensif),⭐ Haute (conceptuellement la chose la plus proche de notre cible),non,non,🔴 Offensive / Pentesting
+securityfortech/secops-mcp,secops-mcp,TRIAGE-MINIMAL,triage minimal,207 étoiles; dernier commit 2025-09-17; licence MIT,MCP collection (offensif + pentest),🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+j3ssie/osmedeus,Osmedeus,TRIAGE-HAUTE,triage obligatoire,6539 étoiles; dernier commit 2026-08-08; licence MIT,Orchestrateur offensif (workflow engine),⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+six2dez/reconftw,reconFTW,TRIAGE-MINIMAL,triage minimal,8027 étoiles; dernier commit 2026-06-29; licence MIT,Pipeline offensif (recon),🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+AutoRecon/AutoRecon,AutoRecon,TRIAGE-MINIMAL,triage minimal,6093 étoiles; dernier commit 2025-11-16; licence GPL-3.0,Orchestrateur recon (par service),🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+pry0cc/axiom,axiom,TRIAGE-MINIMAL,triage minimal,4415 étoiles; inactif depuis 23 mois; licence MIT,Infrastructure distribuée offensive,🟡 Moyenne,oui,oui,🔴 Offensive / Pentesting
+GH05TCREW/MetasploitMCP,MetasploitMCP / wrappers MCP unitaires,TRIAGE-MINIMAL,triage minimal,719 étoiles; dernier commit 2026-02-05; licence Apache-2.0,MCP servers individuels (offensif),"🟡 Moyenne (individuellement simples, collectivement le catalogue à indexer)",oui,oui,🔴 Offensive / Pentesting
+apache/caldera,MITRE Caldera (apache/caldera),TRIAGE-HAUTE,triage obligatoire,7215 étoiles; dernier commit 2026-08-27; licence Apache-2.0,Adversary emulation orchestration,⭐ Haute,oui,oui,🔴 Offensive / Pentesting
+infosecn1nja/Red-Teaming-Toolkit,Red-Teaming-Toolkit / Awesome-Red-Teaming (listes),TRIAGE-MINIMAL,triage minimal,10656 étoiles; dernier commit 2026-05-07; licence GPL-3.0,Listes curated offensives,⚪ Faible,oui,oui,🔴 Offensive / Pentesting
+aliasrobotics/cai,CAI (Cybersecurity AI),SHORTLIST,analyse approfondie,9808 étoiles; dernier commit 2026-08-22; archivé; licence MIT,AI Agent Framework (offensif+défensif),⭐ Haute (patterns + garde-fous uniques),oui,oui,🟢 AI Security Agents
+PurpleAILAB/Decepticon,Decepticon,SHORTLIST,analyse approfondie,5343 étoiles; dernier commit 2026-08-26; licence Apache-2.0,AI Red Team Agent (multi-agents),⭐ Haute,oui,oui,🟢 AI Security Agents
+bugbasesecurity/pentest-copilot,Pentest Copilot,TRIAGE-HAUTE,triage obligatoire,1329 étoiles; dernier commit 2026-08-14; licence MIT,AI Pentest Agent (browser),⭐ Haute (capability registry = pattern clé pour nous),oui,oui,🟢 AI Security Agents
+Vasco0x4/AIDA,AIDA,TRIAGE-MINIMAL,triage minimal,480 étoiles; dernier commit 2026-07-19; licence AGPL-3.0,AI Pentest Platform (MCP-driven),🟡 Moyenne,oui,oui,🟢 AI Security Agents
+ASCIT31/Dark-Moon,Dark-Moon (Darkmoon),TRIAGE-MINIMAL,triage minimal,875 étoiles; dernier commit 2026-08-25; licence GPL-3.0,AI Pentest Platform,🟡 Moyenne,oui,oui,🟢 AI Security Agents
+Stanford-Trinity/ARTEMIS,ARTEMIS (Stanford Trinity),TRIAGE-MINIMAL,triage minimal,535 étoiles; dernier commit 2026-01-01; licence Apache-2.0,AI Vulnerability Discovery Agent,🟡 Moyenne,oui,oui,🟢 AI Security Agents
+ipa-lab/hackingBuddyGPT,hackingBuddyGPT,TRIAGE-MINIMAL,triage minimal,1224 étoiles; dernier commit 2026-08-21; licence MIT,AI Agent Framework (académique),🟡 Moyenne,oui,oui,🟢 AI Security Agents
+berylliumsec/nebula,Nebula,TRIAGE-MINIMAL,triage minimal,1093 étoiles; dernier commit 2026-08-27; licence BSD-2-Clause,AI Pentest Assistant,⚪ Faible,oui,oui,🟢 AI Security Agents
+NoDataFound/hackGPT,hackGPT,TRIAGE-MINIMAL,triage minimal,1202 étoiles; dernier commit 2026-08-12; licence inconnue,AI Offensive Toolkit,⚪ Faible,non,oui,🟢 AI Security Agents
+,Autres agents IA identifiés (2e cercle),N/A,non applicable,licence inconnue; repo non exploitable (hors-perimetre),AI Pentest Agents (divers),⚪ Faible à 🟡 (à revérifier en Phase 2),non,non,🟢 AI Security Agents
+Vigil-SOC/vigil,Vigil (Vigil-SOC),TRIAGE-HAUTE,triage obligatoire,264 étoiles; dernier commit 2026-08-27; licence inconnue,AI SOC / Agentic SOC,⭐ Haute,non,oui,🔵 Defensive / Blue Team
+ugurrates/Blue-Team-Assistant,CABTA (Blue Team Assistant),TRIAGE-MINIMAL,triage minimal,76 étoiles; dernier commit 2026-07-27; licence MIT,AI SOC Assistant + MCP servers,🟡 Moyenne,oui,oui,🔵 Defensive / Blue Team
+mukul975/cve-mcp-server,CVE MCP Server,TRIAGE-HAUTE,triage obligatoire,1167 étoiles; dernier commit 2026-06-22; licence Apache-2.0,MCP aggregator (threat intel/vuln intel),⭐ Haute,oui,oui,🔵 Defensive / Blue Team
+not2cleverdotme/blue-team-mcp,blue-team-mcp,TRIAGE-MINIMAL,triage minimal,dernier commit 2026-03-15; licence MIT,MCP server défensif,⚪ Faible,oui,oui,🔵 Defensive / Blue Team
+deadbits/vigil-llm,Vigil-LLM (homonyme à ne pas confondre),TRIAGE-MINIMAL,triage minimal,496 étoiles; inactif depuis 31 mois; licence Apache-2.0,LLM security scanner,⚪ Faible (pour platform) / 🟡 (si on veut sécuriser nos agents),oui,oui,🔵 Defensive / Blue Team
+metatool-ai/metamcp,MetaMCP,IGNORE,écarté,2630 étoiles; dernier commit 2026-06-22; licence MIT,MCP Aggregator/Gateway/Middleware,⭐ Haute,oui,oui,🟣 MCP / Tool Aggregation
+samanhappy/mcphub,MCPHub,TRIAGE-MINIMAL,triage minimal,2337 étoiles; dernier commit 2026-08-26; licence Apache-2.0,MCP Hub,🟡 Moyenne,oui,oui,🟣 MCP / Tool Aggregation
+mcpjungle/MCPJungle,MCPJungle,SHORTLIST,analyse approfondie,1230 étoiles; dernier commit 2026-08-02; licence MPL-2.0,MCP Gateway + Registry,🟡 Moyenne,oui,oui,🟣 MCP / Tool Aggregation
+wojtyniak/mcp-mcp,mcp-mcp (wojtyniak),TRIAGE-MINIMAL,triage minimal,23 étoiles; dernier commit 2026-06-26; licence MIT,Meta-MCP (découverte),"🟡 Moyenne (pattern ""catalogue agrégé de catalogues"")",oui,oui,🟣 MCP / Tool Aggregation
+pathintegral-institute/mcpm.sh,mcpm.sh,TRIAGE-MINIMAL,triage minimal,992 étoiles; dernier commit 2026-05-22; licence MIT,MCP Package Manager + Registry + Router,🟡 Moyenne,oui,oui,🟣 MCP / Tool Aggregation
+open-webui/mcpo,mcpo,TRIAGE-MINIMAL,triage minimal,4357 étoiles; dernier commit 2026-02-27; licence MIT,MCP → OpenAPI Proxy,🟡 Moyenne,oui,oui,🟣 MCP / Tool Aggregation
+AgentSeal/awesome-mcp-security,Security-scored MCP lists,TRIAGE-HAUTE,triage obligatoire,28 étoiles; dernier commit 2026-03-14; licence inconnue,MCP registries avec scoring sécurité,⭐ Haute (métadonnées de risque prêtes à indexer pour un registry),non,oui,🟣 MCP / Tool Aggregation
+,MCP servers sécurité divers (petits),N/A,non applicable,licence inconnue; repo non exploitable (hors-perimetre),MCP servers (unitaires/petites collections),⚪ Faible individuellement,non,non,🟣 MCP / Tool Aggregation
+modelcontextprotocol/registry,Official MCP Registry,SHORTLIST,analyse approfondie,7194 étoiles; dernier commit 2026-08-20; licence inconnue,MCP Registry (officiel),⭐ Haute,non,oui,🟣 MCP / Tool Aggregation
+maximhq/bifrost,Bifrost (Maxim),TRIAGE-MINIMAL,triage minimal,7599 étoiles; dernier commit 2026-08-27; licence Apache-2.0,LLM + MCP Gateway,🟡 Moyenne,oui,oui,🟣 MCP / Tool Aggregation
+obot-platform/obot,Obot,TRIAGE-MINIMAL,triage minimal,962 étoiles; dernier commit 2026-08-27; licence MIT,AI Governance Platform / MCP catalog,🟡 Moyenne,oui,oui,🟣 MCP / Tool Aggregation
+datacline/secure-mcp-gateway,Other gateways (contexte),TRIAGE-MINIMAL,triage minimal,32 étoiles; dernier commit 2026-05-13; licence MIT,MCP/LLM Gateways (divers),⚪ Faible (couche gateway = commodité),oui,oui,🟣 MCP / Tool Aggregation
+lockfale/OSINT-Framework,OSINT-Framework / autres listes OSINT,TRIAGE-MINIMAL,triage minimal,12016 étoiles; dernier commit 2026-04-03; licence MIT,Curated lists OSINT,🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+kpcyrd/sn0int,sn0int,TRIAGE-MINIMAL,triage minimal,2516 étoiles; inactif depuis 19 mois; licence GPL-3.0,OSINT Framework (sandboxé),🟡 Moyenne,oui,oui,🟤 Threat Intelligence / OSINT
+4ndersonLin/awesome-cloud-security,Nuages : à compléter au propre,TRIAGE-MINIMAL,triage minimal,2483 étoiles; dernier commit 2026-03-17; licence inconnue,Cloud security tooling,🟡 Moyenne (listes) — les hubs MCP (mcp-security-hub) wrappe déjà des images trivy/prowler.,non,oui,🟤 Threat Intelligence / OSINT
+meirwah/awesome-incident-response,meirwah/awesome-incident-response,TRIAGE-MINIMAL,triage minimal,9353 étoiles; dernier commit 2026-07-15; licence Apache-2.0,Curated list DFIR/IR,⚪ Faible,oui,oui,🟤 Threat Intelligence / OSINT
+,(croisé avec 🔵🟠🟡),N/A,non applicable,licence inconnue; repo non exploitable (hors-perimetre),Web platforms / dashboards,🟡 Moyenne (gap confirmé),non,non,🟤 Threat Intelligence / OSINT
+mthcht/awesome-lists,Méta-listes et index majeurs,TRIAGE-MINIMAL,triage minimal,1892 étoiles; dernier commit 2026-08-27; licence MIT,Curated lists / meta-lists,il fournit la structure nécessaire pour représenter une chaîne d’attaque plutôt qu’un finding isolé.,oui,oui,🟤 Threat Intelligence / OSINT

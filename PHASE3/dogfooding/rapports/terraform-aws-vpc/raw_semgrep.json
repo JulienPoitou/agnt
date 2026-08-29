@@ -1,0 +1,193 @@
+{
+  "version": "1.175.0",
+  "results": [],
+  "errors": [],
+  "paths": {
+    "scanned": [
+      "/home/user/PHASE3/mt-scan/.editorconfig",
+      "/home/user/PHASE3/mt-scan/.github/contributing.md",
+      "/home/user/PHASE3/mt-scan/.github/workflows/lock.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/pr-title.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/pre-commit.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/release.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/stale-actions.yaml",
+      "/home/user/PHASE3/mt-scan/.gitignore",
+      "/home/user/PHASE3/mt-scan/.pre-commit-config.yaml",
+      "/home/user/PHASE3/mt-scan/.releaserc.json",
+      "/home/user/PHASE3/mt-scan/CHANGELOG.md",
+      "/home/user/PHASE3/mt-scan/LICENSE",
+      "/home/user/PHASE3/mt-scan/README.md",
+      "/home/user/PHASE3/mt-scan/docs/UPGRADE-3.0.md",
+      "/home/user/PHASE3/mt-scan/docs/UPGRADE-4.0.md",
+      "/home/user/PHASE3/mt-scan/examples/README.md",
+      "/home/user/PHASE3/mt-scan/examples/block-public-access/README.md",
+      "/home/user/PHASE3/mt-scan/examples/block-public-access/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/block-public-access/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/block-public-access/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/block-public-access/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/complete/README.md",
+      "/home/user/PHASE3/mt-scan/examples/complete/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/complete/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/complete/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/complete/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/flow-log/README.md",
+      "/home/user/PHASE3/mt-scan/examples/flow-log/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/flow-log/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/flow-log/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/flow-log/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipam/README.md",
+      "/home/user/PHASE3/mt-scan/examples/ipam/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipam/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipam/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipam/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipv6-dualstack/README.md",
+      "/home/user/PHASE3/mt-scan/examples/ipv6-dualstack/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipv6-dualstack/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipv6-dualstack/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipv6-dualstack/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipv6-only/README.md",
+      "/home/user/PHASE3/mt-scan/examples/ipv6-only/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipv6-only/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipv6-only/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/ipv6-only/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/issues/README.md",
+      "/home/user/PHASE3/mt-scan/examples/issues/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/issues/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/issues/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/issues/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/manage-default-vpc/README.md",
+      "/home/user/PHASE3/mt-scan/examples/manage-default-vpc/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/manage-default-vpc/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/manage-default-vpc/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/manage-default-vpc/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/network-acls/README.md",
+      "/home/user/PHASE3/mt-scan/examples/network-acls/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/network-acls/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/network-acls/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/network-acls/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/outpost/README.md",
+      "/home/user/PHASE3/mt-scan/examples/outpost/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/outpost/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/outpost/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/outpost/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/secondary-cidr-blocks/README.md",
+      "/home/user/PHASE3/mt-scan/examples/secondary-cidr-blocks/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/secondary-cidr-blocks/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/secondary-cidr-blocks/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/secondary-cidr-blocks/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/separate-route-tables/README.md",
+      "/home/user/PHASE3/mt-scan/examples/separate-route-tables/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/separate-route-tables/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/separate-route-tables/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/separate-route-tables/versions.tf",
+      "/home/user/PHASE3/mt-scan/examples/simple/README.md",
+      "/home/user/PHASE3/mt-scan/examples/simple/main.tf",
+      "/home/user/PHASE3/mt-scan/examples/simple/outputs.tf",
+      "/home/user/PHASE3/mt-scan/examples/simple/variables.tf",
+      "/home/user/PHASE3/mt-scan/examples/simple/versions.tf",
+      "/home/user/PHASE3/mt-scan/main.tf",
+      "/home/user/PHASE3/mt-scan/modules/flow-log/README.md",
+      "/home/user/PHASE3/mt-scan/modules/flow-log/main.tf",
+      "/home/user/PHASE3/mt-scan/modules/flow-log/outputs.tf",
+      "/home/user/PHASE3/mt-scan/modules/flow-log/variables.tf",
+      "/home/user/PHASE3/mt-scan/modules/flow-log/versions.tf",
+      "/home/user/PHASE3/mt-scan/modules/vpc-endpoints/README.md",
+      "/home/user/PHASE3/mt-scan/modules/vpc-endpoints/main.tf",
+      "/home/user/PHASE3/mt-scan/modules/vpc-endpoints/outputs.tf",
+      "/home/user/PHASE3/mt-scan/modules/vpc-endpoints/variables.tf",
+      "/home/user/PHASE3/mt-scan/modules/vpc-endpoints/versions.tf",
+      "/home/user/PHASE3/mt-scan/outputs.tf",
+      "/home/user/PHASE3/mt-scan/variables.tf",
+      "/home/user/PHASE3/mt-scan/versions.tf",
+      "/home/user/PHASE3/mt-scan/vpc-flow-logs.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/README.md",
+      "/home/user/PHASE3/mt-scan/wrappers/flow-log/README.md",
+      "/home/user/PHASE3/mt-scan/wrappers/flow-log/main.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/flow-log/outputs.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/flow-log/variables.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/flow-log/versions.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/main.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/outputs.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/variables.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/versions.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/vpc-endpoints/README.md",
+      "/home/user/PHASE3/mt-scan/wrappers/vpc-endpoints/main.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/vpc-endpoints/outputs.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/vpc-endpoints/variables.tf",
+      "/home/user/PHASE3/mt-scan/wrappers/vpc-endpoints/versions.tf"
+    ]
+  },
+  "time": {
+    "rules": [],
+    "rules_parse_time": 0.2311229705810547,
+    "profiling_times": {
+      "config_time": 6.871817350387573,
+      "core_time": 2.035900354385376,
+      "ignores_time": 0.0006661415100097656,
+      "total_time": 8.916814088821411
+    },
+    "parsing_time": {
+      "total_time": 0.0,
+      "per_file_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_files": []
+    },
+    "scanning_time": {
+      "total_time": 2.9104182720184326,
+      "per_file_time": {
+        "mean": 0.015399038476288,
+        "std_dev": 0.002891985385025286
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_files": []
+    },
+    "matching_time": {
+      "total_time": 0.0,
+      "per_file_and_rule_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_rules_on_files": []
+    },
+    "tainting_time": {
+      "total_time": 0.0,
+      "per_def_and_rule_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_rules_on_defs": []
+    },
+    "fixpoint_timeouts": [],
+    "prefiltering": {
+      "project_level_time": 0.0,
+      "file_level_time": 0.0,
+      "rules_with_project_prefilters_ratio": 0.0,
+      "rules_with_file_prefilters_ratio": 0.9977973568281938,
+      "rules_selected_ratio": 0.11013215859030837,
+      "rules_matched_ratio": 0.11013215859030837
+    },
+    "targets": [],
+    "total_bytes": 0,
+    "max_memory_bytes": 566899776
+  },
+  "engine_requested": "OSS",
+  "skipped_rules": [],
+  "profiling_results": []
+}

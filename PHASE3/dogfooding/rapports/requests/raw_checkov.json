@@ -1,0 +1,100 @@
+{
+  "check_type": "github_actions",
+  "results": {
+    "failed_checks": [
+      {
+        "check_id": "CKV_GHA_7",
+        "bc_check_id": null,
+        "check_name": "The build output cannot be affected by user parameters other than the build entry point and the top-level source location. GitHub Actions workflow_dispatch inputs MUST be empty. ",
+        "check_result": {
+          "result": "FAILED",
+          "results_configuration": {
+            "test-pypi-only": {
+              "description": "Publish to Test PyPI only",
+              "type": "boolean",
+              "default": true,
+              "__startline__": 10,
+              "__endline__": 14
+            },
+            "__startline__": 9,
+            "__endline__": 14
+          }
+        },
+        "code_block": [
+          [
+            9,
+            "      test-pypi-only:\n"
+          ],
+          [
+            10,
+            "        description: \"Publish to Test PyPI only\"\n"
+          ],
+          [
+            11,
+            "        type: boolean\n"
+          ],
+          [
+            12,
+            "        default: true\n"
+          ],
+          [
+            13,
+            "\n"
+          ],
+          [
+            14,
+            "permissions:\n"
+          ],
+          [
+            15,
+            "  contents: read\n"
+          ]
+        ],
+        "file_path": "/.github/workflows/publish.yml",
+        "file_abs_path": "/home/user/PHASE3/mt-scan/.github/workflows/publish.yml",
+        "repo_file_path": "/.github/workflows/publish.yml",
+        "file_line_range": [
+          9,
+          15
+        ],
+        "resource": "on(Publish to PyPI)",
+        "evaluations": null,
+        "check_class": "checkov.github_actions.checks.job.EmptyWorkflowDispatch",
+        "fixed_definition": null,
+        "entity_tags": null,
+        "caller_file_path": null,
+        "caller_file_line_range": null,
+        "resource_address": null,
+        "severity": null,
+        "bc_category": null,
+        "benchmarks": null,
+        "description": null,
+        "short_description": null,
+        "vulnerability_details": null,
+        "connected_node": null,
+        "guideline": null,
+        "details": [],
+        "check_len": null,
+        "definition_context_file_path": null,
+        "triggers": [
+          [
+            "workflow_dispatch",
+            "push"
+          ]
+        ],
+        "job": [
+          ""
+        ],
+        "workflow_name": "Publish to PyPI"
+      }
+    ]
+  },
+  "summary": {
+    "passed": 141,
+    "failed": 1,
+    "skipped": 0,
+    "parsing_errors": 0,
+    "resource_count": 0,
+    "checkov_version": "3.3.15"
+  }
+}

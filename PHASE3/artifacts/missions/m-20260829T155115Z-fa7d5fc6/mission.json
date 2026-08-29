@@ -1,0 +1,11 @@
+{
+  "mission_id": "m-20260829T155115Z-fa7d5fc6",
+  "cree_le": "2026-08-29T15:51:15+00:00",
+  "requete": "Analyse la sécurité de ce dépôt",
+  "requete_canonique": "analyse la securite de ce depot",
+  "cible": {
+    "chemin": "/home/user/PHASE3/cible_independante",
+    "type": "repertoire"
+  },
+  "format_journal": "journal.jsonl — append-only, une ligne par événement"
+}

@@ -1,0 +1,399 @@
+{
+  "clusters": [
+    {
+      "cluster_id": "CL-001",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0002",
+        "tv-0003",
+        "tv-0004",
+        "gr-0003",
+        "gr-0005",
+        "gr-0012"
+      ],
+      "cle": "paquet:fast-uri"
+    },
+    {
+      "cluster_id": "CL-002",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0006",
+        "tv-0007",
+        "tv-0014",
+        "gr-0002",
+        "gr-0006",
+        "gr-0014"
+      ],
+      "cle": "paquet:js-yaml"
+    },
+    {
+      "cluster_id": "CL-003",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0015",
+        "tv-0016",
+        "gr-0007",
+        "gr-0015"
+      ],
+      "cle": "paquet:serialize-javascript"
+    },
+    {
+      "cluster_id": "CL-004",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0001",
+        "gr-0013"
+      ],
+      "cle": "paquet:@astrojs/rss"
+    },
+    {
+      "cluster_id": "CL-005",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0005",
+        "gr-0004"
+      ],
+      "cle": "paquet:fast-xml-parser"
+    },
+    {
+      "cluster_id": "CL-006",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0008",
+        "gr-0009"
+      ],
+      "cle": "paquet:nanoid"
+    },
+    {
+      "cluster_id": "CL-007",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0009",
+        "gr-0008"
+      ],
+      "cle": "paquet:postcss"
+    },
+    {
+      "cluster_id": "CL-008",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0010",
+        "gr-0016"
+      ],
+      "cle": "paquet:sharp"
+    },
+    {
+      "cluster_id": "CL-009",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0011",
+        "gr-0011"
+      ],
+      "cle": "paquet:svgo"
+    },
+    {
+      "cluster_id": "CL-010",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0012",
+        "gr-0010"
+      ],
+      "cle": "paquet:yaml"
+    },
+    {
+      "cluster_id": "CL-011",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0013",
+        "gr-0001"
+      ],
+      "cle": "paquet:brace-expansion"
+    },
+    {
+      "cluster_id": "CL-012",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0002",
+        "ki-0002"
+      ],
+      "cle": "fichier:.github/workflows/release-please.yml"
+    }
+  ],
+  "clusters_inter_outils": [
+    {
+      "cluster_id": "CL-001",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0002",
+        "tv-0003",
+        "tv-0004",
+        "gr-0003",
+        "gr-0005",
+        "gr-0012"
+      ],
+      "cle": "paquet:fast-uri"
+    },
+    {
+      "cluster_id": "CL-002",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0006",
+        "tv-0007",
+        "tv-0014",
+        "gr-0002",
+        "gr-0006",
+        "gr-0014"
+      ],
+      "cle": "paquet:js-yaml"
+    },
+    {
+      "cluster_id": "CL-003",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0015",
+        "tv-0016",
+        "gr-0007",
+        "gr-0015"
+      ],
+      "cle": "paquet:serialize-javascript"
+    },
+    {
+      "cluster_id": "CL-004",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0001",
+        "gr-0013"
+      ],
+      "cle": "paquet:@astrojs/rss"
+    },
+    {
+      "cluster_id": "CL-005",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0005",
+        "gr-0004"
+      ],
+      "cle": "paquet:fast-xml-parser"
+    },
+    {
+      "cluster_id": "CL-006",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0008",
+        "gr-0009"
+      ],
+      "cle": "paquet:nanoid"
+    },
+    {
+      "cluster_id": "CL-007",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0009",
+        "gr-0008"
+      ],
+      "cle": "paquet:postcss"
+    },
+    {
+      "cluster_id": "CL-008",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0010",
+        "gr-0016"
+      ],
+      "cle": "paquet:sharp"
+    },
+    {
+      "cluster_id": "CL-009",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0011",
+        "gr-0011"
+      ],
+      "cle": "paquet:svgo"
+    },
+    {
+      "cluster_id": "CL-010",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0012",
+        "gr-0010"
+      ],
+      "cle": "paquet:yaml"
+    },
+    {
+      "cluster_id": "CL-011",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0013",
+        "gr-0001"
+      ],
+      "cle": "paquet:brace-expansion"
+    },
+    {
+      "cluster_id": "CL-012",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0002",
+        "ki-0002"
+      ],
+      "cle": "fichier:.github/workflows/release-please.yml"
+    }
+  ],
+  "non_regroupe": [
+    "ch-0001",
+    "ki-0001",
+    "ki-0003",
+    "ki-0004"
+  ],
+  "stats": {
+    "findings_en_entree": 38,
+    "clusters": 12,
+    "findings_regroupes": 34,
+    "findings_non_regroupes": 4,
+    "reduction": "38 → 16"
+  }
+}

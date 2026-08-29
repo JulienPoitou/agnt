@@ -1,0 +1,91 @@
+{
+  "kics_version": "2.1.20",
+  "files_scanned": 4,
+  "lines_scanned": 129,
+  "files_parsed": 4,
+  "lines_parsed": 128,
+  "lines_ignored": 1,
+  "files_failed_to_scan": 0,
+  "queries_total": 4,
+  "queries_failed_to_execute": 0,
+  "queries_failed_to_compute_similarity_id": 0,
+  "scan_id": "console",
+  "severity_counters": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "INFO": 0,
+    "LOW": 4,
+    "MEDIUM": 0,
+    "TRACE": 0
+  },
+  "total_counter": 4,
+  "total_bom_resources": 0,
+  "start": "2026-08-29T16:51:53.776389716Z",
+  "end": "2026-08-29T16:51:54.565157305Z",
+  "paths": [
+    "/home/user/PHASE3/mt-scan",
+    "/home/user/PHASE3/mt-regles/kics/queries"
+  ],
+  "queries": [
+    {
+      "query_name": "Unpinned Actions Full Length Commit SHA",
+      "query_id": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+      "query_url": "https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions",
+      "severity": "LOW",
+      "platform": "CICD",
+      "cwe": "829",
+      "risk_score": "4.1",
+      "cloud_provider": "COMMON",
+      "category": "Supply-Chain",
+      "experimental": false,
+      "description": "Pinning an action to a full length commit SHA is currently the only way to use an action as an immutable release. Pinning to a particular SHA helps mitigate the risk of a bad actor adding a backdoor to the action's repository, as they would need to generate a SHA-1 collision for a valid Git object payload. When selecting a SHA, you should verify it is from the action's repository and not a repository fork.",
+      "description_id": "9cb8402d",
+      "files": [
+        {
+          "file_name": ".github/workflows/security.yml",
+          "similarity_id": "d7710d7b62f0b6fa906a59f8e730528bd7153be6458330cfdc07746c4d9aca59",
+          "line": 29,
+          "issue_type": "IncorrectValue",
+          "search_key": "uses={{securego/gosec@master}}",
+          "search_line": 29,
+          "search_value": "",
+          "expected_value": "Action pinned to a full length commit SHA.",
+          "actual_value": "Action is not pinned to a full length commit SHA."
+        },
+        {
+          "file_name": ".github/workflows/test.yml",
+          "similarity_id": "8a9e66ed01c9e7054f2cec13f30fbe856fad4999be4e0048e1f8aced08d3560a",
+          "line": 33,
+          "issue_type": "IncorrectValue",
+          "search_key": "uses={{codecov/codecov-action@v3}}",
+          "search_line": 33,
+          "search_value": "",
+          "expected_value": "Action pinned to a full length commit SHA.",
+          "actual_value": "Action is not pinned to a full length commit SHA."
+        },
+        {
+          "file_name": ".github/workflows/verify.yml",
+          "similarity_id": "54f6eb92c16981055c5ec5127cc3c2a351a703fa08d41ee878253323ffa37c90",
+          "line": 29,
+          "issue_type": "IncorrectValue",
+          "search_key": "uses={{golangci/golangci-lint-action@v3}}",
+          "search_line": 29,
+          "search_value": "",
+          "expected_value": "Action pinned to a full length commit SHA.",
+          "actual_value": "Action is not pinned to a full length commit SHA."
+        },
+        {
+          "file_name": ".github/workflows/security.yml",
+          "similarity_id": "863c55ad348bda444251452e58fa053c29a8439128907b56df96c0c508dc1275",
+          "line": 34,
+          "issue_type": "IncorrectValue",
+          "search_key": "uses={{golang/govulncheck-action@v1}}",
+          "search_line": 34,
+          "search_value": "",
+          "expected_value": "Action pinned to a full length commit SHA.",
+          "actual_value": "Action is not pinned to a full length commit SHA."
+        }
+      ]
+    }
+  ]
+}

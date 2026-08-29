@@ -1,0 +1,304 @@
+{
+  "requete": "Analyse la sécurité de mon dépôt",
+  "capacites_demandees": [
+    "CODE_STATIC_ANALYSIS",
+    "CODE_STATIC_ANALYSIS_GO",
+    "DEPENDENCY_ANALYSIS",
+    "SECRET_DETECTION",
+    "IAC_SCAN"
+  ],
+  "motifs_intent": {
+    "CODE_STATIC_ANALYSIS": "demande générique",
+    "CODE_STATIC_ANALYSIS_GO": "demande générique",
+    "DEPENDENCY_ANALYSIS": "demande générique",
+    "SECRET_DETECTION": "demande générique",
+    "IAC_SCAN": "demande générique"
+  },
+  "plan_id": "55666b89d65fb397",
+  "plan_empreinte": "55666b89d65fb397e40da991e48699f2f2c09104cbe8c84af2d666446433fc83",
+  "autorisation": {
+    "allow": true,
+    "motifs": []
+  },
+  "findings": 38,
+  "clustering": {
+    "findings_en_entree": 38,
+    "clusters": 12,
+    "findings_regroupes": 34,
+    "findings_non_regroupes": 4,
+    "reduction": "38 → 16"
+  },
+  "clusters": [
+    {
+      "cluster_id": "CL-001",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0002",
+        "tv-0003",
+        "tv-0004",
+        "gr-0003",
+        "gr-0005",
+        "gr-0012"
+      ],
+      "cle": "paquet:fast-uri"
+    },
+    {
+      "cluster_id": "CL-002",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0006",
+        "tv-0007",
+        "tv-0014",
+        "gr-0002",
+        "gr-0006",
+        "gr-0014"
+      ],
+      "cle": "paquet:js-yaml"
+    },
+    {
+      "cluster_id": "CL-003",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0015",
+        "tv-0016",
+        "gr-0007",
+        "gr-0015"
+      ],
+      "cle": "paquet:serialize-javascript"
+    },
+    {
+      "cluster_id": "CL-004",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0001",
+        "gr-0013"
+      ],
+      "cle": "paquet:@astrojs/rss"
+    },
+    {
+      "cluster_id": "CL-005",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0005",
+        "gr-0004"
+      ],
+      "cle": "paquet:fast-xml-parser"
+    },
+    {
+      "cluster_id": "CL-006",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0008",
+        "gr-0009"
+      ],
+      "cle": "paquet:nanoid"
+    },
+    {
+      "cluster_id": "CL-007",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0009",
+        "gr-0008"
+      ],
+      "cle": "paquet:postcss"
+    },
+    {
+      "cluster_id": "CL-008",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0010",
+        "gr-0016"
+      ],
+      "cle": "paquet:sharp"
+    },
+    {
+      "cluster_id": "CL-009",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0011",
+        "gr-0011"
+      ],
+      "cle": "paquet:svgo"
+    },
+    {
+      "cluster_id": "CL-010",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0012",
+        "gr-0010"
+      ],
+      "cle": "paquet:yaml"
+    },
+    {
+      "cluster_id": "CL-011",
+      "confidence": "high",
+      "reason": [
+        "cross_tool",
+        "same_package",
+        "related_dependency",
+        "tools:grype+trivy"
+      ],
+      "members": [
+        "tv-0013",
+        "gr-0001"
+      ],
+      "cle": "paquet:brace-expansion"
+    },
+    {
+      "cluster_id": "CL-012",
+      "confidence": "medium",
+      "reason": [
+        "cross_tool",
+        "same_asset",
+        "same_file",
+        "tools:checkov+kics"
+      ],
+      "members": [
+        "ch-0002",
+        "ki-0002"
+      ],
+      "cle": "fichier:.github/workflows/release-please.yml"
+    }
+  ],
+  "non_regroupe": [
+    "ch-0001",
+    "ki-0001",
+    "ki-0003",
+    "ki-0004"
+  ],
+  "couverture": {
+    "semgrep": {
+      "analysé": [],
+      "non_analysé": [
+        {
+          "cible": "/home/user/PHASE3/mt-scan",
+          "etat": "not_scanned",
+          "raison": "aucune règle n'a porté sur ce dépôt"
+        }
+      ],
+      "limites": [
+        "le jeu de règles est épinglé sur python/security-audit : un dépôt d'un autre langage ressortirait vide sans erreur"
+      ]
+    },
+    "trivy": {
+      "analysé": [
+        "package-lock.json"
+      ],
+      "non_analysé": [
+        {
+          "cible": "package.json",
+          "etat": "not_scanned",
+          "raison": "manifeste présent mais ignoré par l'outil (nodejs/npm)"
+        }
+      ],
+      "limites": [
+        "package.json présent mais non analysé : dépendances nodejs/npm non couvertes",
+        "base de vulnérabilités figée au pré-chauffage : les CVE publiées depuis ne sont pas détectées"
+      ]
+    },
+    "grype": {
+      "analysé": [],
+      "non_analysé": [
+        {
+          "cible": "/home/user/PHASE3/mt-scan",
+          "etat": "not_scanned",
+          "raison": "aucun résultat produit par l'outil"
+        }
+      ],
+      "limites": [
+        "grype identifie en GHSA-* (mesuré : 62/62 sur testrepo_sca), trivy en CVE-* : convergence inter-outils par PAQUET (6/6 paquets communs mesurés), pas par identifiant de règle. La base grype (~2 Go) est pré-téléchargée sous {DB}/grype ; sans elle, grype tenterait un téléchargement — impossible dans la sandbox (pas de réseau).\n",
+        "provider déclaratif : les résultats sont extraits selon la spécification du manifest, sans connaissance de l'outil par le cœur"
+      ]
+    },
+    "gitleaks": {
+      "analysé": [
+        "historique git"
+      ],
+      "non_analysé": [],
+      "limites": [
+        "valeur des secrets masquée à la source (--redact) : jamais stockée",
+        "détection dépendante des règles : une clé AWS réaliste peut être classée generic-api-key, et les exemples de documentation sont sur liste blanche"
+      ]
+    },
+    "checkov": {
+      "analysé": [
+        "/home/user/PHASE3/mt-scan"
+      ],
+      "non_analysé": [],
+      "limites": [
+        "severity est null dans la sortie OSS (mesuré le 2026-08-28) : la gravité remonte « indéterminée », jamais inventée (leçon #4). file_path n'a pas la même base selon le framework (module Terraform vs dépôt) : les chemins sont conservés tels que l'outil les émet, non réécrits. Les frameworks détectés dépendent du contenu de la cible ; un framework absent n'est pas un échec.\n",
+        "provider déclaratif : les résultats sont extraits selon la spécification du manifest, sans connaissance de l'outil par le cœur"
+      ]
+    },
+    "kics": {
+      "analysé": [
+        "/home/user/PHASE3/mt-scan"
+      ],
+      "non_analysé": [],
+      "limites": [
+        "Bibliothèque de requêtes v2.1.20 pré-installée sous {REGLES}/kics ; sans elle, kics échoue (« unable to find queries »). Les formats IaC en JSON (CloudFormation, ARM) ne sont pas couverts par les globes (collision avec package.json). similarity_id et ordre d'énumération varient entre deux exécutions (mesuré) — l'ensemble des détections, non. severity est portée par la requête, pas par le fichier.\n",
+        "provider déclaratif : les résultats sont extraits selon la spécification du manifest, sans connaissance de l'outil par le cœur"
+      ]
+    }
+  }
+}

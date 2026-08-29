@@ -1,0 +1,91 @@
+{
+  "kics_version": "2.1.20",
+  "files_scanned": 10,
+  "lines_scanned": 477,
+  "files_parsed": 10,
+  "lines_parsed": 465,
+  "lines_ignored": 12,
+  "files_failed_to_scan": 0,
+  "queries_total": 4,
+  "queries_failed_to_execute": 0,
+  "queries_failed_to_compute_similarity_id": 0,
+  "scan_id": "console",
+  "severity_counters": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "INFO": 0,
+    "LOW": 4,
+    "MEDIUM": 0,
+    "TRACE": 0
+  },
+  "total_counter": 4,
+  "total_bom_resources": 0,
+  "start": "2026-08-29T17:14:08.001576411Z",
+  "end": "2026-08-29T17:14:09.147669395Z",
+  "paths": [
+    "/home/user/PHASE3/mt-scan",
+    "/home/user/PHASE3/mt-regles/kics/queries"
+  ],
+  "queries": [
+    {
+      "query_name": "Unpinned Actions Full Length Commit SHA",
+      "query_id": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+      "query_url": "https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions",
+      "severity": "LOW",
+      "platform": "CICD",
+      "cwe": "829",
+      "risk_score": "4.1",
+      "cloud_provider": "COMMON",
+      "category": "Supply-Chain",
+      "experimental": false,
+      "description": "Pinning an action to a full length commit SHA is currently the only way to use an action as an immutable release. Pinning to a particular SHA helps mitigate the risk of a bad actor adding a backdoor to the action's repository, as they would need to generate a SHA-1 collision for a valid Git object payload. When selecting a SHA, you should verify it is from the action's repository and not a repository fork.",
+      "description_id": "9cb8402d",
+      "files": [
+        {
+          "file_name": ".github/workflows/octoguide.yml",
+          "similarity_id": "dc5c2a220e83420cf672e83b48ac1b7ece24dda26ef7924dbc2d3847ac307b1f",
+          "line": 6,
+          "issue_type": "IncorrectValue",
+          "search_key": "uses={{OctoGuide/bot@0.21.10}}",
+          "search_line": 6,
+          "search_value": "",
+          "expected_value": "Action pinned to a full length commit SHA.",
+          "actual_value": "Action is not pinned to a full length commit SHA."
+        },
+        {
+          "file_name": ".github/workflows/release-please.yml",
+          "similarity_id": "49d92ca654471caf418bac3a0a444da8de6a5c224cc88575010ade0c0444396c",
+          "line": 29,
+          "issue_type": "IncorrectValue",
+          "search_key": "uses={{googleapis/release-please-action@v5}}",
+          "search_line": 29,
+          "search_value": "",
+          "expected_value": "Action pinned to a full length commit SHA.",
+          "actual_value": "Action is not pinned to a full length commit SHA."
+        },
+        {
+          "file_name": ".github/workflows/release-comment.yml",
+          "similarity_id": "505d697da5e19607eaa211632ebcc0b4d0af79185caf68fef4d047aec697d3e8",
+          "line": 17,
+          "issue_type": "IncorrectValue",
+          "search_key": "uses={{apexskier/github-release-commenter@v1}}",
+          "search_line": 17,
+          "search_value": "",
+          "expected_value": "Action pinned to a full length commit SHA.",
+          "actual_value": "Action is not pinned to a full length commit SHA."
+        },
+        {
+          "file_name": ".github/workflows/npm-script.yml",
+          "similarity_id": "58d0ff4cfb4f7bda02e732ee4a85e04913d58b042d11550bc5faa153382766e5",
+          "line": 83,
+          "issue_type": "IncorrectValue",
+          "search_key": "uses={{codecov/codecov-action@v7}}",
+          "search_line": 83,
+          "search_value": "",
+          "expected_value": "Action pinned to a full length commit SHA.",
+          "actual_value": "Action is not pinned to a full length commit SHA."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "version": "1.175.0",
+  "results": [],
+  "errors": [],
+  "paths": {
+    "scanned": [
+      "/home/user/PHASE3/mt-scan/.editorconfig",
+      "/home/user/PHASE3/mt-scan/.github/workflows/issues.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/security.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/test.yml",
+      "/home/user/PHASE3/mt-scan/.github/workflows/verify.yml",
+      "/home/user/PHASE3/mt-scan/.gitignore",
+      "/home/user/PHASE3/mt-scan/LICENSE",
+      "/home/user/PHASE3/mt-scan/Makefile",
+      "/home/user/PHASE3/mt-scan/README.md",
+      "/home/user/PHASE3/mt-scan/doc.go",
+      "/home/user/PHASE3/mt-scan/go.mod",
+      "/home/user/PHASE3/mt-scan/middleware.go",
+      "/home/user/PHASE3/mt-scan/mux.go",
+      "/home/user/PHASE3/mt-scan/regexp.go",
+      "/home/user/PHASE3/mt-scan/route.go",
+      "/home/user/PHASE3/mt-scan/test_helpers.go"
+    ]
+  },
+  "time": {
+    "rules": [],
+    "rules_parse_time": 0.2684760093688965,
+    "profiling_times": {
+      "config_time": 6.860074758529663,
+      "core_time": 0.634746789932251,
+      "ignores_time": 0.0007715225219726562,
+      "total_time": 7.503974437713623
+    },
+    "parsing_time": {
+      "total_time": 0.0,
+      "per_file_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_files": []
+    },
+    "scanning_time": {
+      "total_time": 0.209151029586792,
+      "per_file_time": {
+        "mean": 0.009506864981217814,
+        "std_dev": 0.0006279195736086254
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_files": []
+    },
+    "matching_time": {
+      "total_time": 0.0,
+      "per_file_and_rule_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_rules_on_files": []
+    },
+    "tainting_time": {
+      "total_time": 0.0,
+      "per_def_and_rule_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_rules_on_defs": []
+    },
+    "fixpoint_timeouts": [],
+    "prefiltering": {
+      "project_level_time": 0.0,
+      "file_level_time": 0.0,
+      "rules_with_project_prefilters_ratio": 0.0,
+      "rules_with_file_prefilters_ratio": 1.0,
+      "rules_selected_ratio": 0.03,
+      "rules_matched_ratio": 0.03
+    },
+    "targets": [],
+    "total_bytes": 0,
+    "max_memory_bytes": 478216704
+  },
+  "engine_requested": "OSS",
+  "skipped_rules": [],
+  "profiling_results": []
+}

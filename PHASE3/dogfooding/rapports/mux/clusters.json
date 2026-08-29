@@ -1,0 +1,30 @@
+{
+  "clusters": [
+    {
+      "cluster_id": "CL-001",
+      "confidence": "medium",
+      "reason": [
+        "same_asset",
+        "same_file"
+      ],
+      "members": [
+        "ki-0001",
+        "ki-0004"
+      ],
+      "cle": "fichier:.github/workflows/security.yml"
+    }
+  ],
+  "clusters_inter_outils": [],
+  "non_regroupe": [
+    "ch-0001",
+    "ki-0002",
+    "ki-0003"
+  ],
+  "stats": {
+    "findings_en_entree": 5,
+    "clusters": 1,
+    "findings_regroupes": 2,
+    "findings_non_regroupes": 3,
+    "reduction": "5 → 4"
+  }
+}

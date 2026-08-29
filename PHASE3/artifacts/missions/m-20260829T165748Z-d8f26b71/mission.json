@@ -1,0 +1,11 @@
+{
+  "mission_id": "m-20260829T165748Z-d8f26b71",
+  "cree_le": "2026-08-29T16:57:48+00:00",
+  "requete": "Analyse la sécurité de mon dépôt",
+  "requete_canonique": "analyse la securite de mon depot",
+  "cible": {
+    "chemin": "/home/user/PHASE3/testrepo",
+    "type": "repertoire"
+  },
+  "format_journal": "journal.jsonl — append-only, une ligne par événement"
+}

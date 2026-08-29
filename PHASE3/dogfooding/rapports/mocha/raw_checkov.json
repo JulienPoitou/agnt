@@ -1,0 +1,201 @@
+[
+  {
+    "check_type": "terraform_plan",
+    "results": {
+      "failed_checks": []
+    },
+    "summary": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "parsing_errors": 1,
+      "resource_count": 0,
+      "checkov_version": "3.3.15"
+    }
+  },
+  {
+    "check_type": "github_actions",
+    "results": {
+      "failed_checks": [
+        {
+          "check_id": "CKV_GHA_7",
+          "bc_check_id": null,
+          "check_name": "The build output cannot be affected by user parameters other than the build entry point and the top-level source location. GitHub Actions workflow_dispatch inputs MUST be empty. ",
+          "check_result": {
+            "result": "FAILED",
+            "results_configuration": {
+              "pr": {
+                "description": "PR ID",
+                "required": true,
+                "type": "string",
+                "__startline__": 11,
+                "__endline__": 15
+              },
+              "__startline__": 10,
+              "__endline__": 15
+            }
+          },
+          "code_block": [
+            [
+              10,
+              "      pr:\n"
+            ],
+            [
+              11,
+              "        description: \"PR ID\"\n"
+            ],
+            [
+              12,
+              "        required: true\n"
+            ],
+            [
+              13,
+              "        type: string\n"
+            ],
+            [
+              14,
+              "\n"
+            ],
+            [
+              15,
+              "permissions:\n"
+            ],
+            [
+              16,
+              "  contents: read\n"
+            ]
+          ],
+          "file_path": "/.github/workflows/blocked-pr.yml",
+          "file_abs_path": "/home/user/PHASE3/mt-scan/.github/workflows/blocked-pr.yml",
+          "repo_file_path": "/.github/workflows/blocked-pr.yml",
+          "file_line_range": [
+            10,
+            16
+          ],
+          "resource": "on(Blocked PR Check)",
+          "evaluations": null,
+          "check_class": "checkov.github_actions.checks.job.EmptyWorkflowDispatch",
+          "fixed_definition": null,
+          "entity_tags": null,
+          "caller_file_path": null,
+          "caller_file_line_range": null,
+          "resource_address": null,
+          "severity": null,
+          "bc_category": null,
+          "benchmarks": null,
+          "description": null,
+          "short_description": null,
+          "vulnerability_details": null,
+          "connected_node": null,
+          "guideline": null,
+          "details": [],
+          "check_len": null,
+          "definition_context_file_path": null,
+          "triggers": [
+            [
+              "pull_request",
+              "workflow_dispatch"
+            ]
+          ],
+          "job": [
+            ""
+          ],
+          "workflow_name": "Blocked PR Check"
+        },
+        {
+          "check_id": "CKV_GHA_7",
+          "bc_check_id": null,
+          "check_name": "The build output cannot be affected by user parameters other than the build entry point and the top-level source location. GitHub Actions workflow_dispatch inputs MUST be empty. ",
+          "check_result": {
+            "result": "FAILED",
+            "results_configuration": {
+              "target_branch": {
+                "description": "Branch to run Release Please against",
+                "default": "main",
+                "required": false,
+                "__startline__": 10,
+                "__endline__": 14
+              },
+              "__startline__": 9,
+              "__endline__": 14
+            }
+          },
+          "code_block": [
+            [
+              9,
+              "      target_branch:\n"
+            ],
+            [
+              10,
+              "        description: \"Branch to run Release Please against\"\n"
+            ],
+            [
+              11,
+              "        default: \"main\"\n"
+            ],
+            [
+              12,
+              "        required: false\n"
+            ],
+            [
+              13,
+              "\n"
+            ],
+            [
+              14,
+              "permissions:\n"
+            ],
+            [
+              15,
+              "  contents: read\n"
+            ]
+          ],
+          "file_path": "/.github/workflows/release-please.yml",
+          "file_abs_path": "/home/user/PHASE3/mt-scan/.github/workflows/release-please.yml",
+          "repo_file_path": "/.github/workflows/release-please.yml",
+          "file_line_range": [
+            9,
+            15
+          ],
+          "resource": "on(Release Please)",
+          "evaluations": null,
+          "check_class": "checkov.github_actions.checks.job.EmptyWorkflowDispatch",
+          "fixed_definition": null,
+          "entity_tags": null,
+          "caller_file_path": null,
+          "caller_file_line_range": null,
+          "resource_address": null,
+          "severity": null,
+          "bc_category": null,
+          "benchmarks": null,
+          "description": null,
+          "short_description": null,
+          "vulnerability_details": null,
+          "connected_node": null,
+          "guideline": null,
+          "details": [],
+          "check_len": null,
+          "definition_context_file_path": null,
+          "triggers": [
+            [
+              "push",
+              "workflow_dispatch"
+            ]
+          ],
+          "job": [
+            ""
+          ],
+          "workflow_name": "Release Please"
+        }
+      ]
+    },
+    "summary": {
+      "passed": 226,
+      "failed": 2,
+      "skipped": 0,
+      "parsing_errors": 0,
+      "resource_count": 0,
+      "checkov_version": "3.3.15"
+    }
+  }
+]

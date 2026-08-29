@@ -1,0 +1,146 @@
+genere_le: '2026-08-29'
+genere_par: harnais_grype_kics.py (grype 0.118.0 · trivy 0.74.0)
+methode: EXTRAIT d'exécutions sandbox réelles. Régénérer, ne pas éditer.
+attendus:
+  grype:
+    compte: 62
+    par_cle:
+      django:
+      - GHSA-2gwj-7jmv-h26r
+      - GHSA-2m34-jcjv-45xf
+      - GHSA-3gh2-xw74-jmcw
+      - GHSA-3h9f-r86x-qvjx
+      - GHSA-53qw-q765-4fww
+      - GHSA-68w8-qjq3-2gfm
+      - GHSA-6c3j-c64m-qhgq
+      - GHSA-6c7v-2f49-8h26
+      - GHSA-6cw3-g6wv-c2xv
+      - GHSA-6r97-cj55-9hrq
+      - GHSA-6w2r-r2m5-xq5w
+      - GHSA-7rp2-fm2h-wchj
+      - GHSA-7xr5-9hcq-chf9
+      - GHSA-8c5j-9r9f-c6w8
+      - GHSA-8cjm-8mp7-r2xf
+      - GHSA-8qcx-xf44-272x
+      - GHSA-8x94-hmjh-97hq
+      - GHSA-923m-gv2p-w5qp
+      - GHSA-95rw-fx8r-36v6
+      - GHSA-c4qh-4vgv-qc6g
+      - GHSA-crhf-3pfg-w68w
+      - GHSA-fr28-569j-53c4
+      - GHSA-frmv-pr5f-9mcr
+      - GHSA-fvgf-6h6h-3322
+      - GHSA-h5jv-4p7w-64jg
+      - GHSA-h7pc-vwp9-298g
+      - GHSA-hmr4-m2h5-33qx
+      - GHSA-hvmf-r92r-27hr
+      - GHSA-jrh2-hc4r-7jwx
+      - GHSA-m6gj-h9gm-gw44
+      - GHSA-p99v-5w3c-jqq9
+      - GHSA-qm57-vhq3-3fwf
+      - GHSA-qw25-v68c-qjf3
+      - GHSA-rrqc-c2jx-6jgv
+      - GHSA-rxjp-mfm9-w4wr
+      - GHSA-v6rh-hp5x-86rv
+      - GHSA-v9qg-3j8p-r63v
+      - GHSA-vfq6-hq5r-27r6
+      - GHSA-w24h-v9qh-8gxj
+      - GHSA-wpjr-j57x-wxfw
+      - GHSA-xgxc-v2qg-chmh
+      flask:
+      - GHSA-68rp-wp8r-4726
+      - GHSA-m2qf-hxjv-5gpq
+      lodash:
+      - GHSA-29mw-wpgm-hmr9
+      - GHSA-35jh-r3h4-6jhm
+      - GHSA-4xc9-xhrj-v574
+      - GHSA-f23m-r3pf-42rh
+      - GHSA-fvqr-27wr-82fm
+      - GHSA-jf85-cpcp-j695
+      - GHSA-p6mc-m468-83gw
+      - GHSA-r5fr-rjxr-66jc
+      - GHSA-x5rq-j2xg-h7qm
+      - GHSA-xxjr-mmjv-4gpg
+      minimist:
+      - GHSA-vh95-rmgr-6w4m
+      - GHSA-xvch-5gv4-984h
+      pyyaml:
+      - GHSA-3pqx-4fqf-j49f
+      - GHSA-6757-jp84-gxfx
+      - GHSA-8q59-q68h-6hv4
+      requests:
+      - GHSA-9hjg-9r4m-mvj7
+      - GHSA-9wx4-h78v-vm56
+      - GHSA-gc5v-m9x4-r6x2
+      - GHSA-j8r2-6x86-q33q
+  trivy:
+    compte: 62
+    par_cle:
+      django:
+      - CVE-2019-11358
+      - CVE-2019-12308
+      - CVE-2019-12781
+      - CVE-2019-14232
+      - CVE-2019-14233
+      - CVE-2019-14234
+      - CVE-2019-14235
+      - CVE-2019-19118
+      - CVE-2019-19844
+      - CVE-2020-13254
+      - CVE-2020-13596
+      - CVE-2020-24583
+      - CVE-2020-24584
+      - CVE-2020-7471
+      - CVE-2020-9402
+      - CVE-2021-28658
+      - CVE-2021-31542
+      - CVE-2021-32052
+      - CVE-2021-3281
+      - CVE-2021-33203
+      - CVE-2021-33571
+      - CVE-2021-44420
+      - CVE-2021-45115
+      - CVE-2021-45116
+      - CVE-2021-45452
+      - CVE-2022-22818
+      - CVE-2022-23833
+      - CVE-2022-28346
+      - CVE-2022-28347
+      - CVE-2022-36359
+      - CVE-2024-45231
+      - CVE-2025-48432
+      - CVE-2025-57833
+      - CVE-2025-64458
+      - CVE-2025-64459
+      - CVE-2026-48587
+      - CVE-2026-48588
+      - CVE-2026-53877
+      - CVE-2026-53878
+      - CVE-2026-6873
+      - CVE-2026-8404
+      flask:
+      - CVE-2023-30861
+      - CVE-2026-27205
+      lodash:
+      - CVE-2018-16487
+      - CVE-2018-3721
+      - CVE-2019-1010266
+      - CVE-2019-10744
+      - CVE-2020-28500
+      - CVE-2020-8203
+      - CVE-2021-23337
+      - CVE-2025-13465
+      - CVE-2026-2950
+      - CVE-2026-4800
+      minimist:
+      - CVE-2020-7598
+      - CVE-2021-44906
+      pyyaml:
+      - CVE-2019-20477
+      - CVE-2020-14343
+      - CVE-2020-1747
+      requests:
+      - CVE-2023-32681
+      - CVE-2024-35195
+      - CVE-2024-47081
+      - CVE-2026-25645

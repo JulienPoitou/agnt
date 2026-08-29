@@ -1,0 +1,325 @@
+owner_repo,nom,role,pourquoi,capacites,forme_execution,etoiles,dernier_commit,licence,archive,verdict_phase1,verifiable
+projectdiscovery/nuclei,Nuclei,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | WEB_VULN_SCAN,api,30872,2026-08-26,MIT,,INTEGRATE,oui
+rapid7/metasploit-framework,Metasploit Framework,provider,outil qui produit des résultats exploitables,EXPLOITATION,api,38893,2026-08-27,BSD-style,,A_NOTER,oui
+zaproxy/zaproxy,OWASP ZAP,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,15692,2026-08-27,Apache-2.0,,A_NOTER,oui
+SpecterOps/BloodHound,BloodHound,provider,outil qui produit des résultats exploitables,CLOUD_POSTURE,cli,3355,2026-08-27,Apache-2.0,,A_NOTER,oui
+wazuh/wazuh,Wazuh,provider,outil qui produit des résultats exploitables,LOG_ANALYSIS,cli,16696,2026-08-24,BSD,,A_NOTER,oui
+velocidex/velociraptor,Velociraptor,provider,outil qui produit des résultats exploitables,ENDPOINT_COLLECTION | INCIDENT_RESPONSE,cli,4208,2026-08-25,,,INTEGRATE,oui
+zeek/zeek,Zeek,provider,outil qui produit des résultats exploitables,LOG_ANALYSIS,cli,7911,2026-08-27,BSD,,A_NOTER,oui
+OISF/suricata,Suricata,doc,"liste, tutoriel ou spécification",,,6573,2026-08-26,GPL-2.0,,A_NOTER,oui
+modelcontextprotocol/servers,Model Context Protocol Servers,provider,serveur ou agrégateur MCP,,mcp_server,89909,2026-08-18,Apache,,A_NOTER,oui
+punkpeye/awesome-mcp-servers,Awesome MCP Servers,doc,"liste, tutoriel ou spécification",,,92883,2026-08-26,MIT,,A_NOTER,oui
+smithery-ai/cli,Smithery CLI,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,826,2026-05-31,AGPL-3.0,,A_NOTER,oui
+usestrix/strix,Strix,concurrent,agent ou plateforme qui fait le même travail que nous,,,58766,2026-08-26,Apache-2.0,,ADAPT (archi),oui
+GreyDGL/PentestGPT,PentestGPT,doc,"liste, tutoriel ou spécification",,,15105,2026-07-14,MIT,,IGNORE,oui
+kyuupichan/gpt-pentest,GPT-Pentest,concurrent,agent ou plateforme qui fait le même travail que nous,,,,,,,A_NOTER,non
+Shuffle/Shuffle,Shuffle,doc,"liste, tutoriel ou spécification",,,2423,2026-05-14,AGPL-3.0,,A_NOTER,oui
+n8n-io/n8n,n8n,inutile,aucun rôle identifié pour notre projet,,,202606,2026-08-27,,,A_NOTER,oui
+TheHive-Project/Cortex,Cortex,provider,outil qui produit des résultats exploitables,INCIDENT_RESPONSE,api,1618,2026-06-30,AGPL-3.0,,INTEGRATE,oui
+DefectDojo/django-DefectDojo,DefectDojo,provider,outil qui produit des résultats exploitables,CODE_STATIC_ANALYSIS | DEPENDENCY_ANALYSIS | WEB_VULN_SCAN | VULN_MANAGEMENT,cli,4910,2026-08-24,BSD-3-Clause,,ADAPT (archi),oui
+infobyte/faraday,Faraday,inutile,aucun rôle identifié pour notre projet,,,6696,2026-08-19,GPL-3.0,,ADAPT (archi),oui
+archerysec/archerysec,ArcherySec,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS,cli,2471,2024-10-08,GPL-3.0,,A_NOTER,oui
+OpenCTI-Platform/opencti,OpenCTI,inutile,aucun rôle identifié pour notre projet,,,9858,2026-08-27,,,A_NOTER,oui
+MISP/MISP,MISP,doc,"liste, tutoriel ou spécification",,,6490,2026-08-25,AGPL-3.0,,A_NOTER,oui
+smicallef/spiderfoot,SpiderFoot,provider,outil qui produit des résultats exploitables,WEB_ENDPOINT_DISCOVERY | THREAT_INTEL,cli,21459,2023-11-05,MIT,,A_NOTER,oui
+aquasecurity/trivy,Trivy,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | CONTAINER_SCAN | CLOUD_POSTURE | IAC_SCAN,cli,37652,2026-08-21,Apache-2.0,,INTEGRATE,oui
+prowler-cloud/prowler,Prowler,doc,"liste, tutoriel ou spécification",,,14696,2026-08-27,Apache-2.0,,INTEGRATE,oui
+falcosecurity/falco,Falco,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,9310,2026-07-31,Apache-2.0,,ADAPT (archi),oui
+semgrep/semgrep,Semgrep,provider,outil qui produit des résultats exploitables,CODE_STATIC_ANALYSIS,api,16416,2026-08-25,LGPL-2.1,,INTEGRATE,oui
+bridgecrewio/checkov,Checkov,provider,outil qui produit des résultats exploitables,CONTAINER_SCAN | CLOUD_POSTURE | IAC_SCAN,cli,8973,2026-08-27,Apache-2.0,,A_NOTER,oui
+gitleaks/gitleaks,Gitleaks,provider,outil qui produit des résultats exploitables,SECRET_DETECTION,cli,28977,2026-07-22,MIT,,A_NOTER,oui
+TheHive-Project/TheHive,TheHive,provider,outil qui produit des résultats exploitables,THREAT_INTEL | INCIDENT_RESPONSE,cli,3947,2025-07-25,AGPL-3.0,yes,ADAPT (archi),oui
+kevoreilly/CAPEv2,CAPEv2,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,3454,2026-08-23,,,A_NOTER,oui
+log2timeline/plaso,Plaso (log2timeline),inutile,aucun rôle identifié pour notre projet,,,2140,2026-08-27,Apache-2.0,,A_NOTER,oui
+langchain-ai/langgraph,LangGraph,concurrent,agent ou plateforme qui fait le même travail que nous,,,40558,2026-08-26,MIT,,ADAPT,oui
+BerriAI/litellm,LiteLLM,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,57403,2026-08-27,,,A_NOTER,oui
+open-policy-agent/opa,Open Policy Agent (OPA),composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,12171,2026-08-27,Apache-2.0,,INTEGRATE,oui
+elastic/kibana,Elastic Security (Kibana),inutile,aucun rôle identifié pour notre projet,,,21265,2026-08-27,,,A_NOTER,oui
+Security-Onion-Solutions/securityonion,Security Onion,inutile,aucun rôle identifié pour notre projet,,,4848,2026-07-29,,,A_NOTER,oui
+sbilly/awesome-security,Awesome Security,doc,"liste, tutoriel ou spécification",,,14800,2026-01-11,MIT,,A_NOTER,oui
+hslatman/awesome-threat-intelligence,Awesome Threat Intelligence,doc,"liste, tutoriel ou spécification",,,10580,2026-05-31,Apache-2.0,,A_NOTER,oui
+devsecops/awesome-devsecops,Awesome DevSecOps,doc,"liste, tutoriel ou spécification",,,5460,2021-10-20,CC0-1.0,,A_NOTER,oui
+vxcontrol/pentagi,PentAGI,concurrent,agent ou plateforme qui fait le même travail que nous,,,22056,2026-08-06,MIT,,ADAPT (archi),oui
+GaneshKrishnaReddy/PentestCode,PentestCode,concurrent,agent ou plateforme qui fait le même travail que nous,,,1,2026-07-19,MIT,,A_NOTER,oui
+KeygraphHQ/shannon,Shannon,concurrent,agent ou plateforme qui fait le même travail que nous,,,47248,2026-08-27,AGPL-3.0,,ADAPT (archi),oui
+zakirkun/guardian-cli,Guardian CLI,concurrent,agent ou plateforme qui fait le même travail que nous,,,1853,2026-06-27,MIT,,A_NOTER,oui
+SHAdd0WTAka/zen-ai-pentest,Zen AI Pentest,concurrent,agent ou plateforme qui fait le même travail que nous,,,441,2026-08-01,MIT,,A_NOTER,oui
+GH05TCREW/pentestagent,PentestAgent,concurrent,agent ou plateforme qui fait le même travail que nous,,,3014,2026-08-04,MIT,,IGNORE,oui
+samugit83/redamon,Redamon,concurrent,agent ou plateforme qui fait le même travail que nous,,,2356,2026-08-23,MIT,,ADAPT (archi),oui
+ahmetdrak/drakben,Drakben,concurrent,agent ou plateforme qui fait le même travail que nous,,,21,2026-02-16,MIT,,A_NOTER,oui
+Armur-Ai/Pentest-Swarm-AI,Pentest Swarm AI,concurrent,agent ou plateforme qui fait le même travail que nous,,,2389,2026-08-27,AGPL-3.0,,A_NOTER,oui
+Ed1s0nZ/CyberStrikeAI,CyberStrikeAI,concurrent,agent ou plateforme qui fait le même travail que nous,,,6013,2026-08-26,Apache-2.0,,ADAPT (archi),oui
+Agnuxo1/EnigmAgent,EnigmAgent,doc,"liste, tutoriel ou spécification",,,4,2026-06-05,MIT,,A_NOTER,oui
+yz9yt/BugTrace-AI,BugTrace-AI,concurrent,agent ou plateforme qui fait le même travail que nous,,,251,2026-02-11,MIT,yes,A_NOTER,oui
+wudidike/pentest_skill,Pentest Skill,concurrent,agent ou plateforme qui fait le même travail que nous,,,27,2026-08-12,,,A_NOTER,oui
+antoninoLorenzo/AI-OPS,AI-OPS,concurrent,agent ou plateforme qui fait le même travail que nous,,,156,2026-08-10,MIT,,A_NOTER,oui
+NeoTheCapt/RedteamAgent,RedteamAgent,inutile,aucun rôle identifié pour notre projet,,,121,2026-05-10,,,A_NOTER,oui
+0xSteph/pentest-ai-agents,Pentest-AI-Agents,concurrent,agent ou plateforme qui fait le même travail que nous,,,2169,2026-08-16,MIT,,A_NOTER,oui
+marzekan/MASAPT,MASAPT,concurrent,agent ou plateforme qui fait le même travail que nous,,,30,2021-12-22,GPL-2.0,,A_NOTER,oui
+hardenedlinux/agentic-ai-pentest,Agentic AI Pentest,concurrent,agent ou plateforme qui fait le même travail que nous,,,10,2026-02-27,GPL-3.0,,A_NOTER,oui
+ashishpatel26/500-AI-Agents-Projects,Vibe Hacking Agent,concurrent,agent ou plateforme qui fait le même travail que nous,,,37066,2026-07-27,MIT,,A_NOTER,oui
+topics/soc-dashboard,Sentinel (SOC Dashboard),provider,outil qui produit des résultats exploitables,,cli,,,,,A_NOTER,oui
+invincible-jha/QuasarCyberdefenseAI-multi-agent-cybersecurity-ai-system,QuasarCyberdefenseAI,doc,"liste, tutoriel ou spécification",,,3,2024-11-10,MIT,,A_NOTER,oui
+requie/AI-Red-Teaming-Guide,Gideon,concurrent,agent ou plateforme qui fait le même travail que nous,,,845,2026-08-04,MIT,,A_NOTER,oui
+Tencent/AI-Infra-Guard,AI-Infra-Guard,concurrent,agent ou plateforme qui fait le même travail que nous,,,6003,2026-08-27,Apache-2.0,,ADAPT (archi),oui
+agentfence/agentfence,AgentFence,inutile,aucun rôle identifié pour notre projet,,,61,2026-08-06,MIT,,A_NOTER,oui
+SuperagenticAI/superclaw,SuperClaw,concurrent,agent ou plateforme qui fait le même travail que nous,,,400,2026-02-02,Apache-2.0,,A_NOTER,oui
+AKiileX/Valk,Valk,inutile,aucun rôle identifié pour notre projet,,,0,2026-04-09,,,A_NOTER,oui
+confident-ai/deepteam,DeepTeam,inutile,aucun rôle identifié pour notre projet,,,2624,2026-08-21,Apache-2.0,,A_NOTER,oui
+vectara/red-teaming-agent,Red-Teaming-Agent (Vectara),concurrent,agent ou plateforme qui fait le même travail que nous,,,21,2025-10-15,,,A_NOTER,oui
+tbh-ai/SecureAgents,SecureAgents,concurrent,agent ou plateforme qui fait le même travail que nous,,,1,2025-06-12,Apache,,A_NOTER,oui
+FuzzingLabs/mcp-security-hub,MCP Security Hub,concurrent,agent ou plateforme qui fait le même travail que nous,,,769,2026-04-08,MIT,,A_NOTER,oui
+hackersatyamrastogi/pentesting-cyber-mcp,Pentesting Cyber MCP,doc,"liste, tutoriel ou spécification",,,27,2026-01-27,MIT,,A_NOTER,oui
+cyproxio/mcp-for-security,MCP for Security (Cyproxio),doc,"liste, tutoriel ou spécification",,,633,2026-03-30,MIT,yes,A_NOTER,oui
+f1tz/mcp-for-security-python,MCP for Security (f1tz),provider,serveur ou agrégateur MCP,DEPENDENCY_ANALYSIS | NETWORK_DISCOVERY | WEB_ENDPOINT_DISCOVERY,mcp_server,41,2025-06-22,MIT,,A_NOTER,oui
+0x4m4/hexstrike-ai,HexStrike AI MCP Agents,concurrent,agent ou plateforme qui fait le même travail que nous,,,11394,2026-08-03,MIT,,IGNORE,oui
+bhavsec/autopentest-ai,Autopentest-AI,doc,"liste, tutoriel ou spécification",,,218,2026-02-22,Apache-2.0,,A_NOTER,oui
+0xSojalSec/PentestAgent,PentestAgent MCP,provider,serveur ou agrégateur MCP,NETWORK_DISCOVERY | WEB_ENDPOINT_DISCOVERY | EXPLOITATION,mcp_server,696,2025-06-05,MIT,,A_NOTER,oui
+GitHub/github-mcp-server,GitHub Security MCP,provider,serveur ou agrégateur MCP,SECRET_DETECTION | DEPENDENCY_ANALYSIS,mcp_server,32552,2026-08-27,MIT,,A_NOTER,oui
+OpenOSINT/OpenOSINT,OpenOSINT,concurrent,agent ou plateforme qui fait le même travail que nous,,,1475,2026-08-26,MIT,,A_NOTER,oui
+crewaiinc/crewai,CrewAI,concurrent,agent ou plateforme qui fait le même travail que nous,,,57675,2026-08-27,MIT,,A_NOTER,oui
+microsoft/autogen,AutoGen,concurrent,agent ou plateforme qui fait le même travail que nous,,,60652,2026-04-06,CC-BY-4.0,,A_NOTER,oui
+microsoft/agent-framework,Microsoft Agent Framework,concurrent,agent ou plateforme qui fait le même travail que nous,,,13149,2026-08-27,MIT,,A_NOTER,oui
+agentuniverse-ai/agentuniverse,Agent Universe,concurrent,agent ou plateforme qui fait le même travail que nous,,,2345,2026-07-28,Apache-2.0,,A_NOTER,oui
+manusagents/ManusClaw,ManusClaw,concurrent,agent ou plateforme qui fait le même travail que nous,,,2,2026-08-05,MIT,,A_NOTER,oui
+bearclaw-ai/bearclaw,BearClaw,concurrent,agent ou plateforme qui fait le même travail que nous,,,,,,,A_NOTER,non
+microsoft/agent-governance-toolkit,Agent Governance Toolkit,concurrent,agent ou plateforme qui fait le même travail que nous,,,6135,2026-08-25,MIT,,INTEGRATE,oui
+OWASP/secure-agent-playbook,OWASP Secure Agent Playbook,concurrent,agent ou plateforme qui fait le même travail que nous,,,156,2026-06-02,,,A_NOTER,oui
+TracecatHQ/tracecat,Tracecat,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS,cli,3781,2026-08-27,AGPL-3.0,,ADAPT (archi),oui
+COSSAS/SOARCA,SOARCA,inutile,aucun rôle identifié pour notre projet,,,107,2026-07-17,Apache-2.0,,A_NOTER,oui
+SecurityBrewery/catalyst,Catalyst,inutile,aucun rôle identifié pour notre projet,,,535,2026-07-18,AGPL-3.0,yes,A_NOTER,oui
+z1pti3/jimi,Jimi,inutile,aucun rôle identifié pour notre projet,,,172,2024-06-19,Apache-2.0,yes,A_NOTER,oui
+cookpad/deepalert,DeepAlert,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS,api,51,2026-05-27,MIT,,A_NOTER,oui
+swiftbird07/IRIS-SOAR,IRIS-SOAR,inutile,aucun rôle identifié pour notre projet,,,17,2024-03-22,MIT,,A_NOTER,oui
+nsacyber/WALKOFF,WALKOFF,inutile,aucun rôle identifié pour notre projet,,,1237,2020-09-22,,yes,IGNORE,oui
+ShipSecAI/studio,ShipSec Studio,inutile,aucun rôle identifié pour notre projet,,,376,2026-02-25,Apache-2.0,,A_NOTER,oui
+mmmalfares/SuperPlaybooks,SuperPlaybooks,inutile,aucun rôle identifié pour notre projet,,,0,2025-06-08,,,A_NOTER,oui
+AbH-cS/SOAR-EDR-PLAYBOOK,SOAR-EDR-Playbook,inutile,aucun rôle identifié pour notre projet,,,0,2024-12-05,,,A_NOTER,oui
+OpenSecOps-Org/SOAR,OpenSecOps SOAR,inutile,aucun rôle identifié pour notre projet,,,6,2026-05-13,MPL-2.0,,A_NOTER,oui
+FunnyWolf/agentic-soc-platform,Agentic SOC Platform,concurrent,agent ou plateforme qui fait le même travail que nous,,,1162,2026-08-05,,,A_NOTER,oui
+gapilongo/SOC,SOC (LangGraph),inutile,aucun rôle identifié pour notre projet,,,14,2025-10-25,MIT,,A_NOTER,oui
+DependencyTrack/dependency-track,Dependency-Track,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | VULN_MANAGEMENT,cli,4148,2026-08-27,Apache-2.0,,ADAPT (archi),oui
+nccgroup/ScoutSuite,ScoutSuite,provider,outil qui produit des résultats exploitables,CLOUD_POSTURE,cli,7802,2024-05-10,GPL-2.0,,A_NOTER,oui
+carlospolop/PurplePanda,PurplePanda,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | CLOUD_POSTURE,cli,720,2026-07-11,,,A_NOTER,oui
+deepfence/ThreatMapper,ThreatMapper,provider,outil qui produit des résultats exploitables,SECRET_DETECTION | DEPENDENCY_ANALYSIS | CLOUD_POSTURE | EXPLOITATION,cli,5318,2026-05-13,Apache-2.0,,A_NOTER,oui
+deepfence/SecretScanner,SecretScanner,provider,outil qui produit des résultats exploitables,SECRET_DETECTION | DEPENDENCY_ANALYSIS | CONTAINER_SCAN,cli,3382,2026-03-07,MIT,,A_NOTER,oui
+trufflesecurity/trufflehog,TruffleHog,provider,outil qui produit des résultats exploitables,SECRET_DETECTION | DEPENDENCY_ANALYSIS,api,27604,2026-08-26,AGPL-3.0,,A_NOTER,oui
+GitGuardian/ggshield,ggshield (GitGuardian),provider,outil qui produit des résultats exploitables,SECRET_DETECTION,cli,1992,2026-08-27,MIT,,A_NOTER,oui
+Yelp/detect-secrets,detect-secrets,provider,outil qui produit des résultats exploitables,SECRET_DETECTION | DEPENDENCY_ANALYSIS,cli,4629,2026-04-02,Apache-2.0,,A_NOTER,oui
+mongodb/kingfisher,Kingfisher,provider,outil qui produit des résultats exploitables,SECRET_DETECTION | DEPENDENCY_ANALYSIS | CLOUD_POSTURE,cli,1215,2026-08-23,Apache-2.0,,A_NOTER,oui
+grab/secret-scanner,Git Secret Scanner,provider,outil qui produit des résultats exploitables,SECRET_DETECTION | DEPENDENCY_ANALYSIS,api,56,2019-12-19,MIT,,A_NOTER,oui
+padok-team/git-secret-scanner,Git Secret Scanner (Padok),provider,outil qui produit des résultats exploitables,SECRET_DETECTION | DEPENDENCY_ANALYSIS,cli,69,2026-08-20,Apache-2.0,,A_NOTER,oui
+intelowlproject/IntelOwl,IntelOwl,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | THREAT_INTEL | MALWARE_ANALYSIS,api,4684,2026-07-02,AGPL-3.0,,ADAPT (archi),oui
+yeti-platform/yeti,Yeti,inutile,aucun rôle identifié pour notre projet,,,2020,2026-08-27,Apache-2.0,,A_NOTER,oui
+gosintframework/gosint,GOSINT,inutile,aucun rôle identifié pour notre projet,,,,,,,A_NOTER,non
+OSTrICa/OSTrICa,OSTrICa,inutile,aucun rôle identifié pour notre projet,,,,,,,A_NOTER,non
+OpenIOC/OpenIOC,OpenIOC,inutile,aucun rôle identifié pour notre projet,,,,,,,A_NOTER,non
+typedb-osi/typedb-cti,TypeDB CTI,doc,"liste, tutoriel ou spécification",,,170,2026-01-08,,,A_NOTER,oui
+PickupSTIX/pickupstix,PickupSTIX,provider,outil qui produit des résultats exploitables,THREAT_INTEL | MALWARE_ANALYSIS,cli,,,,,A_NOTER,non
+dev-lu/osint_toolkit,OSINT Toolkit,lib,"bibliothèque, pas un outil exécutable",,,937,2026-04-28,AGPL-3.0,,A_NOTER,oui
+TIGMINT/TIGMINT,TIGMINT,provider,outil qui produit des résultats exploitables,THREAT_INTEL,cli,263,2021-07-29,MIT,,A_NOTER,oui
+jivoi/awesome-osint,Awesome OSINT,doc,"liste, tutoriel ou spécification",,,28460,2026-08-25,,yes,A_NOTER,oui
+gmh5225/awesome-ai-security,Awesome AI Security,doc,"liste, tutoriel ou spécification",,,44,2026-08-22,MIT,,A_NOTER,oui
+ProjectRecon/awesome-ai-agents-security,Awesome AI Agents Security,doc,"liste, tutoriel ou spécification",,,67,2026-06-12,,,A_NOTER,oui
+0xh3xa/awesome-cyber-security-tools,Awesome Cybersecurity Tools,doc,"liste, tutoriel ou spécification",,,9,2026-07-18,CC0-1.0,,A_NOTER,oui
+landoncrabtree/awesome-cyber,Awesome Cyber,doc,"liste, tutoriel ou spécification",,,111,2024-12-20,,,A_NOTER,oui
+bst04/CyberSources,CyberSources,doc,"liste, tutoriel ou spécification",,,2398,2026-08-27,MIT,,A_NOTER,oui
+CaledoniaProject/awesome-opensource-security,Awesome Opensource Security,doc,"liste, tutoriel ou spécification",,,660,2026-06-06,,,A_NOTER,oui
+securitytoolkit/securitytoolkit.github.io,Security Toolkit,lib,"bibliothèque, pas un outil exécutable",,,71,2026-07-09,,,A_NOTER,oui
+VoidAccess/VoidAccess,VoidAccess,inutile,aucun rôle identifié pour notre projet,,,,,,,A_NOTER,non
+sa7mon/S3Scanner,S3Scanner,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | CLOUD_POSTURE,cli,3165,2026-07-14,MIT,,A_NOTER,oui
+secureCodeBox/secureCodeBox,secureCodeBox,provider,outil qui produit des résultats exploitables,CODE_STATIC_ANALYSIS,cli,986,2026-08-25,Apache,,ADAPT (archi),oui
+MobSF/Mobile-Security-Framework-MobSF,MobSF,provider,outil qui produit des résultats exploitables,,cli,21657,2026-08-21,GPL-3.0,,A_NOTER,oui
+cuckoosandbox/cuckoo,Cuckoo Sandbox,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,5965,2021-04-26,,yes,ADAPT (archi),oui
+REMnux/REMnux,REMnux,provider,outil qui produit des résultats exploitables,MALWARE_ANALYSIS,cli,120,2026-08-18,,,A_NOTER,oui
+mandiant/flare-vm,FlareVM,provider,outil qui produit des résultats exploitables,MALWARE_ANALYSIS | INCIDENT_RESPONSE,cli,8968,2026-06-23,Apache-2.0,,A_NOTER,oui
+Neo23x0/Loki,LOKI,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | THREAT_INTEL | MALWARE_ANALYSIS,cli,3784,2026-01-09,GPL-3.0,,A_NOTER,oui
+Cisco-Talos/clamav,ClamAV,inutile,aucun rôle identifié pour notre projet,,,7177,2026-08-19,GPL-2.0,,A_NOTER,oui
+dfir-db/fastfinder,Fastfinder,inutile,aucun rôle identifié pour notre projet,,,,,,,A_NOTER,non
+rfxn/linux-malware-detect,Linux Malware Detect,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | MALWARE_ANALYSIS,cli,1490,2026-04-26,GPL-2.0,,A_NOTER,oui
+jtkl/rkhunter,rkhunter,provider,outil qui produit des résultats exploitables,,cli,,,,,A_NOTER,non
+agentic-community/mcp-gateway-registry,MCP Gateway & Registry (agentic-community),concurrent,agent ou plateforme qui fait le même travail que nous,,,880,2026-08-27,Apache-2.0,,ADAPT,oui
+microsoft/mcp-gateway,MCP Gateway (Microsoft),composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,801,2026-08-25,MIT,,A_NOTER,oui
+aarora79/mcp-gateway,MCP Gateway (aarora79),composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,81,2025-10-17,MIT-0,yes,A_NOTER,oui
+jrmatherly/mcp-registry-gateway,MCP Registry Gateway (jrmatherly),composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,0,2026-01-26,Apache-2.0,,A_NOTER,oui
+MikkoParkkola/mcp-gateway,Universal MCP Gateway (MikkoParkkola),composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,56,2026-08-18,MIT,,A_NOTER,oui
+docker/mcp-gateway,Docker MCP Gateway,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,1545,2026-08-26,MIT,,A_NOTER,oui
+lasso-security/mcp-gateway,Lasso MCP Gateway,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,385,2026-01-22,MIT,,A_NOTER,oui
+IBM/mcp-context-forge,IBM ContextForge,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,4376,2026-08-27,Apache-2.0,,ADAPT,oui
+agentgateway/agentgateway,Solo.io AgentGateway,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,4584,2026-08-27,Apache-2.0,,ADAPT,oui
+envoyproxy/ai-gateway,Envoy AI Gateway,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,1965,2026-08-26,Apache-2.0,,A_NOTER,oui
+cisco-ai-defense/mcp-scanner,MCP Scanner (Cisco),provider,serveur ou agrégateur MCP,DEPENDENCY_ANALYSIS,mcp_server,1051,2026-08-17,Apache-2.0,,ADAPT,oui
+riseandignite/mcp-shield,MCP-Shield,provider,serveur ou agrégateur MCP,DEPENDENCY_ANALYSIS,mcp_server,554,2025-04-26,MIT,,A_NOTER,oui
+invariantlabs-ai/mcp-scan,mcp-scan (Snyk/Invariant Labs),provider,serveur ou agrégateur MCP,DEPENDENCY_ANALYSIS,mcp_server,2964,2026-08-26,Apache-2.0,,ADAPT,oui
+stacklok/toolhive,ToolHive,provider,serveur ou agrégateur MCP,,mcp_server,2047,2026-08-27,Apache-2.0,,INTEGRATE,oui
+MCP-Manager/MCP-Checklists,MCP Checklists,provider,serveur ou agrégateur MCP,,mcp_server,195,2025-10-23,AGPL-3.0,,A_NOTER,oui
+msaleme/red-team-blue-team-agent-fabric,Red-Team-Blue-Team-Agent-Fabric,concurrent,agent ou plateforme qui fait le même travail que nous,,,28,2026-08-26,Apache-2.0,,A_NOTER,oui
+sandboxai/sandboxai,SandboxAI,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,,,,,A_NOTER,non
+kubernetes-sigs/agent-sandbox,Kubernetes Agent Sandbox,concurrent,agent ou plateforme qui fait le même travail que nous,,,3657,2026-08-27,Apache-2.0,,A_NOTER,oui
+immunity-agent/immunity-agent,Immunity Agent,concurrent,agent ou plateforme qui fait le même travail que nous,,,,,,,A_NOTER,non
+wazuh/wazuh-dashboard,Wazuh Dashboard,inutile,aucun rôle identifié pour notre projet,,,70,2026-08-21,Apache-2.0,,A_NOTER,oui
+eric-dev-soft/siem-dashboard,SIEM Dashboard,inutile,aucun rôle identifié pour notre projet,,,1,2025-02-13,BSD,,A_NOTER,oui
+Hack-with-Github/Awesome-Hacking,Awesome Hacking,doc,"liste, tutoriel ou spécification",,,119170,2026-07-26,CC0-1.0,,A_NOTER,oui
+danielmiessler/SecLists,SecLists,doc,"liste, tutoriel ou spécification",,,73122,2026-08-27,MIT,,A_NOTER,oui
+swisskyrepo/PayloadsAllTheThings,PayloadAllTheThings,inutile,aucun rôle identifié pour notre projet,,,80428,2026-08-27,MIT,,A_NOTER,oui
+cyver-core/ultimate-pentest-tools-list,Ultimate Pentest Tools List,inutile,aucun rôle identifié pour notre projet,,,68,2026-07-09,,,A_NOTER,oui
+arch3rpro/PentestTools,PentestTools,doc,"liste, tutoriel ou spécification",,,1765,2026-04-13,,,A_NOTER,oui
+paulveillard/cybersecurity-tools,Cybersecurity Tools (paulveillard),inutile,aucun rôle identifié pour notre projet,,,25,2022-01-30,MIT,,A_NOTER,oui
+paulveillard/cybersecurity-SOAR,Cybersecurity SOAR,inutile,aucun rôle identifié pour notre projet,,,123,2023-01-06,Apache-2.0,,A_NOTER,oui
+chaosync-org/awesome-ai-agent-testing,Awesome AI Agent Testing,doc,"liste, tutoriel ou spécification",,,46,2025-05-28,CC0-1.0,,A_NOTER,oui
+mb-mal/awesome-ai-agents-frameworks,Awesome AI Agents Frameworks,doc,"liste, tutoriel ou spécification",,,69,2026-08-27,,,A_NOTER,oui
+bh-rat/awesome-mcp-enterprise,Awesome MCP Enterprise,doc,"liste, tutoriel ou spécification",,,119,2026-08-15,,,A_NOTER,oui
+njmulsqb/Awesome-Security-Repos,Awesome Security Repos,doc,"liste, tutoriel ou spécification",,,57,2022-10-21,,,A_NOTER,oui
+JambaAcademy/OSINT,OSINT (JambaAcademy),doc,"liste, tutoriel ou spécification",,,128,2026-07-29,MIT,,A_NOTER,oui
+topics/ai-osint,AI OSINT Resources,inutile,aucun rôle identifié pour notre projet,,,,,,,A_NOTER,oui
+raphabot/awesome-cybersecurity-agentic-ai,Cybersecurity Agentic AI,doc,"liste, tutoriel ou spécification",,,539,2026-08-26,MIT,,A_NOTER,oui
+neptune1212/MCP_servers_cybersecurity,MCP Servers Cybersecurity (neptune1212),provider,serveur ou agrégateur MCP,NETWORK_DISCOVERY | EXPLOITATION,mcp_server,3,2025-05-31,,,A_NOTER,oui
+MorDavid/awesome-cyber-security-mcp,Awesome Cyber Security MCP (MorDavid),doc,"liste, tutoriel ou spécification",,,97,2026-02-28,,,A_NOTER,oui
+Puliczek/awesome-mcp-security,Awesome MCP Security (Puliczek),doc,"liste, tutoriel ou spécification",,,733,2026-03-03,,,A_NOTER,oui
+xalgorix/xalgorix,Xalgorix,concurrent,agent ou plateforme qui fait le même travail que nous,,,932,2026-08-27,Apache-2.0,,A_NOTER,oui
+Threadlinee/AI-Powered,AI-Powered Autonomous Penetration Testing Agent,concurrent,agent ou plateforme qui fait le même travail que nous,,,8,2025-07-13,MIT,,A_NOTER,oui
+shannonai/shannon,Shannon,doc,"liste, tutoriel ou spécification",,,,,,,A_NOTER,non
+anthropics/codeguard,Project CodeGuard,doc,"liste, tutoriel ou spécification",,,,,,,A_NOTER,non
+opensoar-hq/opensoar-core,OpenSOAR,inutile,aucun rôle identifié pour notre projet,,,18,2026-07-17,Apache-2.0,,A_NOTER,oui
+Admyral-Security/admyral,Admyral,inutile,aucun rôle identifié pour notre projet,,,340,2024-11-22,Apache-2.0,,A_NOTER,oui
+Sorsnce/Open-SOAR,Open-SOAR (Sorsnce),inutile,aucun rôle identifié pour notre projet,,,8,2021-05-20,,,A_NOTER,oui
+StackStorm/st2,StackStorm,inutile,aucun rôle identifié pour notre projet,,,6527,2026-08-22,Apache-2.0,,ADAPT (archi),oui
+SigmaHQ/sigma,Sigma,provider,outil qui produit des résultats exploitables,DETECTION_RULES,cli,10948,2026-08-18,,,A_NOTER,oui
+VirusTotal/yara,YARA,inutile,aucun rôle identifié pour notre projet,,,9833,2026-08-25,BSD-3-Clause,,A_NOTER,oui
+fail2ban/fail2ban,Fail2Ban,inutile,aucun rôle identifié pour notre projet,,,18483,2026-08-26,,,A_NOTER,oui
+crowdsecurity/crowdsec,CrowdSec,inutile,aucun rôle identifié pour notre projet,,,14657,2026-08-26,MIT,,A_NOTER,oui
+arkime/arkime,Arkime (anciennement Moloch),inutile,aucun rôle identifié pour notre projet,,,7459,2026-08-26,Apache-2.0,,A_NOTER,oui
+mitre-attack/attack-navigator,MITRE ATT&CK Navigator,inutile,aucun rôle identifié pour notre projet,,,2448,2026-06-12,Apache-2.0,,A_NOTER,oui
+laramies/theHarvester,theHarvester,provider,outil qui produit des résultats exploitables,THREAT_INTEL,cli,17211,2026-08-27,,,A_NOTER,oui
+lanmaster53/recon-ng,Recon-ng,provider,outil qui produit des résultats exploitables,THREAT_INTEL,cli,5873,2024-11-01,GPL-3.0,,A_NOTER,oui
+achillean/shodan-python,Shodan (Python client),lib,"bibliothèque, pas un outil exécutable",,,2951,2023-12-17,,,A_NOTER,oui
+owasp-amass/amass,Amass (OWASP),provider,outil qui produit des résultats exploitables,,cli,15049,2026-04-07,Apache,,A_NOTER,oui
+,Maltego (CE),inutile,aucun rôle identifié pour notre projet,,,,,,,A_NOTER,non
+nmap/nmap,Nmap,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | NETWORK_DISCOVERY,cli,13469,2026-08-27,,,A_NOTER,oui
+sqlmapproject/sqlmap,SQLMap,inutile,aucun rôle identifié pour notre projet,,,38279,2026-08-26,,,A_NOTER,oui
+stevenaldinger/decker,Decker,inutile,aucun rôle identifié pour notre projet,,,296,2019-03-23,MPL-2.0,,A_NOTER,oui
+GoVanguard/legion,Legion,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS,cli,1057,2024-10-23,GPL-3.0,yes,A_NOTER,oui
+reconmap/reconmap,Reconmap,provider,outil qui produit des résultats exploitables,NETWORK_DISCOVERY,cli,975,2026-08-20,Apache-2.0,,A_NOTER,oui
+owtf/owtf,OWTF (OWASP),doc,"liste, tutoriel ou spécification",,,1950,2026-08-22,BSD-3-Clause,,A_NOTER,oui
+1N3/Sn1per,Sn1per,provider,outil qui produit des résultats exploitables,,cli,11092,2026-07-04,,,A_NOTER,oui
+NullArray/AutoSploit,AutoSploit,provider,outil qui produit des résultats exploitables,EXPLOITATION,api,5253,2020-03-30,GPL-3.0,,A_NOTER,oui
+,Burp Suite (Extensions),inutile,aucun rôle identifié pour notre projet,,,,,,,A_NOTER,non
+sullo/nikto,Nikto,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | WEB_VULN_SCAN,api,10688,2026-08-15,,,A_NOTER,oui
+OJ/gobuster,Gobuster,provider,outil qui produit des résultats exploitables,,cli,14043,2026-01-13,Apache-2.0,,A_NOTER,oui
+ffuf/ffuf,ffuf,provider,outil qui produit des résultats exploitables,WEB_ENDPOINT_DISCOVERY,cli,16597,2026-08-20,MIT,,A_NOTER,oui
+hashcat/hashcat,Hashcat,inutile,aucun rôle identifié pour notre projet,,,26635,2026-08-27,MIT,,A_NOTER,oui
+mitre/caldera,Caldera (MITRE),inutile,aucun rôle identifié pour notre projet,,,7215,2026-08-27,Apache-2.0,,A_NOTER,oui
+redcanaryco/atomic-red-team,Atomic Red Team,lib,"bibliothèque, pas un outil exécutable",,,12459,2026-08-24,MIT,,A_NOTER,oui
+future-architect/vuls,Vuls,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS,cli,12244,2026-08-27,GPL-3.0,,A_NOTER,oui
+greenbone/openvas-scanner,GVM / OpenVAS,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS,cli,4797,2026-08-26,GPL-2.0,,A_NOTER,oui
+google/osv.dev,OSV (Google),inutile,aucun rôle identifié pour notre projet,,,2902,2026-08-27,Apache-2.0,,A_NOTER,oui
+aquasecurity/kube-bench,kube-bench (Aqua Security),doc,"liste, tutoriel ou spécification",,,8157,2026-08-18,Apache-2.0,,A_NOTER,oui
+aquasecurity/kube-hunter,kube-hunter (Aqua Security),inutile,aucun rôle identifié pour notre projet,,,5080,2024-03-19,Apache-2.0,,A_NOTER,oui
+kubescape/kubescape,Kubescape (ARMO),provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | CLOUD_POSTURE | MALWARE_ANALYSIS,cli,11693,2026-08-27,Apache-2.0,,A_NOTER,oui
+aquasecurity/cloudsploit,CloudSploit (Aqua),provider,outil qui produit des résultats exploitables,CLOUD_POSTURE,cli,3768,2026-07-28,GPL-3.0,,A_NOTER,oui
+turbot/steampipe,Steampipe,inutile,aucun rôle identifié pour notre projet,,,7935,2026-08-18,AGPL-3.0,,A_NOTER,oui
+lyft/cartography,Cartography (Lyft),inutile,aucun rôle identifié pour notre projet,,,4028,2026-08-26,Apache-2.0,,A_NOTER,oui
+SonarSource/sonarqube,SonarQube (Community),inutile,aucun rôle identifié pour notre projet,,,10932,2026-08-26,LGPL-3.0,,A_NOTER,oui
+PyCQA/bandit,Bandit,provider,outil qui produit des résultats exploitables,CODE_STATIC_ANALYSIS,cli,8242,2026-08-04,Apache-2.0,,A_NOTER,oui
+Bearer/bearer,Bearer,provider,outil qui produit des résultats exploitables,CODE_STATIC_ANALYSIS,cli,2739,2026-08-24,,,A_NOTER,oui
+anchore/grype,Grype (Anchore),provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | CONTAINER_SCAN,cli,12791,2026-08-27,Apache-2.0,,A_NOTER,oui
+anchore/syft,Syft (Anchore),inutile,aucun rôle identifié pour notre projet,,,9465,2026-08-27,Apache-2.0,,A_NOTER,oui
+dfir-iris/iris-web,DFIR-IRIS,inutile,aucun rôle identifié pour notre projet,,,1549,2025-02-27,LGPL-3.0,,A_NOTER,oui
+google/grr,GRR Rapid Response (Google),inutile,aucun rôle identifié pour notre projet,,,5088,2026-05-12,Apache-2.0,,A_NOTER,oui
+volatilityfoundation/volatility3,Volatility,inutile,aucun rôle identifié pour notre projet,,,4357,2026-08-19,,,A_NOTER,oui
+VirusTotal/yara-x,YARA-X,inutile,aucun rôle identifié pour notre projet,,,1261,2026-08-27,BSD-3-Clause,,A_NOTER,oui
+NationalSecurityAgency/ghidra,Ghidra (NSA),inutile,aucun rôle identifié pour notre projet,,,72949,2026-08-25,Apache-2.0,,A_NOTER,oui
+radareorg/radare2,Radare2,inutile,aucun rôle identifié pour notre projet,,,24658,2026-08-27,,,A_NOTER,oui
+grafana/grafana,Grafana,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,76451,2026-08-27,AGPL-3.0,,A_NOTER,oui
+opensearch-project/OpenSearch-Dashboards,Kibana / OpenSearch Dashboards,inutile,aucun rôle identifié pour notre projet,,,2115,2026-08-27,Apache-2.0,,A_NOTER,oui
+,SOC Prime / Agentic SOC Platforms,concurrent,agent ou plateforme qui fait le même travail que nous,,,,,,,A_NOTER,non
+malwarekid/SOAR-Flow,SOAR-Flow,inutile,aucun rôle identifié pour notre projet,,,138,2025-02-21,MIT,,A_NOTER,oui
+modelcontextprotocol/modelcontextprotocol,MCP Protocol (Anthropic),doc,"liste, tutoriel ou spécification",,,9066,2026-08-26,MIT,,A_NOTER,oui
+jlowin/fastmcp,FastMCP,provider,serveur ou agrégateur MCP,,mcp_server,27406,2026-08-27,Apache-2.0,,INTEGRATE,oui
+pomerium/pomerium,Pomerium,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,4979,2026-08-25,Apache-2.0,,A_NOTER,oui
+langchain-ai/langchain,LangChain,inutile,aucun rôle identifié pour notre projet,,,145131,2026-08-27,MIT,,A_NOTER,oui
+openai/openai-agents-python,OpenAI Agents SDK,concurrent,agent ou plateforme qui fait le même travail que nous,,,29010,2026-08-27,MIT,,A_NOTER,oui
+temporalio/temporal,Temporal,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,22564,2026-08-27,MIT,,INTEGRATE,oui
+PrefectHQ/prefect,Prefect,inutile,aucun rôle identifié pour notre projet,,,23698,2026-08-27,Apache-2.0,,A_NOTER,oui
+moby/moby,Docker / Podman,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,72001,2026-08-27,Apache-2.0,,A_NOTER,oui
+google/gvisor,gVisor (Google),composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,19171,2026-08-27,Apache-2.0,,INTEGRATE,oui
+kata-containers/kata-containers,Kata Containers,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,8612,2026-08-27,Apache-2.0,,A_NOTER,oui
+kyverno/kyverno,Kyverno,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,8076,2026-08-27,Apache-2.0,,A_NOTER,oui
+hashicorp/vault,HashiCorp Vault,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,36180,2026-08-27,,,A_NOTER,oui
+keycloak/keycloak,Keycloak,inutile,aucun rôle identifié pour notre projet,,,36450,2026-08-27,Apache-2.0,,A_NOTER,oui
+enaqx/awesome-pentest,Awesome Pentest,doc,"liste, tutoriel ou spécification",,,27027,2026-07-25,,,A_NOTER,oui
+,Awesome Cybersecurity Agentic AI,doc,"liste, tutoriel ou spécification",,,,,,,A_NOTER,non
+cyberguideme/Tools,Cyber Security Tools List (cyberguideme),doc,"liste, tutoriel ou spécification",,,436,2019-02-25,GPL-3.0,,A_NOTER,oui
+,SOC Knowledge Base,doc,"liste, tutoriel ou spécification",,,,,,,A_NOTER,non
+guardicore/monkey,Infection Monkey (Guardicore),inutile,aucun rôle identifié pour notre projet,,,7076,2025-02-28,GPL-3.0,,A_NOTER,oui
+BishopFox/sliver,Sliver,inutile,aucun rôle identifié pour notre projet,,,11731,2026-08-26,GPL-3.0,,A_NOTER,oui
+HavocFramework/Havoc,Havoc,inutile,aucun rôle identifié pour notre projet,,,8506,2025-12-18,GPL-3.0,yes,A_NOTER,oui
+its-a-feature/Mythic,Mythic,inutile,aucun rôle identifié pour notre projet,,,4727,2026-07-16,,,A_NOTER,oui
+CyberCX-STA/PurpleOps,Purple Knight / PurpleOps,inutile,aucun rôle identifié pour notre projet,,,313,2026-07-06,,,A_NOTER,oui
+elastic/detection-rules,Elastic Security (Detection Rules),provider,outil qui produit des résultats exploitables,DETECTION_RULES,cli,2695,2026-08-27,,,A_NOTER,oui
+splunk/security_content,Splunk Security Content,provider,outil qui produit des résultats exploitables,DETECTION_RULES,cli,1679,2026-08-26,Apache-2.0,,A_NOTER,oui
+osquery/osquery,Osquery,inutile,aucun rôle identifié pour notre projet,,,23525,2026-08-25,Apache-2.0,,A_NOTER,oui
+activecm/rita,RITA,inutile,aucun rôle identifié pour notre projet,,,629,2026-06-17,GPL-3.0,,A_NOTER,oui
+AlienVault-OTX/OTX-Python-SDK,OTX DirectConnect,inutile,aucun rôle identifié pour notre projet,,,402,2021-04-02,,,A_NOTER,oui
+abusech/URLhaus,"Abuse.ch (URLhaus, MalBazaar, ThreatFox)",inutile,aucun rôle identifié pour notre projet,,,70,2024-11-09,,,A_NOTER,oui
+,AI Agent Runtime Security (from topic mcp-security),concurrent,agent ou plateforme qui fait le même travail que nous,,,,,,,A_NOTER,non
+guardrails-ai/guardrails,Guardrails AI,inutile,aucun rôle identifié pour notre projet,,,7325,2026-08-26,Apache-2.0,,A_NOTER,oui
+protectai/llm-guard,LLM Guard,inutile,aucun rôle identifié pour notre projet,,,3204,2026-07-08,MIT,yes,A_NOTER,oui
+protectai/rebuff,Rebuff,provider,outil qui produit des résultats exploitables,,cli,1521,2024-01-25,Apache-2.0,yes,A_NOTER,oui
+,OWASP LLM Top 10 Vulnerable App,inutile,aucun rôle identifié pour notre projet,,,,,,,A_NOTER,non
+,Dastardly (PortSwigger),provider,outil qui produit des résultats exploitables,WEB_VULN_SCAN,cli,,,,,A_NOTER,non
+Checkmarx/kics,KICS (Checkmarx),provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | IAC_SCAN,cli,2695,2026-08-25,Apache-2.0,,A_NOTER,oui
+aquasecurity/tfsec,tfsec,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | IAC_SCAN,cli,7035,2025-05-02,MIT,,A_NOTER,oui
+,ProjectDiscovery (Suite),provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS,cli,,,,,A_NOTER,non
+shadow1ng/fscan,Fscan,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | NETWORK_DISCOVERY,cli,14460,2026-08-25,MIT,,A_NOTER,oui
+RustScan/RustScan,RustScan,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | NETWORK_DISCOVERY,api,20334,2026-06-10,GPL-3.0,,A_NOTER,oui
+,Caido,inutile,aucun rôle identifié pour notre projet,,,,,,,A_NOTER,non
+OAI/OpenAPI-Specification,OpenAPI / Swagger,doc,"liste, tutoriel ou spécification",,,31187,2026-08-20,Apache-2.0,,A_NOTER,oui
+oasis-open/cti-stix2-json-schemas,STIX/TAXII,doc,"liste, tutoriel ou spécification",,,144,2026-01-19,BSD-3-Clause,,A_NOTER,oui
+,CACAO (OASIS),doc,"liste, tutoriel ou spécification",,,,,,,A_NOTER,non
+,OpenC2,doc,"liste, tutoriel ou spécification",,,,,,,A_NOTER,non
+opensearch-project/OpenSearch,Elasticsearch / OpenSearch,inutile,aucun rôle identifié pour notre projet,,,13586,2026-08-27,Apache-2.0,,A_NOTER,oui
+neo4j/neo4j,Neo4j,inutile,aucun rôle identifié pour notre projet,,,17147,2026-08-05,GPL-3.0,,A_NOTER,oui
+ClickHouse/ClickHouse,ClickHouse,inutile,aucun rôle identifié pour notre projet,,,49484,2026-08-27,Apache-2.0,,A_NOTER,oui
+FuzzingLabs/secpipe,SecPipe / FuzzForge AI,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,,,,,A_NOTER,non
+securityfortech/secops-mcp,secops-mcp,provider,serveur ou agrégateur MCP,DEPENDENCY_ANALYSIS,mcp_server,207,2025-09-17,MIT,,A_NOTER,oui
+j3ssie/osmedeus,Osmedeus,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,6539,2026-08-08,MIT,,A_NOTER,oui
+six2dez/reconftw,reconFTW,provider,outil qui produit des résultats exploitables,,cli,8027,2026-06-29,MIT,,A_NOTER,oui
+AutoRecon/AutoRecon,AutoRecon,provider,outil qui produit des résultats exploitables,NETWORK_DISCOVERY,api,6093,2025-11-16,GPL-3.0,,A_NOTER,oui
+pry0cc/axiom,axiom,provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS | CLOUD_POSTURE | NETWORK_DISCOVERY | WEB_ENDPOINT_DISCOVERY | WEB_VULN_SCAN,cli,4415,2024-09-30,MIT,,A_NOTER,oui
+GH05TCREW/MetasploitMCP,MetasploitMCP / wrappers MCP unitaires,provider,serveur ou agrégateur MCP,EXPLOITATION,mcp_server,719,2026-02-05,Apache-2.0,,A_NOTER,oui
+apache/caldera,MITRE Caldera (apache/caldera),inutile,aucun rôle identifié pour notre projet,,,7215,2026-08-27,Apache-2.0,,A_NOTER,oui
+infosecn1nja/Red-Teaming-Toolkit,Red-Teaming-Toolkit / Awesome-Red-Teaming (listes),doc,"liste, tutoriel ou spécification",,,10656,2026-05-07,GPL-3.0,,A_NOTER,oui
+aliasrobotics/cai,CAI (Cybersecurity AI),concurrent,agent ou plateforme qui fait le même travail que nous,,,9808,2026-08-22,MIT,yes,ADAPT (archi),oui
+PurpleAILAB/Decepticon,Decepticon,doc,"liste, tutoriel ou spécification",,,5343,2026-08-26,Apache-2.0,,ADAPT (archi),oui
+bugbasesecurity/pentest-copilot,Pentest Copilot,concurrent,agent ou plateforme qui fait le même travail que nous,,,1329,2026-08-14,MIT,,A_NOTER,oui
+Vasco0x4/AIDA,AIDA,concurrent,agent ou plateforme qui fait le même travail que nous,,,480,2026-07-19,AGPL-3.0,,A_NOTER,oui
+ASCIT31/Dark-Moon,Dark-Moon (Darkmoon),concurrent,agent ou plateforme qui fait le même travail que nous,,,875,2026-08-25,GPL-3.0,,A_NOTER,oui
+Stanford-Trinity/ARTEMIS,ARTEMIS (Stanford Trinity),concurrent,agent ou plateforme qui fait le même travail que nous,,,535,2026-01-01,Apache-2.0,,A_NOTER,oui
+ipa-lab/hackingBuddyGPT,hackingBuddyGPT,doc,"liste, tutoriel ou spécification",,,1224,2026-08-21,MIT,,A_NOTER,oui
+berylliumsec/nebula,Nebula,concurrent,agent ou plateforme qui fait le même travail que nous,,,1093,2026-08-27,BSD-2-Clause,,A_NOTER,oui
+NoDataFound/hackGPT,hackGPT,concurrent,agent ou plateforme qui fait le même travail que nous,,,1202,2026-08-12,,,A_NOTER,oui
+,Autres agents IA identifiés (2e cercle),concurrent,agent ou plateforme qui fait le même travail que nous,,,,,,,A_NOTER,non
+Vigil-SOC/vigil,Vigil (Vigil-SOC),concurrent,agent ou plateforme qui fait le même travail que nous,,,264,2026-08-27,,,A_NOTER,oui
+ugurrates/Blue-Team-Assistant,CABTA (Blue Team Assistant),concurrent,agent ou plateforme qui fait le même travail que nous,,,76,2026-07-27,MIT,,A_NOTER,oui
+mukul975/cve-mcp-server,CVE MCP Server,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,1167,2026-06-22,Apache-2.0,,A_NOTER,oui
+not2cleverdotme/blue-team-mcp,blue-team-mcp,provider,serveur ou agrégateur MCP,,mcp_server,0,2026-03-15,MIT,,A_NOTER,oui
+deadbits/vigil-llm,Vigil-LLM (homonyme à ne pas confondre),provider,outil qui produit des résultats exploitables,DEPENDENCY_ANALYSIS,cli,496,2024-01-31,Apache-2.0,,A_NOTER,oui
+metatool-ai/metamcp,MetaMCP,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,2630,2026-06-22,MIT,,IGNORE,oui
+samanhappy/mcphub,MCPHub,provider,serveur ou agrégateur MCP,ENDPOINT_COLLECTION,mcp_server,2337,2026-08-26,Apache-2.0,,A_NOTER,oui
+mcpjungle/MCPJungle,MCPJungle,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,1230,2026-08-02,MPL-2.0,,ADAPT,oui
+wojtyniak/mcp-mcp,mcp-mcp (wojtyniak),doc,"liste, tutoriel ou spécification",,,23,2026-06-26,MIT,,A_NOTER,oui
+pathintegral-institute/mcpm.sh,mcpm.sh,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,992,2026-05-22,MIT,,A_NOTER,oui
+open-webui/mcpo,mcpo,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,4357,2026-02-27,MIT,,A_NOTER,oui
+AgentSeal/awesome-mcp-security,Security-scored MCP lists,doc,"liste, tutoriel ou spécification",,,28,2026-03-14,,,A_NOTER,oui
+,MCP servers sécurité divers (petits),provider,serveur ou agrégateur MCP,NETWORK_DISCOVERY | EXPLOITATION,mcp_server,,,,,A_NOTER,non
+modelcontextprotocol/registry,Official MCP Registry,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,7194,2026-08-20,,,ADAPT (archi),oui
+maximhq/bifrost,Bifrost (Maxim),composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,7599,2026-08-27,Apache-2.0,,A_NOTER,oui
+obot-platform/obot,Obot,provider,serveur ou agrégateur MCP,,mcp_server,962,2026-08-27,MIT,,A_NOTER,oui
+datacline/secure-mcp-gateway,Other gateways (contexte),composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,32,2026-05-13,MIT,,A_NOTER,oui
+lockfale/OSINT-Framework,OSINT-Framework / autres listes OSINT,doc,"liste, tutoriel ou spécification",,,12016,2026-04-03,MIT,,A_NOTER,oui
+kpcyrd/sn0int,sn0int,composant,"brique de plateforme (policy, sandbox, gateway, registre)",,,2516,2025-01-31,GPL-3.0,,A_NOTER,oui
+4ndersonLin/awesome-cloud-security,Nuages : à compléter au propre,doc,"liste, tutoriel ou spécification",,,2483,2026-03-17,,,A_NOTER,oui
+meirwah/awesome-incident-response,meirwah/awesome-incident-response,doc,"liste, tutoriel ou spécification",,,9353,2026-07-15,Apache-2.0,,A_NOTER,oui
+,(croisé avec 🔵🟠🟡),concurrent,agent ou plateforme qui fait le même travail que nous,,,,,,,A_NOTER,non
+mthcht/awesome-lists,Méta-listes et index majeurs,doc,"liste, tutoriel ou spécification",,,1892,2026-08-27,MIT,,A_NOTER,oui

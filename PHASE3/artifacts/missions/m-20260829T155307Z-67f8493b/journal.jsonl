@@ -1,0 +1,8 @@
+{"seq": 1, "ts": "2026-08-29T15:53:07+00:00", "type": "ouverture", "requete": "Analyse la sécurité de mon dépôt", "cible": "/home/user/PHASE3/testrepo"}
+{"seq": 2, "ts": "2026-08-29T15:53:07+00:00", "type": "plan", "plan_id": "00f77ab5d8940bef", "providers": ["semgrep", "trivy", "grype", "gitleaks"]}
+{"seq": 3, "ts": "2026-08-29T15:53:10+00:00", "type": "contexte", "run_id": "6ada213f7ebda551", "contexte_empreinte": "8962959d86a1f676", "input_digest": "b01ecd1ecf3f6f45", "input_commit": "7c72938f3c2e24dbaaa0ae7713a396bf1131d322", "working_tree_dirty": false}
+{"seq": 4, "ts": "2026-08-29T15:53:21+00:00", "type": "execution", "provider": "semgrep", "code_retour": 0, "timeout": false, "findings": 2}
+{"seq": 5, "ts": "2026-08-29T15:53:21+00:00", "type": "execution", "provider": "trivy", "code_retour": 0, "timeout": false, "findings": 62}
+{"seq": 6, "ts": "2026-08-29T15:53:30+00:00", "type": "execution", "provider": "grype", "code_retour": 0, "timeout": false, "findings": 62}
+{"seq": 7, "ts": "2026-08-29T15:53:30+00:00", "type": "execution", "provider": "gitleaks", "code_retour": 0, "timeout": false, "findings": 1}
+{"seq": 8, "ts": "2026-08-29T15:53:30+00:00", "type": "cloture", "findings": 127, "clusters": 8, "result_digest": "1343600936836e51"}

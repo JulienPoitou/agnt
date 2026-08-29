@@ -1,0 +1,22 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a04e6f-932a-7e3c-b693-9f407bd8f6f7",
+  "CreatedAt": "2026-08-29T16:52:10.154934654Z",
+  "ArtifactID": "sha256:73e0eb1c214d317f9068f842575d4e4c8ab96c1bf64f38f126644e00486ba927",
+  "ArtifactName": "/home/user/PHASE3/mt-scan",
+  "ArtifactType": "repository",
+  "Metadata": {
+    "RepoURL": "https://github.com/terraform-aws-modules/terraform-aws-vpc.git",
+    "Branch": "master",
+    "Tags": [
+      "v6.7.2"
+    ],
+    "Commit": "cf0e3ca46fd51f47bf095957f2a6ac6127c89045",
+    "CommitMsg": "chore(release): version 6.7.2 [skip ci]\n\n## [6.7.2](https://github.com/terraform-aws-modules/terraform-aws-vpc/compare/v6.7.1...v6.7.2) (2026-08-28)\n\n### Bug Fixes\n\n* Stop apply failing on DNS64 without IPv6 and on empty route table lists ([#1306](https://github.com/terraform-aws-modules/terraform-aws-vpc/issues/1306)) ([e0c733a](https://github.com/terraform-aws-modules/terraform-aws-vpc/commit/e0c733a7231d9aee4b1307caabe55103548d67ae))",
+    "Author": "semantic-release-bot <semantic-release-bot@martynus.net>",
+    "Committer": "semantic-release-bot <semantic-release-bot@martynus.net>"
+  }
+}

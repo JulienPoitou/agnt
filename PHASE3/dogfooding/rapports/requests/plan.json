@@ -1,0 +1,140 @@
+{
+  "version": "1.1",
+  "plan_id": "3a8fd0fb5f536e54",
+  "request_id": "e9c56259e930e8fc",
+  "requete": "Analyse la sécurité de mon dépôt",
+  "requete_canonique": "analyse la securite de mon depot",
+  "cible": "/home/user/PHASE3/dogfooding/cibles/requests",
+  "registre_empreinte": "0a95593b8ceaa09b",
+  "moteur_intent": "deterministe",
+  "cree_le": "2026-08-29T16:54:24+00:00",
+  "steps": [
+    {
+      "capability": "CODE_STATIC_ANALYSIS",
+      "provider": "semgrep",
+      "risque": "PASSIVE",
+      "commande": [
+        "{BIN}/semgrep",
+        "scan"
+      ],
+      "args": [
+        "--config={REGLES}/python.yaml",
+        "--config={REGLES}/security-audit.yaml",
+        "--config={REGLES}/javascript.yaml",
+        "--metrics=off",
+        "--disable-version-check",
+        "--json",
+        "--quiet",
+        "--output={sortie}"
+      ],
+      "sorties": [
+        "semgrep.json"
+      ]
+    },
+    {
+      "capability": "DEPENDENCY_ANALYSIS",
+      "provider": "trivy",
+      "risque": "PASSIVE",
+      "commande": [
+        "{BIN}/trivy",
+        "fs"
+      ],
+      "args": [
+        "--scanners=vuln",
+        "--skip-db-update",
+        "--skip-java-db-update",
+        "--disable-telemetry",
+        "--format=json",
+        "--no-progress",
+        "--cache-dir={DB}/trivy",
+        "--output={sortie}"
+      ],
+      "sorties": [
+        "trivy.json"
+      ]
+    },
+    {
+      "capability": "DEPENDENCY_ANALYSIS",
+      "provider": "grype",
+      "risque": "PASSIVE",
+      "commande": [
+        "grype"
+      ],
+      "args": [],
+      "sorties": []
+    },
+    {
+      "capability": "SECRET_DETECTION",
+      "provider": "gitleaks",
+      "risque": "PASSIVE",
+      "commande": [
+        "{BIN}/gitleaks",
+        "git"
+      ],
+      "args": [
+        "--redact",
+        "--report-format=json",
+        "--no-banner",
+        "--report-path={sortie}"
+      ],
+      "sorties": [
+        "gitleaks.json"
+      ]
+    },
+    {
+      "capability": "IAC_SCAN",
+      "provider": "checkov",
+      "risque": "PASSIVE",
+      "commande": [
+        "checkov"
+      ],
+      "args": [],
+      "sorties": []
+    },
+    {
+      "capability": "IAC_SCAN",
+      "provider": "kics",
+      "risque": "PASSIVE",
+      "commande": [
+        "kics"
+      ],
+      "args": [],
+      "sorties": []
+    }
+  ],
+  "selection": {
+    "CODE_STATIC_ANALYSIS": {
+      "choisis": [
+        "semgrep"
+      ],
+      "ecartes": [],
+      "motif": "seul provider PASSIF déclaré pour cette capacité (priorité 100)"
+    },
+    "DEPENDENCY_ANALYSIS": {
+      "choisis": [
+        "trivy",
+        "grype"
+      ],
+      "ecartes": [],
+      "motif": "fan_out déclaré (max 2) : les 2 premiers providers PASSIF dans l'ordre de priorité ; écartés : aucun"
+    },
+    "SECRET_DETECTION": {
+      "choisis": [
+        "gitleaks"
+      ],
+      "ecartes": [],
+      "motif": "seul provider PASSIF déclaré pour cette capacité (priorité 100)"
+    },
+    "IAC_SCAN": {
+      "choisis": [
+        "checkov",
+        "kics"
+      ],
+      "ecartes": [],
+      "motif": "fan_out déclaré (max 2) : les 2 premiers providers PASSIF dans l'ordre de priorité ; écartés : aucun"
+    },
+    "applicabilite": {
+      "semgrep_go": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.go']"
+    }
+  }
+}

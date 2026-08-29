@@ -1,0 +1,11 @@
+{"seq": 1, "ts": "2026-08-29T13:45:34+00:00", "type": "ouverture", "requete": "Analyse la sécurité de mon dépôt", "cible": "/home/user/PHASE3/testrepo"}
+{"seq": 2, "ts": "2026-08-29T13:45:34+00:00", "type": "plan", "plan_id": "723b68e5304f8478", "providers": ["semgrep", "bandit", "bandit_custom", "semgrep_go", "trivy", "gitleaks", "checkov"]}
+{"seq": 3, "ts": "2026-08-29T13:45:41+00:00", "type": "contexte", "run_id": "7f42d9184fd59a1d", "contexte_empreinte": "9f372672bfe60595", "input_digest": "b01ecd1ecf3f6f45", "input_commit": "7c72938f3c2e24dbaaa0ae7713a396bf1131d322", "working_tree_dirty": false}
+{"seq": 4, "ts": "2026-08-29T13:45:54+00:00", "type": "execution", "provider": "semgrep", "code_retour": 0, "timeout": false, "findings": 2}
+{"seq": 5, "ts": "2026-08-29T13:45:55+00:00", "type": "execution", "provider": "bandit", "code_retour": 0, "timeout": false, "findings": 5}
+{"seq": 6, "ts": "2026-08-29T13:45:55+00:00", "type": "execution", "provider": "bandit_custom", "code_retour": 0, "timeout": false, "findings": 5}
+{"seq": 7, "ts": "2026-08-29T13:47:35+00:00", "type": "execution", "provider": "semgrep_go", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 8, "ts": "2026-08-29T13:47:35+00:00", "type": "execution", "provider": "trivy", "code_retour": 0, "timeout": false, "findings": 62}
+{"seq": 9, "ts": "2026-08-29T13:47:36+00:00", "type": "execution", "provider": "gitleaks", "code_retour": 0, "timeout": false, "findings": 1}
+{"seq": 10, "ts": "2026-08-29T13:47:42+00:00", "type": "execution", "provider": "checkov", "code_retour": 0, "timeout": false, "findings": 0}
+{"seq": 11, "ts": "2026-08-29T13:47:42+00:00", "type": "cloture", "findings": 75, "clusters": 10, "result_digest": "4c6ba7877b65c4fc"}

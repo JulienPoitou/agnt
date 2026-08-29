@@ -1,0 +1,332 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a04d22-64d6-7c6e-8419-fd9f250ddfb6",
+  "CreatedAt": "2026-08-29T10:48:14.806815897Z",
+  "ArtifactID": "sha256:91f9b4d480c186932f7e12d72a73b19dcde089a53ae0f3456032360080a2aa07",
+  "ArtifactName": ".",
+  "ArtifactType": "repository",
+  "Metadata": {
+    "Branch": "master",
+    "Commit": "f6ffa15acd59fae7175120926e3b5c2b37b797cd",
+    "CommitMsg": "fixture go de test",
+    "Author": "test \u003ctest@test.local\u003e",
+    "Committer": "test \u003ctest@test.local\u003e"
+  },
+  "Results": [
+    {
+      "Target": "go.mod",
+      "Class": "lang-pkgs",
+      "Type": "gomod",
+      "Packages": [
+        {
+          "ID": "example.com/vulngo",
+          "Name": "example.com/vulngo",
+          "Identifier": {
+            "PURL": "pkg:golang/example.com/vulngo",
+            "UID": "bbfadd31ca5e6ee"
+          },
+          "Relationship": "root",
+          "DependsOn": [
+            "golang.org/x/text@v0.3.0"
+          ],
+          "AnalyzedBy": "gomod"
+        },
+        {
+          "ID": "golang.org/x/text@v0.3.0",
+          "Name": "golang.org/x/text",
+          "Identifier": {
+            "PURL": "pkg:golang/golang.org/x/text@v0.3.0",
+            "UID": "c933534a9e1cec27"
+          },
+          "Version": "v0.3.0",
+          "Relationship": "direct",
+          "AnalyzedBy": "gomod"
+        }
+      ],
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2020-14040",
+          "VendorIDs": [
+            "GHSA-5rcv-m4m3-hfh7",
+            "GO-2020-0015"
+          ],
+          "PkgID": "golang.org/x/text@v0.3.0",
+          "PkgName": "golang.org/x/text",
+          "PkgIdentifier": {
+            "PURL": "pkg:golang/golang.org/x/text@v0.3.0",
+            "UID": "c933534a9e1cec27"
+          },
+          "InstalledVersion": "v0.3.0",
+          "FixedVersion": "0.3.3",
+          "Status": "fixed",
+          "SeveritySource": "nvd",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2020-14040",
+          "DataSource": {
+            "ID": "govulndb",
+            "Name": "The Go Vulnerability Database",
+            "URL": "https://pkg.go.dev/vuln/"
+          },
+          "Fingerprint": "sha256:9ef1ec50179e25c4c275e73ab9b4feb698c4a4a1a18d560d9025196b3b4cdea9",
+          "Title": "golang.org/x/text: possibility to trigger an infinite loop in encoding/unicode could lead to crash",
+          "Description": "The x/text package before 0.3.3 for Go has a vulnerability in encoding/unicode that could lead to the UTF-16 decoder entering an infinite loop, causing the program to crash or run out of memory. An attacker could provide a single byte to a UTF16 decoder instantiated with UseBOM or ExpectBOM to trigger an infinite loop if the String function on the Decoder is called, or the Decoder is passed to golang.org/x/text/transform.String.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-835"
+          ],
+          "VendorSeverity": {
+            "alma": 2,
+            "amazon": 2,
+            "azure": 3,
+            "nvd": 3,
+            "oracle-oval": 2,
+            "redhat": 2,
+            "rocky": 2,
+            "ubuntu": 1
+          },
+          "CVSS": {
+            "nvd": {
+              "V2Vector": "AV:N/AC:L/Au:N/C:N/I:N/A:P",
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V2Score": 5,
+              "V3Score": 7.5
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2020-14040",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1682970",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1752079",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1785242",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1800815",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1801874",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1804193",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1804195",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1813845",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1814928",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1818694",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1821193",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1822038",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1825789",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1827794",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1833220",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1835986",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1837755",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1847544",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1849557",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1850230",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1853230",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1853652",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1857606",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1858862",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1860126",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1866153",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1866833",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1867447",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1868612",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1872263",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1877463",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=1879622",
+            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-10749",
+            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-10756",
+            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-14040",
+            "https://errata.almalinux.org/8/ALSA-2020-4694.html",
+            "https://errata.rockylinux.org/RLSA-2020:4694",
+            "https://github.com/golang/go/issues/39491",
+            "https://go.dev/cl/238238",
+            "https://go.dev/issue/39491",
+            "https://go.googlesource.com/text/+/23ae387dee1f90d29a23c0e87ee0b46038fbed0e",
+            "https://groups.google.com/forum/#!topic/golang-announce/bXVeAmGOqz0",
+            "https://groups.google.com/forum/#%21topic/golang-announce/bXVeAmGOqz0",
+            "https://groups.google.com/g/golang-announce/c/bXVeAmGOqz0",
+            "https://linux.oracle.com/cve/CVE-2020-14040.html",
+            "https://linux.oracle.com/errata/ELSA-2020-4694.html",
+            "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/TACQFZDPA7AUR6TRZBCX2RGRFSDYLI7O/",
+            "https://nvd.nist.gov/vuln/detail/CVE-2020-14040",
+            "https://pkg.go.dev/vuln/GO-2020-0015",
+            "https://ubuntu.com/security/notices/USN-5873-1",
+            "https://www.cve.org/CVERecord?id=CVE-2020-14040"
+          ],
+          "PublishedDate": "2020-06-17T20:15:09.993Z",
+          "LastModifiedDate": "2026-06-17T02:54:08.71Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2021-38561",
+          "VendorIDs": [
+            "GHSA-ppp9-7jff-5vj2",
+            "GO-2021-0113"
+          ],
+          "PkgID": "golang.org/x/text@v0.3.0",
+          "PkgName": "golang.org/x/text",
+          "PkgIdentifier": {
+            "PURL": "pkg:golang/golang.org/x/text@v0.3.0",
+            "UID": "c933534a9e1cec27"
+          },
+          "InstalledVersion": "v0.3.0",
+          "FixedVersion": "0.3.7",
+          "Status": "fixed",
+          "SeveritySource": "nvd",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2021-38561",
+          "DataSource": {
+            "ID": "govulndb",
+            "Name": "The Go Vulnerability Database",
+            "URL": "https://pkg.go.dev/vuln/"
+          },
+          "Fingerprint": "sha256:5c30a1fbc083c8a654e013e1e209b8da98ba7efb673b6d6906f313cdf7db262d",
+          "Title": "golang: out-of-bounds read in golang.org/x/text/language leads to DoS",
+          "Description": "golang.org/x/text/language in golang.org/x/text before 0.3.7 can panic with an out-of-bounds read during BCP 47 language tag parsing. Index calculation is mishandled. If parsing untrusted user input, this can be used as a vector for a denial-of-service attack.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-125"
+          ],
+          "VendorSeverity": {
+            "azure": 3,
+            "nvd": 3,
+            "redhat": 2,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2021-38561",
+            "https://deps.dev/advisory/OSV/GO-2021-0113",
+            "https://go.dev/cl/340830",
+            "https://go.googlesource.com/text/+/383b2e75a7a4198c42f8f87833eefb772868a56f",
+            "https://groups.google.com/g/golang-announce",
+            "https://nvd.nist.gov/vuln/detail/CVE-2021-38561",
+            "https://pkg.go.dev/golang.org/x/text/language",
+            "https://pkg.go.dev/vuln/GO-2021-0113",
+            "https://ubuntu.com/security/notices/USN-5873-1",
+            "https://www.cve.org/CVERecord?id=CVE-2021-38561"
+          ],
+          "PublishedDate": "2022-12-26T06:15:10.56Z",
+          "LastModifiedDate": "2026-06-17T04:02:21.823Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2022-32149",
+          "VendorIDs": [
+            "GHSA-69ch-w2m2-3vjp",
+            "GO-2022-1059"
+          ],
+          "PkgID": "golang.org/x/text@v0.3.0",
+          "PkgName": "golang.org/x/text",
+          "PkgIdentifier": {
+            "PURL": "pkg:golang/golang.org/x/text@v0.3.0",
+            "UID": "c933534a9e1cec27"
+          },
+          "InstalledVersion": "v0.3.0",
+          "FixedVersion": "0.3.8",
+          "Status": "fixed",
+          "SeveritySource": "nvd",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2022-32149",
+          "DataSource": {
+            "ID": "govulndb",
+            "Name": "The Go Vulnerability Database",
+            "URL": "https://pkg.go.dev/vuln/"
+          },
+          "Fingerprint": "sha256:57419ae52b3d316450e79d02e568907f3534f09e495aa9bf4128691dbfe93523",
+          "Title": "golang: golang.org/x/text/language: ParseAcceptLanguage takes a long time to parse complex tags",
+          "Description": "An attacker may cause a denial of service by crafting an Accept-Language header which ParseAcceptLanguage will take significant time to parse.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-772"
+          ],
+          "VendorSeverity": {
+            "azure": 3,
+            "cbl-mariner": 3,
+            "nvd": 3,
+            "redhat": 2,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2022-32149",
+            "https://github.com/golang/text/commit/434eadcdbc3b0256971992e8c70027278364c72c%20%28v0.3.8%29",
+            "https://go.dev/cl/442235",
+            "https://go.dev/issue/56152",
+            "https://groups.google.com/g/golang-announce/c/-hjNw559_tE/m/KlGTfid5CAAJ",
+            "https://groups.google.com/g/golang-dev/c/qfPIly0X7aU",
+            "https://nvd.nist.gov/vuln/detail/CVE-2022-32149",
+            "https://pkg.go.dev/vuln/GO-2022-1059",
+            "https://security.netapp.com/advisory/ntap-20230203-0006/",
+            "https://ubuntu.com/security/notices/USN-5873-1",
+            "https://www.cve.org/CVERecord?id=CVE-2022-32149"
+          ],
+          "PublishedDate": "2022-10-14T15:15:34.543Z",
+          "LastModifiedDate": "2026-06-17T04:46:45.967Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-56852",
+          "VendorIDs": [
+            "GO-2026-5970"
+          ],
+          "PkgID": "golang.org/x/text@v0.3.0",
+          "PkgName": "golang.org/x/text",
+          "PkgIdentifier": {
+            "PURL": "pkg:golang/golang.org/x/text@v0.3.0",
+            "UID": "c933534a9e1cec27"
+          },
+          "InstalledVersion": "v0.3.0",
+          "FixedVersion": "0.39.0",
+          "Status": "fixed",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-56852",
+          "DataSource": {
+            "ID": "govulndb",
+            "Name": "The Go Vulnerability Database",
+            "URL": "https://pkg.go.dev/vuln/"
+          },
+          "Fingerprint": "sha256:567b6acba7773e2498a0e16f8cfa9da48a70caec3211a6f59e98cd220351a7b4",
+          "Title": "golang.org/x/text: golang.org/x/text: Denial of Service via invalid UTF-8 input",
+          "Description": "A norm.Iter can enter an infinite loop when handling input containing invalid UTF-8 bytes.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-835"
+          ],
+          "VendorSeverity": {
+            "amazon": 3,
+            "azure": 3,
+            "redhat": 3
+          },
+          "CVSS": {
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-56852",
+            "https://go.dev/cl/794100",
+            "https://go.dev/issue/80142",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-56852",
+            "https://pkg.go.dev/vuln/GO-2026-5970",
+            "https://www.cve.org/CVERecord?id=CVE-2026-56852"
+          ],
+          "PublishedDate": "2026-07-21T20:17:02.867Z",
+          "LastModifiedDate": "2026-07-23T18:27:48.877Z"
+        }
+      ]
+    }
+  ]
+}

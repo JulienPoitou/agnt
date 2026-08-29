@@ -1,0 +1,152 @@
+{
+  "version": "1.1",
+  "plan_id": "57bee9c26081801b",
+  "request_id": "e9c56259e930e8fc",
+  "requete": "Analyse la sécurité de mon dépôt",
+  "requete_canonique": "analyse la securite de mon depot",
+  "cible": "/home/user/PHASE3/dogfooding/cibles/mux",
+  "registre_empreinte": "0a95593b8ceaa09b",
+  "moteur_intent": "deterministe",
+  "cree_le": "2026-08-29T16:49:53+00:00",
+  "steps": [
+    {
+      "capability": "CODE_STATIC_ANALYSIS",
+      "provider": "semgrep",
+      "risque": "PASSIVE",
+      "commande": [
+        "{BIN}/semgrep",
+        "scan"
+      ],
+      "args": [
+        "--config={REGLES}/python.yaml",
+        "--config={REGLES}/security-audit.yaml",
+        "--config={REGLES}/javascript.yaml",
+        "--metrics=off",
+        "--disable-version-check",
+        "--json",
+        "--quiet",
+        "--output={sortie}"
+      ],
+      "sorties": [
+        "semgrep.json"
+      ]
+    },
+    {
+      "capability": "CODE_STATIC_ANALYSIS_GO",
+      "provider": "semgrep_go",
+      "risque": "PASSIVE",
+      "commande": [
+        "semgrep",
+        "scan"
+      ],
+      "args": [],
+      "sorties": []
+    },
+    {
+      "capability": "DEPENDENCY_ANALYSIS",
+      "provider": "trivy",
+      "risque": "PASSIVE",
+      "commande": [
+        "{BIN}/trivy",
+        "fs"
+      ],
+      "args": [
+        "--scanners=vuln",
+        "--skip-db-update",
+        "--skip-java-db-update",
+        "--disable-telemetry",
+        "--format=json",
+        "--no-progress",
+        "--cache-dir={DB}/trivy",
+        "--output={sortie}"
+      ],
+      "sorties": [
+        "trivy.json"
+      ]
+    },
+    {
+      "capability": "SECRET_DETECTION",
+      "provider": "gitleaks",
+      "risque": "PASSIVE",
+      "commande": [
+        "{BIN}/gitleaks",
+        "git"
+      ],
+      "args": [
+        "--redact",
+        "--report-format=json",
+        "--no-banner",
+        "--report-path={sortie}"
+      ],
+      "sorties": [
+        "gitleaks.json"
+      ]
+    },
+    {
+      "capability": "IAC_SCAN",
+      "provider": "checkov",
+      "risque": "PASSIVE",
+      "commande": [
+        "checkov"
+      ],
+      "args": [],
+      "sorties": []
+    },
+    {
+      "capability": "IAC_SCAN",
+      "provider": "kics",
+      "risque": "PASSIVE",
+      "commande": [
+        "kics"
+      ],
+      "args": [],
+      "sorties": []
+    }
+  ],
+  "selection": {
+    "CODE_STATIC_ANALYSIS": {
+      "choisis": [
+        "semgrep"
+      ],
+      "ecartes": [],
+      "motif": "seul provider PASSIF déclaré pour cette capacité (priorité 100)"
+    },
+    "CODE_STATIC_ANALYSIS_GO": {
+      "choisis": [
+        "semgrep_go"
+      ],
+      "ecartes": [],
+      "motif": "seul provider PASSIF déclaré pour cette capacité (priorité 68)"
+    },
+    "DEPENDENCY_ANALYSIS": {
+      "choisis": [
+        "trivy"
+      ],
+      "ecartes": [
+        {
+          "id": "grype",
+          "priorite": 110
+        }
+      ],
+      "motif": "priorité déclarée la plus forte parmi 2 providers PASSIF (priorité 100) ; écartés : grype (priorité 110)"
+    },
+    "SECRET_DETECTION": {
+      "choisis": [
+        "gitleaks"
+      ],
+      "ecartes": [],
+      "motif": "seul provider PASSIF déclaré pour cette capacité (priorité 100)"
+    },
+    "IAC_SCAN": {
+      "choisis": [
+        "checkov",
+        "kics"
+      ],
+      "ecartes": [],
+      "motif": "fan_out déclaré (max 2) : les 2 premiers providers PASSIF dans l'ordre de priorité ; écartés : aucun"
+    },
+    "applicabilite": {
+      "grype": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*package-lock.json', '*yarn.lock', '*pnpm-lock.yaml', '*requirements.txt', '*Pipfile.lock', '*poetry.lock', '*go.sum', '*Gemfile.lock', '*pom.xml', '*build.gradle*']"
+    }
+  }
+}

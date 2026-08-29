@@ -1,0 +1,28 @@
+tool: grype
+binaire: grype
+version_binaire_sha256: 91705979c6ccb736b87e3250831f5e1a35f13767fd2032ffa85c55b1e6f58f90
+argv:
+- /home/user/.cache/arena_secops/bin/grype
+- dir:/home/user/PHASE3/mt-scan
+- -o
+- json
+env:
+  GRYPE_DB_CACHE_DIR: /home/user/PHASE3/mt-db/grype
+code_retour: 0
+timeout: false
+duree_ms: 12619
+sortie_origine: stdout
+cible: /home/user/PHASE3/testrepo_sca
+sandbox_limites:
+  max_processus: 256
+  max_cpu_secondes: 300
+  max_fichier_octets: 536870912
+  timeout_secondes: 600
+  memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+stderr_extrait: '[0000] ERROR failed to fetch latest version: Get "https://toolbox-data.anchore.io/grype/releases/latest/VERSION":
+  proxyconnect tcp: dial tcp 127.0.0.1:9: connect: connection refused
+
+  [0000]  WARN no explicit name and version provided for directory source, deriving
+  artifact ID from the given path (which is not ideal) from=syft
+
+  '

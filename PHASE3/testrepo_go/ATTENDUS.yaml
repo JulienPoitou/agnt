@@ -1,0 +1,38 @@
+genere_le: '2026-08-29'
+genere_par: semgrep (p/golang épinglé) · trivy 0.74.0 · gitleaks 8.30.1
+methode: 'EXTRAIT d''exécutions réelles sur cette fixture. Ne pas éditer à la main : régénérer via genere_attendus.py
+  depuis artefacts_captures/.'
+attendus:
+  semgrep_go:
+    par_emplacement:
+      main.go:22:
+      - home.user..cache.arena_secops.rules.go.lang.security.audit.crypto.use_of_weak_crypto.use-of-md5
+      main.go:33:
+      - home.user..cache.arena_secops.rules.go.lang.security.audit.crypto.missing-ssl-minversion.missing-ssl-minversion
+    compte: 2
+  trivy:
+    par_paquet:
+      go.mod:golang.org/x/text:
+      - cve: CVE-2020-14040
+        severite: HIGH
+        installee: v0.3.0
+      - cve: CVE-2021-38561
+        severite: HIGH
+        installee: v0.3.0
+      - cve: CVE-2022-32149
+        severite: HIGH
+        installee: v0.3.0
+      - cve: CVE-2026-56852
+        severite: HIGH
+        installee: v0.3.0
+    compte: 4
+  gitleaks:
+  - regle: github-pat
+    fichier: main.go
+    ligne: 59
+note_perimetre: 'Le provider Go déclaré est semgrep_go (règles p/golang épinglées) : gosec, analyse plus
+  profonde, exige le toolchain Go dans l''isolateur — reporté et documenté (mesuré le 2026-08-29 : ''go
+  command required''). La clé AWS d''exemple (documentation AWS) est sur liste blanche gitleaks : le jeton
+  factice ghp_ sert de secret de référence, comme dans testrepo.'
+convergence_attendue: 'gitleaks (main.go:59) et semgrep_go (main.go:22, 33) signalent le MÊME fichier
+  : occasion de regroupement inter-outils mesurée par test_go.py.'

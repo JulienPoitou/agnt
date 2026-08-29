@@ -1,0 +1,43 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a04e71-e595-7df6-b7f3-420a6f6075d9",
+  "CreatedAt": "2026-08-29T16:54:42.325918089Z",
+  "ArtifactID": "sha256:20f867905ba537dbfcfc1bb7dd6eab2dbc9a4b1e6aa86208db674d445b7bdd9f",
+  "ArtifactName": "/home/user/PHASE3/mt-scan",
+  "ArtifactType": "repository",
+  "Metadata": {
+    "RepoURL": "https://github.com/psf/requests.git",
+    "Branch": "main",
+    "Commit": "5460f467b02e49471c0fd6cfc9ca0adab6351f98",
+    "CommitMsg": "Update lock-issues.yml to latest dependencies (#7609)",
+    "Author": "Nate Prewitt <nate.prewitt@gmail.com>",
+    "Committer": "GitHub <noreply@github.com>"
+  },
+  "Results": [
+    {
+      "Target": "docs/requirements.txt",
+      "Class": "lang-pkgs",
+      "Type": "pip",
+      "Packages": [
+        {
+          "Name": "Sphinx",
+          "Identifier": {
+            "PURL": "pkg:pypi/sphinx@7.2.6",
+            "UID": "de59bff7774a7a6f"
+          },
+          "Version": "7.2.6",
+          "Locations": [
+            {
+              "StartLine": 3,
+              "EndLine": 3
+            }
+          ],
+          "AnalyzedBy": "pip"
+        }
+      ]
+    }
+  ]
+}

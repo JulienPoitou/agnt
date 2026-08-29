@@ -1,0 +1,22 @@
+[
+ {
+  "RuleID": "github-pat",
+  "Description": "Uncovered a GitHub Personal Access Token, potentially leading to unauthorized repository access and sensitive content exposure.",
+  "StartLine": 59,
+  "EndLine": 59,
+  "StartColumn": 20,
+  "EndColumn": 59,
+  "Match": "REDACTED",
+  "Secret": "REDACTED",
+  "File": "main.go",
+  "SymlinkFile": "",
+  "Commit": "5ab5bfe29c792112ef9e3bcf6a05671824e37907",
+  "Entropy": 4.143943,
+  "Author": "test",
+  "Email": "test@test.local",
+  "Date": "2026-08-29T10:49:42Z",
+  "Message": "fixture : faux jeton ghp (détection gitleaks prouvée)",
+  "Tags": [],
+  "Fingerprint": "5ab5bfe29c792112ef9e3bcf6a05671824e37907:main.go:github-pat:59"
+ }
+]
