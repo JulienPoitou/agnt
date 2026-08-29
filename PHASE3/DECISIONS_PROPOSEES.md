@@ -1,4 +1,10 @@
 # PHASE 3 — DÉCISIONS ARCHITECTURALES PROPOSÉES
+> **⚠️ Attention : ce fichier a été écrit avant l'application des décisions. Depuis,
+> plusieurs sont appliquées** (sélection de providers « option 1 », Checkov multi-framework,
+> extraction du mapping règle → paquet, confiance de cible, chemins canoniques). Ne pas s'en
+> servir pour savoir ce qui est en place : `PROJET_ETAT.md`, sections datées, en est la seule
+> source. Ce fichier garde sa valeur d'archive : le POURQUOI de chaque décision.
+
 
 **⚠️ Aucune de ces décisions n'est appliquée.** Elles attendent ton accord.
 

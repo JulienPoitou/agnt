@@ -77,14 +77,25 @@ imports). Pas de pyproject/Poetry : ce n'est pas un package, c'est un système e
 
 ## 4. État actuel
 
+> Instantané, tenu à jour à la fin de chaque chantier — pas un journal. L'historique
+> détaillé et daté est dans `PROJET_ETAT.md` ; ce qui est Acté §7, les dettes §6.
+
 - Étapes 0-5 closes (cœur, sandbox, extraction, corrélation, fan-out, dogfooding).
-- Étape 6 close : chemin d'utilisation minimal + LLM branché sur l'intention
-  (catalogue uniquement), F2 (domaine nommé > générique), F3 (question sans
-  capacités internes), matching en mot entier.
-- Régression : **21/22 batteries vertes** ; `test_llm_reel` sauté (GROQ_API_KEY
-  absente — saut environnemental, pas un échec).
-- Git : 2 commits (`2b89977` initial, `4323b4c` étape 6), poussés sur
-  **github.com/JulienPoitou/agnt** (branche `main`, dépôt privé, SSH OK).
+- Étape 6 close + quatre chantiers depuis : **6bis** confiance de cible armée sur le
+  chemin utilisateur · **6ter** identité canonique de fichier (`same_file` débloqué,
+  148 findings réels → 5 clusters inter-outils, `clusterer.py` jamais touché) ·
+  **6quater** couverture Go du mapping (le générateur apprenait 0 Go par construction) ·
+  **Clarification LLM** (« testé » ≠ « validé en production »).
+- Registre : **9 providers** (semgrep, bandit, bandit_custom, semgrep_go, trivy, grype,
+  gitleaks, checkov, kics) ; `pool.yaml` à jour (empreinte `0a95593b8ceaa09b` vérifiée
+  le 2026-08-30).
+- **23 batteries** autonomes. Sur la machine de dev d'origine : 21/22 passaient. Dans
+  un sandbox sans outils épinglés : 7/23, et les 16 rouges ont toutes une cause
+  environnementale vérifiée (`opa` ×10, cache de règles, mission préalable, clé Groq) —
+  aucune n'est une régression. Les lancer APRÈS `bootstrap.sh`, sinon le rouge ne veut
+  rien dire.
+- Git : 3 commits de chantier (`f400fe6`, `59d987f`, `6298dae`) sur la branche de session,
+  poussés sur **github.com/JulienPoitou/agnt**.
 - Machine : **2 Go de RAM** — lire les gros fichiers par blocs, pas de modèle LLM local.
 
 ## 5. Comment travailler ici
@@ -114,7 +125,19 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
 - `Sandbox.M_SCAN` est un chemin d'hôte en dur (`/home/user/PHASE3/mt-scan`) : la
   canonicisation en connaît une forme, mais la portabilité demande un montage dynamique.
 - `cadre` checkov : dette de modèle, ne pas refaire maintenant.
-- pool.yaml STALE (empreinte 0a95593b8ceaa09b) — régénérer en dernier si le registre bouge.
+- `pool.yaml` : régénérer en dernier si le registre bouge. Vérifié le 2026-08-30 :
+  l'empreinte déclarée (`0a95593b8ceaa09b`) est bien celle de `slice/capabilities.yaml`
+  — la ligne « STALE » qui figurait ici datait de l'ajout de la capacité Go, corrigée.
+- **CRASH TEST SÉCURITÉ, relevé n°1 (ouvert, non corrigé à dessein).** Une sortie LLM qui
+  nomme une capacité `interne: true` passe `intent_llm.valider()` : la garde compare au
+  catalogue COMPLET (`registre.capabilities()`), alors que `descr()` et `publiques()`
+  n'exposent que les 5 capacités publiques. Le plan se construit avec le provider interne
+  (`bandit_custom`, donc `bandit` sur la cible) et `policy.rego` ne le refuse pas :
+  `capability_ids` et `providers` transmis à OPA sont le catalogue complet, l'ensemble
+  `couples` contient le couple interne. Impact mesuré : élargissement du périmètre
+  (un outil que le contrat ne propose pas s'exécute), PAS exécution d'une commande
+  forgée — l'argv vient du manifeste et `commande_suspecte` tient. Grave surtout parce
+  que le pool annonce des outils ACTIFS à l'étape 7.
 - `cible_autorisee` (pipeline.py:82) vaut `True` par défaut et n'est posé à `False`
   par aucun appelant : la CLI n'a pas de notion d'autorisation de cible. La garde
   `input.cible.autorisee == true` de `policy.rego` n'est donc armée qu'en test. À
