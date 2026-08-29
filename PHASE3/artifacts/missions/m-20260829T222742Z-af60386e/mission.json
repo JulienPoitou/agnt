@@ -1,0 +1,11 @@
+{
+  "mission_id": "m-20260829T222742Z-af60386e",
+  "cree_le": "2026-08-29T22:27:42+00:00",
+  "requete": "Analyse la sécurité de mon dépôt",
+  "requete_canonique": "analyse la securite de mon depot",
+  "cible": {
+    "chemin": "/home/user/agnt/PHASE3/testrepo_sca",
+    "type": "repertoire"
+  },
+  "format_journal": "journal.jsonl — append-only, une ligne par événement"
+}

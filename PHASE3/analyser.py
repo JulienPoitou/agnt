@@ -2,6 +2,7 @@
 """Une commande, un workflow complet, un rapport lisible.
 
     python3 PHASE3/analyser.py <dépôt> ["requête en langage naturel"] [--moteur auto|deterministe|llm]
+                                 [--confiance controlled|untrusted]
 
 Sortie : un bundle d'artefacts dans PHASE3/artifacts/<input_digest>/<plan_id>/<run_id>/
     rapport.md · rapport_humain.md · manifeste.json · plan.json · findings.json
@@ -22,6 +23,13 @@ Codes de sortie :
     0  workflow exécuté
     1  erreur technique
     2  demande refusée ou nécessitant une clarification — AUCUNE exécution
+
+CONFIANCE DE CIBLE (étape 7 amont, 2026-08-30) : `--confiance untrusted` déclare que
+le dépôt n'est PAS fiable. `policy.rego` refuse alors tout plan tant que la mémoire
+n'est pas bornée (limite imposée par cgroups v2 ou un runtime OCI, non disponible ici) :
+le scan est refusé AVANT toute exécution, et le motif est rendu. Par défaut la cible est
+`controlled` — c'est le comportement historique, et il est AFFICHÉ : une valeur par défaut
+muette, pour une décision de sécurité, ne se justifie pas.
 """
 
 from __future__ import annotations
@@ -108,6 +116,61 @@ def sarif(findings: list[dict], run_id: str, plan_id: str) -> dict:
 
 
 
+# Drapeaux reconnus : (valeurs admises, valeur admise quand le drapeau est nu).
+# `None` en deuxième position = le drapeau EXIGE une valeur — un drapeau de sécurité
+# n'a pas de valeur par défaut muette.
+_DRAPEAUX = {
+    "--moteur": (("auto", "deterministe", "llm"), "llm"),
+    "--confiance": (pipeline.CONFIANCES, None),
+}
+
+
+def _options_depuis_argv(argv: list[str]) -> tuple[dict, list[str]]:
+    """Sépare les options `--drapeau[=]valeur` des arguments de position.
+
+    Retourne (options, arguments_de_position). Trois règles, toutes mesurées :
+
+    · `--drapeau valeur` et `--drapeau=valeur` sont équivalentes — la forme espacée est
+      celle documentée dans README_USAGE.md, et elle était CASSÉE avant cet extracteur :
+      `--moteur deterministe` laissait « deterministe » comme requête et retenait llm ;
+    · une valeur hors liste lève ValueError — jamais de repli sur un défaut : ici le
+      défaut est une décision de sécurité, pas une préférence de confort ;
+    · `options` ne contient QUE ce qui a été demandé. « absent » doit rester distinct
+      de « demandé et obtenu », pour que l'appelant affiche la valeur réellement appliquée.
+    """
+    options: dict[str, str] = {}
+    position: list[str] = []
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if "=" in a and a.split("=", 1)[0] in _DRAPEAUX:
+            drapeau, valeur = a.split("=", 1)
+            i += 1
+        elif a in _DRAPEAUX:
+            drapeau = a
+            suite = argv[i + 1] if i + 1 < len(argv) else ""
+            if suite and not suite.startswith("--"):
+                valeur, i = suite, i + 2
+            else:
+                valeur, i = None, i + 1
+        else:
+            position.append(a)
+            i += 1
+            continue
+
+        admises, defaut_nu = _DRAPEAUX[drapeau]
+        if valeur is None:
+            if defaut_nu is None:
+                raise ValueError(f"{drapeau} exige une valeur "
+                                 f"({' | '.join(admises)})")
+            valeur = defaut_nu
+        if valeur not in admises:
+            raise ValueError(f"valeur {valeur!r} inconnue pour {drapeau} "
+                             f"(admises : {' | '.join(admises)})")
+        options[drapeau[2:]] = valeur
+    return options, position
+
+
 def _choisir_moteur(moteur: str) -> tuple[str, object, str]:
     """Résout `auto` et instancie le fournisseur. Retourne (moteur, fournisseur, note).
 
@@ -166,12 +229,16 @@ def _archiver_mission(e, cible: Path) -> Path | None:
 
 
 def lancer(mission: str, cible: Path, moteur: str = "auto",
-           fournisseur=None) -> tuple[int, dict]:
+           fournisseur=None, confiance: str = "controlled") -> tuple[int, dict]:
     """Exécute une mission de bout en bout. Retourne (code_sortie, résumé).
 
     API pour les tests : elle ne passe PAS par le bundle Phase 4 (pas d'écriture dans
     artifacts/<digest>/), seulement par l'archive de mission. Le bundle est testé par
     test_bundle.py via la CLI.
+
+    `confiance` est transmis tel quel à `pipeline.executer(confiance_cible=...)` : une
+    valeur hors `pipeline.CONFIANCES` est refusée par le pipeline (PipelineError), ici
+    comme partout — la CLI la intercepte plus tôt, la bibliothèque la lève.
     """
     cible = Path(cible)
     if not cible.exists():
@@ -186,7 +253,7 @@ def lancer(mission: str, cible: Path, moteur: str = "auto",
     try:
         pipeline.MOTEUR_INTENT = moteur
         pipeline.FOURNISSEUR_LLM = fournisseur if moteur == "llm" else None
-        e = pipeline.executer(mission, cible)
+        e = pipeline.executer(mission, cible, confiance_cible=confiance)
     finally:
         pipeline.MOTEUR_INTENT, pipeline.FOURNISSEUR_LLM = ancien_moteur, ancien_four
 
@@ -194,6 +261,7 @@ def lancer(mission: str, cible: Path, moteur: str = "auto",
     resume = {
         "statut": e.arret or "complet",
         "moteur": (e.intent or {}).get("moteur", ""),
+        "confiance_cible": confiance,
         "mission": e.mission,
         "findings": len(e.findings),
         "clusters_inter_outils": len((e.clusters or {}).get("clusters_inter_outils") or []),
@@ -211,14 +279,17 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 1
 
-    args = [a for a in argv[1:] if not a.startswith("--moteur")]
-    moteur = "auto"
-    for a in argv[1:]:
-        if a.startswith("--moteur"):
-            moteur = a.split("=", 1)[1] if "=" in a else "llm"
-    if moteur not in ("auto", "deterministe", "llm"):
-        print(f"ERREUR : moteur inconnu {moteur!r} (auto | deterministe | llm)")
+    try:
+        options, args = _options_depuis_argv(argv[1:])
+    except ValueError as e:
+        print(f"ERREUR : {e}")
         return 1
+
+    moteur = options.get("moteur", "auto")
+    # Défaut historique conservé — mais il est AFFICHÉ plus bas : muet, ce serait faire
+    # croire qu'une cible a été jugée fiable alors qu'elle n'a simplement pas été posée.
+    confiance = options.get("confiance", "controlled")
+    confiance_explicite = "confiance" in options
 
     cible = Path(args[0]).resolve()
     requete = args[1] if len(args) > 1 else "Analyse la sécurité de mon dépôt"
@@ -233,11 +304,14 @@ def main(argv: list[str]) -> int:
 
     print(f"cible   : {cible}")
     print(f"requete : {requete}")
-    print(f"moteur  : {moteur}" + (f" ({note})" if note else "") + "\n")
+    print(f"moteur  : {moteur}" + (f" ({note})" if note else ""))
+    print(f"confiance : {confiance}" + ("" if confiance_explicite else
+          "  (défaut — aucune évaluation de la cible n'a été faite ; "
+          "--confiance=untrusted pour un dépôt non fiable)") + "\n")
     # Note : le moteur EFFECTIF n'est connu qu'après exécution — un LLM injoignable
     # retombe sur le déterministe. Il est affiché plus bas, dans le résumé.
 
-    e = pipeline.executer(requete, cible)
+    e = pipeline.executer(requete, cible, confiance_cible=confiance)
 
     # ---------------------------------------------------- arrêt avant exécution
     if e.arret:
@@ -246,6 +320,10 @@ def main(argv: list[str]) -> int:
             print(f"\nQUESTION : {e.intent['question']}")
         if e.intent.get("motif"):
             print(f"\nMOTIF : {e.intent['motif']}")
+        motifs = (e.decision or {}).get("motifs") or []
+        if motifs:
+            print(f"\nMOTIFS POLICY : {'; '.join(motifs)}")
+            print(f"confiance appliquée : {confiance} · profil : {e.profil or '—'}")
         print("\nAucune exécution, aucun plan, aucun outil lancé.")
         return 2
 
@@ -266,7 +344,8 @@ def main(argv: list[str]) -> int:
     (dossier / "clusters.json").write_text(
         json.dumps(e.clusters, ensure_ascii=False, indent=2), encoding="utf-8")
     (dossier / "run.json").write_text(
-        json.dumps({"execution_profile": e.profil, "plan_id": e.plan["plan_id"],
+        json.dumps({"execution_profile": e.profil, "confiance_cible": confiance,
+                    "plan_id": e.plan["plan_id"],
                     "input_digest": e.contexte.get("input_digest"),
                     "input_commit": e.contexte.get("input_commit"),
                     "working_tree_dirty": e.contexte.get("working_tree_dirty"),
@@ -310,6 +389,10 @@ def main(argv: list[str]) -> int:
         "request_id": e.plan.get("request_id"),
         "cible": str(cible),
         "profil": e.profil,
+        # Pas seulement « quel profil » : ce que la policy a vu de LA cible. Un refus
+        # pour mémoire non bornée ne se comprend qu'avec la confiance appliquée.
+        "confiance_cible": confiance,
+        "decision_policy": e.decision,
         "moteur_intent": e.intent.get("moteur"),
         "identifiants": {
             "plan_id": e.plan["plan_id"],

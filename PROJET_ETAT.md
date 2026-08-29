@@ -1,6 +1,6 @@
 # ÉTAT DU PROJET — plateforme IA cybersécurité
 
-_Dernière mise à jour : 2026-08-27_
+_Dernière mise à jour : 2026-08-30 (confiance de cible armée sur le chemin utilisateur)_
 
 ## Porte actuelle
 
@@ -1100,3 +1100,74 @@ Détail : intentions 22 · sélection 13 · llm 32 · manifeste 27 · corrélati
 chemins 9 · niveau2 21 · fanout 13 · traçabilité 12 · rapport 20 · rapport_humain 18 ·
 slice 10 · bundle 26 · isolateur 11 · extraction_blocs 14 · go 18 · indépendant 10 ·
 outils_pool_mission 19 · grype_kics 30 · sécurité (porte ouverte) · utilisation 15.
+
+---
+
+## Étape 6bis — armement de la confiance de cible sur le chemin utilisateur (2026-08-30)
+
+**Déclencheur, mesuré avant de coder.** `policy.rego:91-97` refuse une cible
+`untrusted` tant que la mémoire n'est pas bornée ; `profils.py` documente cette
+fermeture ; `test_intentions.py:122-133` la prouve. Mais `analyser.py` appelait
+`pipeline.executer(requete, cible)` **sans** `confiance_cible` : la valeur par défaut
+`controlled` était donc imposée par le point d'entrée, et `cible_autorisee` aussi
+(vaut `True`, jamais mis à `false` hors tests). La garde existait, elle n'était
+armable par personne d'autre qu'une batterie. Chantier : rendre la décision accessible,
+ne rien réarchitecturer — `policy.rego` et le modèle de plan sont restés intouchés.
+
+**Ce qui a été fait** (test-first : la section G de `test_utilisation.py` a d'abord
+rougi sur `_options_depuis_argv` inexistant, puis implémentation) :
+
+- `analyser.py` : `--confiance controlled|untrusted` (formes `=` et espacée), défaut
+  `controlled` **affiché** avec la mention « aucune évaluation de la cible n'a été
+  faite » ; valeur inconnue ou drapeau nu → `ERREUR`, code 1, **avant** toute création
+  de dossier de mission. Un seul extracteur `_options_depuis_argv()` pour les deux
+  drapeaux, seule source des valeurs admises.
+- `pipeline.executer()` : `CONFIANCES = ("controlled", "untrusted")` et refus par
+  `PipelineError` si la valeur est hors liste — le contrôle vit dans la bibliothèque,
+  pas dans la CLI, sinon tout appelant tiers l'évite. Consignation
+  `MS.consigner(miss, "confiance", …)` **avant** la policy : le dossier de mission
+  append-only garde la trace de ce qui a été cru de la cible, même en cas de refus ou
+  d'OPA indisponible. Le `profil` est désormais renseigné sur l'`Execution` de refus
+  (un refus qui ne nomme pas le profil qui refuse ne se relit pas).
+- `manifeste.json` et `run.json` portent `confiance_cible` ; `manifeste.json` porte
+  aussi `decision_policy` (le motif du refus est une donnée de la mission, pas seulement
+  une ligne console).
+- `README_USAGE.md`, `CONTRAT_PUBLIC.md` §4, et note de correction dans
+  `STATUT_PHASE3.md` §6quinquies.
+
+**Deux incidents trouvés en route, chacun mesuré avant d'être corrigé.**
+
+1. **La forme espacée documentée était cassée.** `README_USAGE.md:14` enseigne
+   `--moteur deterministe` ; l'ancien parseur (une boucle qui retirait les jetons
+   commençant par `--moteur`) retenait `llm` pour le moteur **et laissait
+   « deterministe » comme requête**. Reproduit avant correction :
+   `moteur=llm`, `requete="deterministe"`. Corrigé par l'extracteur commun, cas G6/G7.
+2. **Le profil et la politique ne parlaient pas le même français.** `Profil.to_dict()`
+   émettait `memory_bounded` et `hardened` ; `policy.rego` lit `memoire_bornee`
+   (`:93`) et `durci` (`:103`). À ne pas lire, `--confiance=untrusted` n'aurait **rien**
+   mesuré : `to_dict()` n'est consommé que par `policy.py:72`, donc OPA recevait un
+   champ inexistant — et `not <indéfini>` vaut vrai, donc la garde se déclenchait par
+   accident, jamais par mesure ; un profil à mémoire réellement bornée (étape 7)
+   n'aurait jamais pu l'armer. Aligné côté producteur ; **cas G15** vérifie désormais,
+   sans binaire, que tout `input.profil_sandbox.<champ>` cité dans la politique existe
+   dans le profil produit — c'est la classe d'erreur qui est fermée, pas les deux noms.
+   `test_intentions.py` n'a pas été modifié : ses dicts `SANS_MEMOIRE`/`AVEC_MEMOIRE`
+   utilisaient déjà les noms lus par la politique (c'est parce qu'il court-circuitait le
+   producteur que la divergence est restée invisible — d'où G15, qui part du producteur).
+
+**Régression (sandbox Arena, 2026-08-30).** Section G : **14 cas évalués, 14 passés**,
+plus 2 **non évalués** (G13 refus réel et G14 contrôle : exigent le binaire `opa`, absent
+ici — convention des trois états de `test_correlation.py`, un cas non évalué n'est jamais
+compté comme un succès). Les 22 batteries : **5 vertes, 17 bloquées par
+l'environnement**, exactement comme avant ce chantier, et pour les mêmes causes vérifiées
+à la trace (`binaire OPA introuvable`, `sandbox inutilisable : points de montage
+absents`, `artifacts/…` non produit). Aucune nouvelle cause d'échec introduite.
+**À relancer sur la machine source** : `test_utilisation` (31 cas attendus),
+`test_intentions` (la garde de ressources, maintenant branchée sur le vrai producteur),
+`test_bundle` et `test_rapport` (deux clés de plus dans le bundle).
+
+**Ce qui n'est PAS fait, et ne l'était pas dans ce chantier** : `pool.yaml` inchangé
+(le registre n'a pas bougé) ; aucun provider, aucune capacité, aucune commande nouvelle ;
+`cgroups v2` / runtime OCI toujours absents — `LIMITES_A_PROUVER` reste refusé à l'usage,
+donc `--confiance=untrusted` refuse **toujours** tout scan, c'est le comportement voulu
+tant que les limites ne sont pas appliquées ; le `mode ACTIF` (étape 7) n'a pas commencé.

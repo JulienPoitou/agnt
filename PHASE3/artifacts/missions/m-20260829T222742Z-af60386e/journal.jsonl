@@ -1,0 +1,4 @@
+{"seq": 1, "ts": "2026-08-29T22:27:42+00:00", "type": "ouverture", "requete": "Analyse la sécurité de mon dépôt", "cible": "/home/user/agnt/PHASE3/testrepo_sca"}
+{"seq": 2, "ts": "2026-08-29T22:27:42+00:00", "type": "confiance", "confiance_cible": "untrusted", "cible_autorisee": true, "profil": "controlled_dev"}
+{"seq": 3, "ts": "2026-08-29T22:27:42+00:00", "type": "applicabilite", "ecartes": {"semgrep_go": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.go']"}}
+{"seq": 4, "ts": "2026-08-29T22:27:42+00:00", "type": "plan", "plan_id": "73317422149f2a94", "providers": ["semgrep", "trivy", "grype", "gitleaks", "checkov", "kics"]}

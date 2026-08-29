@@ -113,6 +113,10 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
   « vérifie les dependances » (sans accent) → needs_clarification. Vérifié. À traiter avec F5.
 - `cadre` checkov : dette de modèle, ne pas refaire maintenant.
 - pool.yaml STALE (empreinte 0a95593b8ceaa09b) — régénérer en dernier si le registre bouge.
+- `cible_autorisee` (pipeline.py:82) vaut `True` par défaut et n'est posé à `False`
+  par aucun appelant : la CLI n'a pas de notion d'autorisation de cible. La garde
+  `input.cible.autorisee == true` de `policy.rego` n'est donc armée qu'en test. À
+  traiter avec l'approbation ACTIF de l'étape 7 (même nature de décision), pas à chaud.
 - Sigma / providers Groupe B : backlog, pas maintenant.
 
 ## 7. Direction actée (pas à rediscuter)

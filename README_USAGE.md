@@ -24,6 +24,11 @@ python3 PHASE3/analyser.py /chemin/du/depot "Analyse mon code Terraform" --moteu
   validée contre le registre, tout échec retombe sur le déterministe et le
   repli est tracé dans le champ `moteur`. `--moteur auto` (défaut) choisit le
   LLM si une clé est présente, sinon le déterministe — et le dit à l'écran.
+- **La confiance de cible se déclare** : `--confiance untrusted` dit « ce dépôt n'est
+  pas fiable ». La politique OPA refuse alors tout plan tant que la mémoire n'est pas
+  bornée (il faut cgroups v2 ou un runtime OCI) — refus rendu **avant** exécution,
+  avec le motif `memoire_non_bornee_cible_non_fiable`. Défaut : `controlled`, et il est
+  affiché, jamais silencieux. Une valeur inconnue est une **erreur** (`1`), pas un repli.
 - Codes de sortie : `0` analyse complète · `2` rien n'a été exécuté (une
   clarification est demandée, la demande est refusée, ou aucun provider ne
   s'applique) · `1` erreur technique.

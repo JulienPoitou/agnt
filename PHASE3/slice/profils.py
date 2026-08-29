@@ -4,9 +4,13 @@ Le moteur DÉCLARE son profil ; OPA DÉCIDE. Cette séparation est la même que 
 plan : aucune règle de sécurité ne vit dans le code Python.
 
 Un profil n'est pas une description technique, c'est un CONTRAT : il dit quelle confiance
-de cible et quel niveau de risque sont admissibles dans cet environnement. Tant que la
-mémoire n'est pas bornée, `controlled_dev` est le seul profil honnête — et il interdit
-les dépôts non fiables et les outils actifs.
+de cible et quel niveau de risque sont admissibles dans cet environnement. Le contrat court
+dans le sens moteur → politique : c'est `policy.rego` qui lit, donc les noms de champs
+produits ici sont CEUX QUE LA POLITIQUE ATTEND — un nom divergent désarme une garde sans
+lever d'erreur (contrat de noms testé : G15, `test_utilisation.py`).
+
+Tant que la mémoire n'est pas bornée, `controlled_dev` est le seul profil honnête — et il
+interdit les dépôts non fiables et les outils actifs.
 
 La formulation à conserver :
 
@@ -32,12 +36,18 @@ class Profil:
     commentaire: str = ""
 
     def to_dict(self) -> dict:
+        """Vue SOUMISE À OPA : les noms sont ceux que `policy.rego` lit, pas des noms
+        de rapport. Mesuré le 2026-08-30 : `memoire_bornee` et `durci` s'écrivaient
+        `memory_bounded` et `hardened`. OPA ne voyait donc jamais le champ, et
+        `not <indéfini>` vaut vrai : la garde mémoire se déclenchait PAR ACCIDENT, et
+        un profil à mémoire réellement bornée n'aurait jamais pu l'armer. D'où le test
+        de contrat de noms (G15, PHASE3/test_utilisation.py)."""
         return {
-            "execution_profile": self.nom,
-            "memory_bounded": self.memoire_bornee,
-            "allowed_target_trust": list(self.confiance_cible_admise),
-            "allowed_risk": list(self.risques_admis),
-            "hardened": self.durci,
+            "nom_profil": self.nom,
+            "memoire_bornee": self.memoire_bornee,
+            "confiance_admise": list(self.confiance_cible_admise),
+            "risques_admis": list(self.risques_admis),
+            "durci": self.durci,
             # Champs techniques sous-jacents, consommés par la policy.
             "cpu_borne": True,
             "processus_bornes": True,

@@ -40,6 +40,12 @@ SORTIE = RACINE / "run"
 MOTEUR_INTENT = "deterministe"
 FOURNISSEUR_LLM = None
 
+# Confiances de cible admises : exactement les valeurs que `policy.rego` compare à
+# `input.cible.confiance`. La liste vit ici, et non dans un drapeau CLI, parce que
+# c'est la bibliothèque qui applique la décision — toute entrée d'appel (CLI, test,
+# appelant tiers) passe par ce contrôle.
+CONFIANCES = ("controlled", "untrusted")
+
 
 class PipelineError(Exception):
     pass
@@ -82,12 +88,23 @@ def _prepare_sortie() -> Path:
 def executer(requete: str, cible: Path, cible_autorisee: bool = True,
              confiance_cible: str = "controlled",
              avec_internes: bool = False) -> Execution:
+    if confiance_cible not in CONFIANCES:
+        # Pas de repli : une valeur non reconnue vaudrait «controlled» par accident,
+        # et désarmerait silencieusement la garde mémoire de la policy.
+        raise PipelineError(
+            f"confiance de cible inconnue : {confiance_cible!r} · admises : "
+            f"{' | '.join(CONFIANCES)}")
     registre = Registry()
 
     # ---------------------------------------------------------------- 0. mission
     # Le dossier append-only s'ouvre AVANT toute décision : un arrêt (intent non
     # résolu, policy) doit être tracé autant qu'une exécution complète.
     miss = MS.ouvrir(requete, P.canonicaliser(requete), Path(cible))
+    # La confiance APPLIQUÉE est consignée immédiatement, avant la policy : « qu'est-ce
+    # qu'on a cru de cette cible ? » doit se relire dans le dossier de mission même si
+    # la policy refuse ensuite — et même si OPA est indisponible.
+    MS.consigner(miss, "confiance", confiance_cible=confiance_cible,
+                 cible_autorisee=cible_autorisee, profil=profils.actif().nom)
 
     # ---------------------------------------------------------------- 1. intention
     # Les garde-fous déterministes s'appliquent dans les DEUX modes : une demande
@@ -141,7 +158,10 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         MS.consigner(miss, "arret", motif="policy", decision=list(decision.motifs))
         return Execution(plan=plan.to_dict(),
                          decision={"allow": False, "motifs": list(decision.motifs)},
-                         intent=it.to_dict(), arret="policy", mission=miss.id)
+                         intent=it.to_dict(), arret="policy", mission=miss.id,
+                         # Un refus sans le nom du profil qui refuse ne se relit pas :
+                         # « qui a décidé quoi, avec quelles limites » est la question.
+                         profil=profils.actif().nom)
 
     # ---------------------------------------------------------------- 4. garde de chemin
     # OPA a autorisé la cible DEMANDÉE. Ici on vérifie ce qui est RÉELLEMENT accessible :
