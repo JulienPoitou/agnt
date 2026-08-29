@@ -18,11 +18,46 @@ tests de paraphrase sont écrits comme CONTRAT, pas comme validation.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from registre import Registry
 
 STATUTS = ("resolved", "needs_clarification", "rejected")
+
+
+def _motif_complet(mot: str) -> re.Pattern[str]:
+    r"""Matche un mot-clé en MOT ENTIER, jamais en sous-chaîne.
+
+    Sans ce garde, « sca » (acronyme de SCA, capacité DEPENDENCY_ANALYSIS) matche
+    dans « **sca**n » : « scan de sécurité complet du dépôt » remontait donc
+    DEPENDENCY_ANALYSIS par accident de sous-chaîne, puis — la règle F2 n'élargissant
+    plus dès qu'un mot-clé a matché — la demande se réduisait à cette seule capacité.
+
+    Les accents ne sont pas des frontières de mot en Python (`\w` inclut les lettres
+    accentuées) : la classe de bordure est donc écrite explicitement.
+    """
+    bordure = r"(?<![0-9A-Za-zÀ-ÿ_])" + re.escape(mot) + r"(?![0-9A-Za-zÀ-ÿ_])"
+    return re.compile(bordure, re.IGNORECASE)
+
+
+_CACHE_MOTIFS: dict[str, re.Pattern[str]] = {}
+
+
+def _contient(texte_min: str, mot: str) -> bool:
+    """Teste un mot-clé sur un texte DÉJÀ mis en minuscules (voir `inferer`).
+
+    Les MOTIFS accentués sont écrits avec accents (« dépendance », « clé exposée ») et
+    le texte d'entrée n'est PAS normalisé en NFKD ici. Conséquence connue : une phrase
+    saisie sans accent (« dependance ») ne matche pas ces motifs-là. Ce n'est pas
+    nouveau avec le matching en mot entier, et ce n'est pas corrigé ici non plus —
+    `plan.requete_canonique`, lui, retire les accents : les deux modules ne
+    normalisent donc pas de la même façon. Noté comme dette, pas corrigé à chaud.
+    """
+    motif = _CACHE_MOTIFS.get(mot)
+    if motif is None:
+        motif = _CACHE_MOTIFS[mot] = _motif_complet(mot)
+    return motif.search(texte_min) is not None
 
 # Capacités demandées, par mot-clé. Ordre significatif : le plus spécifique d'abord.
 MOTIFS: dict[str, tuple[str, ...]] = {
@@ -139,17 +174,24 @@ def inferer(requete: str, registre: Registry, avec_internes: bool = False) -> In
 
     # 1. refus : la demande est comprise, mais hors périmètre.
     for mot, motif in INTERDIT:
-        if mot in bas:
+        if _contient(bas, mot):
             return Intent("rejected", requete, motif=f"demande interdite : {motif}")
 
     # 2. capacités explicitement demandées.
     connues = {c.id for c in registre.capabilities()}
+    eligibles = connues if avec_internes else {
+        c.id for c in registre.capabilities() if not c.interne}
     trouvees: dict[str, str] = {}
     for cap_id, mots in MOTIFS.items():
         if cap_id not in connues:
             continue
+        # Les capacités internes ne remontent JAMAIS en usage normal — y compris
+        # par mot-clé spécifique (« code » matche aussi la SUITE interne). Même
+        # règle que pour l'expansion générique et pour la question de clarification.
+        if not avec_internes and cap_id not in eligibles:
+            continue
         for mot in mots:
-            if mot in bas:
+            if _contient(bas, mot):
                 trouvees[cap_id] = mot
                 break
 
@@ -160,14 +202,16 @@ def inferer(requete: str, registre: Registry, avec_internes: bool = False) -> In
     # DEPENDENCY_ANALYSIS : « scan de sécurité complet du dépôt » matchait donc un
     # mot-clé, le générique ne se déclenchait jamais, et le résultat se réduisait à
     # DEPENDENCY_ANALYSIS seul.
-    generique = any(m in bas for m in GENERIC)
-    if generique:
-        # Les capacités INTERNES ne sont proposées que sur demande explicite
-        # (`avec_internes=True`), c'est-à-dire par les tests de providers. En usage
-        # normal elles sont exclues : elles décrivent le même besoin utilisateur qu'une
-        # capacité publique, et les proposer ferait sur-sélectionner.
-        eligibles = connues if avec_internes else {
-            c.id for c in registre.capabilities() if not c.interne}
+    # `eligibles` (calculé plus haut) exclut les capacités INTERNES en usage normal.
+    generique = any(_contient(bas, m) for m in GENERIC)
+    # Un marqueur de DOMAINE nommé explicitement l'emporte sur le générique
+    # (dogfooding 2026-08-29) : « Analyse mon code Terraform » remontait les 5
+    # capacités publiques — le mot « analyse » noyait « terraform ». L'utilisateur
+    # paie alors des providers qu'il n'a pas demandés, et le rapport est illisible.
+    # Le générique ne s'applique donc que si AUCUN domaine n'est nommé.
+    # Cas historique préservé : « scan de sécurité complet du dépôt » ne nomme aucun
+    # domaine (« sécurité » n'est mot-clé d'aucune capacité) → générique → tout.
+    if generique and not trouvees:
         for cap_id in eligibles:
             if cap_id not in trouvees:
                 trouvees[cap_id] = "demande générique"
@@ -178,15 +222,18 @@ def inferer(requete: str, registre: Registry, avec_internes: bool = False) -> In
                       motifs={k: trouvees[k] for k in ordre})
 
     # 4. ambigu : il manque une information. Ce n'est PAS un refus.
-    if any(m in bas for m in AMBIGU) or len(texte.split()) <= 2:
+    if any(_contient(bas, m) for m in AMBIGU) or len(texte.split()) <= 2:
         return Intent("needs_clarification", requete,
                       question="Que veux-tu vérifier : le code, les dépendances, "
                                "ou les secrets exposés ?")
 
     # 5. compris comme une demande d'analyse, mais aucune capacité ne correspond.
+    # La question s'adresse à l'utilisateur : elle ne liste QUE des capacités
+    # publiques. Les identifiants internes (CODE_STATIC_ANALYSIS_SUITE, …) sont du
+    # vocabulaire de test — les montrer est une fuite de détail d'implémentation.
     return Intent("needs_clarification", requete,
                   question="Aucune capacité ne correspond à cette demande. "
-                           f"Capacités disponibles : {', '.join(sorted(connues))}.")
+                           f"Capacités disponibles : {', '.join(sorted(eligibles))}.")
 
 
 def choisir_providers(intent: Intent, registre: Registry) -> list[str]:

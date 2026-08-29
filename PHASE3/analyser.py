@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
-"""Phase 4 — une commande, un workflow complet, un rapport lisible.
+"""Une commande, un workflow complet, un rapport lisible.
 
-    python3 PHASE3/analyser.py <dépôt> ["requête en langage naturel"]
+    python3 PHASE3/analyser.py <dépôt> ["requête en langage naturel"] [--moteur auto|deterministe|llm]
 
-Sortie : un bundle d'artefacts dans PHASE3/bundles/<plan_id>/
-    rapport.md · manifeste.json · plan.json · findings.json · clusters.json
-    run.json · raw_*.json · rapport.sarif
+Sortie : un bundle d'artefacts dans PHASE3/artifacts/<input_digest>/<plan_id>/<run_id>/
+    rapport.md · rapport_humain.md · manifeste.json · plan.json · findings.json
+    clusters.json · run.json · raw_*.json · rapport.sarif
+et, étape 6, une archive de mission sous PHASE3/artifacts/missions/<mission>/sortie/
+    RAPPORT.md · intent.json + copie des JSON du bundle
 
-Aucune nouvelle capacité, aucun nouvel outil, aucun LLM. Le rapport est produit par du
-code déterministe : à cible et contexte identiques, le texte est reproductible.
+L'ordre des arguments est celui de Phase 4 : LA CIBLE D'ABORD, la requête ensuite.
+Elle est optionnelle — sans elle, la requête par défaut est un audit complet.
+Le faire autrement casserait tout appel déjà écrit (`test_rapport.py`, `test_bundle.py`).
+
+Étape 6 (2026-08-29) : le matching d'intention peut être confié à un LLM. Il ne pilote
+QUE le catalogue : sa sortie est validée contre le registre, un échec retombe sur le
+déterministe et le repli est tracé dans `intent.moteur`. Aucune logique de sécurité
+n'est ajoutée ici.
 
 Codes de sortie :
     0  workflow exécuté
@@ -19,6 +27,7 @@ Codes de sortie :
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sys
 from datetime import datetime, timezone
@@ -28,6 +37,7 @@ RACINE = Path(__file__).resolve().parent
 sys.path.insert(0, str(RACINE / "slice"))
 
 import assainissement as ASS  # noqa: E402
+import mission as MS  # noqa: E402
 import rapport_humain as RH  # noqa: E402
 import pipeline          # noqa: E402
 import rapport as R      # noqa: E402
@@ -97,27 +107,125 @@ def sarif(findings: list[dict], run_id: str, plan_id: str) -> dict:
     }
 
 
+
+def _choisir_moteur(moteur: str) -> tuple[str, object, str]:
+    """Résout `auto` et instancie le fournisseur. Retourne (moteur, fournisseur, note).
+
+    `auto` n'est jamais une surprise : sans canal configuré on reste déterministe et on
+    le DIT (la note est affichée). Silencieux, l'utilisateur croirait à un LLM.
+    """
+    if moteur == "llm":
+        import fournisseurs_llm
+        return "llm", fournisseurs_llm.Groq(), ""
+    if moteur == "auto":
+        if os.environ.get("GROQ_API_KEY"):
+            import fournisseurs_llm
+            return "llm", fournisseurs_llm.Groq(), ""
+        return "deterministe", None, (
+            "aucun canal LLM configuré (GROQ_API_KEY absent) — moteur déterministe")
+    return "deterministe", None, ""
+
+
+def _archiver_mission(e, cible: Path) -> Path | None:
+    """Copie les preuves de l'exécution SOUS le dossier de la mission (append-only).
+
+    Le bundle `artifacts/<digest>/<plan>/<run>/` reste la référence technique. Cette
+    archive répond à une autre question — « qu'a produit CETTE mission ? » — et évite
+    qu'une mission suivante écrase les preuves de la précédente. Les objets
+    d'exécution (plan, findings, clusters, rapport, run) sont réécrits depuis `e` :
+    `pipeline.executer()` les retourne sans les écrire, c'est ce module qui le fait.
+    """
+    if not e.mission:
+        return None
+    sortie = MS.MISSIONS / e.mission / "sortie"
+    sortie.mkdir(parents=True, exist_ok=True)
+    src_run = RACINE / "run"
+    if src_run.exists():
+        for f in sorted(src_run.iterdir()):
+            if f.is_file():
+                shutil.copy(f, sortie / f.name)
+    for nom, objet in (("plan", e.plan), ("findings", e.findings),
+                       ("clusters", e.clusters), ("rapport", e.rapport),
+                       ("intent", e.intent)):
+        (sortie / f"{nom}.json").write_text(
+            json.dumps(objet, ensure_ascii=False, indent=2, default=str),
+            encoding="utf-8")
+    (sortie / "run.json").write_text(json.dumps({
+        "run_id": e.run_id, "profil": e.profil,
+        "plan_id": e.plan.get("plan_id"),
+        "input_digest": e.contexte.get("input_digest"),
+        "input_commit": e.contexte.get("input_commit", ""),
+        "working_tree_dirty": e.contexte.get("working_tree_dirty", False),
+        "execution_context_digest": e.contexte.get("contexte_empreinte"),
+        "result_digest": e.result_digest,
+        "contexte": e.contexte, "chemin": e.chemin,
+    }, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    if not e.arret:
+        (sortie / "RAPPORT.md").write_text(RH.generer(e, cible), encoding="utf-8")
+    return sortie
+
+
+def lancer(mission: str, cible: Path, moteur: str = "auto",
+           fournisseur=None) -> tuple[int, dict]:
+    """Exécute une mission de bout en bout. Retourne (code_sortie, résumé).
+
+    API pour les tests : elle ne passe PAS par le bundle Phase 4 (pas d'écriture dans
+    artifacts/<digest>/), seulement par l'archive de mission. Le bundle est testé par
+    test_bundle.py via la CLI.
+    """
+    cible = Path(cible)
+    if not cible.exists():
+        return 1, {"statut": "erreur", "motif": f"cible introuvable : {cible}"}
+
+    if moteur == "auto":
+        moteur, fournisseur_auto, _ = _choisir_moteur(moteur)
+        if fournisseur is None:
+            fournisseur = fournisseur_auto
+
+    ancien_moteur, ancien_four = pipeline.MOTEUR_INTENT, pipeline.FOURNISSEUR_LLM
+    try:
+        pipeline.MOTEUR_INTENT = moteur
+        pipeline.FOURNISSEUR_LLM = fournisseur if moteur == "llm" else None
+        e = pipeline.executer(mission, cible)
+    finally:
+        pipeline.MOTEUR_INTENT, pipeline.FOURNISSEUR_LLM = ancien_moteur, ancien_four
+
+    sortie = _archiver_mission(e, cible)
+    resume = {
+        "statut": e.arret or "complet",
+        "moteur": (e.intent or {}).get("moteur", ""),
+        "mission": e.mission,
+        "findings": len(e.findings),
+        "clusters_inter_outils": len((e.clusters or {}).get("clusters_inter_outils") or []),
+        "question": (e.intent or {}).get("question", ""),
+        "motif": (e.intent or {}).get("motif", "") or "; ".join(
+            (e.decision or {}).get("motifs") or []),
+        "rapport": str(sortie / "RAPPORT.md") if (sortie and not e.arret) else None,
+        "sortie": str(sortie) if sortie else None,
+    }
+    return (0 if not e.arret else 2), resume
+
+
 def main(argv: list[str]) -> int:
     if len(argv) < 2:
         print(__doc__)
         return 1
 
     args = [a for a in argv[1:] if not a.startswith("--moteur")]
-    moteur = "deterministe"
+    moteur = "auto"
     for a in argv[1:]:
         if a.startswith("--moteur"):
             moteur = a.split("=", 1)[1] if "=" in a else "llm"
-    if moteur not in ("deterministe", "llm"):
-        print(f"ERREUR : moteur inconnu {moteur!r} (deterministe | llm)")
+    if moteur not in ("auto", "deterministe", "llm"):
+        print(f"ERREUR : moteur inconnu {moteur!r} (auto | deterministe | llm)")
         return 1
 
     cible = Path(args[0]).resolve()
     requete = args[1] if len(args) > 1 else "Analyse la sécurité de mon dépôt"
 
-    if moteur == "llm":
-        import fournisseurs_llm
-        pipeline.MOTEUR_INTENT = "llm"
-        pipeline.FOURNISSEUR_LLM = fournisseurs_llm.MockLLM()
+    moteur, fournisseur, note = _choisir_moteur(moteur)
+    pipeline.MOTEUR_INTENT = moteur
+    pipeline.FOURNISSEUR_LLM = fournisseur
 
     if not cible.exists():
         print(f"ERREUR : cible introuvable : {cible}")
@@ -125,7 +233,9 @@ def main(argv: list[str]) -> int:
 
     print(f"cible   : {cible}")
     print(f"requete : {requete}")
-    print(f"moteur  : {moteur}\n")
+    print(f"moteur  : {moteur}" + (f" ({note})" if note else "") + "\n")
+    # Note : le moteur EFFECTIF n'est connu qu'après exécution — un LLM injoignable
+    # retombe sur le déterministe. Il est affiché plus bas, dans le résumé.
 
     e = pipeline.executer(requete, cible)
 
@@ -168,6 +278,9 @@ def main(argv: list[str]) -> int:
     (dossier / "rapport.sarif").write_text(
         json.dumps(sarif(e.findings, e.run_id, e.plan["plan_id"]),
                    ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Étape 6 : mêmes preuves, vues depuis la mission plutôt que depuis le plan.
+    sortie_mission = _archiver_mission(e, cible)
 
     # ---------------------------------------------------------- politique de conservation
     # Conserver la donnée brute si elle est sûre ; sinon conserver son empreinte, ses
@@ -227,8 +340,13 @@ def main(argv: list[str]) -> int:
     print(f"\nartefacts : {dossier.relative_to(RACINE)}")
     for p in sorted(dossier.iterdir()):
         print(f"    {p.name:<20} {p.stat().st_size:>9,} o")
+    reel = e.intent.get("moteur", "")
+    if reel and not reel.startswith(moteur):
+        print(f"moteur effectif  : {reel}  (le {moteur} demandé n'a pas abouti)")
     print(f"\npour un humain   : {dossier / 'rapport_humain.md'}")
     print(f"rapport complet  : {dossier / 'rapport.md'}")
+    if sortie_mission:
+        print(f"mission {e.mission} : {sortie_mission.relative_to(RACINE)}")
     return 0
 
 

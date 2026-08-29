@@ -1041,3 +1041,62 @@ forme d'inclusion.
 pool.yaml régénéré (empreinte du registre changée par C1).
 **Régression complète : 20/20 batteries vertes** après C1+C2+C3
 (test_llm_reel : saut environnemental, clé absente).
+
+---
+
+## Étape 6 — chemin d'utilisation minimal + branchement LLM de l'intention (2026-08-29)
+
+**Livrable** : `PHASE3/analyser.py` (point d'entrée), `PHASE3/test_utilisation.py`
+(15 cas), `README_USAGE.md`, F2 + F3 dans `slice/intent.py`.
+
+Le LLM ne pilote **que le matching d'intention, dans le catalogue déclaré** : sa
+sortie est validée contre le registre, tout échec retombe sur le déterministe et le
+repli est tracé (`moteur = "deterministe(repli:<cause>)"`). Aucun nom d'outil ni
+chemin ne lui est transmis. `--moteur auto` choisit le LLM si `GROQ_API_KEY` est
+présente et **le dit** à l'écran.
+
+**F2** : l'expansion générique ne s'applique que si aucun domaine n'est nommé —
+« Analyse mon code Terraform » → {CODE_STATIC_ANALYSIS, IAC_SCAN}, plus les 5
+capacités publiques. « sécurité » n'est mot-clé d'aucune capacité, donc
+« scan de sécurité complet du dépôt » reste un audit complet (cas historique).
+**F3** : la question de clarification ne liste que des capacités publiques — les
+identifiants internes (`..._SUITE`) sont du vocabulaire de test.
+
+### Deux régressions causées par cette étape, trouvées par la régression
+
+1. **`analyser.py` écrasé.** Je l'ai réécrit pour l'étape 6 alors qu'il existait
+   déjà (Phase 4 : bundle indexé, `rapport.sarif`, `manifeste.json`,
+   conservation/masquage des sorties) et j'ai inversé l'ordre des arguments
+   (`<mission> <cible>` au lieu de `<dépôt> [requête]`). Conséquence mesurée :
+   `test_rapport` 17/20, `test_bundle` 25/26, et tout appel déjà écrit cassé.
+   **Corrigé par fusion, pas par choix** : signature et bundle Phase 4 restaurés
+   (SARIF, manifeste, 13 fichiers vérifiés à l'exécution), archive de mission de
+   l'étape 6 conservée en plus → 20/20 et 26/26.
+2. **Faux positif de mot-clé.** `"sca"` est une sous-chaîne de « **sca**n » :
+   « scan de sécurité complet du dépôt » matchait DEPENDENCY_ANALYSIS, et la
+   condition F2 `not trouvees` bloquait alors l'expansion générique — la demande
+   se réduisait à une seule capacité. La règle F2 était **innocente** ; c'est le
+   matching en sous-chaîne qui était faux. Corrigé par `_contient()` : matching
+   en **mot entier**, appliqué aux 4 tables (MOTIFS, GENERIC, AMBIGU, INTERDIT).
+
+Leçon : **avant de créer un fichier, vérifier s'il existe déjà.** J'ai annoncé
+15/15 sur la seule batterie que j'avais écrite, sans lancer la régression — les
+deux régressions sont passées à travers.
+
+### Dette ajoutée (observée, non corrigée)
+
+`intent.py` ne normalise pas les accents alors que `plan.requete_canonique` les
+retire : « vérifie les **dependances** » → `needs_clarification`, alors que
+« vérifie les dépendances » → DEPENDENCY_ANALYSIS. Vérifié à l'exécution. Ce
+n'est pas nouveau avec le matching en mot entier. À traiter avec F5
+(formulations non-expertes), pas à chaud.
+
+### Régression
+
+21/22 batteries vertes. `test_llm_reel` : saut environnemental (`GROQ_API_KEY`
+absente) — le mode `llm` en CLI retombe sur le déterministe, désormais **affiché**
+(`moteur effectif : deterministe(repli:reponse_vide)`) au lieu d'un « llm » trompeur.
+Détail : intentions 22 · sélection 13 · llm 32 · manifeste 27 · corrélation 7 ·
+chemins 9 · niveau2 21 · fanout 13 · traçabilité 12 · rapport 20 · rapport_humain 18 ·
+slice 10 · bundle 26 · isolateur 11 · extraction_blocs 14 · go 18 · indépendant 10 ·
+outils_pool_mission 19 · grype_kics 30 · sécurité (porte ouverte) · utilisation 15.
