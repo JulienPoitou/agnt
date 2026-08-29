@@ -128,7 +128,18 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
 - `pool.yaml` : régénérer en dernier si le registre bouge. Vérifié le 2026-08-30 :
   l'empreinte déclarée (`0a95593b8ceaa09b`) est bien celle de `slice/capabilities.yaml`
   — la ligne « STALE » qui figurait ici datait de l'ajout de la capacité Go, corrigée.
-- **CRASH TEST SÉCURITÉ, relevé n°1 (ouvert, non corrigé à dessein).** Une sortie LLM qui
+- **CRASH TEST SÉCURITÉ : campagne close, 9 FAIL relevés, AUCUN corrigé (en attente de
+  GO).** `PHASE3/test_adversaire.py` · 34 cas · 23 PASS · 9 FAIL · 2 NON ÉVALUÉS. Par gravité :
+  **F1** capacité `interne: true` sélectionnable par le modèle → plan + argv construits
+  (`valider()` compare au catalogue complet, pas à `publiques()` ; `policy.rego` non plus) ;
+  **F2** `cible_autorisee=False` n'est posé par AUCUN appelant, ni production ni test — la garde
+  du `.rego` n'a jamais eu de fausse entrée à évaluer ; **F3** garde-fous pré-LLM contournés par
+  homoglyphes/espaces/conjugaisons ; **F4** le contenu du dépôt scanné écrit dans le rapport
+  (lien cliquable, section `## ` forgée via un `message` ou un NOM de fichier) ; **F5** aucune
+  borne de taille sur la requête sortante ; **F6** le rendu affirme « valeur jamais stockée » sur
+  le secret sans le contrôler. Détail, preuves et candidats : `PROJET_ETAT.md`, « Crash test
+  sécurité — relevé de campagne ».
+- (relevé n°1, devenu F1 ci-dessus) : Une sortie LLM qui
   nomme une capacité `interne: true` passe `intent_llm.valider()` : la garde compare au
   catalogue COMPLET (`registre.capabilities()`), alors que `descr()` et `publiques()`
   n'exposent que les 5 capacités publiques. Le plan se construit avec le provider interne
