@@ -35,6 +35,7 @@
 | **Pas de faux état produit** | Quand l'API répond mais qu'aucune mission n'existe, l'interface affiche un accueil réel, jamais des données de démonstration. |
 | **Progressive disclosure** | L'UX montre d'abord le résultat métier ; providers et détails techniques restent secondaires. Les données non fiables sont rendues avec `textContent`, jamais `innerHTML`. |
 | **Dimensions de statut séparées** | Statut Mission, applicabilité, sélection, condition, autorisation, disponibilité, exécution, détection et complétude sont distincts ; aucune absence/erreur/refus ne devient `rien_trouve` ou un compteur zéro. |
+| **Forme API History détenue par Product** | Les schémas Product versionnés (`agnt.history.v1`, `agnt.timeline.v1`, `agnt.execution-status.v1`) sont l'autorité pour les noms de champs et enveloppes HTTP. Le gate Security complète ce contrat par des contrôles de fuite/contradiction ; il ne crée jamais un dialecte concurrent. |
 | **Autorisation de cible explicite** | `cible_autorisee` n'a aucun défaut permissif : seul `True` explicite l'arme ; l'API dérive cette autorisation exclusivement de la liste opérateur `cibles_admises()`. |
 | **Jeux de règles de sécurité contrôlés** | Un scanner ne doit jamais charger une configuration fournie par le dépôt analysé. Une règle doit venir d'une source AGNT de confiance, montée en lecture seule et vérifiée. |
 | **Mode laboratoire propriétaire, pas bypass** | Un mode explicite peut faciliter des tests sur cibles contrôlées, mais ne désactive jamais sandbox, policy, intégrité, autorisation de cible ou redaction ; il ne peut être activé ni par LLM ni par API cliente. |
@@ -48,7 +49,7 @@
 | CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d`, `729c2c0`, `fed13d6`, `e36c53a` | **P1 :** aligner History API sur les contrats Product, ajouter `data.timeline` et `data.executions[]` structurés. |
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d` | **P2 :** interopérabilité contre une implémentation MCP indépendante ; **P1 intégration :** raccord final au module CORE canonique à traiter lors de l'intégration coordonnée. |
 | WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
-| SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003` | **P1 :** concevoir et tester un Mode laboratoire propriétaire borné ; gate History/Timeline en attente de l'API CORE. |
+| SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003`, `cf1eea6` | Gate adversarial livré **candidat** : re-bind obligatoire sur les contrats Product avant intégration ; Mode laboratoire reste en cours, sans handoff nouveau. |
 | PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f`, `3f96e255` | Gate black-box livré ; attente contrôlée de l'API CORE réelle pour certification History/Timeline/Status. |
 
 ---
@@ -92,6 +93,7 @@
 - Tests adversariaux et de régression ajoutés pour l'autorisation de cible et le journal.
 - SEC-G6a fermé : gitleaks reçoit une configuration AGNT explicite sous `{REGLES}`, épinglée, installée par bootstrap et vérifiée avant tout `Popen`.
 - La cible ne peut plus fournir son propre `.gitleaks.toml` pour réduire la détection ; absence/divergence de règles = refus fail-closed.
+- Gate adversarial History/Timeline/Status ajouté dans `cf1eea6` : runner stdlib, corpus hostile de 81 fixtures et 93 vérifications déclarées vertes ; push du SHA confirmé. Il reste **candidat non re-lié** : son schéma temporaire ne doit pas devenir le contrat API.
 
 ### PRODUCT & UX
 
@@ -160,9 +162,17 @@ WEB n'a aucun code à construire sans dupliquer Product & UX ou devancer le lect
 - Les bundles dogfooding, `localStorage`, fixtures et fichiers d'archives ne sont jamais une source d'historique Web.
 - L'exposition d'artefacts ou de téléchargements attend une décision Security explicite.
 
+### P1 — SECURITY : gate adversarial History / Timeline / Status livré, re-bind requis
+
+Security a livré `cf1eea6` (push **CONFIRMÉ**) : un runner stdlib, 81 fixtures hostiles et un harnais dont les 93 vérifications sont **DÉCLARÉES** vertes. Il protège utilement contre secrets, chemins/artefacts bruts, payloads, faux zéros, contradictions et provenance MCP non fiable.
+
+Un conflit de contrat est toutefois **CONFIRMÉ** par comparaison ciblée des branches distantes : les contrats Product existent sur `arena/01a05425-agnt` (`3f96e255`) et utilisent notamment `schema_version`, `items`/`page`, `status`, `data.timeline`, `sequence`/`timestamp`/`kind`. Le gate Security, construit dans un checkout où ces fichiers étaient absents, attend une enveloppe temporaire `api`/`endpoint`/`data`, le champ `statut` et `seq`/`ts`/`type`. Il rejettera donc une réponse Product conforme.
+
+Conséquence : ne pas demander à CORE d'adopter le dialecte Security et ne pas présenter ce gate comme feu vert de release avant re-bind. À la reprise explicite, Security devra adapter ses allowlists et fixtures aux trois schémas Product, conserver les contrôles hostiles, puis le gate Product et le gate Security seront exécutés contre la même API CORE intégrée. Les valeurs MCP temporaires (`transport`/`protocol`) restent à confirmer avec MCP.
+
 ### P1 — SECURITY : Mode laboratoire propriétaire borné
 
-Le gate History/Timeline reste nécessaire mais dépend de l'API CORE non encore livrée. Security traite maintenant une tâche indépendante et demandée par le propriétaire : concevoir/tester un **Mode laboratoire propriétaire**, jamais un bypass générique.
+Le handoff `cf1eea6` ne couvre pas le Mode laboratoire. Ce chantier demandé par le propriétaire reste donc en cours, jamais un bypass générique.
 
 Invariants :
 - activation locale explicite et double opt-in opérateur ;
@@ -172,8 +182,6 @@ Invariants :
 - sandbox, policy fail-closed, intégrité, redaction et autorisation de cible restent actifs ;
 - journal/audit obligatoire ;
 - refus automatique dans un profil public/production.
-
-Le gate History/Timeline reprendra dès livraison de l'API CORE.
 
 ---
 
@@ -268,7 +276,7 @@ transports.enregistrer("mcp", executeur)
 | Compatibilité MCP avec une implémentation tierce indépendante. | Moyenne | HTTP, Streamable HTTP et stdio sont prouvés contre serveurs contrôlés internes ; une preuve avec une implémentation indépendante reste à faire. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product UI est déjà livré ; WEB a été recadré et ne modifie pas ces fichiers. Préparer une adoption ciblée après référence consolidée, jamais une seconde refonte. |
 | History API candidate diverge des contrats Product non visibles sur la branche CORE. | Élevée à l'intégration | Lecteur/API CORE est livré et testé localement, mais doit être aligné sur `agnt.history.v1`, `data.timeline` et `data.executions[]`, puis passer le gate Product/API réel avant activation WEB. |
-| Exposition API History/Timeline/Status de données sensibles ou payloads non allowlistés. | Haute sécurité d'intégration | Gate adversarial Security P1 actif avant exposition WEB ; CORE reste propriétaire de la projection/sérialisation. |
+| Exposition API History/Timeline/Status de données sensibles ou payloads non allowlistés. | Haute sécurité d'intégration | Gate Security candidat livré (`cf1eea6`), mais son schéma temporaire diverge de façon **confirmée** du contrat Product (`statut` vs `status`, enveloppe et événements). Re-bind obligatoire, puis exécution des deux gates contre la même API ; CORE reste propriétaire de la projection/redaction. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
 | Un « bypass » générique pourrait devenir une backdoor publique ou désactiver des garanties de sécurité. | Haute sécurité | Remplacer le concept par un Mode laboratoire propriétaire borné, local, audité et impossible à activer depuis le LLM/API ; Security en est propriétaire. |
 
@@ -310,7 +318,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | PRODUCT-005 | Validation produit des réponses History/Timeline/Status réelles | P1 intégration | Gate livré — dépend du lecteur/API CORE et de captures complètes |
 | GATE-001 | Endpoints CORE requis pour validation API réelle | Intégration | Bloqué — CORE en cours |
 | GATE-002 | Captures CORE couvrant toute la matrice sémantique | Qualité | Ouvert — CORE/MCP/SECURITY |
-| GATE-003 | Corpus hostiles complémentaire au gate Product | Sécurité | Ouvert — SECURITY |
+| GATE-003 | Corpus hostiles complémentaire au gate Product | Sécurité | Livré candidat — `cf1eea6`; re-bind Product/MCP obligatoire avant valeur de gate d'intégration |
 | WEB-001 | Adoption de la refonte Product UI et états honnêtes | P1 | En attente de référence consolidée ; carte d'adoption active |
 | WEB-002 | Consommation UI de `/api/missions` et détail | P1 | Bloqué — dépend de CORE History/Timeline et validation Security |
 | WEB-003 | Validation navigateur réelle d'un run terminé | P2 environnement | Bloqué — OPA/bwrap/outils absents |
@@ -319,8 +327,8 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | TIMELINE-003 | Allowlists transport/protocole MCP approuvées avec Security | Sécurité | Ouvert |
 | SEC-G6a | Configuration gitleaks contrôlée par le dépôt cible | P1 haute sécurité | Terminé — `e5838003`, config AGNT épinglée/fail-closed |
 | SEC-G9 | Mesure réelle gitleaks face à un `.gitleaks.toml` hostile | P2 environnement | Bloqué |
-| SEC-HIST-001 | Gate adversarial d'exposition History/Timeline/Status | P1 intégration sécurité | En attente — dépend de l'API CORE |
-| SEC-LAB-001 | Mode laboratoire propriétaire borné, testé et audité | P1 pré-publication | En cours — SECURITY |
+| SEC-HIST-001 | Gate adversarial d'exposition History/Timeline/Status | P1 intégration sécurité | Livré candidat — `cf1eea6`; re-bind aux contrats Product puis API CORE intégrée requis |
+| SEC-LAB-001 | Mode laboratoire propriétaire borné, testé et audité | P1 pré-publication | En cours — aucun handoff associé à `cf1eea6` |
 | SEC-B6 | Durcissement garde-fous homoglyphes / espaces | P3 | Différé |
 | SEC-B7 | Borne de taille de requête sortante fournisseur | P3 | Différé |
 
@@ -328,12 +336,12 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 
 ## Ordre d'intégration prévisionnel
 
-1. Préserver les correctifs Security poussés P0.1 `d1d562f` et SEC-G6a `e5838003`; ne pas déclarer G9 mesuré sans vrai gitleaks.
-2. Security conçoit/teste le Mode laboratoire propriétaire borné ; CORE aligne en parallèle son lecteur/API History candidat sur History/Timeline/Status Product, en préservant Cible et l'autorisation explicite de cible.
-3. Prouver l'interopérabilité MCP avec une implémentation indépendante, de manière bornée et isolée ; ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
-4. CORE termine `data.timeline` et `data.executions[]` enrichi, puis lance le gate Product/API réel avec couverture complète ; Product & UX valide alors le résultat sans toucher à l'UI partagée.
-5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle.
-6. Security exécute son gate adversarial contre l'API CORE intégrée et approuve allowlists/redaction de provenance/statuts avant exposition WEB ; le Mode laboratoire ne peut être exposé à WEB qu'en lecture seule et explicitement signalé.
-7. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après feu vert produit/Security.
+1. Préserver les correctifs Security poussés P0.1 `d1d562f`, SEC-G6a `e5838003` et le corpus candidat `cf1eea6`; ne pas déclarer G9 mesuré sans vrai gitleaks ni le schéma temporaire Security comme contrat API.
+2. Prendre les trois schémas Product versionnés comme référence de forme, puis CORE aligne son lecteur/API History candidat sur eux en préservant Cible et l'autorisation explicite de cible. Aucun merge n'est implicite dans cette étape.
+3. Security re-lie son gate au contrat Product et aux décisions MCP de provenance, sans perdre les contrôles hostiles ni créer de second format ; le Mode laboratoire propriétaire avance séparément.
+4. CORE termine `data.timeline` et `data.executions[]` enrichi, puis les gates Product/API **et** Security sont lancés contre la même API réelle avec couverture complète. Product & UX valide alors le résultat sans toucher à l'UI partagée.
+5. Prouver l'interopérabilité MCP avec une implémentation indépendante, de manière bornée et isolée ; ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
+6. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle.
+7. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après double feu vert produit/Security.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
