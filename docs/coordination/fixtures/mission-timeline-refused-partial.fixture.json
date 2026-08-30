@@ -1,0 +1,55 @@
+{
+  "$fixture": "ANONYMIZED CONTRACT FIXTURE — NEVER SERVE AS PRODUCT DATA",
+  "schema_version": "agnt.timeline.v1",
+  "state": "partial",
+  "ordering": "journal_sequence_ascending",
+  "events": [
+    {
+      "event_id": "m-20260830T094000Z-b2c3d4e5:1",
+      "position": 1,
+      "source": {"kind": "journal", "sequence": 1},
+      "time": {"state": "recorded", "timestamp": "2026-08-30T09:40:00Z"},
+      "category": "mission",
+      "kind": "mission_created",
+      "consequence": "recorded",
+      "visibility": "summary",
+      "safe_summary": "Mission créée",
+      "references": {"mission_id": "m-20260830T094000Z-b2c3d4e5"},
+      "data_state": "complete",
+      "limitations": []
+    },
+    {
+      "event_id": "m-20260830T094000Z-b2c3d4e5:2",
+      "position": 2,
+      "source": {"kind": "journal", "sequence": 2, "source_kind": "future_decision"},
+      "time": {"state": "unavailable"},
+      "category": "unknown",
+      "kind": "unknown_event_recorded",
+      "consequence": "recorded",
+      "visibility": "technical",
+      "safe_summary": "Un événement non reconnu a été consigné",
+      "references": {"mission_id": "m-20260830T094000Z-b2c3d4e5"},
+      "data_state": "unavailable",
+      "limitations": ["timestamp_missing", "projection_version_unsupported"]
+    },
+    {
+      "event_id": "m-20260830T094000Z-b2c3d4e5:3",
+      "position": 3,
+      "source": {"kind": "journal", "sequence": 3},
+      "time": {"state": "recorded", "timestamp": "2026-08-30T09:40:02Z"},
+      "category": "policy",
+      "kind": "mission_stopped",
+      "consequence": "refused",
+      "visibility": "summary",
+      "safe_summary": "Mission refusée par la politique d’exécution",
+      "references": {"mission_id": "m-20260830T094000Z-b2c3d4e5", "plan_id": "plan-anonymized-02"},
+      "data_state": "redacted",
+      "limitations": ["payload_redacted"]
+    }
+  ],
+  "returned_events": 3,
+  "total_events": 3,
+  "truncated": false,
+  "next_cursor": null,
+  "limitations": ["timestamp_missing", "payload_redacted", "projection_version_unsupported"]
+}

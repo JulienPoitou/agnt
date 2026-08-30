@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agnt.local/contracts/mission-timeline-v1.schema.json",
+  "title": "AGNT Mission Timeline Companion v1",
+  "description": "Schema for data.timeline inside an agnt.history.v1 Mission detail. Fixtures may add $fixture; production timeline objects MUST NOT.",
+  "type": "object",
+  "required": ["schema_version", "state", "ordering", "events", "returned_events", "truncated", "next_cursor", "limitations"],
+  "properties": {
+    "$fixture": {"type": "string"},
+    "schema_version": {"const": "agnt.timeline.v1"},
+    "state": {"enum": ["complete", "partial", "unavailable"]},
+    "ordering": {"const": "journal_sequence_ascending"},
+    "events": {"type": "array", "items": {"$ref": "#/$defs/event"}},
+    "returned_events": {"type": "integer", "minimum": 0},
+    "total_events": {"type": "integer", "minimum": 0},
+    "truncated": {"type": "boolean"},
+    "next_cursor": {"type": ["string", "null"]},
+    "limitations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/limitation"},
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "limitation": {
+      "enum": [
+        "journal_missing",
+        "journal_unreadable",
+        "history_prefix_missing",
+        "history_gap_detected",
+        "timestamp_missing",
+        "payload_redacted",
+        "provenance_partial",
+        "projection_version_unsupported"
+      ]
+    },
+    "time": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["state", "timestamp"],
+          "properties": {
+            "state": {"const": "recorded"},
+            "timestamp": {"type": "string", "format": "date-time"}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["state"],
+          "properties": {"state": {"enum": ["unavailable", "redacted"]}},
+          "additionalProperties": false
+        }
+      ]
+    },
+    "source": {
+      "type": "object",
+      "required": ["kind", "sequence"],
+      "properties": {
+        "kind": {"const": "journal"},
+        "sequence": {"type": "integer", "minimum": 1},
+        "source_kind": {"type": "string", "pattern": "^[a-z0-9_.-]{1,64}$"}
+      },
+      "additionalProperties": false
+    },
+    "references": {
+      "type": "object",
+      "required": ["mission_id"],
+      "properties": {
+        "mission_id": {"type": "string", "pattern": "^m-[A-Za-z0-9-]+$"},
+        "run_id": {"$ref": "#/$defs/safeId"},
+        "plan_id": {"$ref": "#/$defs/safeId"},
+        "provider_id": {"$ref": "#/$defs/safeId"},
+        "finding_ids": {"type": "array", "items": {"$ref": "#/$defs/safeId"}, "uniqueItems": true},
+        "cluster_ids": {"type": "array", "items": {"$ref": "#/$defs/safeId"}, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    },
+    "safeId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"},
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "provider_id": {"$ref": "#/$defs/safeId"},
+        "provider_kind": {"enum": ["local", "mcp", "external"]},
+        "transport": {"type": "string", "pattern": "^[a-z0-9_.-]{1,40}$"},
+        "server_id": {"$ref": "#/$defs/safeId"},
+        "tool_id": {"$ref": "#/$defs/safeId"},
+        "protocol": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": {"type": "string", "pattern": "^[a-z0-9_.-]{1,40}$"},
+            "version": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,40}$"}
+          },
+          "additionalProperties": false
+        },
+        "confidence": {
+          "type": "object",
+          "required": ["level", "basis"],
+          "properties": {
+            "level": {"enum": ["low", "medium", "high", "unknown"]},
+            "basis": {"enum": ["provider_declared", "agnt_assessed", "corroborated", "unknown"]}
+          },
+          "additionalProperties": false
+        },
+        "availability": {"enum": ["available", "degraded", "unavailable", "unknown"]},
+        "request_id": {"$ref": "#/$defs/safeId"},
+        "correlation_id": {"$ref": "#/$defs/safeId"}
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "event_id", "position", "source", "time", "category", "kind", "consequence",
+        "visibility", "safe_summary", "references", "data_state", "limitations"
+      ],
+      "properties": {
+        "event_id": {"type": "string", "pattern": "^m-[A-Za-z0-9-]+:[1-9][0-9]*$"},
+        "position": {"type": "integer", "minimum": 1},
+        "source": {"$ref": "#/$defs/source"},
+        "time": {"$ref": "#/$defs/time"},
+        "category": {
+          "enum": ["mission", "intent", "plan", "policy", "execution", "coverage", "correlation", "report", "security", "system", "unknown"]
+        },
+        "kind": {"type": "string", "pattern": "^[a-z0-9_.-]{1,80}$"},
+        "consequence": {
+          "enum": ["recorded", "started", "progress", "completed", "succeeded", "refused", "failed", "skipped", "unavailable", "unknown"]
+        },
+        "visibility": {"enum": ["summary", "mission", "technical"]},
+        "safe_summary": {"type": "string", "minLength": 1, "maxLength": 240},
+        "references": {"$ref": "#/$defs/references"},
+        "provenance": {"$ref": "#/$defs/provenance"},
+        "data_state": {"enum": ["complete", "partial", "redacted", "unavailable"]},
+        "limitations": {"type": "array", "items": {"$ref": "#/$defs/limitation"}, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    }
+  }
+}
