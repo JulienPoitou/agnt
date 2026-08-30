@@ -1,45 +1,61 @@
-# Interface — maquette d'affichage (non branchée)
+# Interface — surcouche réelle sur le moteur
 
-Ce dossier contient **la maquette visuelle** du futur écran AGNT, pas une interface utilisable.
-Le moteur n'est pas appelé : `app.js` lit `donnees_exemple.json`.
+`PHASE3/interface/` n'est plus une maquette : `api.py` sert la page et quatre routes, et le
+bouton RUN appelle le vrai point d'entrée (`analyser.lancer`). Le moteur de décision, lui,
+n'est pas dupliqué ici — l'API transmet et relit ce que le moteur écrit dans son archive de
+mission.
 
-## Voir
+## Lancer
 
 ```sh
-python3 -m http.server 8141 --bind 0.0.0.0 --directory PHASE3/interface
+python3 PHASE3/interface/api.py --host 0.0.0.0 --port 8141
 # http://localhost:8141/
 ```
 
-(Pas d'ouverture en `file://` : `fetch()` y est bloqué par le navigateur.)
+`--ouvert` ouvre le navigateur. Sans `api.py`, la page reste lisible : elle retombe sur
+`donnees_exemple.json` (mêmes clés, valeurs inventées) **en l'affichant** — un bandeau
+« MAQUETTE » se retire tout seul dès que l'API répond. Un écran de démo qui se prend pour un
+écran de résultat est le défaut qu'on veut éviter, pas celui qu'on veut offrir.
 
-## Ce qui est réel et ce qui est inventé
+## Routes
 
 | | |
 |---|---|
-| **noms de champs** | réels — `analyser.lancer()` (resume), `analyser._archiver_mission()` (`run.json`), `pipeline._rapport()`, `findings.Finding.to_dict()`, `clusterer.regrouper()`, `run.Contexte.to_dict()` |
-| **valeurs** | inventées. Elles ressemblent à un résultat plausible ; elles ne viennent d'aucune exécution |
-| **ordre des blocs** | délibéré : *ce qui a tourné* avant *les constats*, pour qu'un « 0 constat » se lise avec ses limites |
+| `GET /` | la page |
+| `GET /api/cibles` | les dépôts que le cœur accepte de scanner (mêmes règles que la CLI) |
+| `GET /api/capacites` | le catalogue publié, pour remplir le sélecteur |
+| `POST /api/runs` | `{cible, question, modele, confiance, moteur}` → `{run_id, statut}` |
+| `GET /api/runs/<id>` | l'état, puis les artefacts de la mission quand elle est terminée |
 
-Le jour du branchement, chaque champ doit être recalé sur un `run.json` **sorti d'une vraie
-exécution** (machine outillée : `bwrap`, `opa`, binaires d'outils). Une maquette qui affiche un
-champ que le moteur ne produit pas est un écran vide déguisé en fonctionnalité.
+Une **file à un consommateur** : les montages de `Sandbox` partagent `PHASE3/run`, donc deux
+RUN en parallèle se marcheraient dessus. Le parallélisme est un choix à faire, pas un réglage.
 
-## Une règle de code, non négociable ici
+## Ce que le RUN est réellement
 
-`textContent` partout, **jamais** `innerHTML`. Le contenu affiché vient d'outils qui ont lu un
-dépôt non fiable ; ce dépôt peut glisser un lien ou un titre de section dans un `message`
-(FAIL C1/C2/C6 du relevé de crash test, `PROJET_ETAT.md`). En attendant F4, le rapport est donc
-un bloc de texte brut, avec un bouton *copier* plutôt qu'un rendu markdown.
+`analyser.lancer(question, cible, moteur="auto", fournisseur=None, confiance="controlled")` →
+`(0 \| 2, résumé)`. Le numéro de mission affiché est le **dossier d'archive**
+(`artifacts/missions/<id>/sortie/{plan,findings,clusters,rapport,intent,run}.json + RAPPORT.md`),
+qui n'est pas le `run_id` consigné dans `run.json` — les deux sont affichés parce que les
+confondre coûte des minutes quand on cherche une trace.
 
-## Branchement prévu (une fois la maquette validée)
+Sur une machine où `opa` et les binaires d'outils manquent, un RUN aboutit à
+`statut: "refuse"` avec le motif (`PolicyError : binaire OPA introuvable`). C'est le
+comportement attendu et c'est ce que l'écran doit montrer : un refus **nommé**, pas un spinner
+éternel ni un rapport vide.
 
-```text
-POST /api/runs {cible, question, modele}
-  → une file à un job (les montages partagent PHASE3/run : parallelisme = plus tard)
-  → analyser.lancer(mission, cible, moteur="auto", confiance=…)
-  → lit l'archive de mission déjà écrite : artifacts/missions/<id>/sortie/{plan,findings,clusters,rapport,intent,run}.json + RAPPORT.md
-  → GET /api/runs/<id> renvoie exactement l'objet de donnees_exemple.json
-```
+## Règle de rendu, non négociable
 
-Deux corrections du relevé conditionnent l'exposition à quelqu'un d'autre : **F4** (assainir au
-rendu) et **F8** (déclarer les `--config` réellement passés, pas une liste écrite en dur).
+`textContent` partout, **jamais** `innerHTML`. Le dépôt scanné peut glisser un lien ou un titre
+de section dans un `message` d'outil : la campagne adverse l'a mesuré trois fois (C1, C2, C6).
+L'échappement ne vit pas dans l'interface mais dans `rapport_humain.sur()`, importée par
+`rapport.py` — les deux rendeurs du projet partagent la même politique, sinon elle diverge.
+La couverture, elle, est lue dans la commande passée (`adapters._drapeau`) et non plus écrite à
+côté : un écran qui affiche « 2 scanners » quand 3 jeux de règles sont chargés est un mensonge
+de mise en page.
+
+## Ce que l'interface ne fournit pas
+
+Pas d'authentification, pas de multi-tenant, pas d'annulation d'un RUN lancé, pas d'édition de
+politique. Le modèle de menace retenu est l'usage local par l'opérateur ; ce qui reste non
+négociable, c'est que **l'entrée** (le dépôt) est hostile et que **la sortie** (le rapport) est
+vue par un humain qui la copiera ailleurs.
