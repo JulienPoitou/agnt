@@ -36,6 +36,7 @@ import policy as PO
 from registre import Registry
 import statuts as STAT
 import conditions as COND
+from provider_contract import Target
 from sandbox import CACHE_BIN, CACHE_DB, CACHE_REGLES, Sandbox
 
 RACINE = Path(__file__).resolve().parent.parent     # PHASE3/
@@ -211,6 +212,10 @@ class _ContexteVague:
     tous_findings: list
     domaines: dict
     binaires: dict
+    # Factories injectées par test ou par un futur runtime de mission. Elles sont
+    # indexées par provider et non globales : une mission ne partage pas une session
+    # MCP, des credentials ou un cache mutable avec une autre.
+    transport_factories: dict = field(default_factory=dict)
 
 
 def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
@@ -270,7 +275,16 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
             return                      # vague déjà condamnée : on ne lance pas un autre outil
         _vivant(prov.id)
         try:
-            brut = adapters.executer(prov, sbx)
+            # Une cible typée est construite une fois par l'orchestrateur, puis remise
+            # au backend. Le transport ne reçoit jamais un chemin pour décider lui-même
+            # de ce qu'est la cible ; il ne reçoit que cette donnée validée.
+            kind = ("repository" if "repository" in tuple(prov.target_types)
+                    else tuple(prov.target_types or ("repository",))[0])
+            cible_typed = Target(kind, str(cible))
+            brut = adapters.executer(
+                prov, sbx, target=cible_typed,
+                transport_factory=V.transport_factories.get(prov.id),
+                cancel_event=avorter)
         except Exception as exc:
             # Un échec d'ADAPTATION (isolateur inutilisable : montages absents, bwrap
             # manquant) n'est pas une ligne de couverture : `verifie()` refuse avant tout
@@ -320,6 +334,17 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
             "code_retour": brut.code_retour,
             "timeout": brut.timeout,
             "vague": vague,
+            # Contrat provider : les consommateurs structurés n'ont pas à parser une
+            # erreur MCP dans stderr. Ces champs restent valides pour les providers
+            # locaux (statut succeeded par compatibilité).
+            "statut": getattr(brut, "statut", "succeeded"),
+            "erreur": getattr(brut, "erreur", ""),
+            "transport": getattr(brut, "transport", "local"),
+            "correlation_id": getattr(brut, "correlation_id", ""),
+            "request_id": getattr(brut, "request_id", ""),
+            "identite_provider": getattr(brut, "identite_provider", {}) or {},
+            **({"disponibilite": brut.disponibilite}
+               if getattr(brut, "disponibilite", None) else {}),
         })
         exec_.couverture.append(brut.couverture.to_dict())
 
@@ -339,13 +364,25 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
         for f_ in norm:
             f_.source["categorie"] = domaines_du_provider.get(prov.id)
             f_.source["horodatage"] = horodatage
-            f_.source["version_outil"] = ((ctx.outils or {}).get(
-                binaire_de_provider.get(prov.id, "")) or None)
+            # Un binaire local obtient sa version du contexte capturé ; un provider
+            # externe n'a pas de binaire local et porte la version déclarée/rapportée
+            # par son binding. L'absence reste None : elle n'est jamais devinée.
+            f_.source["version_outil"] = (
+                (getattr(brut, "identite_provider", {}) or {}).get("tool_version")
+                or (ctx.outils or {}).get(binaire_de_provider.get(prov.id, ""))
+                or getattr(prov, "tool_version", "")
+                or None)
             f_.source["vague"] = vague
         tous_findings.extend(norm)
         trouves[prov.id] = len(norm)
         MS.consigner(miss, "execution", provider=prov.id, vague=vague,
                      code_retour=brut.code_retour, timeout=brut.timeout,
+                     statut=getattr(brut, "statut", "succeeded"),
+                     transport=getattr(brut, "transport", "local"),
+                     correlation_id=getattr(brut, "correlation_id", ""),
+                     request_id=getattr(brut, "request_id", ""),
+                     erreur=getattr(brut, "erreur", ""),
+                     disponibilite=getattr(brut, "disponibilite", {}) or {},
                      findings=len(norm))
 
     if erreurs:
@@ -608,6 +645,9 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
     # la cause, le journal de mission s'arrêtait à « plan ».
     try:
         moteur = PO.PolicyEngine(opa=CACHE_BIN / "opa")
+        # MCP-004 : plus de type de cible codé en dur. OPA lit le descripteur STRUCTURÉ
+        # porté par le plan (`cible_descr` = Cible.to_dict()), donc le type réel de la
+        # cible — pas un littéral "repository" qui mentirait sur une cible filesystem.
         decision = moteur.evaluer(plan, registre, cible_autorisee,
                                   confiance_cible=confiance_cible,
                                   profil=profil_eff.to_dict())
@@ -818,6 +858,20 @@ def _rapport(it, plan, e: Execution) -> dict:
         "motifs_intent": it.motifs,
         "plan_id": plan.plan_id,
         "plan_empreinte": plan.empreinte(),
+        # Vue structurée consommable par l'UI : elle n'a pas à parser une commande
+        # locale pour déterminer qu'un provider est MCP, ni à reconstruire les
+        # versions serveur/outils depuis le journal.
+        "providers": [{
+            "id": s.provider,
+            "capability": s.capability,
+            "transport": s.transport,
+            "provider_version": s.provider_version,
+            "server": {"id": s.server_id, "version": s.server_version},
+            "tool": {"name": s.tool, "version": s.tool_version},
+            "protocol_version": s.protocol_version,
+            "trust": s.trust,
+            "target_types": list(s.target_types),
+        } for s in plan.steps],
         "autorisation": e.decision,
         # La garde d'export dans le rapport, pas seulement dans le journal : c'est la première
         # question de quiconque relit des findings obtenus avec réseau (« l'outil a-t-il appelé

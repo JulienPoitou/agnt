@@ -34,6 +34,10 @@ rendre distinct, c'est refuser de confondre « l'outil n'a pas été retenu » e
 
 from __future__ import annotations
 
+# MCP-004 : le nom canonique du transport fourni par le cœur vient du module CORE,
+# jamais d'un littéral recopié ici (un "local" écrit à la main dériverait en silence).
+import transports
+
 STATUTS = ("non_disponible", "non_applicable", "non_selectionne", "non_autorise",
            "selectionne", "echoue", "execute")
 
@@ -133,19 +137,33 @@ def construire(registre, plan: dict, decision: dict, raw: list[dict],
         cap_id = prov.capability if prov else next(
             (s.get("capability") for s in (plan.get("steps") or [])
              if s.get("provider") == pid), "")
+        transport = (getattr(prov, "transport", transports.TRANSPORT_SANDBOX_CLI) if prov
+                 else transports.TRANSPORT_SANDBOX_CLI)
         binaire = (prov.commande[0] if prov and prov.commande else
-                   (getattr(getattr(prov, "manifest", None), "binaire", "") or pid))
-        outil = getattr(getattr(prov, "manifest", None), "tool_id", "") or ""
-        chemin_exe = resoudre(binaire) if binaire else None
-        if chemin_exe is None and prov is not None:
-            # Deux origines pour nommer un exécutable (déclaratif : `manifest.binaire` ;
-            # historique : `commande[0]`). Le ledger essaie les deux, comme
-            # `adapters.exe_de` le fait au lancement : une divergence afficherait
-            # « non disponible » sous un outil qui vient de tourner — et l'inverse.
-            autre = getattr(getattr(prov, "manifest", None), "binaire", "") or ""
-            if autre and autre != binaire:
-                binaire, chemin_exe = autre, resoudre(autre)
-        dispo = chemin_exe is not None
+                   (getattr(getattr(prov, "manifest", None), "tool", "") or
+                    getattr(getattr(prov, "manifest", None), "binaire", "") or pid))
+        outil = (getattr(getattr(prov, "manifest", None), "tool", "") or
+                 getattr(getattr(prov, "manifest", None), "tool_id", "") or "")
+        if transport != transports.TRANSPORT_SANDBOX_CLI:
+            # Un provider externe n'a volontairement PAS d'exécutable local : sa
+            # disponibilité de configuration est prouvée par le registre (transport
+            # enregistré + binding serveur/outils), et la disponibilité réelle du
+            # serveur et de l'outil distant est ensuite portée par le résultat du
+            # transport. Chercher un binaire ici afficherait « non disponible » sous
+            # un provider qui n'a jamais prétendu en avoir un.
+            chemin_exe = "external"
+            dispo = True
+        else:
+            chemin_exe = resoudre(binaire) if binaire else None
+            if chemin_exe is None and prov is not None:
+                # Deux origines pour nommer un exécutable (déclaratif : `manifest.binaire` ;
+                # historique : `commande[0]`). Le ledger essaie les deux, comme
+                # `adapters.exe_de` le fait au lancement : une divergence afficherait
+                # « non disponible » sous un outil qui vient de tourner — et l'inverse.
+                autre = getattr(getattr(prov, "manifest", None), "binaire", "") or ""
+                if autre and autre != binaire:
+                    binaire, chemin_exe = autre, resoudre(autre)
+            dispo = chemin_exe is not None
         n = int((findings_par_provider or {}).get(pid, 0))
         c = couv.get(pid) or {}
         etats = [x.get("etat") for x in (c.get("cibles") or [])]
@@ -197,8 +215,13 @@ def construire(registre, plan: dict, decision: dict, raw: list[dict],
             if mani is not None:
                 att = tuple(getattr(mani, "code_succes", ()) or ())
             codes_ok = att or (0,)
-            if brut.get("timeout"):
-                statut, raison = "echoue", "timeout"
+            if brut.get("timeout") or brut.get("statut") == "timed_out":
+                statut, raison = "echoue", ("timeout" if transport == transports.TRANSPORT_SANDBOX_CLI
+                                            else "timeout provider")
+            elif brut.get("statut") in ("unavailable", "invalid", "failed", "cancelled"):
+                statut, raison = "echoue", (
+                    f"provider {transport} : statut {brut.get('statut')} — "
+                    f"{brut.get('erreur') or 'aucune sortie exploitable'}")
             elif brut.get("code_retour") not in codes_ok:
                 statut, raison = "echoue", (
                     f"code retour {brut.get('code_retour')} hors {list(codes_ok)} "
@@ -219,11 +242,29 @@ def construire(registre, plan: dict, decision: dict, raw: list[dict],
             raison += (f" — ATTENTION : une sortie conservée existe pourtant "
                        f"(code {brut.get('code_retour')})")
 
+        disponibilite = None
+        if transport != transports.TRANSPORT_SANDBOX_CLI:
+            disponibilite = (brut or {}).get("disponibilite") or {
+                "status": "unknown",
+                "reason": "aucun résultat MCP conservé",
+                "checked_at": "",
+            }
+
         entry = {
             "provider": pid,
             "capability": cap_id,
             "outil": outil,
             "binaire": binaire,
+            "transport": transport,
+            **({"disponibilite": disponibilite} if disponibilite is not None else {}),
+            "request_id": (brut or {}).get("request_id"),
+            "server_id": getattr(prov, "server_id", "") if prov else "",
+            "tool": getattr(prov, "tool", "") if prov else "",
+            "provider_version": getattr(prov, "provider_version", "") if prov else "",
+            "server_version": getattr(prov, "server_version", "") if prov else "",
+            "tool_version": getattr(prov, "tool_version", "") if prov else "",
+            "protocol_version": getattr(prov, "protocol_version", "") if prov else "",
+            "trust": getattr(prov, "trust", "") if prov else "",
             "disponible": dispo,
             "statut": statut,
             "raison": raison,
