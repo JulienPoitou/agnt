@@ -16,6 +16,8 @@
 - Les builders construisent sur leurs branches ; l'orchestrateur prépare et décide les intégrations.
 - Ne pas recréer une fonctionnalité déjà marquée **terminée** sans décision explicite.
 - Tout nouveau contrat partagé doit être ajouté ci-dessous avec ses consommateurs.
+- Toute mission terminée se clôture par un bloc `=== AGNT HANDOFF v1 ===` … `=== END AGNT HANDOFF ===` : agent, domaine, branche, statut, commits/push, livrables, tests PASS/FAIL/BLOCKED/NON ÉVALUÉ, blocages, périmètre non touché et confiance. Une mission non terminée utilise explicitement `=== AGNT PROGRESS v1 ===` … `=== END AGNT PROGRESS ===`, jamais un faux handoff final.
+- En cas de branches isolées ou renommées, citer le SHA immuable et le domaine avant le nom de branche ; le nom de branche seul n’est pas une preuve de provenance de contrat.
 
 ---
 
@@ -51,7 +53,7 @@
 |---|---|---|---|---|
 | CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d`, `729c2c0`, `fed13d6`, `e36c53a` | **P1 actif :** aligner le lecteur/API History sur les contrats Product, avec `data.timeline` et `data.executions[]` structurés ; ne pas réécrire le lecteur livré. |
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d`, `6e04ff8` | Interop stdio terminée dans son périmètre ; aucun nouveau chantier MCP assigné. Raccord Transport CORE réservé à l'intégration coordonnée. |
-| WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
+| WEB | `arena/01a0541a-agnt` | `COMPLETED` | `93f8ead` | Carte d'adoption livrée ; attendre CORE + double gate Product/Security avant tout code UI/API. |
 | SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003`, `cf1eea6`, `dae445a` | Gate adversarial re-lié au contrat Product ; **P1 actif :** Mode Laboratoire Propriétaire borné, sans bypass ni merge. |
 | DEVOPS / Release / Environnement | `arena/01a05481-agnt` (**DÉCLARÉ**, session Arena issue de `arena/builder-devops`) | `PARTIAL` — reconnaissance/test interrompus, aucune livraison acceptée | aucun commit de livraison rapporté | Corriger le protocole de reconnaissance et rendre un bilan cohérent avant toute écriture de bootstrap, CI, pin ou source. |
 | PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f`, `3f96e255` | Gate black-box livré ; attente contrôlée de l'API CORE réelle pour certification History/Timeline/Status. |
@@ -90,6 +92,7 @@
 - Baseline UI/API caractérisée et verte : `_domtest.mjs` 103/103, `test_interface.py` 34/35 avec un non-évalué environnemental.
 - Recadrage respecté : aucune implémentation retenue, aucune route archive/bundle/fichier, aucun changement non commité.
 - Le périmètre Web est désormais de consommer les contrats Product et les endpoints CORE stabilisés, jamais de reconstruire persistance ou historique côté client.
+- Carte d'adoption Product/UI livrée dans `93f8ead` : mapping DOM/API, sept lots, portes Q1–Q10 et six conflits d'intégration documentés. Résultat `_domtest.mjs` 103/103 **DÉCLARÉ** ; aucun fichier UI/API ni endpoint n'est modifié.
 
 ### SECURITY
 
@@ -161,14 +164,18 @@ Les trois contrats produit et le gate black-box sont terminés :
 
 Ne pas créer de quatrième contrat, de nouvelle UI ou de CI trompeuse sur fixtures. Dès que CORE livre l'API réelle, Product & UX exécute le gate avec `--base-url` et `--require-full-coverage`, valide les captures contrôlées et donne le feu vert produit à WEB.
 
-### P1 — WEB : carte d'adoption et préparation d'intégration
+### P1 — WEB : carte d'adoption livrée, attente d'intégration
 
-WEB n'a aucun code à construire sans dupliquer Product & UX ou devancer le lecteur CORE. Travail utile autorisé : comparer de façon ciblée la refonte Product UI (`18c1aad`) aux invariants DOM/API WEB existants, documenter les dépendances et préparer le plan d'adoption sans modifier `index.html`, `app.js`, `style.css` ou `api.py`.
+WEB a livré la carte `docs/coordination/WEB_ADOPTION_MAP.md` dans `93f8ead` (**DÉCLARÉ** poussé). Elle fixe les sept lots d'adoption, les portes Q1–Q10, l'absence de persistance frontend et les conflits à résoudre dans l'ordre.
 
-- Product UI est déjà livré ; ne pas le réécrire.
-- L'historique est consommé seulement après livraison de `GET /api/missions` par CORE.
-- Les bundles dogfooding, `localStorage`, fixtures et fichiers d'archives ne sont jamais une source d'historique Web.
-- L'exposition d'artefacts ou de téléchargements attend une décision Security explicite.
+Aucun code WEB ne doit démarrer avant les prérequis réels :
+- refonte Product intégrée de façon contrôlée, sans seconde UI concurrente ;
+- `GET /api/missions` et détail CORE alignés sur le contrat Product ;
+- `mission_id` durable distinct de l'id de soumission, en particulier pour un refus ;
+- Timeline/Execution Status réellement projetés ;
+- double gate Product + Security sur l'API CORE intégrée.
+
+Les bundles dogfooding, `localStorage`, fixtures et fichiers d'archives ne deviennent jamais une source d'historique. L'exposition d'artefacts/téléchargements attend une décision Security explicite.
 
 ### P1 — DEVOPS / Release / Environnement : reconnaissance partielle à corriger
 
@@ -297,7 +304,7 @@ transports.enregistrer("mcp", executeur)
 | Interopérabilité MCP seulement locale, pas contre un serveur tiers. | Moyenne | preuve indépendante **DÉCLARÉE** pour le SDK officiel `mcp==2.1.1` en stdio (20 tests déclarés, commit/push confirmés) ; HTTP, Streamable HTTP, SSE et compatibilité générale restent non démontrés. |
 | Contrat Transport ne reçoit pas encore le descripteur `Cible` pour une exécution distante. | Architecturale P1 | Les URL sont représentables et filtrées, mais non exécutables ; évolution conjointe CORE/MCP/SECURITY requise avant support distant réel. |
 | Compatibilité MCP avec une implémentation tierce indépendante. | Moyenne | Preuve indépendante terminée pour `mcp==2.1.1` en stdio seulement ; ne pas généraliser aux autres SDK, profils ou transports. |
-| PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product UI est déjà livré ; WEB a été recadré et ne modifie pas ces fichiers. Préparer une adoption ciblée après référence consolidée, jamais une seconde refonte. |
+| PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Carte WEB `93f8ead` livrée : sept lots et six conflits (dont id de soumission ≠ `mission_id` sur refus) sont documentés. Aucune seconde refonte : adoption uniquement après API CORE et double gate. |
 | History API candidate diverge des contrats Product non visibles sur la branche CORE. | Élevée à l'intégration | Lecteur/API CORE est livré et testé localement, mais doit être aligné sur `agnt.history.v1`, `data.timeline` et `data.executions[]`, puis passer le gate Product/API réel avant activation WEB. |
 | Exposition API History/Timeline/Status de données sensibles ou payloads non allowlistés. | Haute sécurité d'intégration | Gate Security re-lié au contrat Product (`dae445a`, résultat de harnais **DÉCLARÉ**) ; validation encore requise contre l'API CORE intégrée, avec le gate Product. CORE reste propriétaire de la projection/redaction. Toute clarification MCP sera demandée seulement sur écart précis. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
@@ -342,7 +349,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | GATE-001 | Endpoints CORE requis pour validation API réelle | Intégration | Bloqué — CORE en cours |
 | GATE-002 | Captures CORE couvrant toute la matrice sémantique | Qualité | Ouvert — CORE/MCP/SECURITY |
 | GATE-003 | Corpus hostiles complémentaire au gate Product | Sécurité | Re-lié — `dae445a`, 88 fixtures déclarées ; attente de l'API CORE intégrée pour gate réel |
-| WEB-001 | Adoption de la refonte Product UI et états honnêtes | P1 | En attente de référence consolidée ; carte d'adoption active |
+| WEB-001 | Adoption de la refonte Product UI et états honnêtes | P1 | Carte d'adoption terminée — `93f8ead`; code différé jusqu'aux prérequis CORE/Product/Security |
 | WEB-002 | Consommation UI de `/api/missions` et détail | P1 | Bloqué — dépend de CORE History/Timeline et validation Security |
 | WEB-003 | Validation navigateur réelle d'un run terminé | P2 environnement | Bloqué — OPA/bwrap/outils absents |
 | TIMELINE-001 | Projection `data.timeline` dans le lecteur canonique CORE | P1 intégration | En cours — CORE |
@@ -367,7 +374,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 3. **Mission Security active :** implémenter/tester le Mode Laboratoire Propriétaire borné, sans bypass. Consulter MCP seulement si un écart précis de provenance est constaté.
 4. CORE termine `data.timeline` et `data.executions[]` enrichi à partir des contrats, puis les gates Product/API **et** Security re-lié sont lancés contre la même API réelle avec couverture complète. Product & UX valide alors le résultat sans toucher à l'UI partagée.
 5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle. Ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
-6. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après double feu vert produit/Security.
+6. Appliquer la carte WEB `93f8ead` par lots, sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après double feu vert produit/Security.
 7. Seulement après ces jalons, le propriétaire pourra décider d'un pilote Strix strictement local et isolé ; aucun agent tiers complet n'est intégré dans le cœur AGNT.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
