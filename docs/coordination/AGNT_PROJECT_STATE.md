@@ -30,7 +30,8 @@
 | **Intention locale à l'appel** | Les nouveaux flux passent `moteur_intent` et `fournisseur_llm` à `pipeline.executer()` ; les globales historiques sont un repli de compatibilité seulement. |
 | **Journal explicatif append-only** | Le journal porte au minimum l'intention et la sélection de providers ; il ne dépend pas uniquement de `plan.json`. |
 | **Policy avant invocation** | Une policy absente, indisponible ou refusée n'autorise jamais une exécution locale ou externe. |
-| **Cible distincte du sandbox** | Une cible n'est pas automatiquement un `Path` local ; une cible distante ne doit jamais être montée ou exécutée comme un faux chemin local. |
+| **Cible distincte du sandbox** | `Cible(type, reference, chemin_local=None)` est le descripteur canonique ; une cible distante ne devient jamais un `Path`, ne passe jamais à `sandbox_cli` et est filtrée à l'applicabilité. |
+| **Types de cible effectifs** | `target_types` des manifests gouverne réellement l'applicabilité ; la représentation sûre de cible est ajoutée de manière compatible au plan, journal et entrée OPA. |
 | **Pas de faux état produit** | Quand l'API répond mais qu'aucune mission n'existe, l'interface affiche un accueil réel, jamais des données de démonstration. |
 | **Progressive disclosure** | L'UX montre d'abord le résultat métier ; providers et détails techniques restent secondaires. Les données non fiables sont rendues avec `textContent`, jamais `innerHTML`. |
 | **Autorisation de cible explicite** | `cible_autorisee` n'a aucun défaut permissif : seul `True` explicite l'arme ; l'API dérive cette autorisation exclusivement de la liste opérateur `cibles_admises()`. |
@@ -42,7 +43,7 @@
 
 | Builder | Branche | Statut rapporté | Derniers commits | Prochaine mission assignée |
 |---|---|---|---|---|
-| CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c` | **P1 :** descripteur de cible canonique et typé, branché sans réécriture du moteur. |
+| CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d` | **P1 :** lecteur canonique d'historique Mission et API en lecture seule selon le contrat produit. |
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844` | **P1 :** alignement sur le contrat CORE et test contre un serveur MCP contrôlé réel. |
 | WEB | non reçu | en attente de handoff | — | À définir après handoff. |
 | SECURITY | `arena/01a05426-agnt` | `PARTIAL` | `d1d562f` — non poussé au handoff | **P1 :** pousser le correctif P0.1 puis fermer SEC-G6a : jeu de règles gitleaks de confiance. |
@@ -59,6 +60,9 @@
 - Séparation Provider / Transport.
 - Module de transport extensible et validation fail-closed des manifests.
 - Observabilité structurée : décision d'intention et sélection de providers dans le journal.
+- Descripteur canonique `Cible`, normalisé une seule fois à la frontière du pipeline.
+- `target_types` validé et appliqué à la sélection ; URL/non-local représentable mais jamais convertie en chemin ou exécutée par CLI local.
+- Représentation sûre de cible ajoutée de façon additive au plan, journal de mission et entrée OPA.
 
 ### MCP
 
@@ -89,17 +93,15 @@
 
 ## Travaux actifs et prochains jalons
 
-### P1 — CORE : descripteur de cible typé
+### P1 — CORE : lecteur canonique d'historique Mission et API lecture seule
 
-Créer une représentation canonique de la cible, en réutilisant le vocabulaire existant `target_types`.
-
-Critères clés :
-- compatibilité avec les appels historiques utilisant `Path` ;
-- sélection de providers selon le type de cible ;
-- plan, policy et journal capables de décrire une cible structurée ;
-- pas de conversion silencieuse d'une URL en chemin local ;
-- `sandbox_cli` ne reçoit qu'une cible locale autorisée ;
-- aucun modèle `Target/Cible` concurrent côté MCP, Web ou Security.
+Implémenter le contrat produit versionné `agnt.history.v1` sans base parallèle :
+- `GET /api/missions` et `GET /api/missions/{mission_id}` depuis les headers, journal et artefacts canoniques ;
+- `mission_id` persistant distinct du polling temporaire `run_id` ;
+- statuts, pagination, filtres et `missing_artifacts` conformes au contrat Product & UX ;
+- données sûres/redacted, sans chemins absolus, sorties brutes, argv ou secrets ;
+- enrichissement additif du polling avec `mission_id` / `detail_href`;
+- préservation stricte du contrat Security d'autorisation explicite de cible.
 
 ### P1 — MCP : intégration prête à fusionner et test réel contrôlé
 
@@ -156,6 +158,13 @@ transports.enregistrer("mcp", executeur)
 - `tools/list` est informatif, jamais une autorité d'autorisation.
 - Les nouveaux champs de provenance doivent être additifs pour Web/API/SARIF.
 
+### Contrat Cible à préserver
+
+- Forme publique : `Cible(type, reference, chemin_local=None)` et `Cible.normaliser(Path | str | Cible)`.
+- `to_dict()` expose une référence sûre, pas le userinfo éventuel d'une URL ; le champ historique `cible` texte reste compatible.
+- `repository` et `filesystem` sont aujourd'hui les types locaux effectivement chargés ; `url` est représentable mais aucun transport ne peut encore la recevoir.
+- Le contrat Transport actuel ne reçoit pas `Cible`. Toute évolution pour une cible distante est un chantier conjoint CORE + MCP + SECURITY, sans cacher l'URL dans Sandbox ou un global.
+
 ### Contrat produit d'historique à préserver
 
 - Une **Mission** est le dossier persistant visible par l'utilisateur ; un **Run** est son exécution technique. Cardinalité actuelle : `Mission 1 → 0..1 Run`.
@@ -175,7 +184,7 @@ transports.enregistrer("mcp", executeur)
 
 - **WEB :** ne pas supposer un unique `PHASE3/run`; utiliser les données de mission et tolérer les champs MCP additionnels (`transport`, serveur, outil, protocole, confiance, disponibilité, corrélation).
 - **SECURITY :** fermer SEC-G6a avant les chantiers secondaires, puis définir/tester les invariants d'un backend externe : egress, endpoint contrôlé par registre, secrets, timeout, policy avant appel, confiance et absence de bypass sandbox implicite.
-- **CORE / MCP :** tout nouvel appel à `pipeline.executer()` ou nouveau type de cible doit préserver l'autorisation explicite ; aucune cible externe ne doit contourner la liste opérateur et la policy.
+- **CORE / MCP :** tout nouvel appel à `pipeline.executer()` ou nouveau type de cible doit préserver l'autorisation explicite ; aucune cible externe ne doit contourner la liste opérateur et la policy. Une cible URL ne doit pas être exécutée tant que le contrat Transport ne reçoit pas explicitement `Cible`.
 - **PRODUCT & UX :** ne pas créer une deuxième source de vérité pour les types de cible ou les extensions. Le contrat d'historique est terminé ; définir maintenant la timeline/provenance sans modifier les fichiers UI partagés avant coordination avec WEB.
 - **CORE :** implémenter l'historique depuis le lecteur canonique de mission, sans base parallèle, et enrichir le polling par `mission_id` / `detail_href` dès disponibilité.
 - **WEB :** consommer exclusivement `/api/missions` pour l'historique, en utilisant `mission_id` comme référence persistante ; ne jamais reconstruire une liste locale.
@@ -190,10 +199,10 @@ transports.enregistrer("mcp", executeur)
 | Initialisation du transport MCP avant validation des manifests. | Élevée | Bootstrap explicite et déterministe requis avant intégration MCP. |
 | Serveur MCP externe hors sandbox locale. | Élevée | Contrôles Security et provenance/confiance obligatoires ; jamais présenter cela comme sandboxé. |
 | Test MCP uniquement simulé. | Élevée pour la preuve d'interopérabilité | Builder MCP crée un serveur contrôlé local et des tests E2E réels. |
-| Cible encore principalement représentée par un `Path`. | Architecturale P1 | Mission CORE active ; Web/MCP/Security ne créent pas d'abstraction concurrente. |
+| Contrat Transport ne reçoit pas encore le descripteur `Cible` pour une exécution distante. | Architecturale P1 | Les URL sont représentables et filtrées, mais non exécutables ; évolution conjointe CORE/MCP/SECURITY requise avant support distant réel. |
 | Annulation HTTP en cours d'appel MCP. | Moyenne | MCP-003 reste ouvert jusqu'à preuve réelle ou solution documentée. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product & UX travaille désormais sur le contrat d'historique hors de ces fichiers ; attendre le handoff WEB avant tout nouveau chantier UI. |
-| Historique global affiché sans source backend persistée. | Élevée produit | Contrat P1 terminé ; garder l'historique désactivé jusqu'à l'implémentation réelle de `GET /api/missions`, sans données de démonstration après une réponse API. |
+| Historique global affiché sans source backend persistée. | Élevée produit | Contrat P1 terminé ; CORE implémente désormais le lecteur/API canonique avant toute activation WEB, sans données de démonstration après une réponse API. |
 | Gitleaks peut charger une configuration hostile du dépôt et masquer des secrets (SEC-G6a). | Haute sécurité | Correctif Security P1 actif : config AGNT explicite, vérifiée et fail-closed ; ne pas déclarer la détection de secrets fiable avant fermeture. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
 
@@ -216,7 +225,9 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 
 | ID | Sujet | Priorité | Statut |
 |---|---|---:|---|
-| CORE-001 | Cible typée / descriptor canonique | P1 | En cours — CORE |
+| CORE-001 | Cible typée / descriptor canonique | P1 | Terminé — `8eb4005`, `f1f323d` |
+| CORE-004 | Historique Mission persistant et API lecture seule `agnt.history.v1` | P1 | En cours — CORE |
+| CORE-005 | Contrat Transport recevant Cible pour providers distants | P1 architecture | Ouvert — joint CORE/MCP/SECURITY |
 | CORE-002 | Graphe d'exécution explicite dans `plan.json` | P2 | Différé |
 | CORE-003 | Validation E2E avec OPA/bwrap/outils | Environnement | Bloqué |
 | MCP-001 | Validation OPA réelle | P1 environnement | Bloqué |
@@ -235,11 +246,10 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 ## Ordre d'intégration prévisionnel
 
 1. Pousser et préserver le correctif Security P0.1 `d1d562f`, puis fermer SEC-G6a avant de considérer le scan de secrets fiable.
-2. Stabiliser le lot CORE Cible sans casser les contrats actuels, notamment l'autorisation explicite de cible.
-3. Finaliser l'alignement MCP sur les extension points CORE et sa preuve E2E contrôlée.
-4. Implémenter l'historique à partir du contrat produit terminé, après stabilisation du lecteur canonique CORE ; ne pas réactiver l'UI avant l'endpoint réel.
-5. Finaliser le contrat produit de timeline/provenance en parallèle, sans toucher à l'UI partagée.
-6. Examiner les diff/contrats CORE + MCP + SECURITY ensemble et préparer une stratégie de merge ciblée.
-7. Adapter WEB aux contrats stabilisés, sans reconstruire de logique métier côté UI.
+2. Implémenter le lecteur/API d'historique CORE selon le contrat produit, en préservant Cible et l'autorisation explicite de cible.
+3. Finaliser l'alignement MCP sur les extension points CORE et sa preuve E2E contrôlée ; ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
+4. Finaliser le contrat produit de timeline/provenance en parallèle, sans toucher à l'UI partagée.
+5. Examiner les diff/contrats CORE + MCP + SECURITY ensemble et préparer une stratégie de merge ciblée.
+6. Adapter WEB aux endpoints stabilisés, sans reconstruire de logique métier côté UI.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
