@@ -1,0 +1,956 @@
+{
+  "$fixture": "ANONYMIZED CONTRACT FIXTURE — NEVER SERVE AS PRODUCT DATA",
+  "schema_version": "agnt.execution-status.v1",
+  "cases": [
+    {
+      "case_id": "completed_zero_proven",
+      "mission_status": "termine",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "local-static-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "recorded"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "recorded"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "recorded"
+          },
+          "authorization": {
+            "value": "autorise",
+            "proof": "recorded"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "recorded"
+          },
+          "execution": {
+            "value": "termine",
+            "invocation": "oui",
+            "output": "exploitable",
+            "proof": "recorded"
+          },
+          "detection": {
+            "value": "rien_trouve",
+            "proof": "recorded",
+            "findings_count": 0,
+            "analyzed_targets": 14
+          },
+          "completeness": {
+            "state": "complete",
+            "missing": [],
+            "limitations": []
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Analyse terminée — aucun finding remonté sur les cibles analysées",
+        "advanced_summary": "Exécution réussie, 14 cibles analysées, artefact normalisé lisible, 0 finding",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "completed_with_findings",
+      "mission_status": "termine",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "local-dependency-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "recorded"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "recorded"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "recorded"
+          },
+          "authorization": {
+            "value": "autorise",
+            "proof": "recorded"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "recorded"
+          },
+          "execution": {
+            "value": "termine",
+            "invocation": "oui",
+            "output": "exploitable",
+            "proof": "recorded"
+          },
+          "detection": {
+            "value": "findings_presents",
+            "proof": "recorded",
+            "findings_count": 3,
+            "analyzed_targets": 2
+          },
+          "completeness": {
+            "state": "complete",
+            "missing": [],
+            "limitations": []
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Analyse terminée — 3 findings remontés",
+        "advanced_summary": "Résultat normalisé et attribué au provider",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "local_provider_absent",
+      "mission_status": "refuse",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "local-secret-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "recorded"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "recorded"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "recorded"
+          },
+          "authorization": {
+            "value": "autorise",
+            "proof": "recorded"
+          },
+          "availability": {
+            "value": "indisponible",
+            "proof": "recorded",
+            "reason_code": "binary_missing"
+          },
+          "execution": {
+            "value": "unavailable",
+            "invocation": "non",
+            "output": "non_exploitable",
+            "proof": "recorded",
+            "reason_code": "binary_missing"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "recorded"
+          },
+          "completeness": {
+            "state": "complete",
+            "missing": [],
+            "limitations": []
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Provider indisponible — analyse non exécutée",
+        "advanced_summary": "Binaire absent ; aucune invocation",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "provider_not_applicable",
+      "mission_status": "termine",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "local-container-analysis",
+          "applicability": {
+            "value": "non_applicable",
+            "proof": "derived"
+          },
+          "selection": {
+            "value": "non_selectionne",
+            "proof": "derived"
+          },
+          "condition": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "authorization": {
+            "value": "non_evalue",
+            "proof": "derived",
+            "reason_code": "target_not_applicable"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "derived"
+          },
+          "execution": {
+            "value": "non_lance",
+            "invocation": "non",
+            "output": "non_exploitable",
+            "proof": "derived",
+            "reason_code": "target_not_applicable"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "derived",
+            "reason_code": "target_not_applicable"
+          },
+          "completeness": {
+            "state": "complete",
+            "missing": [],
+            "limitations": []
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Non applicable à cette cible",
+        "advanced_summary": "Contraintes de cible incompatibles ; aucune invocation",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "explicit_policy_refusal",
+      "mission_status": "refuse",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "local-static-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "recorded"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "recorded"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "recorded"
+          },
+          "authorization": {
+            "value": "non_autorise",
+            "proof": "recorded",
+            "reason_code": "policy_denied"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "recorded"
+          },
+          "execution": {
+            "value": "non_lance",
+            "invocation": "non",
+            "output": "non_exploitable",
+            "proof": "recorded",
+            "reason_code": "policy_denied"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "recorded",
+            "reason_code": "policy_denied"
+          },
+          "completeness": {
+            "state": "complete",
+            "missing": [],
+            "limitations": []
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Mission refusée par la politique d’exécution",
+        "advanced_summary": "Refus explicite enregistré ; provider non invoqué",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "policy_unavailable_fail_closed",
+      "mission_status": "refuse",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "local-static-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "recorded"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "recorded"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "recorded"
+          },
+          "authorization": {
+            "value": "non_evalue",
+            "proof": "recorded",
+            "reason_code": "policy_unavailable"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "recorded"
+          },
+          "execution": {
+            "value": "non_lance",
+            "invocation": "non",
+            "output": "non_exploitable",
+            "proof": "recorded",
+            "reason_code": "policy_unavailable"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "recorded",
+            "reason_code": "policy_unavailable"
+          },
+          "completeness": {
+            "state": "partial",
+            "missing": [
+              "policy_decision"
+            ],
+            "limitations": [
+              "fail_closed"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Mission refusée — validation de sécurité indisponible",
+        "advanced_summary": "Aucune décision allow/deny ; arrêt fail-closed",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "target_not_authorized",
+      "mission_status": "refuse",
+      "records": [],
+      "expected": {
+        "user_message": "Mission refusée — cible non autorisée",
+        "advanced_summary": "Arrêt avant sélection ou invocation d’un provider",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "egress_blocked_before_mcp",
+      "mission_status": "refuse",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "mcp-web-assessment",
+          "applicability": {
+            "value": "applicable",
+            "proof": "recorded"
+          },
+          "selection": {
+            "value": "non_selectionne",
+            "proof": "recorded"
+          },
+          "condition": {
+            "value": "bloquee",
+            "proof": "recorded",
+            "reason_code": "egress_not_authorized"
+          },
+          "authorization": {
+            "value": "non_evalue",
+            "proof": "recorded",
+            "reason_code": "egress_not_authorized"
+          },
+          "availability": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "execution": {
+            "value": "non_lance",
+            "invocation": "non",
+            "output": "non_exploitable",
+            "proof": "recorded",
+            "reason_code": "egress_not_authorized"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "recorded",
+            "reason_code": "egress_not_authorized"
+          },
+          "completeness": {
+            "state": "complete",
+            "missing": [],
+            "limitations": []
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Provider non exécuté — accès réseau non autorisé",
+        "advanced_summary": "Blocage avant appel ; disponibilité distante non évaluée",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "rule_pack_invalid",
+      "mission_status": "refuse",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "local-static-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "recorded"
+          },
+          "selection": {
+            "value": "non_selectionne",
+            "proof": "recorded"
+          },
+          "condition": {
+            "value": "bloquee",
+            "proof": "recorded",
+            "reason_code": "rule_pack_invalid"
+          },
+          "authorization": {
+            "value": "non_evalue",
+            "proof": "recorded",
+            "reason_code": "rule_pack_invalid"
+          },
+          "availability": {
+            "value": "indisponible",
+            "proof": "recorded",
+            "reason_code": "rule_pack_invalid"
+          },
+          "execution": {
+            "value": "unavailable",
+            "invocation": "non",
+            "output": "non_exploitable",
+            "proof": "recorded",
+            "reason_code": "rule_pack_invalid"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "recorded"
+          },
+          "completeness": {
+            "state": "complete",
+            "missing": [],
+            "limitations": []
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Analyse non exécutée — règles indisponibles",
+        "advanced_summary": "Jeu de règles invalide ; aucune invocation",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "mcp_provider_unavailable",
+      "mission_status": "termine",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "mcp-dependency-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "provider_reported"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "provider_reported"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "provider_reported"
+          },
+          "authorization": {
+            "value": "autorise",
+            "proof": "provider_reported"
+          },
+          "availability": {
+            "value": "indisponible",
+            "proof": "provider_reported",
+            "reason_code": "external_server_unavailable"
+          },
+          "execution": {
+            "value": "unavailable",
+            "invocation": "non",
+            "output": "non_exploitable",
+            "proof": "provider_reported",
+            "reason_code": "external_server_unavailable"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "provider_reported"
+          },
+          "completeness": {
+            "state": "partial",
+            "missing": [],
+            "limitations": [
+              "coverage_incomplete"
+            ]
+          },
+          "provenance": {
+            "provider_id": "mcp-dependency-analysis",
+            "provider_kind": "mcp",
+            "availability": "unavailable"
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Provider externe indisponible — résultats incomplets",
+        "advanced_summary": "Indisponibilité structurée ; aucun appel exploitable",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "mcp_timeout",
+      "mission_status": "erreur",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "mcp-web-assessment",
+          "applicability": {
+            "value": "applicable",
+            "proof": "provider_reported"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "provider_reported"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "provider_reported"
+          },
+          "authorization": {
+            "value": "autorise",
+            "proof": "provider_reported"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "provider_reported"
+          },
+          "execution": {
+            "value": "timed_out",
+            "invocation": "oui",
+            "output": "non_exploitable",
+            "proof": "provider_reported",
+            "reason_code": "deadline_exceeded"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "provider_reported",
+            "reason_code": "deadline_exceeded"
+          },
+          "completeness": {
+            "state": "complete",
+            "missing": [],
+            "limitations": []
+          },
+          "provenance": {
+            "provider_id": "mcp-web-assessment",
+            "provider_kind": "mcp",
+            "transport": "stdio",
+            "request_id": "req-support-01"
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Délai d’exécution dépassé",
+        "advanced_summary": "Deadline enregistrée ; aucun résultat de détection exploitable",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "mcp_cancelled",
+      "mission_status": "inconnu",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "mcp-web-assessment",
+          "applicability": {
+            "value": "applicable",
+            "proof": "provider_reported"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "provider_reported"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "provider_reported"
+          },
+          "authorization": {
+            "value": "autorise",
+            "proof": "provider_reported"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "provider_reported"
+          },
+          "execution": {
+            "value": "cancelled",
+            "invocation": "oui",
+            "output": "non_exploitable",
+            "proof": "provider_reported",
+            "reason_code": "cancellation_acknowledged"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "provider_reported",
+            "reason_code": "cancellation_acknowledged"
+          },
+          "completeness": {
+            "state": "partial",
+            "missing": [],
+            "limitations": [
+              "terminal_mission_state_missing"
+            ]
+          },
+          "provenance": {
+            "provider_id": "mcp-web-assessment",
+            "provider_kind": "mcp",
+            "request_id": "req-support-02"
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Analyse annulée",
+        "advanced_summary": "Annulation acquittée ; état terminal Mission non consigné",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "remote_provider_error",
+      "mission_status": "termine",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "mcp-dependency-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "provider_reported"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "provider_reported"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "provider_reported"
+          },
+          "authorization": {
+            "value": "autorise",
+            "proof": "provider_reported"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "provider_reported"
+          },
+          "execution": {
+            "value": "echoue",
+            "invocation": "oui",
+            "output": "non_exploitable",
+            "proof": "provider_reported",
+            "reason_code": "remote_failure"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "provider_reported",
+            "reason_code": "remote_failure"
+          },
+          "completeness": {
+            "state": "partial",
+            "missing": [],
+            "limitations": [
+              "coverage_incomplete"
+            ]
+          },
+          "provenance": {
+            "provider_id": "mcp-dependency-analysis",
+            "provider_kind": "mcp"
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Le provider externe a échoué — résultats incomplets",
+        "advanced_summary": "Erreur distante redacted ; aucune sortie acceptée",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "invalid_provider_output",
+      "mission_status": "erreur",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "external-iac-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "recorded"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "recorded"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "recorded"
+          },
+          "authorization": {
+            "value": "autorise",
+            "proof": "recorded"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "recorded"
+          },
+          "execution": {
+            "value": "echoue",
+            "invocation": "oui",
+            "output": "non_exploitable",
+            "proof": "recorded",
+            "reason_code": "invalid_provider_output"
+          },
+          "detection": {
+            "value": "non_evalue",
+            "proof": "recorded",
+            "reason_code": "invalid_provider_output"
+          },
+          "completeness": {
+            "state": "complete",
+            "missing": [],
+            "limitations": []
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Résultat provider inexploitable",
+        "advanced_summary": "Réponse rejetée par le validateur",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "findings_artifact_missing",
+      "mission_status": "termine",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "local-static-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "recorded"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "recorded"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "recorded"
+          },
+          "authorization": {
+            "value": "autorise",
+            "proof": "recorded"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "recorded"
+          },
+          "execution": {
+            "value": "termine",
+            "invocation": "oui",
+            "output": "exploitable",
+            "proof": "recorded"
+          },
+          "detection": {
+            "value": "inconnu",
+            "proof": "unknown",
+            "reason_code": "findings_evidence_missing"
+          },
+          "completeness": {
+            "state": "partial",
+            "missing": [
+              "findings_artifact"
+            ],
+            "limitations": [
+              "detection_result_unavailable"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Résultat de détection indisponible",
+        "advanced_summary": "Exécution terminée mais artefact findings absent",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "incomplete_journal_and_artifacts",
+      "mission_status": "inconnu",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "provider-unknown",
+          "applicability": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "selection": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "condition": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "authorization": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "availability": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "execution": {
+            "value": "inconnu",
+            "invocation": "inconnu",
+            "output": "inconnu",
+            "proof": "unknown",
+            "reason_code": "execution_evidence_missing"
+          },
+          "detection": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "completeness": {
+            "state": "unavailable",
+            "missing": [
+              "execution_ledger",
+              "findings_artifact"
+            ],
+            "limitations": [
+              "journal_incomplete"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Informations de mission incomplètes",
+        "advanced_summary": "État conservé inconnu ; aucune conclusion de détection",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "partial_mcp_provenance_with_valid_findings",
+      "mission_status": "termine",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "mcp-secret-analysis",
+          "applicability": {
+            "value": "applicable",
+            "proof": "recorded"
+          },
+          "selection": {
+            "value": "selectionne",
+            "proof": "recorded"
+          },
+          "condition": {
+            "value": "remplie",
+            "proof": "recorded"
+          },
+          "authorization": {
+            "value": "autorise",
+            "proof": "recorded"
+          },
+          "availability": {
+            "value": "disponible",
+            "proof": "recorded"
+          },
+          "execution": {
+            "value": "termine",
+            "invocation": "oui",
+            "output": "exploitable",
+            "proof": "recorded"
+          },
+          "detection": {
+            "value": "findings_presents",
+            "proof": "recorded",
+            "findings_count": 1,
+            "analyzed_targets": 1
+          },
+          "completeness": {
+            "state": "partial",
+            "missing": [
+              "transport",
+              "server_id"
+            ],
+            "limitations": [
+              "provenance_partial"
+            ]
+          },
+          "provenance": {
+            "provider_id": "mcp-secret-analysis",
+            "provider_kind": "mcp"
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "Analyse terminée — 1 finding remonté ; provenance partielle",
+        "advanced_summary": "Résultat normalisé valide ; transport et serveur non consignés",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    },
+    {
+      "case_id": "unknown_source_status",
+      "mission_status": "inconnu",
+      "records": [
+        {
+          "schema_version": "agnt.execution-status.v1",
+          "provider_id": "external-analysis",
+          "applicability": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "selection": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "condition": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "authorization": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "availability": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "execution": {
+            "value": "inconnu",
+            "invocation": "inconnu",
+            "output": "inconnu",
+            "proof": "unknown",
+            "reason_code": "unknown_source_status"
+          },
+          "detection": {
+            "value": "inconnu",
+            "proof": "unknown"
+          },
+          "completeness": {
+            "state": "partial",
+            "missing": [
+              "recognized_status"
+            ],
+            "limitations": [
+              "unknown_source_status"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "user_message": "État d’exécution inconnu",
+        "advanced_summary": "Valeur source non reconnue ; aucune interprétation optimiste",
+        "must_not_say": "Aucun problème trouvé"
+      }
+    }
+  ]
+}

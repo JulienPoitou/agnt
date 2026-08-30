@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agnt.local/contracts/execution-status-v1.schema.json",
+  "title": "AGNT Provider Execution Status v1",
+  "description": "Companion shape for each existing agnt.history.v1 data.executions[] item. It is not a second execution collection.",
+  "type": "object",
+  "required": [
+    "schema_version", "provider_id", "applicability", "selection", "condition",
+    "authorization", "availability", "execution", "detection", "completeness"
+  ],
+  "properties": {
+    "schema_version": {"const": "agnt.execution-status.v1"},
+    "provider_id": {"$ref": "#/$defs/safeId"},
+    "capability_id": {"$ref": "#/$defs/safeId"},
+    "display_name": {"type": "string", "minLength": 1, "maxLength": 160},
+    "applicability": {
+      "$ref": "#/$defs/applicability"
+    },
+    "selection": {
+      "$ref": "#/$defs/selection"
+    },
+    "condition": {
+      "$ref": "#/$defs/condition"
+    },
+    "authorization": {
+      "$ref": "#/$defs/authorization"
+    },
+    "availability": {
+      "$ref": "#/$defs/availability"
+    },
+    "execution": {
+      "$ref": "#/$defs/execution"
+    },
+    "detection": {
+      "$ref": "#/$defs/detection"
+    },
+    "completeness": {
+      "$ref": "#/$defs/completeness"
+    },
+    "provenance": {
+      "type": "object",
+      "description": "When present, MUST also conform to agnt.timeline.v1 #/$defs/provenance. Kept additive for implementations resolving companion schemas."
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "safeId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"},
+    "reasonCode": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,79}$"},
+    "proof": {"enum": ["recorded", "derived", "provider_reported", "unknown"]},
+    "baseDimension": {
+      "type": "object",
+      "required": ["value", "proof"],
+      "properties": {
+        "value": {"type": "string"},
+        "proof": {"$ref": "#/$defs/proof"},
+        "reason_code": {"$ref": "#/$defs/reasonCode"}
+      },
+      "additionalProperties": false
+    },
+    "applicability": {
+      "allOf": [
+        {"$ref": "#/$defs/baseDimension"},
+        {"properties": {"value": {"enum": ["applicable", "non_applicable", "inconnu"]}}}
+      ]
+    },
+    "selection": {
+      "allOf": [
+        {"$ref": "#/$defs/baseDimension"},
+        {"properties": {"value": {"enum": ["selectionne", "non_selectionne", "inconnu"]}}}
+      ]
+    },
+    "condition": {
+      "allOf": [
+        {"$ref": "#/$defs/baseDimension"},
+        {"properties": {"value": {"enum": ["remplie", "bloquee", "inconnu"]}}}
+      ]
+    },
+    "authorization": {
+      "allOf": [
+        {"$ref": "#/$defs/baseDimension"},
+        {"properties": {"value": {"enum": ["autorise", "non_autorise", "non_evalue", "inconnu"]}}}
+      ]
+    },
+    "availability": {
+      "type": "object",
+      "required": ["value", "proof"],
+      "properties": {
+        "value": {"enum": ["disponible", "indisponible", "inconnu"]},
+        "proof": {"$ref": "#/$defs/proof"},
+        "reason_code": {"$ref": "#/$defs/reasonCode"}
+      },
+      "additionalProperties": false
+    },
+    "execution": {
+      "type": "object",
+      "required": ["value", "invocation", "output", "proof"],
+      "properties": {
+        "value": {"enum": ["non_lance", "en_cours", "termine", "echoue", "timed_out", "cancelled", "unavailable", "inconnu"]},
+        "invocation": {"enum": ["oui", "non", "inconnu"]},
+        "output": {"enum": ["exploitable", "partiel", "non_exploitable", "inconnu"]},
+        "proof": {"$ref": "#/$defs/proof"},
+        "reason_code": {"$ref": "#/$defs/reasonCode"}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties": {"value": {"const": "termine"}}, "required": ["value"]},
+          "then": {"properties": {"invocation": {"const": "oui"}, "output": {"enum": ["exploitable", "partiel"]}}}
+        },
+        {
+          "if": {"properties": {"value": {"enum": ["non_lance", "unavailable"]}}, "required": ["value"]},
+          "then": {"properties": {"invocation": {"const": "non"}, "output": {"const": "non_exploitable"}}}
+        },
+        {
+          "if": {"properties": {"value": {"const": "en_cours"}}, "required": ["value"]},
+          "then": {"properties": {"invocation": {"const": "oui"}}}
+        }
+      ]
+    },
+    "detection": {
+      "type": "object",
+      "required": ["value", "proof"],
+      "properties": {
+        "value": {"enum": ["findings_presents", "rien_trouve", "non_evalue", "inconnu"]},
+        "findings_count": {"type": "integer", "minimum": 0},
+        "analyzed_targets": {"type": "integer", "minimum": 0},
+        "proof": {"$ref": "#/$defs/proof"},
+        "reason_code": {"$ref": "#/$defs/reasonCode"}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties": {"value": {"const": "rien_trouve"}}, "required": ["value"]},
+          "then": {
+            "required": ["findings_count", "analyzed_targets"],
+            "properties": {"findings_count": {"const": 0}, "analyzed_targets": {"minimum": 1}}
+          }
+        },
+        {
+          "if": {"properties": {"value": {"const": "findings_presents"}}, "required": ["value"]},
+          "then": {
+            "required": ["findings_count"],
+            "properties": {"findings_count": {"minimum": 1}}
+          }
+        },
+        {
+          "if": {"properties": {"value": {"enum": ["non_evalue", "inconnu"]}}, "required": ["value"]},
+          "then": {"properties": {"findings_count": false}}
+        }
+      ]
+    },
+    "completeness": {
+      "type": "object",
+      "required": ["state", "missing", "limitations"],
+      "properties": {
+        "state": {"enum": ["complete", "partial", "unavailable", "conflict"]},
+        "missing": {"type": "array", "items": {"$ref": "#/$defs/reasonCode"}, "uniqueItems": true},
+        "limitations": {"type": "array", "items": {"$ref": "#/$defs/reasonCode"}, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    }
+  }
+}
