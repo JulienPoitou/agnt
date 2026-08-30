@@ -1,0 +1,7 @@
+{
+  "$fixture": "ANONYMIZED CONTRACT FIXTURE — NEVER SERVE AS PRODUCT DATA",
+  "error": {
+    "code": "INVALID_STATUS_FILTER",
+    "message": "Statut de mission invalide"
+  }
+}
