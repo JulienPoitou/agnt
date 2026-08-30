@@ -61,13 +61,26 @@ def ouvrir(requete: str, requete_canonique: str, cible: Path) -> Mission:
     return m
 
 
+# Verrou de journal. Un verrou, pas une chance. Depuis la vague parallèle (LOT 3), deux outils
+# peuvent consigner en même temps ; sans lui, deux threads calculent le même `seq` sur la même
+# longueur de fichier (deux événements au même rang : un rejeu ne rechiffre plus pareil) et,
+# pire, deux écritures peuvent s'entrelacer au milieu d'une ligne. Un journal append-only dont
+# une ligne est cassée n'est plus une preuve, c'est un fichier de debug.
+_VERROU = __import__("threading").Lock()
+
+
 def consigner(m: Mission, type_: str, **payload) -> int:
-    """Ajoute un événement. Append strict : ouverture en mode 'a', jamais 'w'."""
+    """Ajoute un événement. Append strict : ouverture en mode 'a', jamais 'w'.
+
+    `seq` et l'écriture sont dans la même section critique : un lecteur qui voit `seq: 7` a la
+    garantie qu'aucun autre événement de ce journal ne portera ce rang, et qu'aucun rang ne manque.
+    """
     j = m.chemin / "journal.jsonl"
-    seq = (sum(1 for _ in j.open(encoding="utf-8")) if j.exists() else 0) + 1
-    ligne = {"seq": seq, "ts": _ts(), "type": type_, **payload}
-    with j.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(ligne, ensure_ascii=False, default=str) + "\n")
+    with _VERROU:
+        seq = (sum(1 for _ in j.open(encoding="utf-8")) if j.exists() else 0) + 1
+        ligne = {"seq": seq, "ts": _ts(), "type": type_, **payload}
+        with j.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(ligne, ensure_ascii=False, default=str) + "\n")
     return seq
 
 

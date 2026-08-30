@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from intent import AMBIGU, INTERDIT, Intent, STATUTS
+from intent import AMBIGU, INTERDIT, Intent, STATUTS, interdit
 from registre import Registry
 
 
@@ -45,25 +45,46 @@ class ReponseLLM:
     fournisseur: str = ""
 
 
-def valider(rep: ReponseLLM, registre: Registry) -> Intent:
+def valider(rep: ReponseLLM, registre: Registry, avec_internes: bool = False) -> Intent:
     """Valide une réponse LLM contre le registre et produit un Intent.
 
     Lève SortieInvalide si le contrat n'est pas respecté. On ne devine jamais :
     une capacité inconnue est rejetée, pas interprétée.
+
+    `avec_internes`, par défaut `False` : la comparaison se fait sur le catalogue qui a été
+    PROPOSÉ au modèle (`registre.publiques()`, la même liste que `descr()`), pas sur le
+    registre entier. Une capacité `interne: true` existe — elle sert à qualifier des
+    providers — mais elle n'est jamais nommée dans la proposition : la valider contre le
+    catalogue complet laissait le modèle élargir le périmètre tout seul, en citant un outil
+    que personne ne lui avait montré (constat A2/A3 de la campagne adverse, 2026-08-30).
+
+    Ce n'est pas une règle nouvelle : `intent.inferer(avec_internes=…)` l'applique déjà au
+    chemin déterministe, avec le même drapeau et la même valeur par défaut. Les deux moteurs
+    refusent donc pour la même raison. Le chemin qui mène à une capacité interne n'est pas
+    supprimé — il devient explicite : un appelant qui la réclame le passe en argument.
     """
     if rep.statut not in STATUTS:
         raise SortieInvalide(f"statut inconnu : {rep.statut!r}")
 
     connues = {c.id for c in registre.capabilities()}
+    proposees = connues if avec_internes else {c.id for c in registre.publiques()}
 
     if rep.statut == "resolved":
         caps = tuple(rep.capabilities or ())
         if not caps:
             raise SortieInvalide("resolved sans capacités")
         inconnues = sorted(set(caps) - connues)
-        if inconnues:
-            # Le point critique : le LLM ne peut pas inventer une capacité.
-            raise SortieInvalide(f"capacités inconnues du registre : {inconnues}")
+        hors_proposition = sorted((set(caps) & connues) - proposees)
+        if inconnues or hors_proposition:
+            # Le point critique : le LLM ne peut ni inventer une capacité, ni en réclamer
+            # une qui n'était pas dans la proposition. Les deux sont nommés séparément —
+            # confondre « inconnue » et « interne » ferait chercher le bug du mauvais côté.
+            morceaux = []
+            if inconnues:
+                morceaux.append(f"inconnues du registre : {inconnues}")
+            if hors_proposition:
+                morceaux.append(f"non proposées au modèle (internes) : {hors_proposition}")
+            raise SortieInvalide("capacités refusées — " + " · ".join(morceaux))
         ordre = tuple(c.id for c in registre.capabilities() if c.id in set(caps))
         return Intent("resolved", "", capabilities=ordre, moteur=f"llm:{rep.fournisseur}")
 
@@ -79,6 +100,14 @@ def valider(rep: ReponseLLM, registre: Registry) -> Intent:
     return Intent("rejected", "", motif=rep.motif, moteur=f"llm:{rep.fournisseur}")
 
 
+# Ce qu'un fournisseur accepte de recevoir. Une demande de 120 000 caractères est une
+# dépense, pas une question : elle part au tarif du modèle, elle est journalisée, et elle ne
+# change rien à la capacité choisie. La borne est sur l'ENVOYÉ uniquement — `requete` reste
+# entière, parce que c'est elle qui définit `request_id` et l'archive de mission : tronquer la
+# trace pour économiser un appel serait falsifier le dossier au lieu de payer moins cher.
+LIMITE_REQUETE_FOURNISSEUR = 6000
+
+
 def inferer(requete: str, registre: Registry, fournisseur) -> Intent:
     """Inférence LLM, avec repli déterministe.
 
@@ -92,17 +121,38 @@ def inferer(requete: str, registre: Registry, fournisseur) -> Intent:
     """
     from intent import inferer as inferer_deterministe
 
+    # La borne porte sur ce qui SORT. `requete` reste entière plus bas : c'est elle qui définit
+    # `request_id` et l'archive de mission, et tronquer la trace pour économiser un appel
+    # reviendrait à falsifier le dossier au lieu de payer moins cher.
+    envoyee = requete or ""
+    borne: dict = {}
+    if len(envoyee) > LIMITE_REQUETE_FOURNISSEUR:
+        borne = {"longue_de": len(envoyee), "envoyee_a": LIMITE_REQUETE_FOURNISSEUR}
+        envoyee = envoyee[:LIMITE_REQUETE_FOURNISSEUR]
+
+    def trace(it):
+        """La borne est tracée sur tous les retours, replis compris : ce qui est parti au
+        fournisseur l'a été tronqué, et le lecteur a le droit de savoir qu'une partie de sa
+        phrase n'a été lue par personne — y compris quand la décision, elle, vient du
+        déterministe qui a lu la requête entière."""
+        if not borne:
+            return it
+        return Intent(it.statut, it.requete, it.capabilities, it.question, it.motif,
+                      moteur=it.moteur, motifs={**(it.motifs or {}), "requete_bornee": borne})
+
     try:
-        rep = fournisseur.complet(requete, registre.descr())
+        rep = fournisseur.complet(envoyee, registre.descr())
     except Exception as e:
         it = inferer_deterministe(requete, registre)
-        return Intent(it.statut, it.requete, it.capabilities, it.question, it.motif,
-                      moteur=f"deterministe(repli:{type(e).__name__})", motifs=it.motifs)
+        # l'étiquette du moteur est LE traceur du repli (cas E2 de la batterie) : `trace`
+        # recopie `moteur`, il ne doit en aucun cas le choisir à la place de l'appelant
+        return trace(Intent(it.statut, it.requete, it.capabilities, it.question, it.motif,
+                            moteur=f"deterministe(repli:{type(e).__name__})", motifs=it.motifs))
 
     if rep is None:
         it = inferer_deterministe(requete, registre)
-        return Intent(it.statut, it.requete, it.capabilities, it.question, it.motif,
-                      moteur="deterministe(repli:reponse_vide)", motifs=it.motifs)
+        return trace(Intent(it.statut, it.requete, it.capabilities, it.question, it.motif,
+                            moteur="deterministe(repli:reponse_vide)", motifs=it.motifs))
 
     try:
         it = valider(rep, registre)
@@ -112,8 +162,8 @@ def inferer(requete: str, registre: Registry, fournisseur) -> Intent:
                       moteur=f"deterministe(repli:{e})", motifs=dit.motifs)
 
     # La requête originale est conservée : c'est elle qui définit request_id.
-    return Intent(it.statut, requete, it.capabilities, it.question, it.motif,
-                  moteur=it.moteur, motifs=it.motifs)
+    return trace(Intent(it.statut, requete, it.capabilities, it.question, it.motif,
+                        moteur=it.moteur, motifs=it.motifs))
 
 
 def garde_fous(requete: str, registre: Registry) -> Intent | None:
@@ -122,12 +172,15 @@ def garde_fous(requete: str, registre: Registry) -> Intent | None:
     Une demande explicitement interdite ne doit jamais être soumise à un modèle :
     le refus est une règle, pas une opinion.
     """
-    bas = (requete or "").lower()
-    for mot, motif in INTERDIT:
-        if mot in bas:
-            return Intent("rejected", requete, motif=f"demande interdite : {motif}",
-                          moteur="deterministe(garde-fou)")
-    if not bas.strip():
+    # Une seule politique pour les deux chemins : `intent.interdit()`. La version precedente
+    # faisait `mot in requete.lower()` — une sous-chaîne, donc ni accents pliés, ni
+    # homoglyphes, ni lettres espacées. Le refus d'une demande interdite ne doit pas dépendre
+    # du moteur qui a répondu (constat B6 de la campagne adverse, côté garde-fou).
+    refuse = interdit(requete or "")
+    if refuse:
+        return Intent("rejected", requete, motif=f"demande interdite : {refuse[1]}",
+                      moteur="deterministe(garde-fou)")
+    if not (requete or "").strip():
         return Intent("needs_clarification", requete,
                       question="Que dois-je analyser, et sur quel dépôt ?",
                       moteur="deterministe(garde-fou)")

@@ -2,6 +2,8 @@
 """Une commande, un workflow complet, un rapport lisible.
 
     python3 PHASE3/analyser.py <dépôt> ["requête en langage naturel"] [--moteur auto|deterministe|llm]
+                                 [--confiance controlled|untrusted]
+                                 [--egress true|false]
 
 Sortie : un bundle d'artefacts dans PHASE3/artifacts/<input_digest>/<plan_id>/<run_id>/
     rapport.md · rapport_humain.md · manifeste.json · plan.json · findings.json
@@ -22,6 +24,13 @@ Codes de sortie :
     0  workflow exécuté
     1  erreur technique
     2  demande refusée ou nécessitant une clarification — AUCUNE exécution
+
+CONFIANCE DE CIBLE (étape 7 amont, 2026-08-30) : `--confiance untrusted` déclare que
+le dépôt n'est PAS fiable. `policy.rego` refuse alors tout plan tant que la mémoire
+n'est pas bornée (limite imposée par cgroups v2 ou un runtime OCI, non disponible ici) :
+le scan est refusé AVANT toute exécution, et le motif est rendu. Par défaut la cible est
+`controlled` — c'est le comportement historique, et il est AFFICHÉ : une valeur par défaut
+muette, pour une décision de sécurité, ne se justifie pas.
 """
 
 from __future__ import annotations
@@ -41,7 +50,7 @@ import mission as MS  # noqa: E402
 import rapport_humain as RH  # noqa: E402
 import pipeline          # noqa: E402
 import rapport as R      # noqa: E402
-from sandbox import CACHE_BIN  # noqa: E402
+import statuts as ST     # noqa: E402
 
 # Index en trois niveaux :
 #   artifacts/<input_digest>/<plan_id>/<run_id>/
@@ -89,6 +98,29 @@ def sarif(findings: list[dict], run_id: str, plan_id: str) -> dict:
                 "artifactLocation": {"uri": loc["file"]},
                 **({"region": region} if region else {}),
             }}]
+        else:
+            # Cibles NON fichiers (URL d'un scanner web, hôte, image, ressource cloud) :
+            # sans cette branche, un finding de cible web partait à l'export SANS
+            # localisation — l'information était perdue au moment même où elle devient
+            # échangeable. `uri` a le droit d'être une URL absolue en SARIF 2.1.0 ; les
+            # autres coordonnées passent en logicalLocations, lues par les consommateurs.
+            autre = {k: loc[k] for k in ("url", "hote", "image", "ressource") if loc.get(k)}
+            if autre:
+                log = [{"fullyQualifiedName": f"{k}:{v}"} for k, v in sorted(autre.items())]
+                res["locations"] = [{
+                    **({"physicalLocation": {"artifactLocation": {"uri": autre["url"]}}}
+                       if "url" in autre else {}),
+                    "logicalLocations": log,
+                }]
+        res["properties"].update({
+            # ce que le modèle interne sait et que SARIF ne porte pas nativement
+            "categorie": f["source"].get("categorie"),
+            "horodatage": f["source"].get("horodatage"),
+            "version_outil": f["source"].get("version_outil"),
+            "cwe": (f.get("evidence") or {}).get("cwe"),
+            "remediation": (f.get("evidence") or {}).get("remediation"),
+            "confiance": (f.get("evidence") or {}).get("confiance"),
+        })
         resultats.append(res)
 
     return {
@@ -106,6 +138,72 @@ def sarif(findings: list[dict], run_id: str, plan_id: str) -> dict:
         }],
     }
 
+
+
+# Drapeaux reconnus : (valeurs admises, valeur admise quand le drapeau est nu).
+# `None` en deuxième position = le drapeau EXIGE une valeur — un drapeau de sécurité
+# n'a pas de valeur par défaut muette.
+_DRAPEAUX = {
+    "--moteur": (("auto", "deterministe", "llm"), "llm"),
+    "--confiance": (pipeline.CONFIANCES, None),
+    # Le drapeau n'a pas de forme « `--egress` seul vaut tout autoriser » : une valeur est
+    # exigée (`true`/`false`) parce qu'un opérateur doit pouvoir écrire explicitement qu'il
+    # ferme ce que le profil avait ouvert. Le nu, lui, est refusé — `None` en second.
+    "--egress": (("true", "false"), None),
+}
+
+
+def _booleen(options: dict, cle: str) -> bool | None:
+    """`None` = pas demandé (donc le profil fait foi). `absent` et `false` ne sont pas le même fait."""
+    if cle not in options:
+        return None
+    return str(options[cle]).strip().lower() == "true"
+
+
+def _options_depuis_argv(argv: list[str]) -> tuple[dict, list[str]]:
+    """Sépare les options `--drapeau[=]valeur` des arguments de position.
+
+    Retourne (options, arguments_de_position). Trois règles, toutes mesurées :
+
+    · `--drapeau valeur` et `--drapeau=valeur` sont équivalentes — la forme espacée est
+      celle documentée dans README_USAGE.md, et elle était CASSÉE avant cet extracteur :
+      `--moteur deterministe` laissait « deterministe » comme requête et retenait llm ;
+    · une valeur hors liste lève ValueError — jamais de repli sur un défaut : ici le
+      défaut est une décision de sécurité, pas une préférence de confort ;
+    · `options` ne contient QUE ce qui a été demandé. « absent » doit rester distinct
+      de « demandé et obtenu », pour que l'appelant affiche la valeur réellement appliquée.
+    """
+    options: dict[str, str] = {}
+    position: list[str] = []
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if "=" in a and a.split("=", 1)[0] in _DRAPEAUX:
+            drapeau, valeur = a.split("=", 1)
+            i += 1
+        elif a in _DRAPEAUX:
+            drapeau = a
+            suite = argv[i + 1] if i + 1 < len(argv) else ""
+            if suite and not suite.startswith("--"):
+                valeur, i = suite, i + 2
+            else:
+                valeur, i = None, i + 1
+        else:
+            position.append(a)
+            i += 1
+            continue
+
+        admises, defaut_nu = _DRAPEAUX[drapeau]
+        if valeur is None:
+            if defaut_nu is None:
+                raise ValueError(f"{drapeau} exige une valeur "
+                                 f"({' | '.join(admises)})")
+            valeur = defaut_nu
+        if valeur not in admises:
+            raise ValueError(f"valeur {valeur!r} inconnue pour {drapeau} "
+                             f"(admises : {' | '.join(admises)})")
+        options[drapeau[2:]] = valeur
+    return options, position
 
 
 def _choisir_moteur(moteur: str) -> tuple[str, object, str]:
@@ -166,12 +264,17 @@ def _archiver_mission(e, cible: Path) -> Path | None:
 
 
 def lancer(mission: str, cible: Path, moteur: str = "auto",
-           fournisseur=None) -> tuple[int, dict]:
+           fournisseur=None, confiance: str = "controlled",
+           egress: bool | None = None) -> tuple[int, dict]:
     """Exécute une mission de bout en bout. Retourne (code_sortie, résumé).
 
     API pour les tests : elle ne passe PAS par le bundle Phase 4 (pas d'écriture dans
     artifacts/<digest>/), seulement par l'archive de mission. Le bundle est testé par
     test_bundle.py via la CLI.
+
+    `confiance` est transmis tel quel à `pipeline.executer(confiance_cible=...)` : une
+    valeur hors `pipeline.CONFIANCES` est refusée par le pipeline (PipelineError), ici
+    comme partout — la CLI la intercepte plus tôt, la bibliothèque la lève.
     """
     cible = Path(cible)
     if not cible.exists():
@@ -186,7 +289,7 @@ def lancer(mission: str, cible: Path, moteur: str = "auto",
     try:
         pipeline.MOTEUR_INTENT = moteur
         pipeline.FOURNISSEUR_LLM = fournisseur if moteur == "llm" else None
-        e = pipeline.executer(mission, cible)
+        e = pipeline.executer(mission, cible, confiance_cible=confiance, egress=egress)
     finally:
         pipeline.MOTEUR_INTENT, pipeline.FOURNISSEUR_LLM = ancien_moteur, ancien_four
 
@@ -194,6 +297,10 @@ def lancer(mission: str, cible: Path, moteur: str = "auto",
     resume = {
         "statut": e.arret or "complet",
         "moteur": (e.intent or {}).get("moteur", ""),
+        "confiance_cible": confiance,
+        # L'état de la garde d'export fait partie du résumé : un run mené cage ouverte doit
+        # se reconnaître depuis l'appelant (CLI, interface), pas seulement en ouvrant le journal.
+        "egress": dict(e.egress or {}),
         "mission": e.mission,
         "findings": len(e.findings),
         "clusters_inter_outils": len((e.clusters or {}).get("clusters_inter_outils") or []),
@@ -211,14 +318,19 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 1
 
-    args = [a for a in argv[1:] if not a.startswith("--moteur")]
-    moteur = "auto"
-    for a in argv[1:]:
-        if a.startswith("--moteur"):
-            moteur = a.split("=", 1)[1] if "=" in a else "llm"
-    if moteur not in ("auto", "deterministe", "llm"):
-        print(f"ERREUR : moteur inconnu {moteur!r} (auto | deterministe | llm)")
+    try:
+        options, args = _options_depuis_argv(argv[1:])
+    except ValueError as e:
+        print(f"ERREUR : {e}")
         return 1
+
+    moteur = options.get("moteur", "auto")
+    # Défaut historique conservé — mais il est AFFICHÉ plus bas : muet, ce serait faire
+    # croire qu'une cible a été jugée fiable alors qu'elle n'a simplement pas été posée.
+    confiance = options.get("confiance", "controlled")
+    confiance_explicite = "confiance" in options
+    egress = _booleen(options, "egress")
+    egress_explicite = "egress" in options
 
     cible = Path(args[0]).resolve()
     requete = args[1] if len(args) > 1 else "Analyse la sécurité de mon dépôt"
@@ -233,11 +345,61 @@ def main(argv: list[str]) -> int:
 
     print(f"cible   : {cible}")
     print(f"requete : {requete}")
-    print(f"moteur  : {moteur}" + (f" ({note})" if note else "") + "\n")
+    print(f"moteur  : {moteur}" + (f" ({note})" if note else ""))
+    print(f"confiance : {confiance}" + ("" if confiance_explicite else
+          "  (défaut — aucune évaluation de la cible n'a été faite ; "
+          "--confiance=untrusted pour un dépôt non fiable)"))
+    # Ce que la cage laisse sortir est affiché avec ce qu'elle laisse lire : un run dont
+    # l'outil a pu joindre PyPI n'a pas la même portée qu'un run hors réseau, et l'opérateur
+    # l'apprend en lisant la sortie, pas en relisant le code du profil.
+    print("egress  : " + ("NON DEMANDÉ — le profil fait foi (cage `--unshare-net`)"
+                          if not egress_explicite else
+                          ("ACCORDÉ pour cette mission — les outils marqués `reseau: true` "
+                           "seront lancés hors du réseau coupé" if egress else
+                           "REFUSÉ explicitement — même un profil qui autorise la sortie "
+                           "reste coupé")))
+    print()
     # Note : le moteur EFFECTIF n'est connu qu'après exécution — un LLM injoignable
     # retombe sur le déterministe. Il est affiché plus bas, dans le résumé.
 
-    e = pipeline.executer(requete, cible)
+    try:
+        e = pipeline.executer(requete, cible, confiance_cible=confiance, egress=egress)
+    except Exception as exc:                       # noqa: BLE001
+        # Un refus d'exécution est une INFORMATION, pas une panne : « quelle dépendance
+        # manque, quels outils étaient prêts » se lit sans décoder un traceback. Une panne
+        # qui n'est PAS un refus garde son traceback complet — ici on n'étouffe rien.
+        etat = getattr(exc, "agnt_refus", None)
+        if etat is None:
+            raise
+        print(f"REFUS D'EXÉCUTION · {type(exc).__name__} : {exc}")
+        # La portée demandée est rappelée DANS le bloc de refus : c'est lui qu'on colle dans un
+        # ticket, trois écrans plus bas. Sans cette ligne, un refus de mission menée cage ouverte
+        # se relit comme une mission ordinaire.
+        eg = etat.get("egress") or {}
+        if eg:
+            print("cage     : " + (
+                f"sortie réseau ACCORDÉE à cette mission (profil {eg.get('profil') or '?'}, "
+                f"demande {eg.get('demande') or '?'}"
+                + (", par délégation" if eg.get("delegation") else "") + ")"
+                if eg.get("autorise") else
+                f"réseau coupé pour tous les outils (profil {eg.get('profil') or '?'}, "
+                f"demande {eg.get('demande') or '?'})"))
+        resume = etat.get("resume") or {}
+        comptes = " · ".join(f"{k} {v}" for k, v in resume.items() if v)
+        if comptes:
+            print(f"outils : {comptes}")
+        for prov, motif in (etat.get("conditions") or {}).items():
+            print(f"conditions refusées : {prov} — {motif}")
+        plan = etat.get("plan") or {}
+        if plan.get("providers"):
+            print(f"plan {plan.get('plan_id')} · providers : {', '.join(plan['providers'])}")
+        for o in (etat.get("statuts") or []):
+            print(f"  – {str(o.get('provider'))[:18]:18} {str(o.get('statut'))[:16]:16} "
+                  f"{str(o.get('raison') or '')[:110]}")
+        if etat.get("mission"):
+            print(f"journal : {etat['mission']}")
+        print("\nAucune exécution, aucun rapport produit. Code de sortie 2.")
+        return 2
 
     # ---------------------------------------------------- arrêt avant exécution
     if e.arret:
@@ -246,6 +408,10 @@ def main(argv: list[str]) -> int:
             print(f"\nQUESTION : {e.intent['question']}")
         if e.intent.get("motif"):
             print(f"\nMOTIF : {e.intent['motif']}")
+        motifs = (e.decision or {}).get("motifs") or []
+        if motifs:
+            print(f"\nMOTIFS POLICY : {'; '.join(motifs)}")
+            print(f"confiance appliquée : {confiance} · profil : {e.profil or '—'}")
         print("\nAucune exécution, aucun plan, aucun outil lancé.")
         return 2
 
@@ -266,7 +432,9 @@ def main(argv: list[str]) -> int:
     (dossier / "clusters.json").write_text(
         json.dumps(e.clusters, ensure_ascii=False, indent=2), encoding="utf-8")
     (dossier / "run.json").write_text(
-        json.dumps({"execution_profile": e.profil, "plan_id": e.plan["plan_id"],
+        json.dumps({"execution_profile": e.profil, "confiance_cible": confiance,
+                    "egress": e.egress,
+                    "plan_id": e.plan["plan_id"],
                     "input_digest": e.contexte.get("input_digest"),
                     "input_commit": e.contexte.get("input_commit"),
                     "working_tree_dirty": e.contexte.get("working_tree_dirty"),
@@ -288,12 +456,17 @@ def main(argv: list[str]) -> int:
     # une fuite que NOUS créons — constaté pour de vrai avec Bandit.
     src_run = RACINE / "run"
     conservation = {}
-    for f in sorted(src_run.glob("raw_*.json")):
+    # `raw_*.json` (ce que le cœur a compris) ET `brut_*` (ce que l'outil a écrit) : les
+    # deux sont des sorties d'outil, donc les deux passent par le même examen. Oublier les
+    # seconds ferait sortir du dépôt une valeur non masquée par la fenêtre ajoutée la
+    # semaine dernière — c'est précisément le défaut que test_bundle cherche.
+    for f in sorted(list(src_run.glob("raw_*.json")) + list(src_run.glob("brut_*"))):
         v = ASS.examiner_fichier(f)
         if v.sur:
             shutil.copy2(f, dossier / f.name)
         else:
-            cible = dossier / f.name.replace(".json", ".redacted.json")
+            cible = dossier / (f.name.replace(".json", "") + ".redacted"
+                               + (".json" if f.suffix == ".json" else f.suffix))
             cible.write_text(v.texte_masque, encoding="utf-8")
         conservation[f.name] = ({
             "raw_output": v.to_dict(),
@@ -310,6 +483,10 @@ def main(argv: list[str]) -> int:
         "request_id": e.plan.get("request_id"),
         "cible": str(cible),
         "profil": e.profil,
+        # Pas seulement « quel profil » : ce que la policy a vu de LA cible. Un refus
+        # pour mémoire non bornée ne se comprend qu'avec la confiance appliquée.
+        "confiance_cible": confiance,
+        "decision_policy": e.decision,
         "moteur_intent": e.intent.get("moteur"),
         "identifiants": {
             "plan_id": e.plan["plan_id"],
@@ -321,6 +498,8 @@ def main(argv: list[str]) -> int:
         },
         "intent": e.intent,
         "couverture": e.rapport.get("couverture"),
+        "statuts": list(getattr(e, "statuts", []) or []),
+        "statuts_resume": ST.resumer(getattr(e, "statuts", []) or []),
         "observations": len(e.findings),
         "clusters": len(e.rapport.get("clusters", [])),
         "clusters_inter_outils": len(e.clusters.get("clusters_inter_outils", [])),

@@ -1,0 +1,31 @@
+# Proposition d'intégration — générée par PHASE3/inventaire_plateforme.py. NE PAS ÉDITER À LA MAIN.
+# PROPOSITION, PAS UN PLUGIN : `plugins/propositions/` n'est pas chargé par le runtime ;
+# le copier dans `plugins/` est le seul geste de plus — d'où une grammaire unique,
+# celle que `slice/plugins.py` lit.
+# priorité 0.4 · valeur 4 · complexité 4 · risque 5 · preuve : déclaré (non mesuré ici)
+# dépôt amont : https://github.com/ffuf/ffuf · installation : binaire Go · licence déclarée : MIT
+# rôle pour AGNT : outil qui produit des résultats exploitables
+# limite connue : aucune consignée dans la fiche Phase 1 — à vérifier au run
+# verdict du chargeur de plugins (recalculé, pas décrété) : refusé — plugin ffuf.yaml : `binaire` absent — un plugin sans binaire n'est pas lisible
+id: ffuf
+capacites:
+- WEB_ENDPOINT_DISCOVERY
+entrees:
+- repository
+sortie:
+  format: json
+lecture:
+  modele: plat
+requirements:
+  reseau: true
+  sandbox: true
+licence: MIT
+a_verifier:
+- 'binaire : quel programme lancer, avec quelle empreinte — à épingler dans manifeste_dependances.yaml
+  (c''est LA porte, pas une formalité)'
+- 'risque : PASSIVE, ACTIVE ou EXPLOIT selon un run, jamais selon la documentation'
+- 'sortie : un run réel, puis `lecture.champs` mappé sur les clés réellement rendues'
+- codes de retour réels (beaucoup de scanners sortent 1 quand ils trouvent)
+- '`lecture.items_from` : la clé qui porte la liste des résultats, à lire dans la sortie'
+- 'egress : `reseau: true` sera REFUSÉ tant que l''autorisation d''export n''est pas accordée explicitement
+  pour la mission — ne pas retirer cette garde pour faire passer l''outil'

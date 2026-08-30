@@ -25,10 +25,16 @@ Si un parser ne respecte pas ce contrat, c'est le parser qui est faux, pas le c�
 from __future__ import annotations
 
 import re
+import sys
+from pathlib import Path
 
 from assainissement import masquer_large
 
 _REGISTRE = {}
+_REGISTRE_CHARGÉ = False
+# Nom du module → raison de l'échec. Lu par le test de cohérence : un module de parser
+# qui ne s'importe pas est un trou de couverture, pas un détail.
+_IMPORT_ÉCHOUÉ: dict[str, str] = {}
 
 
 def enregistrer(nom: str):
@@ -39,22 +45,47 @@ def enregistrer(nom: str):
     return _decorateur
 
 
-def obtenir(nom: str):
-    """Retourne un parser par son nom, ou None.
+def _charger_tous() -> None:
+    """Importe TOUS les modules `parsers_*.py` du paquet — l'enregistrement est un effet
+    de bord du décorateur `@enregistrer`.
 
-    Importe paresseusement les parsers connus : le cœur ne les importe jamais lui-même.
+    Pourquoi ce n'est plus une liste à la main : ajouter un outil devait jusqu'ici
+    modifier CE fichier (le registre des parsers), ce qui contredisait la promesse —
+    « un nouveau format = un fichier en plus, aucun changement du cœur ». La découverte
+    est bornée au répertoire du paquet et ignore les modules cassés : un parser dont
+    l'import échoue ne doit pas empêcher les autres de s'enregistrer, mais il est CONSIGNÉ
+    (la variable `_import_échoué` est lue par le test de cohérence).
     """
+    global _REGISTRE_CHARGÉ
+    if _REGISTRE_CHARGÉ:
+        return
+    _REGISTRE_CHARGÉ = True
+    repertoire = Path(__file__).resolve().parent
+    for fichier in sorted(repertoire.glob("parsers_*.py")):
+        nom = fichier.stem
+        if nom not in sys.modules:
+            try:
+                __import__(nom)
+            except Exception as e:                     # noqa: BLE001  (voir ci-dessus)
+                _IMPORT_ÉCHOUÉ[nom] = f"{type(e).__name__}: {e}"
+
+
+def obtenir(nom: str):
+    """Retourne un parser par son nom, ou None."""
     if nom not in _REGISTRE:
-        try:
-            import parsers_bandit  # noqa: F401  (effet de bord : enregistrement)
-        except ImportError:
-            pass
+        _charger_tous()
     return _REGISTRE.get(nom)
 
 
 def disponibles() -> list[str]:
-    obtenir("__forcer_chargement__")
+    _charger_tous()
     return sorted(_REGISTRE)
+
+
+def echecs_import() -> dict[str, str]:
+    """Modules de parser non chargés (nom → erreur). Vide attendu."""
+    _charger_tous()
+    return dict(_IMPORT_ÉCHOUÉ)
 
 
 # ------------------------------------------------------------------ utilitaires

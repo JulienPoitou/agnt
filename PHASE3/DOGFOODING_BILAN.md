@@ -140,7 +140,31 @@ sonde où un outil signale l'usage d'une dépendance que l'autre signale vulnér
 
 ---
 
-## Suivi de roadmap (2026-08-29)
+## Suivi de roadmap (2026-08-29, relu le 2026-08-30)
+
+**Complément 2026-08-30 — l'« autre aveuglement » est fermé.** La relativisation aux
+racines connues ne couvrait ni `./x`, ni `a/../b`, ni le dépôt nommé depuis le répertoire
+du run (`/PHASE3/testrepo_iac/k8s.yaml`, 20 findings checkov réels). Ces trois formes sont
+canonisées depuis le 2026-08-30 dans `findings.normalise_chemin` (le clusterer n'a pas été
+touché : il compare des identités, il ne les devine pas). Mesuré sur les captures de la
+fixture iac : 148 findings → 5 clusters inter-outils dont `k8s.yaml` (checkov × kics),
+et 0 cluster mêlant deux fichiers. Le mapping npm reste NON codé, pour les mêmes raisons
+qu'au 2026-08-29 : impact toujours non démontré. Détail : `PROJET_ETAT.md`, étape 6ter.
+
+**Suites du 2026-08-30 — chantiers C (couverture Go du mapping) et D (clarification LLM).**
+C n'a pas consisté à régénérer le mapping : mesuré, l'ancien générateur produisait **0 entrée
+Go même avec un `golang.yaml` portant des chemins de module** — la couverture était nulle par
+construction, pas par oubli. S'ensuivent quatre corrections de `extraire_mapping.py` (liste
+d'autorité = manifeste épinglé, `lues`/`mappées` par jeu, refus tracé des paquets Go en nom
+court, tables incohérentes = génération refusée) et une batterie `test_mapping_go.py`
+(17/17, 1 non évalué) dont les deux cas qui comptent sont les **négatifs** : sur les captures
+réelles de `testrepo_go`, `technology: [go]` est un langage et ne nomme aucune dépendance →
+0 paquet, 0 cluster, et c'est la réponse correcte. **Le dogfood de C reste à faire sur la
+machine source** (`semgrep.dev` injoignable ici) : `python3 PHASE3/extraire_mapping.py` puis
+lire « golang.yaml : N lues · M mappées ». `M = 0` ⇒ pas de corrélation Go codable, verdict
+identique au mapping npm. D : « testé avec Groq » ne vaut pas « validé en production » —
+l'ambiguïté est levée dans `PROJET_ETAT.md` par une clarification datée plutôt qu'en effaçant
+les états successifs.
 
 Chantier « normalisation des chemins » FAIT (décision utilisateur) : chemins
 relativisés aux racines connues avant calcul des fingerprints ; batterie

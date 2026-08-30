@@ -186,7 +186,8 @@ class Plan:
 
 
 def construire(requete: str, cible: str, providers: list[str], registre: Registry,
-               moteur_intent: str, exclus_applicabilite: dict | None = None) -> Plan:
+               moteur_intent: str, exclus_applicabilite: dict | None = None,
+               exclus_conditions: dict | None = None) -> Plan:
     """Construit le plan à partir du registre.
 
     Chaque étape refuse un provider qui n'appartient pas à la capacité demandée :
@@ -250,6 +251,11 @@ def construire(requete: str, cible: str, providers: list[str], registre: Registr
     # elle se raconte comme les autres.
     if exclus_applicabilite:
         selection["applicabilite"] = dict(exclus_applicabilite)
+    # Conditions d'exécution non remplies (2026-08-30) : un outil écarté parce qu'il lui
+    # faut le réseau ou une base absente est une DÉCISION, pas un accident. Elle se lit au
+    # même endroit que les écartements de sélection et d'applicabilité.
+    if exclus_conditions:
+        selection["conditions"] = dict(exclus_conditions)
 
     plan = Plan(
         requete=requete,

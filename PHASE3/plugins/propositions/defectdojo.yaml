@@ -1,0 +1,32 @@
+# Proposition d'intégration — générée par PHASE3/inventaire_plateforme.py. NE PAS ÉDITER À LA MAIN.
+# PROPOSITION, PAS UN PLUGIN : `plugins/propositions/` n'est pas chargé par le runtime ;
+# le copier dans `plugins/` est le seul geste de plus — d'où une grammaire unique,
+# celle que `slice/plugins.py` lit.
+# priorité 0.8333 · valeur 5 · complexité 3 · risque 2 · preuve : aucun contrat de sortie connu : à lire avant intégration
+# dépôt amont : https://github.com/DefectDojo/django-DefectDojo · installation : pip · licence déclarée : BSD-3-Clause
+# rôle pour AGNT : outil qui produit des résultats exploitables
+# limite connue : aucune consignée dans la fiche Phase 1 — à vérifier au run
+# verdict du chargeur de plugins (recalculé, pas décrété) : refusé — plugin defectdojo.yaml : `binaire` absent — un plugin sans binaire n'est pas lisible
+id: defectdojo
+capacites:
+- CODE_STATIC_ANALYSIS
+- DEPENDENCY_ANALYSIS
+- WEB_VULN_SCAN
+- VULN_MANAGEMENT
+entrees:
+- repository
+sortie:
+  format: json
+lecture:
+  modele: plat
+requirements:
+  reseau: false
+  sandbox: true
+licence: BSD-3-Clause
+a_verifier:
+- 'binaire : quel programme lancer, avec quelle empreinte — à épingler dans manifeste_dependances.yaml
+  (c''est LA porte, pas une formalité)'
+- 'risque : PASSIVE, ACTIVE ou EXPLOIT selon un run, jamais selon la documentation'
+- 'sortie : un run réel, puis `lecture.champs` mappé sur les clés réellement rendues'
+- codes de retour réels (beaucoup de scanners sortent 1 quand ils trouvent)
+- '`lecture.items_from` : la clé qui porte la liste des résultats, à lire dans la sortie'

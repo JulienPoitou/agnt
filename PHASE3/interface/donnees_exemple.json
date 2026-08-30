@@ -1,0 +1,170 @@
+{
+  "maquette": true,
+  "note": "Valeurs inventées, SCHÉMA RÉEL. Chaque clé vient d'un artefact écrit par le moteur : plan.json (steps, selection), rapport.json (pipeline._rapport), findings.json (Finding.to_dict), clusters.json (clusterer.regrouper), run.json (Contexte.to_dict), RAPPORT.md. Aucun champ décoratif : ce que le moteur n'écrit pas n'est pas affiché.",
+
+  "run": {
+    "mission": "m-20260830T141207Z-9c4f1a02",
+    "run_id": "run-9c4f1a02",
+    "statut": "complet",
+    "question": "Analyse ce dépôt et trouve les problèmes de sécurité importants.",
+    "moteur": "llm:groq",
+    "confiance_cible": "controlled",
+    "profil": "controlled_dev",
+    "findings": 7,
+    "clusters_inter_outils": 1,
+    "motif": "",
+    "sortie": "PHASE3/artifacts/missions/m-20260830T141207Z-9c4f1a02/sortie"
+  },
+
+  "chaine": {
+    "requete": "Analyse ce dépôt et trouve les problèmes de sécurité importants.",
+    "requete_canonique": "analyse sécurité dépôt",
+    "capacites_demandees": ["CODE_STATIC_ANALYSIS", "SECRET_DETECTION", "DEPENDENCY_ANALYSIS"],
+    "motifs_intent": {
+      "CODE_STATIC_ANALYSIS": "« analyse » + « code » → analyse statique",
+      "SECRET_DETECTION": "« sécurité importants » couvre les secrets exposés",
+      "DEPENDENCY_ANALYSIS": "requirements.txt et package-lock.json présents dans la cible"
+    },
+    "plan_id": "3a8fd0fb5f536e54",
+    "plan_empreinte": "b7d1e0c4a9f32518",
+    "moteur_intent": "llm:groq",
+    "cible": "PHASE3/testrepo",
+    "steps": [
+      {"capability": "CODE_STATIC_ANALYSIS", "provider": "semgrep", "risque": "PASSIVE",
+       "commande": ["{BIN}/semgrep", "scan"],
+       "args": ["--config={REGLES}/python.yaml", "--config={REGLES}/security-audit.yaml",
+                "--config={REGLES}/javascript.yaml", "--metrics=off", "--disable-version-check",
+                "--json", "--quiet", "--output={sortie}"],
+       "sorties": ["semgrep.json"]},
+      {"capability": "SECRET_DETECTION", "provider": "gitleaks", "risque": "PASSIVE",
+       "commande": ["{BIN}/gitleaks", "git"],
+       "args": ["--redact", "--report-format=json", "--no-banner", "--report-path={sortie}/gitleaks.json"],
+       "sorties": ["gitleaks.json"]},
+      {"capability": "DEPENDENCY_ANALYSIS", "provider": "trivy", "risque": "PASSIVE",
+       "commande": ["{BIN}/trivy", "fs"],
+       "args": ["--quiet", "--format=json", "--cache-dir={DB}/trivy", "--scanners=vuln,misconfig"],
+       "sorties": ["trivy.json"]}
+    ],
+    "selection": {
+      "CODE_STATIC_ANALYSIS": {"choisis": ["semgrep"], "ecartes": ["bandit_custom"],
+        "motif": "provider interne non proposé au modèle ; écartés : bandit_custom (interne)"},
+      "SECRET_DETECTION": {"choisis": ["gitleaks"], "ecartes": [],
+        "motif": "seul provider PASSIF déclaré pour cette capacité (priorité 100)"},
+      "DEPENDENCY_ANALYSIS": {"choisis": ["trivy"], "ecartes": ["grype"],
+        "motif": "fan_out = 1 demandé par le manifeste pour cette cible ; écartés : grype"}
+    },
+    "autorisation": {
+      "allow": true,
+      "motifs": ["3 steps, tous PASSIF et déclarés dans le registre",
+                 "empreinte du registre concordante",
+                 "aucun jeton suspect dans les argv",
+                 "cible autorisée · profil controlled_dev"]
+    },
+    "couverture": {
+      "semgrep": {
+        "analysé": ["app.py"],
+        "non_analysé": [{"cible": "static/bundle.js", "etat": "ignored_by_config",
+                         "raison": "hors du périmètre déclaré par le manifeste"}],
+        "limites": ["semgrep ne prouve pas l'absence de faille logique",
+                    "jeux de règles passés : python.yaml, security-audit.yaml, javascript.yaml"]
+      },
+      "gitleaks": {
+        "analysé": ["."],
+        "non_analysé": [],
+        "limites": ["aucun --config épinglé par le plan : gitleaks cherche son .gitleaks.toml dans la cible scannée (constat G6a)",
+                    "valeur masquée au rendu, brute dans raw_gitleaks.json"]
+      },
+      "trivy": {
+        "analysé": ["requirements.txt"],
+        "non_analysé": [{"cible": "Dockerfile", "etat": "timeout", "raison": "temps_borne = 300 s atteint"}],
+        "limites": ["base de vulnérabilités du 2026-08-28 : un CVE publié après est invisible"]
+      }
+    }
+  },
+
+  "findings": [
+    {"id": "sg-0001",
+     "source": {"tool": "semgrep", "original_rule_id": "python.flask.security.sql.string-concat",
+                "canonical_rule_id": "semgrep:python.flask.security.sql.string-concat", "package": null},
+     "identity": {"canonical_rule_id": "semgrep:python.flask.security.sql.string-concat", "fingerprint": "9c1b7e4a02d3"},
+     "location": {"asset": "repository", "file": "app.py", "line": 88, "package": null},
+     "severity": {"value": "ERROR", "origine": "semgrep"},
+     "evidence": {"message": "String built with concatenation used in a SQL query.",
+                  "extrait": "query = \"SELECT * FROM users WHERE name = '\" + name + \"'\""},
+     "statut": "open"},
+    {"id": "gl-0001",
+     "source": {"tool": "gitleaks", "original_rule_id": "generic-api-key",
+                "canonical_rule_id": "gitleaks:generic-api-key", "package": null},
+     "identity": {"canonical_rule_id": "gitleaks:generic-api-key", "fingerprint": "7e0a55c1b9d4"},
+     "location": {"asset": "repository", "file": "app.py", "line": 12, "package": null},
+     "severity": {"value": "HIGH", "origine": "gitleaks"},
+     "evidence": {"message": "generic API key detected in committed settings",
+                  "secret": "•••••••••••• (masqué au rendu)", "entropy": 4.81},
+     "statut": "open"},
+    {"id": "tr-0002",
+     "source": {"tool": "trivy", "original_rule_id": "CVE-2024-11111",
+                "canonical_rule_id": "trivy:CVE-2024-11111", "package": "pyyaml==5.3.1"},
+     "identity": {"canonical_rule_id": "trivy:CVE-2024-11111", "fingerprint": "44c7d2e81a05"},
+     "location": {"asset": "dependency", "file": "requirements.txt", "line": 7, "package": "pyyaml"},
+     "severity": {"value": "CRITICAL", "origine": "base de vulnérabilités"},
+     "evidence": {"titre": "Deserialization of untrusted data in yaml.load", "cwe": ["CWE-502"],
+                  "references": ["https://nvd.nist.gov/vuln/detail/CVE-2024-11111"]},
+     "statut": "open"},
+    {"id": "sg-0002",
+     "source": {"tool": "semgrep", "original_rule_id": "python.lang.security.audit.subprocess-shell-true",
+                "canonical_rule_id": "semgrep:python.lang.security.audit.subprocess-shell-true", "package": null},
+     "identity": {"canonical_rule_id": "semgrep:python.lang.security.audit.subprocess-shell-true", "fingerprint": "b2440fe9d17c"},
+     "location": {"asset": "repository", "file": "app.py", "line": 141, "package": null},
+     "severity": {"value": "WARNING", "origine": "semgrep"},
+     "evidence": {"message": "subprocess with shell=True on a value derived from request data.",
+                  "extrait": "subprocess.run(f\"convert {path}\", shell=True)"},
+     "statut": "open"},
+    {"id": "tr-0003",
+     "source": {"tool": "trivy", "original_rule_id": "CVE-2025-22222",
+                "canonical_rule_id": "trivy:CVE-2025-22222", "package": "requests==2.19.0"},
+     "identity": {"canonical_rule_id": "trivy:CVE-2025-22222", "fingerprint": "aa02f6b17c33"},
+     "location": {"asset": "dependency", "file": "requirements.txt", "line": 2, "package": "requests"},
+     "severity": {"value": "MEDIUM", "origine": "base de vulnérabilités"},
+     "evidence": {"titre": "Credential leak across hosts on redirect", "cwe": ["CWE-522"], "references": []},
+     "statut": "open"}
+  ],
+
+  "clusters": {
+    "stats": {"findings_en_entree": 7, "clusters": 3, "findings_regroupes": 5,
+              "findings_non_regroupes": 2, "reduction": "7 → 5"},
+    "clusters": [
+      {"cluster_id": "CL-001", "confidence": "high", "reason": ["same_asset", "same_file", "ligne_proche"],
+       "members": ["sg-0001", "sg-0002"], "cle": "fichier:app.py"},
+      {"cluster_id": "CL-002", "confidence": "medium", "reason": ["same_package", "related_dependency"],
+       "members": ["tr-0002", "tr-0003"], "cle": "paquet:requirements.txt"},
+      {"cluster_id": "CL-003", "confidence": "low", "reason": ["same_rule"],
+       "members": ["gl-0001"], "cle": "regle:gitleaks:generic-api-key"}
+    ],
+    "clusters_inter_outils": [
+      {"cluster_id": "XI-001", "confidence": "medium",
+       "reason": ["semgrep et trivy touchent le même fichier de dépendances"],
+       "members": ["sg-0002", "tr-0002"], "cle": "fichier:requirements.txt"}
+    ],
+    "non_regroupe": []
+  },
+
+  "contexte": {
+    "outils": {"semgrep": "1.79.0", "trivy": "trivy version 0.52.1", "gitleaks": "8.18.4",
+               "bwrap": "bubblewrap 0.9.0", "opa": "0.64.0"},
+    "regles": {"python.yaml": "0a95593b8ceaa09b1e0d5c4a7f2b9e10",
+               "security-audit.yaml": "c41d7e0a92bb3516f0e5a1d2c83b4706",
+               "javascript.yaml": "77ab30f9d1c4e2508b6a7f3e0d11cc94"},
+    "base_trivy": "3f0a9d5c77b2e1480aa6c3d5e91b70f2",
+    "policy": "d1c0be9a77f3425c8b0a6d1e7c3f9024",
+    "registre": "0a95593b8ceaa09b",
+    "sandbox": {"cpu_borne": true, "processus_bornes": true, "temps_borne": true,
+                "memoire_bornee": false, "reseau": "aucun (--unshare-net)",
+                "ecriture": "répertoire de sortie uniquement (--bind unique)"},
+    "contexte_empreinte": "e70b1d4a9c3f2508",
+    "input_digest": "11c9d7f0b2a4538e6d0c1a9f77b2e043",
+    "input_commit": "421bec1",
+    "working_tree_dirty": false
+  },
+
+  "rapport_markdown": "# Mission m-20260830T141207Z-9c4f1a02\n\n## Ce qui a été analysé\n\n- cible : `PHASE3/testrepo` (commit `421bec1`, arbre propre)\n- capacités retenues : CODE_STATIC_ANALYSIS · SECRET_DETECTION · DEPENDENCY_ANALYSIS\n- outils : semgrep, gitleaks, trivy — 1 fichier non analysé (timeout trivy)\n\n## Constats\n\n1. `app.py:88` — requête SQL construite par concaténation (semgrep, ERROR)\n2. `app.py:12` — clé API générique commitée (gitleaks, HIGH)\n3. `requirements.txt:7` — pyyaml 5.3.1, désérialisation non fiable (trivy, CRITICAL)\n\n## Limites connues\n\n- `Dockerfile` : expiré (temps_borne 300 s)\n- gitleaks : aucun jeu de règles épinglé par le plan (constat G6a)\n- base de vulnérabilités du 2026-08-28\n\nUn « 0 constat » ici ne prouverait rien : il signifierait seulement que les outils lancés,\navec les règles listées ci-dessus, n'ont rien remonté."
+}

@@ -86,6 +86,132 @@ class Finding:
         }
 
 
+# COORDONNÉES DE CIBLE (2026-08-30). Jusqu'ici, `location` était un triplet
+# fichier:ligne+paquet : correct pour du code, inexistant pour le reste. Un finding de
+# nuclei ou de sqlmap porte une URL ; celui de trivy/grype porte un paquet ; un finding
+# cloud porte une ressource (`arn:aws:s3:::bucket`), une image (`repo/tag@sha256:...`)
+# ou un hôte. Sans vocabulaire de cible, ces outils ne pouvaient PAS être intégrés
+# honnêtement : leur finding n'avait nulle part où loger sa localisation, et un modèle
+# « tout est un fichier » aurait fini par inventer des chemins.
+#
+# Quatre coordonnées, déclarées par le manifest (alias dans `extraction.champs`) : une
+# fausse coordonnée est un finding muet, pas une erreur visible — d'où le vocabulaire
+# fermé, et le fait que le cœur ne devine JAMAIS l'asset à partir d'un chemin.
+COORDONNEES = (("url", "url"), ("hote", "hote"), ("image", "image"),
+               ("ressource", "ressource"))
+_ASSET_DEFAUT = "repository"
+
+
+def _coordonnee(c: dict) -> tuple[str, str, str]:
+    """(type d'asset, clé de localisation, valeur) — première coordonnée DÉCLARÉE et pleine.
+
+    Ordre = ordre de `COORDONNEES`, donc déterministe quand un outil en fournit deux.
+    """
+    for alias, cle in COORDONNEES:
+        v = c.get(alias)
+        if v:
+            return alias, cle, str(v)
+    return _ASSET_DEFAUT, "", ""
+
+
+def _nettoie_url(v: str) -> str:
+    """Cache l'identifiant d'une URL.
+
+    Une URL d'outil peut porter `https://user:***@hote/x` (Basic auth dans l'URL,
+    fréquent dans les sortie de scanners web) : le masque général des secrets ne reconnaît
+    pas cette forme parce qu'elle n'a pas de nom de variable. On ne la garde jamais telle
+    quelle — le finding a besoin du PATH, pas du couple d'identifiants.
+    """
+    if "://" not in v:
+        return v
+    tete, _, reste = v.partition("://")
+    autorite, sep, suite = reste.partition("/")
+    if "@" in autorite:
+        autorite = "***@" + autorite.rsplit("@", 1)[1]
+    return tete + "://" + autorite + (sep + suite if sep else "")
+
+
+_RE_CVE = re.compile(r"(?i)\b(CVE-\d{4}-\d{4,})\b")
+
+
+def cve_de(regle_canonique: str, *autres: str) -> str | None:
+    """CVE lue dans un identifiant de règle, ou None.
+
+    Motif strict (`CVE-AAAA-NNNN+`), pas de « ressemble à un identifiant » : une CVE
+    inventée dans un rapport de sécurité est le pire défaut possible. Les outils dont la
+    CVE n'apparaît pas dans l'id (GHSA-… pour grype) ressortent à None, et le rapport le
+    dit — c'est un manque assumé, pas un zéro.
+    """
+    for source in (regle_canonique, *autres):
+        if not source:
+            continue
+        m = _RE_CVE.search(str(source))
+        if m:
+            return m.group(1).upper()
+    return None
+
+
+def vue_unifiee(f, *, versions: dict | None = None) -> dict:
+    """Projection plate d'un finding, pour tout ce qui doit comparer d'autres outils.
+
+    À quoi ça sert : un finding reste stocké par blocs (source/identity/location/…),
+    forme qui a fait ses preuves pour le rejeu. Mais une cible web, une console, un
+    export CSV ou une corrélation inter-outils veulent un enregistrement PLAT avec les
+    mêmes noms de champs pour tous les outils. Cette fonction est le SEUL endroit où cette
+    projection est définie — sinon chaque consommateur refait ses choix, et c'est ainsi
+    que deux écrans finissent par contredire un rapport.
+
+    Règle : un champ que personne n'a fourni vaut None. Il n'est ni 0, ni « inconnu »,
+    ni deviné — la différence entre « l'outil ne l'a pas dit » et « il a dit rien » est
+    précisément ce que le produit s'interdit de perdre.
+    """
+    d = f.to_dict() if hasattr(f, "to_dict") else dict(f or {})
+    src, ident = d.get("source") or {}, d.get("identity") or {}
+    loc, sev, ev = d.get("location") or {}, d.get("severity") or {}, d.get("evidence") or {}
+    asset = loc.get("asset") or _ASSET_DEFAUT
+    outil = src.get("tool") or ""
+    regle = src.get("canonical_rule_id") or ""
+    version = ""
+    if versions:
+        # la table `contexte.outils` est indexée par NOM d'outil (et non par provider)
+        version = str(versions.get(outil) or versions.get(src.get("tool_id") or "") or "")
+    vue = {
+        "id": d.get("id"),
+        "outil": outil,
+        "version_outil": version or None,
+        "categorie": src.get("categorie") or None,
+        "capacite": src.get("capability") or None,
+        "provider": src.get("provider") or None,
+        "cible": {"type": asset,
+                  "chemin": loc.get("file") or None,
+                  "ligne": loc.get("line"),
+                  "url": loc.get("url"),
+                  "hote": loc.get("hote"),
+                  "image": loc.get("image"),
+                  "ressource": loc.get("ressource"),
+                  "paquet": loc.get("package") or None},
+        "regle": {"originale": src.get("original_rule_id") or None,
+                  "canonique": regle or None,
+                  "nom": src.get("nom_regle") or None},
+        "cve": cve_de(regle, src.get("original_rule_id") or "", ev.get("message") or ""),
+        "cwe": ev.get("cwe") or None,
+        "severite": sev.get("value") or None,
+        "origine_severite": sev.get("origine") or None,
+        "confiance": ev.get("confiance") or None,
+        "remediation": ev.get("remediation") or None,
+        "reference": ev.get("reference") or None,
+        "message": ev.get("message") or None,
+        "empreinte": ident.get("fingerprint") or None,
+        "statut": d.get("statut") or None,
+        "horodatage": src.get("horodatage") or None,
+    }
+    # ce que l'OUTIL n'a pas dit, distingué de ce qu'il a dit vide : un lecteur d'un export
+    # doit voir « personne ne sait » sans rouvrir le finding brut.
+    vue["absents"] = [k for k in ("cve", "cwe", "remediation", "confiance",
+                                  "version_outil") if vue[k] is None]
+    return vue
+
+
 def _fp(*parties: str) -> str:
     return hashlib.sha256("\x1f".join(parties).encode("utf-8")).hexdigest()[:32]
 
@@ -147,36 +273,85 @@ def _paquet_concerne(rid: str) -> dict:
             "confidence": d.get("confiance", "none")}
 
 
-def normalise_chemin(fichier: str, racines=()) -> str:
-    """Chemin relatif à la cible, indépendant de la machine (décision 2026-08-28).
+def _replie(segs: list[str]) -> str | None:
+    """Replie « . » et « .. » LEXICALEMENT. Renvoie None si ça remonte au-dessus du
+    point d'ancrage : dans ce cas le chemin n'est PAS normalisable, et le refus est la
+    réponse — l'aplatir (« ../x » → « x ») fabrique une identité de fichier qui créera
+    un `same_file` entre deux fichiers distincts. Aucun accès au filesystem : la
+    fonction reste déterministe et reproductible hors isolateur.
+    """
+    out: list[str] = []
+    for s in segs:
+        if s in ("", "."):
+            continue
+        if s == "..":
+            if out and out[-1] != "..":
+                out.pop()
+                continue
+            return None                      # remonte hors de la racine
+        out.append(s)
+    return "/".join(out)
 
-    Les chemins émis par les outils ont trois formes selon le contexte : absolus
+
+def _segs(chemin: str) -> list[str]:
+    return [s for s in chemin.replace("\\", "/").split("/") if s not in ("", ".")]
+
+
+def normalise_chemin(fichier: str, racines=()) -> str:
+    """Chemin relatif à la cible, indépendant de la machine (décision 2026-08-28,
+    complétée le 2026-08-30).
+
+    Les chemins émis par les outils ont plusieurs formes selon le contexte : absolus
     sous le montage de l'isolateur (/…/mt-scan/docs/x.js), relatifs à slash meneur
-    (/main.tf — convention checkov), ou relatifs (docs/package-lock.json — trivy).
-    Les fingerprints et les clés de cluster sont calculés à partir du fichier :
-    sans normalisation, les identités dépendent du point de montage et de la
-    machine. Mesuré en dogfooding : 72 findings eslint en chemin absolu, 7 clés
-    de cluster concernées.
+    (/main.tf — convention checkov), relatifs (docs/package-lock.json — trivy),
+    « ./main.go » (style gosec), ou le dépôt nommé depuis le répertoire du run
+    (/PHASE3/testrepo_iac/k8s.yaml — checkov hors isolateur, 20 findings mesurés sur
+    la fixture iac). Les fingerprints et les clés de cluster sont calculés à partir du
+    fichier : sans normalisation, les identités dépendent du point de montage, du cwd
+    et du séparateur. Mesuré en dogfooding : 72 findings eslint en chemin absolu, 7 clés
+    de cluster concernées ; et, à l'envers, un `./` non replié qui empêchait deux outils
+    de parler du MÊME fichier.
 
     Règles — déterministes, SANS accès au filesystem :
-      1. une racine connue (montage, cible) est retirée → chemin relatif ;
-      2. un slash meneur résiduel est retiré : dans l'isolateur la cible est la
-         seule arborescence visible, donc un chemin à slash meneur EST relatif à
-         la cible (hypothèse documentée, testée dans test_chemins.py) ;
-      3. tout autre chemin est rendu TEL QUEL — on ne fabrique pas de relativité.
+      0. aucune marque de chemin (ni « / », ni « \\ », ni « ./ ») → RENDU TEL QUEL.
+         Un finding peut porter un paquet, un asset, un dépôt : « golang.org/x/text »
+         n'est pas un chemin et ne devient jamais un chemin local.
+      1. séparateurs unifiés (Windows → POSIX), pour que l'identité ne dépende pas du
+         séparateur. Inerte sous Linux, aucune occurrence observée.
+      2. une racine connue (montage, cible — sous TOUTES ses formes, absolue ou
+         relative) est retirée, puis les segments « . » et « .. » sont repliés ;
+      3. un slash meneur résiduel est retiré : dans l'isolateur la cible est la seule
+         arborescence visible, donc un chemin à slash meneur EST relatif à la cible
+         (hypothèse documentée, testée dans test_chemins.py) ;
+      4. si le repliement remonte AU-DESSUS de la racine (`../x`, `/..`), rien n'est
+         aplati : le chemin est rendu tel quel. Il reste donc DISTINCT du fichier du
+         même nom dans la cible — la prudence prime sur le regroupement ;
+      5. tout autre chemin est rendu TEL QUEL — on ne fabrique pas de relativité.
     """
     if not fichier:
         return fichier or ""
     f = str(fichier)
-    for r in racines:
-        r = str(r).rstrip("/")
-        if r and (f == r or f.startswith(r + "/")):
-            reste = f[len(r):].lstrip("/")
-            if reste:
-                return reste
-    if f.startswith("/") and not f.startswith("//"):
-        return f[1:]
-    return f
+    if "/" not in f and "\\" not in f and not f.startswith(("./", ".\\")):
+        return f                                     # règle 0 : pas un chemin
+
+    g = f.replace("\\", "/")                          # règle 1
+    segs = _segs(g)
+    for r in racines:                                # règle 2
+        rs = _segs(str(r))
+        if not rs or len(segs) < len(rs) or segs[:len(rs)] != rs:
+            continue
+        reste = _replie(segs[len(rs):])
+        if reste is None:
+            return f                                 # règle 4 : remontée → refus
+        if reste:
+            return reste
+    if g.startswith("//"):
+        return f                                     # « //… » : on n'y touche pas
+    replie = _replie(segs)
+    if replie is None:
+        return f                                     # règle 4
+    return replie
+
 
 
 def depuis_semgrep(brut, racines=()) -> list[Finding]:
@@ -330,10 +505,35 @@ def depuis_manifest(brut, mani, outil: str, racines=()) -> list:
             paquet = _paquet_concerne(canon)["paquet"] if regle else None
             paquet_methode = "mapping_versionné" if paquet else "inconnu"
             paquet_confiance = "medium" if paquet else "none"
+        asset, cle_cible, valeur_cible = _coordonnee(c)
+        if asset == "url":
+            valeur_cible = _nettoie_url(valeur_cible)
+        # L'empreinte suit la coordonnée : deux URL d'un même hôte ne sont pas le même
+        # finding, et deux fichiers portant la même règle ne doivent pas fusionner.
+        # Pour `repository`, la composition reste EXACTEMENT celle d'avant (quatre
+        # parties) — les digests historiques des bundles de dogfooding sont épinglés en
+        # test, et un changement d'identité silencieux casserait la corrélation
+        # inter-outils autant que le rejeu.
+        empreinte = (_fp(outil, canon, str(fichier), str(ligne)) if asset == _ASSET_DEFAUT
+                     else _fp(outil, canon, asset, valeur_cible))
+        location = {"asset": asset, "file": fichier, "line": ligne, "package": paquet}
+        if asset != _ASSET_DEFAUT:
+            location[cle_cible] = valeur_cible
+        # DEUX corrections de justesse, mesurées le 2026-08-30 :
+        #  · `source["tool"]` doit nommer l'OUTIL (le binaire), pas le provider. Le
+        #    clusterer compte les outils distincts d'un cluster pour affirmer une
+        #    convergence : avec l'id du provider, `semgrep` et `semgrep_go` (ou `bandit`
+        #    et `bandit_custom`) Comptaient deux moteurs indépendants alors qu'ils sont
+        #    le même moteur sur deux jeux de règles. Une convergence surévaluée est une
+        #    affirmation de sécurité fausse, pas un détail de présentation.
+        #  · l'identifiant de finding doit être unique dans la mission. Le préfixe à
+        #    deux lettres (`se-0001`) faisait collisionner `semgrep` et `semgrep_go`
+        #    dans la même exécution — et `par_id[m]` écrasait silencieusement le premier.
         out.append(Finding(
-            id=f"{outil[:2]}-{i:04d}",
+            id=f"{outil}-{i:04d}",
             source={
-                "tool": outil,
+                "tool": (getattr(mani, "binaire", "") or outil),
+                "provider": outil,
                 "original_rule_id": regle,
                 "canonical_rule_id": f"{outil}:{canon}",
                 "package": paquet,
@@ -341,16 +541,23 @@ def depuis_manifest(brut, mani, outil: str, racines=()) -> list:
                                     "confidence": paquet_confiance},
                 "nom_regle": c.get("nom_regle"),
                 "declaratif": True,
+                # capacité du provider : la CATÉGORIE du finding vient de la déclaration,
+                # pas d'un dictionnaire de noms d'outils entretenu à la main.
+                "capability": getattr(mani, "capability", "") or None,
+                "provider": getattr(mani, "id", "") or outil,
             },
             identity={"canonical_rule_id": f"{outil}:{canon}",
-                      "fingerprint": _fp(outil, canon, str(fichier), str(ligne))},
-            location={"asset": "repository", "file": fichier, "line": ligne,
-                      "package": paquet},
+                      "fingerprint": empreinte},
+            location=location,
             severity={"value": str(c.get("severite") or "UNKNOWN").upper(),
                       "origine": outil},
             evidence={"message": c.get("message"),
                       "cwe": c.get("cwe"),
-                      "reference": c.get("reference")},
+                      "reference": c.get("reference"),
+                      # deux champs que plusieurs outils fournis réellement (checkov,
+                      # kics, trivy) : déclarés dans `extraction.champs`, jamais déduits.
+                      "remediation": c.get("remediation"),
+                      "confiance": c.get("confiance")},
         ))
     return out
 

@@ -277,6 +277,16 @@ capabilities:
           - "--no-progress"
           - "--cache-dir={DB}/trivy"   # {DB} = parent commun des bases (trivy/, grype/)
           - "--output={sortie}"
+        conditions:
+          # `--skip-db-update` (déclaré plus haut) signifie : la base vient du cache.
+          # Donc si le cache est vide, Trivy ne trouve RIEN À COMPARER — et selon la
+          # version, il sort soit un « 0 vulnérabilité » silencieux, soit une erreur.
+          # Le cœur ne compte pas sur l'humeur de l'outil : la base est exigée AVANT.
+          # `trivy/db/metadata.json` est le marqueur que Trivy écrit APRÈS avoir chargé la
+          # base ; exiger le seul répertoire `trivy/db` laisserait passer un répertoire
+          # vide — exactement le cas où l'outil ne compare rien. Le chemin est celui que
+          # `bootstrap.sh` produit (contrôlé en test, dans les deux sens).
+          base_fichiers: ["trivy/db/metadata.json"]
         sorties: ["trivy.json"]
         preconditions:
           cibles: [repo, filesystem]
@@ -329,6 +339,15 @@ capabilities:
           target_types: [repository]
           # Mesuré : code 0 même avec 62 findings (pas de --fail-on).
           code_succes: [0]
+          conditions:
+            # GRYPE_DB_CACHE_DIR ci-dessus pointe sur {DB}/grype : sans base dans ce
+            # répertoire, grype ne compare RIEN et rend un résultat vide. Exigé avant
+            # exécution, comme pour Trivy. DIFFÉRENCE assumée : grype range sa base sous
+            # `db/<numero-de-schema>/`, et le numéro change avec les versions — exiger le
+            # répertoire `grype` est donc plus faible que le marqueur Trivy (un cache
+            # partiellement peuplé passerait). Dire la limite plutôt que la cacher : le jour où un
+            # marqueur stable est mesuré sur une vraie installation, il faut le préciser ici.
+            base_fichiers: ["grype"]
           applicabilite:
             # Pas de lockfile/manifest de dépendances → grype ne trouve rien. Les
             # globes préfixés par * traversent les sous-répertoires (fnmatch).
@@ -357,6 +376,13 @@ capabilities:
     domaines: [secrets, code]
     entree: [cible]
     sortie: finding/secret-exposure
+    # 30/08/2026 — passage en fan_out(2), raison MESURÉE et non esthétique : les deux
+    # scanners ne voient pas la même chose. gitleaks est à règles internes (mot-clé + regex) ;
+    # detect-secrets ajoute les heuristiques à haute entropie, qui trouvent un secret là où
+    # aucun mot-clé n'aide. Avec un seul provider, ce désaccord restait invisible. Le plafond
+    # reste 2 : un troisième scanner grossirait le volume sans information nouvelle.
+    mode_selection: fan_out
+    max_providers: 2
     providers:
       - id: gitleaks
         kind: cli
@@ -376,7 +402,59 @@ capabilities:
         preconditions:
           cibles: [repo]
           historique_git: requis
-
+      # ── PREMIER OUTIL AJOUTÉ DE BOUT EN BOUT (30/08/2026) ──────────────────
+      # Preuve de la promesse d'extension : ajouter un outil réel a demandé (1) ce bloc,
+      # (2) un fichier de parser nommé, (3) l'outil dans BINAIRES_AUTORISES, (4) son épingle
+      # dans manifeste_dependances.yaml, (5) une ligne dans bootstrap.sh. Ni le pipeline, ni
+      # le normaliseur, ni les clusters, ni la couverture, ni le rapport n'ont été touchés.
+      - id: detect_secrets
+        kind: tool
+        mode: CLI
+        risque: PASSIVE
+        cout: faible
+        priorite: 110          # derrière gitleaks (100) : il complète, il ne remplace pas
+        commande: ["detect-secrets"]
+        manifest:
+          id: detect_secrets
+          kind: tool
+          mode: cli
+          binaire: detect-secrets
+          tool_id: detect-secrets        # épinglé dans manifeste_dependances.yaml
+          # Aucun préfiltre : un secret peut être dans n'importe quel fichier. `--all-files`
+          # est indispensable hors dépôt git (voir `limite`), sinon l'outil ne lit RIEN.
+          applicabilite: {}
+          argv:
+            - '{BIN}'
+            - scan
+            - --all-files
+            # --verify n'est PAS demandé : il interrogerait le fournisseur du token, donc
+            # sortirait sur le réseau. Les secrets restent marqués « non vérifiés ».
+            # Pas de --baseline : /dev/null serait lu comme une baseline et refuserait
+            # de démarrer (mesuré : l'outil exige un JSON). Le baseline est rendu sur stdout.
+          output:
+            format: custom               # le JSON va sur stdout, --output n'existe pas
+          # La sortie est un dictionnaire de listes indexé par fichier : ni « plat », ni
+          # « imbriqué ». C'est ce qui impose le parser nommé (second niveau de la promesse).
+          extraction:
+            parser: detect_secrets_scan
+            items_from: items
+            champs:
+              regle: regle
+              fichier: fichier
+              ligne: ligne
+              message: message
+          risk: PASSIVE
+          target_types: [repository, filesystem]
+          code_succes: [0]               # l'outil rend 0 même quand il trouve : pas de [0,1]
+          coverage:
+            declares_files: true
+          limite: >
+            scan hors dépôt git : sans --all-files l'outil ne lit AUCUN fichier et rend un
+            baseline vide (mesuré 30/08/2026 : 0 finding sur la fixture testrepo, 4 avec
+            --all-files). Un résultat vide se lit « rien d'analysé ou rien trouvé », jamais
+            « propre ». `is_verified: false` est l'état par défaut : la valeur n'a pas été
+            confirmée chez l'émetteur du secret. L'outil ne rend PAS la liste des fichiers
+            parcourus : la couverture vue ici est celle des fichiers qui portent un finding.
   - id: IAC_SCAN
     description: >
       Analyse des fichiers d'infrastructure-as-code (Terraform) : mauvaises
@@ -417,6 +495,15 @@ capabilities:
             - "--output"
             - "json"
             - "--quiet"
+            # 31/08/2026 — checkov télécharge sa « guideline » depuis api0.prismacloud.io par
+            # DÉFAUT, pour un provider déclaré hors réseau. Mesuré sur PHASE3/testrepo_iac :
+            # sans le drapeau, 68 lignes de traceback urllib3 sur stderr pour 38 findings qui
+            # sont PAR AILLEURS identiques ; avec, stderr vide. Deux conséquences, pas une :
+            # un opérateur lit une panne là où il y a un résultat, et — plus grave — sur une
+            # mission à `egress` accordé, l'outil IrAIT réellement chercher des règles à
+            # distance : le même scan rendrait alors deux résultats selon la cage. `--skip-download`
+            # rend le résultat indépendant de l'autorisation de sortie.
+            - "--skip-download"
           output:
             format: json
           extraction:

@@ -123,9 +123,14 @@ def main() -> int:
     import adapters
     from sandbox import Sandbox
     sbx_defaut = Sandbox()
-    cas("3a. montages par défaut STRICTEMENT identiques à l'existant",
-        sbx_defaut.M_SCAN == "/home/user/PHASE3/mt-scan"
-        and sbx_defaut.M_OUT == "/home/user/PHASE3/mt-out"
+    # 3a réécrit le 2026-08-30, et la raison est une mesure : il comparait à un littéral
+    # /home/user/PHASE3 qui ne désigne rien sur aucune machine — l'invariant « identique à
+    # l'existant » n'était donc vrai que par coïncidence locale. Il compare maintenant à la
+    # racine que bootstrap.sh crée réellement. L'exigence sur adapters.IN_SCAN est inchangée.
+    from sandbox import RACINE_MONTEURS
+    cas("3a. montages par défaut = ceux que le bootstrap crée, et collants aux adapters",
+        sbx_defaut.M_SCAN == str(RACINE_MONTEURS / "mt-scan")
+        and sbx_defaut.M_OUT == str(RACINE_MONTEURS / "mt-out")
         and adapters.IN_SCAN == sbx_defaut.M_SCAN)
     s1 = Sandbox(M_SCAN="/x/scan-1", M_OUT="/x/out-1")
     s2 = Sandbox(M_SCAN="/x/scan-2", M_OUT="/x/out-2")

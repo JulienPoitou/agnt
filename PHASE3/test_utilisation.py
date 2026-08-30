@@ -16,6 +16,14 @@ Invariants vérifiés :
 - LLM PILOTE DANS LE CATALOGUE : branché via analyser, validé contre le
   registre ; un LLM qui invente, impose un outil, ou tombe → repli
   déterministe TRACÉ dans `moteur`. Aucun nom d'outil ne lui est transmis.
+- CONFIANCE DE CIBLE : `--confiance controlled|untrusted` arrive jusqu'à
+  `pipeline.executer()`, est enregistrée dans le journal de mission, et une valeur
+  inconnue est une ERREUR immédiate — jamais un repli. Le refus réel (mémoire non
+  bornée + cible non fiable) exige le binaire `opa` : sans lui, cas NON ÉVALUÉ.
+
+Section G (`bloc_confiance`) exécutable seule :
+    python3 -c "import sys; sys.path.insert(0,'PHASE3'); import test_utilisation as t; \
+t.bloc_confiance(); raise SystemExit(1 if t.ECHECS else 0)"
 
 Usage: python3 PHASE3/test_utilisation.py
 """
@@ -35,6 +43,237 @@ def cas(nom: str, cond: bool, detail: str = ""):
     CAS.append((nom, cond, detail))
     if not cond:
         ECHECS.append(nom)
+
+
+# TROIS ÉTATS, JAMAIS MÉLANGÉS (convention reprise de test_correlation.py) :
+#   succès · échec (exit 1) · non évalué (dépendance d'environnement absente).
+# Un cas non évalué n'est JAMAIS compté comme un succès.
+NON_EVALUES: list[tuple[str, str]] = []
+
+
+def cas_non_evalue(nom: str, motif: str):
+    NON_EVALUES.append((nom, motif))
+
+
+def _faux_executer(capture: dict, arret: str = "policy",
+                   motifs=("memoire_non_bornee_cible_non_fiable",)):
+    """Remplace pipeline.executer pour observer ce que la CLI lui transmet.
+
+    On ne rejoue pas la policy ici : on vérifie seulement que l'argument de sécurité
+    ARRIVE jusqu'à la fonction qui l'appelle. L'effet réel est vérifié à part, avec opa.
+    """
+    import pipeline
+
+    def faux(requete, cible, cible_autorisee=True, confiance_cible="controlled",
+             avec_internes=False):
+        capture.clear()
+        capture.update(requete=requete, cible=str(cible),
+                       cible_autorisee=cible_autorisee,
+                       confiance_cible=confiance_cible,
+                       avec_internes=avec_internes)
+        return pipeline.Execution(
+            plan={}, decision={"allow": False, "motifs": list(motifs)},
+            intent={"moteur": "deterministe"}, arret=arret, mission="")
+    return faux
+
+
+def bloc_confiance():
+    """Section G — la confiance de cible, du drapeau CLI jusqu'à la décision.
+
+    Constat mesuré (2026-08-30) : `policy.rego:90-97` refuse une cible « untrusted »
+    quand la mémoire n'est pas bornée, `profils.py` documente cette fermeture, et
+    `test_intentions.py:126-133` le prouve à l'étage de la policy. Mais
+    `analyser.py` appelait `pipeline.executer(requete, cible)` SANS `confiance_cible` :
+    la valeur par défaut « controlled » était donc imposée par le point d'entrée.
+    Autrement dit la garde existait et ne pouvait être armée par personne d'autre
+    qu'un test. Ces cas verrouillent le câblage, pas la règle (la règle est déjà
+    testée ailleurs).
+    """
+    import subprocess
+
+    import analyser
+    import mission as MS
+    import pipeline
+
+    cible = RACINE / "testrepo_sca"
+
+    # ------------------------------------------------- G1-G4 parsing des options
+    o, reste = analyser._options_depuis_argv(["depot", "--confiance=untrusted"])
+    cas("G1. --confiance=untrusted : valeur lue, positionnels intacts",
+        o.get("confiance") == "untrusted" and reste == ["depot"], f"{o} {reste}")
+    o, reste = analyser._options_depuis_argv(["depot", "ma requête",
+                                              "--confiance", "untrusted"])
+    cas("G2. --confiance untrusted (forme espacée) : la requête n'avale pas la valeur",
+        o.get("confiance") == "untrusted" and reste == ["depot", "ma requête"],
+        f"{o} {reste}")
+    o, reste = analyser._options_depuis_argv(["depot"])
+    cas("G3. aucune option --confiance : défaut « controlled » (compatibilité appelants)",
+        o.get("confiance") is None and reste == ["depot"], f"{o} {reste}")
+    try:
+        analyser._options_depuis_argv(["depot", "--confiance=tromperie"])
+        cas("G4. valeur de confiance inconnue : ERREUR immédiate, aucun repli", False,
+            "aucune exception levée")
+    except ValueError as e:
+        cas("G4. valeur de confiance inconnue : ERREUR immédiate, aucun repli",
+            "controlled" not in str(e) or "untrusted" in str(e), str(e)[:90])
+    try:
+        analyser._options_depuis_argv(["depot", "--confiance"])
+        cas("G5. --confiance sans valeur : ERREUR (pas de valeur par défaut muette)",
+            False, "aucune exception levée")
+    except ValueError as e:
+        cas("G5. --confiance sans valeur : ERREUR (pas de valeur par défaut muette)",
+            True, str(e)[:90])
+
+    # --moteur : la forme espacée est documentée dans README_USAGE.md:14. Mesurée
+    # fausse avant ce chantier : `--moteur deterministe` donnait moteur=llm ET
+    # laissait « deterministe » comme requête. Corrigée par le même extracteur.
+    o, reste = analyser._options_depuis_argv(["depot", "--moteur", "deterministe"])
+    cas("G6. --moteur deterministe (forme espacée documentée) : valeur lue, requête propre",
+        o.get("moteur") == "deterministe" and reste == ["depot"], f"{o} {reste}")
+    o, _ = analyser._options_depuis_argv(["depot", "--moteur"])
+    cas("G7. --moteur nu : « llm » conservé (comportement historique, non cassé)",
+        o.get("moteur") == "llm", f"{o}")
+
+    # ------------------------------------- G8-G9 le drapeau atteint le pipeline
+    capture: dict = {}
+    reel = pipeline.executer
+    pipeline.executer = _faux_executer(capture)
+    try:
+        code, r = analyser.lancer("Analyse la sécurité de mon dépôt", cible,
+                                  moteur="deterministe", confiance="untrusted")
+        cas("G8. analyser.lancer(confiance='untrusted') transmet confiance_cible au pipeline",
+            capture.get("confiance_cible") == "untrusted"
+            and r.get("confiance_cible") == "untrusted" and code == 2,
+            f"capture={capture.get('confiance_cible')} resume={r.get('confiance_cible')} code={code}")
+        code = analyser.main(["analyser.py", str(cible), "Analyse les dépendances",
+                             "--confiance=untrusted"])
+        cas("G9. chemin CLI complet (main) : la valeur arrive au pipeline et le refus est rendu",
+            capture.get("confiance_cible") == "untrusted"
+            and code == 2, f"capture={capture} code={code}")
+    finally:
+        pipeline.executer = reel
+
+    # ------------------------ G10 la valeur est enregistrée dans le dossier de mission
+    n_avant = len(list(MS.MISSIONS.glob("m-*"))) if MS.MISSIONS.is_dir() else 0
+    code = analyser.main(["analyser.py", str(cible), "--confiance=valeur_impossible"])
+    n_apres = len(list(MS.MISSIONS.glob("m-*"))) if MS.MISSIONS.is_dir() else 0
+    cas("G10. CLI + confiance invalide : code 1, AUCUN dossier de mission créé",
+        code == 1 and n_apres == n_avant, f"code={code} missions {n_avant}→{n_apres}")
+
+    # On ne cherche PAS « un journal qui contient untrusted » : le précédent run en
+    # laisserait un, et le cas vert ne prouverait plus rien. On ne regarde que les
+    # dossiers CRÉÉS par cet appel.
+    avant = set(MS.MISSIONS.glob("m-*")) if MS.MISSIONS.is_dir() else set()
+    try:
+        pipeline.executer("Analyse la sécurité de mon dépôt", cible,
+                          confiance_cible="untrusted")
+    except Exception as e:                       # noqa: BLE001 — OPA/outil absent ici :
+        erreur = e                                # la consigne précède la policy, elle passe.
+    else:
+        erreur = None
+    nouveaux = sorted(set(MS.MISSIONS.glob("m-*")) - avant)
+    trouve = next((ligne for d in nouveaux
+                   for ligne in (d / "journal.jsonl").read_text(encoding="utf-8").splitlines()
+                   if '"confiance"' in ligne and '"untrusted"' in ligne), None)
+    cas("G11. le journal append-only de la mission enregistre la confiance appliquée",
+        trouve is not None,
+        f"{len(nouveaux)} nouveau(x) dossier(s) de mission · "
+        f"erreur pendant l'exécution={type(erreur).__name__ if erreur else None}")
+
+    # ------------------------------- G12 la bibliothèque refuse aussi, pas que la CLI
+    try:
+        pipeline.executer("Analyse la sécurité de mon dépôt", cible,
+                          confiance_cible="probably-fine")
+        cas("G12. pipeline.executer(confiance inconnue) lève — aucun repli silencieux",
+            False, "aucune exception levée")
+    except pipeline.PipelineError as e:
+        cas("G12. pipeline.executer(confiance inconnue) lève — aucun repli silencieux",
+            "controlled" in str(e) and "untrusted" in str(e), str(e)[:110])
+
+    # ---------------- G12b les DEUX conditions du refus sont réunies dans l'entrée d'OPA
+    # Sans le binaire `opa`, on ne peut pas rejouer la décision — mais on peut prouver
+    # que le document soumis à OPA porte ce que la règle regarde : la confiance de la
+    # cible ET le fait que la mémoire n'est pas bornée. C'est la moitié vérifiable
+    # partout de G13 ; la règle elle-même est testée par test_intentions.py:126-133.
+    import policy as PO
+
+    capture_entree: dict = {}
+
+    class MoteurEspion(PO.PolicyEngine):
+        def __init__(self, *a, **kw):            # pas de binaire requis : espion
+            pass
+
+        def evaluer(self, plan, registre, cible_autorisee,
+                    confiance_cible="controlled", profil=None):
+            capture_entree["doc"] = PO.PolicyEngine.entree(
+                plan, registre, cible_autorisee, confiance_cible, profil)
+            # Refus volontaire : on veut lire le document soumis, pas lancer les outils.
+            return PO.Decision(allow=False, motifs=("espion_entree_opa",))
+
+    reel_moteur = PO.PolicyEngine
+    PO.PolicyEngine = MoteurEspion
+    try:
+        analyser.main(["analyser.py", str(cible), "Analyse la sécurité de mon dépôt",
+                       "--confiance=untrusted", "--moteur=deterministe"])
+    except Exception:                            # noqa: BLE001 — sandbox/outil absent ici,
+        pass                                     # et c'est APRÈS la policy dans ce cas.
+    finally:
+        PO.PolicyEngine = reel_moteur
+
+    doc = capture_entree.get("doc") or {}
+    cas("G12b. entrée soumise à OPA : confiance untrusted + mémoire non bornée (les deux conditions)",
+        (doc.get("cible") or {}).get("confiance") == "untrusted"
+        and doc.get("profil_sandbox", {}).get("memoire_bornee") is False,
+        f"cible={doc.get('cible')} memoire_bornee={doc.get('profil_sandbox', {}).get('memoire_bornee')}")
+
+    # ------------------------- G15 contrat de noms profils.py ↔ policy.rego (sans binaire)
+    # Le jour où un seul des deux côtés change un nom, la garde cesse de lire ce qu'elle
+    # croit lire — et côté OPA, un champ absent ne lève rien : `not <indéfini>` vaut vrai.
+    # C'est exactement ce qui s'est passé (mesure 2026-08-30) : le profil émettait
+    # `memory_bounded`, la politique lisait `memoire_bornee`. Ce cas rend la classe
+    # d'erreur impossible, pour TOUS les champs lus, pas seulement ceux-là.
+    import re as _re
+
+    import profils
+    rego = (RACINE / "policy" / "policy.rego").read_text(encoding="utf-8")
+    champs_lus = set(_re.findall(r"input\.profil_sandbox\.([a-z_]+)", rego))
+    champs_produits = set(profils.actif().to_dict())
+    cas("G15. tout champ de profil lu par policy.rego est produit par profils.to_dict()",
+        bool(champs_lus) and champs_lus <= champs_produits,
+        f"lus={sorted(champs_lus)} · manquants={sorted(champs_lus - champs_produits)}")
+
+    # ---------------------------- G13-G14 effet RÉEL sur la décision (exige opa)
+    from sandbox import CACHE_BIN
+    if not (CACHE_BIN / "opa").exists():
+        cas_non_evalue("G13. cible untrusted + mémoire non bornée → REFUS réel (policy)",
+                       f"binaire opa absent : {CACHE_BIN / 'opa'}")
+        cas_non_evalue("G14. même plan en controlled → le motif mémoire n'apparaît pas",
+                       "idem")
+        return
+
+    # Requête volontairement étroite (« secrets » → un provider) : le refus se joue à la
+    # policy, donc une requête bon marché suffit — et G14, qui n'est PAS refusé, reste
+    # rapide sur la machine source.
+    code, r = analyser.lancer("Cherche des secrets exposés", cible,
+                              moteur="deterministe", confiance="untrusted")
+    cas("G13. cible untrusted + mémoire non bornée → REFUS réel (policy)",
+        code == 2 and "memoire_non_bornee_cible_non_fiable" in (r.get("motif") or "")
+        and not r.get("rapport"),
+        f"code={code} motif={r.get('motif')}")
+
+    # Contrôle : mêmes limites, confiance « controlled » → PAS de refus mémoire.
+    # Sur une machine sans outils, l'exécution échoue plus loin (sandbox) : c'est la
+    # preuve que la policy n'a pas refusé. Les deux issues sont donc satisfaisantes.
+    r: dict = {}
+    try:
+        code, r = analyser.lancer("Cherche des secrets exposés", cible,
+                                  moteur="deterministe", confiance="controlled")
+        ok = not ("memoire_non_bornee_cible_non_fiable" in (r.get("motif") or "")
+                  and r.get("statut") == "policy")
+    except Exception as e:                       # noqa: BLE001 — exécution non disponible
+        ok = "memoire_non_bornee" not in str(e)
+    cas("G14. même plan en controlled → le motif mémoire n'apparaît pas", ok,
+        f"statut={r.get('statut')}")
 
 
 def main() -> int:
@@ -133,9 +372,16 @@ def main() -> int:
     pipeline.MOTEUR_INTENT = "deterministe"
     pipeline.FOURNISSEUR_LLM = None
 
+    bloc_confiance()
+
     for nom, ok, detail in CAS:
         print(f"  [{'OK' if ok else 'ECHEC'}] {nom}" + (f"  — {detail}" if detail and not ok else ""))
-    print(f"\ntest_utilisation : {len(CAS) - len(ECHECS)}/{len(CAS)} cas passés")
+    for nom, motif in NON_EVALUES:
+        print(f"  [NON EVALUE] {nom}  — {motif}")
+    passes = len(CAS) - len(ECHECS)
+    print(f"\ntest_utilisation : {passes}/{len(CAS)} cas passés"
+          + (f" · {len(NON_EVALUES)} non évalués" if NON_EVALUES else "")
+          + (f" · {len(ECHECS)} échec(s)" if ECHECS else ""))
     return 1 if ECHECS else 0
 
 

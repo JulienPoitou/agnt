@@ -36,12 +36,44 @@ PLACEHOLDERS = ("{BIN}", "{TARGET}", "{OUT}", "{OUT_DIR}", "{REGLES}", "{DB}")
 # Fragments interdits dans un argument, indépendamment d'OPA : seconde barrière.
 FRAGMENTS_INTERDITS = (";", "&&", "||", "|", "`", "$(", ">", "<", "\n", "\r", "\x00")
 
-# Binaires autorisés. Un manifest ne peut pas introduire un binaire arbitraire :
-# c'est le trusted core qui décide ce qui peut être exécuté.
+# Binaires du cœur. Un manifest ne peut pas introduire un binaire arbitraire.
+#
+# Depuis les plugins (LOT 2, 30/08/2026), cette liste n'est plus la SEULE porte : un nom absent
+# d'ici est admis s'il est **épinglé** dans `manifeste_dependances.yaml` avec le rôle `outil`
+# (voir `binaire_autorise`). Le déplacement est délibéré : exiger d'ajouter une ligne ici pour
+# chaque nouvel outil signifiait qu'intégrer un outil public touchait encore le cœur, ce que la
+# commande du 2026-08-30 interdit. Le manifeste d'approvisionnement est le meilleur endroit —
+# il porte déjà la version, l'empreinte, la source et la licence, donc l'autorité y est unique,
+# versionnée et relisible ; et un binaire non épinglé reste refusé, ce qui laisse le PATH vide
+# d'autorité.
 BINAIRES_AUTORISES = ("semgrep", "trivy", "gitleaks", "bandit", "checkov",
-                      "grype", "kics")
+                      "grype", "kics",
+                      # 30/08/2026 — premier outil ajouté de bout en bout SANS toucher le
+                      # cœur : 1 entrée ici (la porte), 1 provider dans capabilities.yaml,
+                      # 1 parser dans parsers_detect_secrets.py, 1 épingle au manifeste.
+                      # detect-secrets ne sort jamais sur le réseau en mode `scan` (la
+                      # vérification en ligne --verify n'est pas dans l'argv, et la limite
+                      # est consignée avec).
+                      "detect-secrets")
 
-FORMATS_SORTIE = ("json", "sarif", "custom")
+FORMATS_SORTIE = ("json", "jsonl", "sarif", "csv", "xml", "custom")
+
+# Le modèle de lecture n'est JAMAIS déduit du contenu : il est déclaré, et la paire
+# (format, modèle) doit être cohérente. Sans cette table, un `modele: plat` posé sur une
+# sortie `xml` se traduirait par « 0 item lus » — le mode de défaillance le plus cher
+# d'un scanner, parce qu'il ressemble à un dépôt propre.
+PairesFormatModele = {
+    "json": ("plat", "imbriqué"),
+    "sarif": ("plat", "imbriqué"),
+    "jsonl": ("lignes_json",),
+    "csv": ("csv",),
+    "xml": ("xml",),
+    "custom": ("plat", "imbriqué"),   # admis seulement parce qu'un parser nommé lit d'abord
+}
+MODELES_LECTURE = ("plat", "imbriqué", "lignes_json", "csv", "xml")
+
+
+import conditions as COND  # noqa: E402  (aucun cycle : conditions ne lit rien)
 
 
 class ManifestError(Exception):
@@ -83,6 +115,10 @@ class Extraction:
     # aurait sinon traversé la validation sans être vu.
     jetons_outil: list = field(default_factory=list)
     masquer_large: list = field(default_factory=list)
+    # Séparateur du modèle `csv`, déclaré (pas deviné) : `;` est réellement employé par des
+    # exports d'outils, et un mauvais séparateur ne lève aucune erreur — il produit UNE
+    # colonne, donc tous les champs à None, donc un scan vide.
+    separateur: str = ","
     # Nom d'un parser spécifique enregistré dans parsers.py. Requis pour le format
     # 'custom' : c'est le second niveau de la promesse. Le pipeline ne connaît que le
     # NOM, jamais l'outil.
@@ -124,6 +160,18 @@ class Manifest:
     # (pas d'exclusion devinée — une fausse exclusion est pire qu'un not_scanned
     # honnête). Le filtrage est déterministe et PRÉ-exécution (plan.py).
     applicable_globs: tuple[str, ...] = ()
+    # CONDITIONS D'EXÉCUTION (2026-08-30) : ce que l'outil EXIGE pour que son résultat
+    # veuille dire quelque chose — réseau, base de données, durée, privilèges. Quatre
+    # champs plats, parsés et bornés par `conditions.valider`, et consommés à deux
+    # endroits : `plan`/`pipeline` (écarte avant même de proposer) et `adapters`
+    # (refuse avant le premier Popen). Sans ces champs, un outil qui a besoin du réseau
+    # tournait dans la cage sans egress, rendait un résultat VIDE en code 0, et le
+    # rapport titrait « 0 vulnérabilité ». Le cœur ne devine rien : non déclaré = aucune
+    # exigence (un faux refus coûterait plus cher qu'un not_scanned honnête).
+    reseau: bool = False
+    base_fichiers: tuple = ()
+    timeout_s: int = 0
+    privileges: str = "aucun"
     # Variables d'environnement DÉCLARATIVES (étape 4). Occurrence observée : grype
     # 0.118 n'a pas de flag pour son cache de DB — uniquement GRYPE_DB_CACHE_DIR.
     # Mêmes règles de sécurité qu'argv : clés au format nom de variable, valeurs
@@ -140,7 +188,51 @@ class Manifest:
                 "declare_fichiers": self.declare_fichiers, "limite": self.limite,
                 "tool_id": self.tool_id,
                 "applicabilite": {"globs": list(self.applicable_globs)},
-                "env": {k: v for k, v in self.env}}
+                "env": {k: v for k, v in self.env},
+                "conditions": {"reseau": self.reseau, "base_fichiers": list(self.base_fichiers),
+                               "timeout_s": self.timeout_s, "privileges": self.privileges}}
+
+
+def binaire_autorise(nom: str) -> bool:
+    """Le nom de programme peut-il être exécuté ?
+
+    Deux sources, dans cet ordre : la liste du cœur (outils historiquement admis, dont `opa` et
+    les interpréteurs utilisés par les providers déclaratifs), puis le manifeste
+    d'approvisionnement — un outil que bootstrap sait épingler et installer est un outil que la
+    plateforme peut exécuter, à condition d'y figérer avec le rôle `outil`. Un nom qui ne figure
+    nulle part ne peut pas être invoqué : `which` n'est pas une autorisation.
+    """
+    if nom in BINAIRES_AUTORISES:
+        return True
+    if not nom:
+        return False
+    try:
+        import outils
+        t = outils.registre().get(nom)
+    except Exception:
+        # Manifeste illisible : on ne peut pas s'appuyer sur une autorité cassée, donc on s'en
+        # tient à la liste du cœur (refus), jamais on n'ouvre par tolérance d'exception.
+        return False
+    return t is not None and t.role == "outil"
+
+
+def binaire_est_autorise(nom: str) -> str:
+    """Vide si autorisé, sinon la raison lisible (destinée au refus, pas au journal de debug)."""
+    if nom in BINAIRES_AUTORISES:
+        return ""
+    try:
+        import outils
+        epingles = outils.registre()
+    except Exception as e:
+        return f"manifeste des dépendances illisible ({e})"
+    t = epingles.get(nom)
+    if t is None:
+        return (f"binaire {nom!r} ni dans la liste du cœur ni épinglé dans "
+                f"{outils.MANIFESTE.name} — un outil à intégrer doit d'abord y recevoir une "
+                "entrée (version, source, licence, empreinte ou note)")
+    if t.role != "outil":
+        return f"binaire {nom!r} épinglé sous le rôle {t.role!r}, qui ne porte pas de provider"
+    return ""
 
 
 def valider(doc: dict, capability: str) -> Manifest:
@@ -166,10 +258,8 @@ def valider(doc: dict, capability: str) -> Manifest:
         raise ManifestError(f"{doc['id']} : 'argv' doit être une liste non vide")
 
     binaire = doc["binaire"]
-    if binaire not in BINAIRES_AUTORISES:
-        raise ManifestError(
-            f"{doc['id']} : binaire {binaire!r} non autorisé. "
-            f"Autorisés : {list(BINAIRES_AUTORISES)}")
+    if not binaire_autorise(binaire):
+        raise ManifestError(f"{doc['id']} : binaire {binaire!r} non autorisé — {binaire_est_autorise(binaire)}")
 
     # tool_id (étape 2) : OPTIONNEL, mais s'il est déclaré il est vérifié ICI.
     # Le registre des tools formalise l'artefact épinglé ; le manifeste reste la
@@ -236,6 +326,18 @@ def valider(doc: dict, capability: str) -> Manifest:
             f"parser spécifique — sans modifier le cœur.")
 
     ex = doc.get("extraction") or {}
+    # ── cohérence format ↔ modèle, jugée AU CHARGEMENT (comme tout le reste)
+    modele = str(ex.get("modele", "plat") or "plat")
+    if modele not in MODELES_LECTURE:
+        raise ManifestError(
+            f"{doc['id']} : modèle de lecture {modele!r} inconnu. Admis : "
+            f"{list(MODELES_LECTURE)}. Un modèle inconnu vaudrait « aucun item lu ».")
+    attendus = PairesFormatModele.get(fmt, ())
+    if fmt != "custom" and attendus and modele not in attendus:
+        raise ManifestError(
+            f"{doc['id']} : format {fmt!r} avec modele {modele!r} — paire non lue par le "
+            f"cœur. Pour {fmt!r} le modèle attendu est {list(attendus)}, sinon il faut un "
+            "parser nommé en format `custom`.")
     # Format custom : un parser spécifique est OBLIGATOIRE, et il doit exister.
     if fmt == "custom":
         nom = ex.get("parser", "")
@@ -270,7 +372,8 @@ def valider(doc: dict, capability: str) -> Manifest:
         argv=tuple(argv),
         sortie_format=fmt,
         extraction=Extraction(
-            modele=ex.get("modele", "plat"),
+            modele=modele,
+            separateur=str(ex.get("separateur", ",") or ","),
             items_from=ex.get("items_from", "results"),
             nested_from=ex.get("nested_from", ""),
             nested_key=ex.get("nested_key", ""),
@@ -290,6 +393,7 @@ def valider(doc: dict, capability: str) -> Manifest:
         tool_id=str(doc.get("tool_id") or ""),
         applicable_globs=tuple((doc.get("applicabilite") or {}).get("globs") or []),
         env=tuple(sorted(env_doc.items())),
+        **_conditions(doc),
     )
 
 
@@ -354,3 +458,16 @@ def resoudre_argv(m: Manifest, chemins: dict[str, str]) -> list[str]:
         out.append(a)
     return out
 
+
+
+def _conditions(doc: dict) -> dict:
+    """Bloc `conditions`, traduit en refus de manifest (jamais en erreur Python nue).
+
+    `valider(doc)` connaît le vocabulaire et ses bornes ; ici on ne fait que changer la
+    classe d'exception, parce que l'appelant (registre) présente `ManifestError` à
+    l'opérateur comme « le manifest est refusé », et c'est exactement ce qui doit arriver.
+    """
+    try:
+        return COND.valider(doc)
+    except ValueError as e:
+        raise ManifestError(str(e)) from None

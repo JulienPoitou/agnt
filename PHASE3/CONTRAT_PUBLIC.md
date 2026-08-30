@@ -76,24 +76,37 @@ working_tree_dirty  = true / false
 Le profil **actuel** est le seul honnête tant que la mémoire n'est pas bornée :
 
 ```yaml
-execution_profile: controlled_dev
-memory_bounded: false
-allowed_target_trust: [controlled]
-allowed_risk: [PASSIVE]
+nom_profil: controlled_dev
+memoire_bornee: false
+confiance_admise: [controlled]
+risques_admis: [PASSIVE]
+durci: false
 ```
 
 Le profil cible, **non disponible** :
 
 ```yaml
-execution_profile: limites_a_prouver
-memory_bounded: true
-allowed_target_trust: [controlled, untrusted]
-allowed_risk: [PASSIVE, ACTIVE]
+nom_profil: limites_a_prouver
+memoire_bornee: true
+confiance_admise: [controlled, untrusted]
+risques_admis: [PASSIVE, ACTIVE]
+durci: true
 ```
+
+Ces noms sont ceux que `policy.rego` lit : le dictionnaire rendu par
+`profils.Profil.to_dict()` EST l'entrée soumise à OPA (`policy.py:72`), pas une vue de
+rapport. Un nom qui diverge d'un côté rend la garde inopérante **sans erreur** — côté
+OPA un champ absent ne lève rien, et `not <indéfini>` vaut vrai. Contrats vérifiés par
+`test_utilisation.py` (G15) et par les cas de `test_intentions.py`.
 
 **La mémoire n'est pas bornée. Le système refuse donc les dépôts non fiables et les outils
 actifs.** Ce n'est pas un détail qui peut attendre sans condition : un dépôt volumineux ou
 hostile peut provoquer un problème de disponibilité même avec un outil passif.
+
+La confiance de cible se **déclare** à l'entrée utilisateur
+(`analyser.py --confiance controlled|untrusted`, défaut `controlled` affiché) et traverse
+`pipeline.executer(confiance_cible=…)` jusqu'à OPA ; une valeur hors liste est une erreur,
+jamais un repli.
 
 Le refus est **déterministe**, appliqué par OPA, et testé :
 

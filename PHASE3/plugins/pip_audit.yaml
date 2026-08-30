@@ -1,0 +1,69 @@
+# Plugin AGNT — second cas, choisi pour être REFUSÉ : l'outil sort sur le réseau.
+#
+# Laisser un outil réseau « intégré mais jamais lancé » sans l'écrire n'est pas une
+# intégration. Ici la déclaration est honnête (`reseau: true`), le refus est produit par les
+# conditions du cœur, et il doit être lisible dans le ledger de mission.
+id: pip_audit
+capacites:
+  - DEPENDENCY_ANALYSIS
+entrees:
+  - repository
+binaire: pip-audit
+outillage: pip-audit
+version_min: "2.10.1"
+licence: Apache-2.0
+# `intent.choisir_providers` trie les providers PASSIFS par `priorite` CROISSANTE puis prend
+# `max_providers` : le PLUS PETIT nombre gagne (c'est un rang, pas un score). trivy=100,
+# grype=110. Déclarer 60 ici, comme la première version de ce fichier le faisait « pour être
+# discret », plaçait pip-audit DEVANT les deux et changeait le plan de toute mission de
+# dépendances — et comme l'outil est de plus refusé par le réseau, la mission perdait grype
+# pour un scan qui n'aurait jamais lieu. 400 = derrière, sans effet sur l'existant.
+priorite: 400
+cout: moyen
+risque: PASSIVE
+description: >
+  Audit des dépendances Python déclarées, contre l'annuaire PyPI (PYSEC + alias CVE).
+  Complète trivy/grype sur un point : ceux-là veulent des paquets résolus, pip-audit lit le
+  fichier de contraintes tel quel.
+fichiers_requis:
+  - "*requirements.txt"
+execution:
+  args:
+    - "-r"
+    - "{TARGET}/requirements.txt"
+    - "-f"
+    - json
+    - --progress-spinner
+    - "off"
+sortie:
+  format: json
+lecture:
+  modele: imbriqué
+  nested_from: dependencies
+  nested_key: vulns
+  contexte:
+    paquet: name
+    version_installee: version
+  champs:
+    regle: id
+    nom_regle: id
+    message: description
+    paquet: paquet
+    # 31/08/2026 — trois alias déclarés ici depuis le premier jour ne sont LUS par personne :
+    # `aliases`, `version`, `correction`. Le modèle de finding ne consomme que
+    # regle/nom_regle/fichier/ligne/message/severite/reference/remediation/confiance/cwe/
+    # paquet + les quatre coordonnées — un alias en plus est une donnée perdue en silence, pas
+    # un champ « plus tard ». `correction` devient donc `remediation` (la version de correctif
+    # remonte réellement), et `aliases`/`version` sont RETIRÉS : ils restent dans l'artefact
+    # brut de l'outil, où ils sont lisibles, au lieu de feindre d'être dans le finding.
+    remediation: fix_versions
+  masquer_large:
+    - message
+requirements:
+  reseau: true             # PyPI à chaque exécution — refusé tant que l'export n'est pas autorisé
+  privileges: aucun
+  timeout_s: 900
+  sandbox: true
+a_verifier:
+  - "`correction: fix_versions` : liste rendue dans le finding, pas mappée sur un champ de remédiation structuré"
+  - "l'outil n'émet PAS de sévérité : les findings pip-audit restent non classés, volontairement"

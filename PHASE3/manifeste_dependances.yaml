@@ -108,6 +108,64 @@ binaires:
       binaires (0 assets, mesuré) — le harnais qualifie des artefacts, pas des
       annonces.
 
+  # detect-secrets : premier outil ÉPINGLÉ à l'occasion d'une extension réelle (30/08/2026).
+  # Régime volontairement celui de semgrep (note, pas de hash) plutôt que bandit : le
+  # « hash RECORD » d'une distribution pip dépend du chemin d'installation, donc l'exiger
+  # ferait refuser le bootstrap sur la machine du user alors qu'il passe ici. La
+  # traçabilité est plus faible, elle est DITE plutôt que simulée.
+  detect-secrets:
+    package: detect-secrets
+    version: "1.5.0"
+    source: https://pypi.org/project/detect-secrets/
+    licence: Apache-2.0
+    distribution: pip
+    sha256: null
+    note: >
+      Installé par pip, donc pas de binaire unique vérifiable par SHA-256. Version épinglée
+      par bootstrap.sh. Mesuré ici avec `python3 -m detect_secrets scan --all-files` sur la
+      fixture PHASE3/testrepo : 4 findings (AWS Access Key, Base64 High Entropy, Secret
+      Keyword, GitHub Token), secrets rendus sous forme d'empreinte et non en clair.
+  # 30/08/2026 — deux outils ajoutés par la voie PLUGIN (LOT 2) : aucune ligne touchée dans
+  # capabilities.yaml, aucun code de provider écrit à la main. L'épingle reste la porte : un
+  # plugin qui ne nomme pas une entrée d'ici est refusé au chargement.
+  radon:
+    package: radon
+    version: "6.0.1"
+    source: https://pypi.org/project/radon/
+    licence: MIT
+    distribution: pip
+    sha256: null
+    note: >
+      Installé par pip, donc pas de binaire unique vérifiable par SHA-256 — régime « note »,
+      comme detect-secrets. Mesuré ici (30/08/2026) sur PHASE3/testrepo :
+      `python3 -m radon cc --json --min D testrepo` rend un objet JSON dont chaque clé est un
+      chemin de fichier, hors réseau. Sortie de test : 0 bloc au seuil D sur la fixture (le
+      provider rend donc « rien d'exploitable », et c'est un résultat, pas un échec).
+    verification: >
+      Le plugin declare `version_min: 6.0.1` : le format `cc --json` (clé = chemin de fichier)
+      est celui lu ; une version inférieure change la structure et le plugin est refusé au
+      chargement, pas ignoré à l'exécution.
+
+  pip-audit:
+    package: pip-audit
+    version: "2.10.1"
+    source: https://pypi.org/project/pip-audit/
+    licence: Apache-2.0
+    distribution: pip
+    sha256: null
+    note: >
+      Installé par pip — régime « note ». Mesuré ici le 30/08/2026 hors sandbox :
+      `python3 -m pip_audit -r testrepo/requirements.txt -f json` a rendu 70 vulnérabilités
+      connues sur 6 paquets de la fixture (PYSEC + alias CVE, descriptions). L'outil CONSULT
+      PyPI à chaque exécution : le plugin déclare donc `reseau: true`, et AGNT refusera de le
+      lancer tant que l'autorisation d'export n'est pas accordée pour la mission. C'est
+      l'état attendu, pas une panne — le refus doit être lisible dans le ledger.
+    verification: >
+      Formats réellement rendus par 2.10.1 : Columns, Json, CycloneDxJson, CycloneDxXml,
+      Markdown. Pas de CSV : la documentation externe qui promet « -f csv » est fausse pour
+      cette version (mesuré : `invalid OutputFormatChoice value: 'csv'`).
+
+
   semgrep:
     version: "1.175.0"
     sha256: null
@@ -120,6 +178,95 @@ binaires:
       traçabilité de ce tool est plus faible (version épinglée par le bootstrap
       seulement). À durcir (hash RECORD) si Semgrep devient un composant de
       production.
+
+  ruff:
+    package: ruff
+    version: "0.16.5"
+    source: https://pypi.org/project/ruff/
+    licence: MIT
+    distribution: pip
+    # Binaire NATIF (le wheel pip de ruff embarque l'exécutable Rust) : contrairement à
+    # radon/bandit, il y a bien un fichier unique à figer, donc un SHA-256 réel — régime le
+    # plus fort des deux, relevé sur le binaire effectivement installé dans le pool.
+    sha256: 024cdfbba8627539cc951908267077e3fd8e710add19f0b31d6cc606d19ddc32
+    note: >
+      Mesuré ici (31/08/2026), hors réseau : `ruff check --isolated --no-cache --select
+      S,E,F --output-format json --quiet PHASE3/testrepo` rend 4 findings (S105 x2, S324,
+      S602) en code 1 ; cible propre → `[]` en code 0. La cible qui écrit un `.ruff.toml`
+      invalide fait échouer ruff SANS `--isolated` (rc=2, scan supprimé) et ne change rien
+      AVEC : c'est la raison pour laquelle le drapeau est dans le plugin, pas une préférence.
+    verification: >
+      Le plugin déclare `version_min: 0.16.5` : `--output-format json` (tableau en racine,
+      clés code/name/location/message/severity/url) est le format lu. `ruff check --format
+      json` a été retiré par ruff : une version plus ancienne ne rendrait pas ce document.
+
+  trufflehog3:
+    package: trufflehog3
+    version: "3.0.10"
+    source: https://pypi.org/project/trufflehog3/
+    licence: GPL-2.0
+    distribution: pip
+    sha256: null
+    distribution_hash: a4d17bc01cd057e668c624c6dba95bc833600a83418bf481a9a081bbb4143157
+    note: >
+      Installé par pip — régime « empreinte du RECORD de la distribution », comme bandit et
+      checkov. Mesuré ici (31/08/2026) hors réseau : `trufflehog3 -f json PHASE3/testrepo`
+      rend 2 findings (high-entropy + règle github-token) en code 2, et `[]` en code 0 sur
+      une cible propre. LE JSON DE L'OUTIL CONTIENT LA VALEUR DU SECRET EN CLAIR (`secret`,
+      `context`) : le plugin ne mappe pas ces deux champs, et l'artefact brut archivé par le
+      run, lui, les contient — limitation écrite dans le plugin, pas gommée.
+    verification: >
+      Projet DISTINCT de TruffleHog v3 (Go, GitHub Releases). L'épingle s'appelle trufflehog3
+      et le plugin aussi : aucune qualification de l'outil amont n'est reprise ici.
+  eslint:
+    package: eslint
+    version: "9.39.5"
+    source: https://www.npmjs.com/package/eslint
+    licence: MIT
+    distribution: npm
+    sha256: null
+    # Pas de binaire unique : ESLint est un arbre de ~90 paquets npm. L'empreinte ci-dessous
+    # est un HASH D'ARBRE, calculé ainsi (reproductible sur la machine d'installation) :
+    #   cd ~/.cache/arena_secops/node \
+    #     && find node_modules -type f | sort | xargs sha256sum | sha256sum
+    # Un SHA-256 de binaire n'aurait aucun sens ici, et `sha256: null` le dit : c'est le régime
+    # « note + méthode » des outils pip, étendu à npm, pas une case laissée vide.
+    distribution_hash: 7c33a96f10284979e0d7262fd9590de0416e5f21ee1b53da138c3e1267c610ba
+    note: >
+      Installé par `npm install --prefix ~/.cache/arena_secops/node eslint@9`. Mesuré ici
+      (31/08/2026) : sur PHASE3/testrepo_js, `--no-config-lookup --format json --rule '<jeu
+      sécurisé>'` rend no-eval + no-script-url en code 1 ; la même cible portant un
+      `eslint.config.mjs` avec `ignores: ["**"]` rend rc=2 SANS le drapeau (le dépôt a décidé
+      de ne pas être scanné) et le même résultat AVEC. Cible saine → `[]`, code 0.
+    verification: >
+      Format lu : tableau de blocs {filePath, messages[]} (`--format json`, API de ESLint 9).
+      ESLint 8 rendait un tableau plat de messages : un `version_min` plus ancien chargerait
+      un manifest qui ne projette rien — d'où le rang de version épinglé ici, pas décoratif.
+
+  npm:
+    package: npm
+    version: "10.9.8"
+    source: https://www.npmjs.com/package/npm
+    licence: Artistic-2.0
+    distribution: npm
+    sha256: null
+    distribution_hash: null
+    note: >
+      Régime « note », assumé et nommé : npm n'est PAS téléchargé par bootstrap.sh — c'est le
+      gestionnaire de paquets livré avec le runtime node de la machine. Rien n'est donc épinglé
+      par empreinte ici ; ce qui l'est, c'est le VERSIONNEL (le format `auditReportVersion: 2` lu
+      par le plugin est celui de npm 7+ ; `metadata.vulnerabilities`, lui, a bougé entre majeures).
+      Conséquence honnête : la reproductibilité de ce provider vaut sur une machine donnée, pas
+      d'une machine à l'autre — à durcir en épinglant node + npm par URL et sha256 si ce provider
+      devient un composant de production.
+      Mesuré 31/08/2026 : `npm audit --prefix <cible> --json` depuis /tmp et depuis la cible rend
+      le MÊME rapport (2 paquets vulnérables sur PHASE3/testrepo, rc=1) — contrairement à ESLint,
+      l'outil n'est donc pas sensible au répertoire courant quand `--prefix` est passé.
+    verification: >
+      Aucun téléchargement, donc aucune empreinte à comparer : `bootstrap.sh` vérifie la PRÉSENCE
+      de `npm` et signale son absence (le plugin se chargerait quand même, et l'outil serait
+      introuvable à l'exécution — le silence que ce fichier existe pour casser).
+
 
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
