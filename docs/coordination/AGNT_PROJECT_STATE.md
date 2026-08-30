@@ -47,7 +47,7 @@
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a` | **P2 :** annulation HTTP réellement interruptible ; **P1 intégration :** raccord final au module CORE canonique à traiter lors de l'intégration coordonnée. |
 | WEB | non reçu | en attente de handoff | — | À définir après handoff. |
 | SECURITY | `arena/01a05426-agnt` | `PARTIAL` | `d1d562f` — non poussé au handoff | **P1 :** pousser le correctif P0.1 puis fermer SEC-G6a : jeu de règles gitleaks de confiance. |
-| PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26` | **P2 :** contrat de timeline/provenance sûre, sans toucher aux fichiers UI partagés. |
+| PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa` | **P2 :** contrat de sémantique des statuts d'exécution et disponibilité, sans toucher aux fichiers UI partagés. |
 
 ---
 
@@ -90,6 +90,7 @@
 - Rendu sécurisé maintenu via `textContent`.
 - Contrat versionné d'historique persistant : Mission `1 → 0..1 Run`, schéma `agnt.history.v1`, fixtures anonymisées et tests autonomes.
 - Endpoints produit décidés : `GET /api/missions` et `GET /api/missions/{mission_id}` ; le polling temporaire `GET /api/runs/{submission_id}` reste distinct.
+- Contrat de timeline `agnt.timeline.v1` : projection read-only du journal sous `data.timeline`, ordre par `seq`, provenance allowlistée/redacted et compatibilité additive avec `data.events`.
 
 ---
 
@@ -119,17 +120,19 @@ Le bootstrap MCP et les tests locaux réels sont terminés. Le raccord reste pro
 
 Le timeout HTTP est prouvé, mais l'annulation pendant une requête HTTP bloquante reste ouverte. Le prochain lot MCP doit traiter ce comportement sans modifier le pipeline générique ni promettre une annulation protocolaire non démontrée.
 
-### P2 — PRODUCT & UX : contrat de timeline et provenance sûre
+### P2 — PRODUCT & UX : contrat de sémantique des statuts d'exécution
 
-Le contrat P1 d'historique est terminé dans `docs/coordination/MISSION_HISTORY_CONTRACT.md` avec schéma, fixtures et tests.
+Les contrats P1 d'historique et P2 de timeline sont terminés dans `docs/coordination/`, avec schémas, fixtures et tests.
 
-Définir maintenant, sans implémenter backend ou UI, la projection sûre du journal append-only en timeline lisible :
-- ordre, horodatage, états et niveaux de détail non inventés ;
-- provenance MCP additive et redacted ;
-- compatibilité avec `agnt.history.v1` ;
-- critères d'acceptation pour CORE, WEB, MCP et SECURITY.
+Définir maintenant une projection produit cohérente des dimensions distinctes :
+- statut Mission ;
+- sélection provider ;
+- disponibilité provider ;
+- résultat d'exécution (`success`, `failed`, `timed_out`, `cancelled`, etc.) ;
+- refus de policy/cible/condition ;
+- résultat de détection (`rien_trouve` ≠ outil absent ≠ échec).
 
-Le builder Product & UX ne touche pas à `index.html`, `app.js` ou `style.css` dans ce lot afin d'éviter un conflit avec builder-web avant réception de son handoff.
+Le contrat doit empêcher WEB de confondre absence, erreur, refus et résultat propre, sans modifier `index.html`, `app.js` ou `style.css`.
 
 ### P1 — SECURITY : jeu de règles gitleaks de confiance
 
@@ -173,6 +176,14 @@ transports.enregistrer("mcp", executeur)
 - `repository` et `filesystem` sont aujourd'hui les types locaux effectivement chargés ; `url` est représentable mais aucun transport ne peut encore la recevoir.
 - Le contrat Transport actuel ne reçoit pas `Cible`. Toute évolution pour une cible distante est un chantier conjoint CORE + MCP + SECURITY, sans cacher l'URL dans Sandbox ou un global.
 
+### Contrat produit de timeline à préserver
+
+- La timeline est une projection read-only du journal canonique sous `data.timeline` dans `GET /api/missions/{mission_id}` ; elle n'est ni un second journal ni un endpoint séparé.
+- `seq` définit ordre et identité (`<mission_id>:<source_sequence>`); le timestamp ne sert jamais seul à ordonner.
+- `data.events` reste un fallback minimal legacy ; WEB préfère `data.timeline` et ne fusionne jamais les deux.
+- Les payloads inconnus, événements déduits d'artefacts et snapshots `statuts` éclatés sont interdits.
+- Provenance MCP : additive, secondaire, allowlistée et redacted ; absence de provenance ne signifie jamais local, disponible ou fiable.
+
 ### Contrat produit d'historique à préserver
 
 - Une **Mission** est le dossier persistant visible par l'utilisateur ; un **Run** est son exécution technique. Cardinalité actuelle : `Mission 1 → 0..1 Run`.
@@ -193,8 +204,8 @@ transports.enregistrer("mcp", executeur)
 - **WEB :** ne pas supposer un unique `PHASE3/run`; utiliser les données de mission et tolérer les champs MCP additionnels (`transport`, serveur, outil, protocole, confiance, disponibilité, corrélation).
 - **SECURITY :** fermer SEC-G6a avant les chantiers secondaires, puis définir/tester les invariants d'un backend externe : egress, endpoint contrôlé par registre, secrets, timeout, policy avant appel, confiance et absence de bypass sandbox implicite.
 - **CORE / MCP :** tout nouvel appel à `pipeline.executer()` ou nouveau type de cible doit préserver l'autorisation explicite ; aucune cible externe ne doit contourner la liste opérateur et la policy. Une cible URL ne doit pas être exécutée tant que le contrat Transport ne reçoit pas explicitement `Cible`.
-- **PRODUCT & UX :** ne pas créer une deuxième source de vérité pour les types de cible ou les extensions. Le contrat d'historique est terminé ; définir maintenant la timeline/provenance sans modifier les fichiers UI partagés avant coordination avec WEB.
-- **CORE :** implémenter l'historique depuis le lecteur canonique de mission, sans base parallèle, et enrichir le polling par `mission_id` / `detail_href` dès disponibilité.
+- **PRODUCT & UX :** ne pas créer une deuxième source de vérité pour les types de cible ou les extensions. Historique et timeline sont terminés ; définir maintenant la sémantique des statuts sans modifier les fichiers UI partagés avant coordination avec WEB.
+- **CORE :** implémenter l'historique et `data.timeline` depuis le lecteur canonique de mission, sans base parallèle, et enrichir le polling par `mission_id` / `detail_href` dès disponibilité.
 - **WEB :** consommer exclusivement `/api/missions` pour l'historique, en utilisant `mission_id` comme référence persistante ; ne jamais reconstruire une liste locale.
 
 ---
@@ -210,7 +221,7 @@ transports.enregistrer("mcp", executeur)
 | Contrat Transport ne reçoit pas encore le descripteur `Cible` pour une exécution distante. | Architecturale P1 | Les URL sont représentables et filtrées, mais non exécutables ; évolution conjointe CORE/MCP/SECURITY requise avant support distant réel. |
 | Annulation HTTP en cours d'appel MCP. | Moyenne | Timeout et fermeture de session existent ; interruption réelle d'un appel bloquant reste à prouver/implémenter dans un lot MCP P2. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product & UX travaille désormais sur le contrat d'historique hors de ces fichiers ; attendre le handoff WEB avant tout nouveau chantier UI. |
-| Historique global affiché sans source backend persistée. | Élevée produit | Contrat P1 terminé ; CORE implémente désormais le lecteur/API canonique avant toute activation WEB, sans données de démonstration après une réponse API. |
+| Historique/timeline affichés sans source backend persistée. | Élevée produit | Contrats produit terminés ; CORE doit exposer lecteur/API et `data.timeline` canoniques avant toute activation WEB, sans données de démonstration après une réponse API. |
 | Gitleaks peut charger une configuration hostile du dépôt et masquer des secrets (SEC-G6a). | Haute sécurité | Correctif Security P1 actif : config AGNT explicite, vérifiée et fail-closed ; ne pas déclarer la détection de secrets fiable avant fermeture. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
 
@@ -244,7 +255,11 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | MCP-004 | Raccord MCP au module Transport CORE canonique | P1 intégration | Ouvert — intégration coordonnée requise |
 | PRODUCT-001 | Endpoint d'historique persistant des missions | P1 | Contrat produit terminé ; implémentation CORE/WEB à planifier |
 | PRODUCT-002 | Comparaison de runs et vues globales Findings/Reports | P2 | Différé |
-| PRODUCT-003 | Timeline et projection sûre de provenance | P2 | En cours — PRODUCT & UX |
+| PRODUCT-003 | Timeline et projection sûre de provenance | P2 | Terminé — `226029fa` |
+| PRODUCT-004 | Sémantique produit des statuts/exécution/disponibilité | P2 | En cours — PRODUCT & UX |
+| TIMELINE-001 | Projection `data.timeline` dans le lecteur canonique CORE | P2 | Ouvert — CORE |
+| TIMELINE-002 | Noms source des événements intention/sélection alignés à CORE | Intégration | Ouvert |
+| TIMELINE-003 | Allowlists transport/protocole MCP approuvées avec Security | Sécurité | Ouvert |
 | SEC-G6a | Configuration gitleaks contrôlée par le dépôt cible | P1 haute sécurité | En cours — SECURITY |
 | SEC-G9 | Mesure réelle gitleaks face à un `.gitleaks.toml` hostile | P2 environnement | Bloqué |
 | SEC-B6 | Durcissement garde-fous homoglyphes / espaces | P3 | Différé |
@@ -257,8 +272,9 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 1. Pousser et préserver le correctif Security P0.1 `d1d562f`, puis fermer SEC-G6a avant de considérer le scan de secrets fiable.
 2. Implémenter le lecteur/API d'historique CORE selon le contrat produit, en préservant Cible et l'autorisation explicite de cible.
 3. Finaliser l'annulation HTTP MCP de manière honnête et isolée ; ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
-4. Finaliser le contrat produit de timeline/provenance en parallèle, sans toucher à l'UI partagée.
+4. CORE implémente `data.timeline` avec le lecteur d'historique selon les contrats produit ; Product & UX stabilise la sémantique des statuts en parallèle, sans toucher à l'UI partagée.
 5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle.
-6. Adapter WEB aux endpoints stabilisés, sans reconstruire de logique métier côté UI.
+6. Security approuve les allowlists/redaction de provenance et les statuts hostiles avant exposition WEB.
+7. Adapter WEB aux endpoints stabilisés, sans reconstruire de logique métier côté UI.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
