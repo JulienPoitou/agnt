@@ -139,6 +139,20 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
   borne de taille sur la requête sortante ; **F6** le rendu affirme « valeur jamais stockée » sur
   le secret sans le contrôler. Détail, preuves et candidats : `PROJET_ETAT.md`, « Crash test
   sécurité — relevé de campagne ».
+- **Famille G (« l'agent peut-il atteindre ce qui décide de lui ? »), 2026-08-30** — règle
+  installée : la **source** de l'autorisation se teste avant son **contenu**. 9 cas
+  (`test_adversaire.py`, G1–G9) : les sources de décision TIENNENT (G1 montage en lecture seule
+  avec une seule `--bind` = la sortie ; G2 aucun profil pilotable par l'environnement ; G3 les 4
+  fichiers de décision ont le même sha256 avant/après une exécution hostile ; G4 ancrage au
+  module, mesuré en `chdir` dans un répertoire piégé ; G5 aucune auto-découverte de manifeste ni
+  d'import à la demande). Quatre FAIL, tous de la même forme — ce qui décide est **laissé dehors** :
+  **F7** `gitleaks` lancé sans `--config` (la cible fournit donc son propre jeu de règles, et rien
+  ne le trace) ; **F8** `couverture.scanners_actives` écrit en dur ≠ les 3 `--config` passés ;
+  **F9** `Sandbox.exec` part de `dict(os.environ)` → `GROQ_API_KEY`, `GH_TOKEN`, `GITHUB_TOKEN`
+  atteignent le process qui parse le dépôt de l'attaquant ; **F10** `ARENA_SECOPS_CACHE` déplace la
+  racine des binaires et des règles sans re-vérification d'empreinte à l'exécution (le sha256 est
+  comparé à l'installation, consigné à la qualification, jamais au moment de lancer). Batterie :
+  44 cas · 28 PASS · 13 FAIL · 3 NON ÉVALUÉS. Détail : `PROJET_ETAT.md`, « famille G ».
 - (relevé n°1, devenu F1 ci-dessus) : Une sortie LLM qui
   nomme une capacité `interne: true` passe `intent_llm.valider()` : la garde compare au
   catalogue COMPLET (`registre.capabilities()`), alors que `descr()` et `publiques()`
