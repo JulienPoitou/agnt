@@ -45,7 +45,7 @@
 
 | Builder | Branche | Statut rapporté | Derniers commits | Prochaine mission assignée |
 |---|---|---|---|---|
-| CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d` | **P1 :** lecteur canonique d'historique Mission et API en lecture seule selon le contrat produit. |
+| CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d`, `729c2c0`, `fed13d6`, `e36c53a` | **P1 :** aligner History API sur les contrats Product, ajouter `data.timeline` et `data.executions[]` structurés. |
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d` | **P2 :** interopérabilité contre une implémentation MCP indépendante ; **P1 intégration :** raccord final au module CORE canonique à traiter lors de l'intégration coordonnée. |
 | WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
 | SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003` | **P1 :** concevoir et tester un Mode laboratoire propriétaire borné ; gate History/Timeline en attente de l'API CORE. |
@@ -65,6 +65,7 @@
 - Descripteur canonique `Cible`, normalisé une seule fois à la frontière du pipeline.
 - `target_types` validé et appliqué à la sélection ; URL/non-local représentable mais jamais convertie en chemin ou exécutée par CLI local.
 - Représentation sûre de cible ajoutée de façon additive au plan, journal de mission et entrée OPA.
+- Lecteur canonique `mission_history.py` et endpoints lecture seule `GET /api/missions` / `GET /api/missions/{mission_id}` livrés avec pagination, filtres, projection redacted, validation traversal/symlink et polling enrichi.
 
 ### MCP
 
@@ -109,15 +110,17 @@
 
 ## Travaux actifs et prochains jalons
 
-### P1 — CORE : lecteur canonique d'historique Mission et API lecture seule
+### P1 — CORE : alignement History / Timeline / Status sur les contrats Product
 
-Implémenter le contrat produit versionné `agnt.history.v1` sans base parallèle :
-- `GET /api/missions` et `GET /api/missions/{mission_id}` depuis les headers, journal et artefacts canoniques ;
-- `mission_id` persistant distinct du polling temporaire `run_id` ;
-- statuts, pagination, filtres et `missing_artifacts` conformes au contrat Product & UX ;
-- données sûres/redacted, sans chemins absolus, sorties brutes, argv ou secrets ;
-- enrichissement additif du polling avec `mission_id` / `detail_href`;
-- préservation stricte du contrat Security d'autorisation explicite de cible.
+Le lecteur canonique et les endpoints History sont livrés (`729c2c0`, `fed13d6`, `e36c53a`) avec 30 tests HTTP. Les fichiers Product n'étaient pas visibles dans le checkout CORE : une passe d'alignement explicite est requise avant intégration.
+
+- conserver le lecteur unique, l'API GET read-only et les projections Security déjà livrés ;
+- aligner la forme exacte de réponse sur `agnt.history.v1` ;
+- ajouter `data.timeline` à partir du journal, sans second store ni événement inventé ;
+- conserver `data.events` legacy séparé ;
+- enrichir `data.executions[]` selon `agnt.execution-status.v1`, sans remplacer le statut Mission ;
+- lancer le gate Product/API sur une référence intégrée/captures contrôlées avant feu vert WEB ;
+- préserver le POST Security et l'autorisation explicite de cible.
 
 ### P1 — MCP : raccord final au Transport CORE lors de l'intégration coordonnée
 
@@ -204,6 +207,13 @@ transports.enregistrer("mcp", executeur)
 - `repository` et `filesystem` sont aujourd'hui les types locaux effectivement chargés ; `url` est représentable mais aucun transport ne peut encore la recevoir.
 - Le contrat Transport actuel ne reçoit pas `Cible`. Toute évolution pour une cible distante est un chantier conjoint CORE + MCP + SECURITY, sans cacher l'URL dans Sandbox ou un global.
 
+### Implémentation CORE History candidate
+
+- `mission_history.py` est l'unique lecteur de projection pour les GET History ; il ne crée ni base ni index autoritaire.
+- Listing : `GET /api/missions`, liste vide HTTP 200, pagination base64 opaque, filtres `status` / `target_type`, tri stable.
+- Détail : projection redacted, artefacts manquants explicites, ID validé et symlinks/traversal refusés.
+- Cette implémentation est **candidate**, non encore certifiée contre les fichiers Product réels absents du checkout CORE ; ne pas activer WEB avant gate Product/API réel.
+
 ### Contrat produit de statuts à préserver
 
 - `agnt.execution-status.v1` enrichit `data.executions[]` sans changer les statuts Mission History v1.
@@ -241,7 +251,7 @@ transports.enregistrer("mcp", executeur)
 - **SECURITY :** fermer SEC-G6a avant les chantiers secondaires, puis définir/tester les invariants d'un backend externe : egress, endpoint contrôlé par registre, secrets, timeout, policy avant appel, confiance et absence de bypass sandbox implicite.
 - **CORE / MCP :** tout nouvel appel à `pipeline.executer()` ou nouveau type de cible doit préserver l'autorisation explicite ; aucune cible externe ne doit contourner la liste opérateur et la policy. Une cible URL ne doit pas être exécutée tant que le contrat Transport ne reçoit pas explicitement `Cible`.
 - **PRODUCT & UX :** historique, timeline, statuts et gate sont terminés. Ne pas créer de quatrième contrat, UI ou CI certifiante sur fixtures : attendre le lecteur/API CORE, exécuter le gate réel avec couverture exigée, puis donner le feu vert à WEB.
-- **CORE :** implémenter l'historique, `data.timeline` et l'enrichissement structuré de `data.executions[]` depuis le lecteur canonique de mission, sans base parallèle, puis lancer le gate Product/API contre `--base-url` et publier des captures contrôlées à couverture complète.
+- **CORE :** conserver le lecteur History livré et l'aligner sur les fichiers Product : ajouter `data.timeline` et `data.executions[]` structurés depuis le journal/ledger, puis lancer le gate Product/API contre `--base-url` et publier des captures contrôlées à couverture complète.
 - **WEB :** consommer exclusivement `/api/missions` pour l'historique, en utilisant `mission_id` comme référence persistante ; ne jamais reconstruire une liste locale ni mapper absence/refus/erreur vers zéro finding. Attendre le passage du gate Product/API réel.
 
 ---
@@ -257,7 +267,7 @@ transports.enregistrer("mcp", executeur)
 | Contrat Transport ne reçoit pas encore le descripteur `Cible` pour une exécution distante. | Architecturale P1 | Les URL sont représentables et filtrées, mais non exécutables ; évolution conjointe CORE/MCP/SECURITY requise avant support distant réel. |
 | Compatibilité MCP avec une implémentation tierce indépendante. | Moyenne | HTTP, Streamable HTTP et stdio sont prouvés contre serveurs contrôlés internes ; une preuve avec une implémentation indépendante reste à faire. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product UI est déjà livré ; WEB a été recadré et ne modifie pas ces fichiers. Préparer une adoption ciblée après référence consolidée, jamais une seconde refonte. |
-| Historique/timeline/statuts affichés sans source backend persistée. | Élevée produit | Contrats et gate Product terminés ; CORE doit exposer lecteur/API, `data.timeline` et `data.executions[]` enrichi puis passer le gate réel avant toute activation WEB. |
+| History API candidate diverge des contrats Product non visibles sur la branche CORE. | Élevée à l'intégration | Lecteur/API CORE est livré et testé localement, mais doit être aligné sur `agnt.history.v1`, `data.timeline` et `data.executions[]`, puis passer le gate Product/API réel avant activation WEB. |
 | Exposition API History/Timeline/Status de données sensibles ou payloads non allowlistés. | Haute sécurité d'intégration | Gate adversarial Security P1 actif avant exposition WEB ; CORE reste propriétaire de la projection/sérialisation. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
 | Un « bypass » générique pourrait devenir une backdoor publique ou désactiver des garanties de sécurité. | Haute sécurité | Remplacer le concept par un Mode laboratoire propriétaire borné, local, audité et impossible à activer depuis le LLM/API ; Security en est propriétaire. |
@@ -283,7 +293,8 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | ID | Sujet | Priorité | Statut |
 |---|---|---:|---|
 | CORE-001 | Cible typée / descriptor canonique | P1 | Terminé — `8eb4005`, `f1f323d` |
-| CORE-004 | Historique Mission persistant et API lecture seule `agnt.history.v1` | P1 | En cours — CORE |
+| CORE-004 | Historique Mission persistant et API lecture seule `agnt.history.v1` | P1 | Livré candidat — `729c2c0`, `fed13d6`, `e36c53a`; alignement Product requis |
+| CORE-006 | Projection `data.timeline` et `data.executions[]` conforme aux contrats Product | P1 intégration | En cours — CORE |
 | CORE-005 | Contrat Transport recevant Cible pour providers distants | P1 architecture | Ouvert — joint CORE/MCP/SECURITY |
 | CORE-002 | Graphe d'exécution explicite dans `plan.json` | P2 | Différé |
 | CORE-003 | Validation E2E avec OPA/bwrap/outils | Environnement | Bloqué |
@@ -303,7 +314,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | WEB-001 | Adoption de la refonte Product UI et états honnêtes | P1 | En attente de référence consolidée ; carte d'adoption active |
 | WEB-002 | Consommation UI de `/api/missions` et détail | P1 | Bloqué — dépend de CORE History/Timeline et validation Security |
 | WEB-003 | Validation navigateur réelle d'un run terminé | P2 environnement | Bloqué — OPA/bwrap/outils absents |
-| TIMELINE-001 | Projection `data.timeline` dans le lecteur canonique CORE | P2 | Ouvert — CORE |
+| TIMELINE-001 | Projection `data.timeline` dans le lecteur canonique CORE | P1 intégration | En cours — CORE |
 | TIMELINE-002 | Noms source des événements intention/sélection alignés à CORE | Intégration | Ouvert |
 | TIMELINE-003 | Allowlists transport/protocole MCP approuvées avec Security | Sécurité | Ouvert |
 | SEC-G6a | Configuration gitleaks contrôlée par le dépôt cible | P1 haute sécurité | Terminé — `e5838003`, config AGNT épinglée/fail-closed |
@@ -318,9 +329,9 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 ## Ordre d'intégration prévisionnel
 
 1. Préserver les correctifs Security poussés P0.1 `d1d562f` et SEC-G6a `e5838003`; ne pas déclarer G9 mesuré sans vrai gitleaks.
-2. Security conçoit/teste le Mode laboratoire propriétaire borné ; CORE implémente en parallèle le lecteur/API d'historique, en préservant Cible et l'autorisation explicite de cible.
+2. Security conçoit/teste le Mode laboratoire propriétaire borné ; CORE aligne en parallèle son lecteur/API History candidat sur History/Timeline/Status Product, en préservant Cible et l'autorisation explicite de cible.
 3. Prouver l'interopérabilité MCP avec une implémentation indépendante, de manière bornée et isolée ; ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
-4. CORE implémente `data.timeline` et `data.executions[]` enrichi avec le lecteur d'historique selon les contrats produit, lance le gate Product/API réel avec couverture complète ; Product & UX valide alors le résultat sans toucher à l'UI partagée.
+4. CORE termine `data.timeline` et `data.executions[]` enrichi, puis lance le gate Product/API réel avec couverture complète ; Product & UX valide alors le résultat sans toucher à l'UI partagée.
 5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle.
 6. Security exécute son gate adversarial contre l'API CORE intégrée et approuve allowlists/redaction de provenance/statuts avant exposition WEB ; le Mode laboratoire ne peut être exposé à WEB qu'en lecture seule et explicitement signalé.
 7. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après feu vert produit/Security.
