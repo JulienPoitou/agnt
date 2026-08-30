@@ -1839,6 +1839,15 @@ compteurs égaux, et rouge si quelqu'un revient à une liste écrite à côté. 
 deux sens : en remettant la liste en dur, G6b rougit ; en restaurant le correctif, il
 verdit.
 
+**Écart assumé à l'item, à corriger sur demande :** l'item F8 disait aussi « ajouter un champ
+`regles` à `Couverture.to_dict()` ». Il n'a pas été ajouté : le jeu de règles est déjà dans
+`scanners_actives` (les tiges des `--config`) et dans la limite qui le nomme. Un second champ
+portant la même information, calculé ailleurs, recrée exactement la dérive que F8 ferme — deux
+endroits qui doivent être d'accord sans rien qui les y oblige. Si l'opérateur veut malgré tout
+le champ (pour un affichage qui trie par outil plutôt que par capacité), la version correcte est
+`regles = [{"config": c, "sha256": empreinte(c)} for c in _drapeau(argv, "config")]` — dérivée du
+même lecteur, jamais d'une seconde écriture.
+
 **Ce que F8 ne ferme pas, relevé au passage :** `grype` déclare `grype:json`, qui vient de la
 ligne 317 (`f"{m.id}:{m.sortie_format}"`) — le provider mission-mode présente son *format de
 sortie* comme scanner actif. Ce n'est pas un mensonge sur ce qui a tourné, mais ce n'est pas
