@@ -33,6 +33,8 @@
 | **Cible distincte du sandbox** | Une cible n'est pas automatiquement un `Path` local ; une cible distante ne doit jamais être montée ou exécutée comme un faux chemin local. |
 | **Pas de faux état produit** | Quand l'API répond mais qu'aucune mission n'existe, l'interface affiche un accueil réel, jamais des données de démonstration. |
 | **Progressive disclosure** | L'UX montre d'abord le résultat métier ; providers et détails techniques restent secondaires. Les données non fiables sont rendues avec `textContent`, jamais `innerHTML`. |
+| **Autorisation de cible explicite** | `cible_autorisee` n'a aucun défaut permissif : seul `True` explicite l'arme ; l'API dérive cette autorisation exclusivement de la liste opérateur `cibles_admises()`. |
+| **Jeux de règles de sécurité contrôlés** | Un scanner ne doit jamais charger une configuration fournie par le dépôt analysé. Une règle doit venir d'une source AGNT de confiance, montée en lecture seule et vérifiée. |
 
 ---
 
@@ -43,7 +45,7 @@
 | CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c` | **P1 :** descripteur de cible canonique et typé, branché sans réécriture du moteur. |
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844` | **P1 :** alignement sur le contrat CORE et test contre un serveur MCP contrôlé réel. |
 | WEB | non reçu | en attente de handoff | — | À définir après handoff. |
-| SECURITY | non reçu | en attente de handoff | — | À définir après handoff. |
+| SECURITY | `arena/01a05426-agnt` | `PARTIAL` | `d1d562f` — non poussé au handoff | **P1 :** pousser le correctif P0.1 puis fermer SEC-G6a : jeu de règles gitleaks de confiance. |
 | PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED_WITH_LIMITATIONS` | `18c1aad` | **P1 :** contrat produit/API minimal pour l'historique réel des missions, sans toucher aux fichiers UI partagés. |
 
 ---
@@ -66,6 +68,12 @@
 - Normalisation des findings MCP dans le chemin commun AGNT.
 - Provenance MCP, corrélation, ledger, reporting, API et SARIF enrichis de façon additive.
 - Tests contractuels et intégration simulée en mémoire.
+
+### SECURITY
+
+- Correctif P0.1 F2/D4 : l'autorisation d'une cible n'est plus implicite dans pipeline, CLI ou API.
+- L'API ignore toute tentative client de définir `cible_autorisee` et utilise uniquement la liste d'admission opérateur.
+- Tests adversariaux et de régression ajoutés pour l'autorisation de cible et le journal.
 
 ### PRODUCT & UX
 
@@ -111,6 +119,16 @@ Définir, sans implémenter un backend ou une nouvelle UI concurrente, le contra
 
 Le builder Product & UX ne touche pas à `index.html`, `app.js` ou `style.css` dans ce lot afin d'éviter un conflit avec builder-web avant réception de son handoff.
 
+### P1 — SECURITY : jeu de règles gitleaks de confiance
+
+Avant tout autre chantier Security :
+- pousser le commit P0.1 `d1d562f` sur sa branche ;
+- fermer SEC-G6a en forçant gitleaks à utiliser un fichier `gitleaks.toml` AGNT sous `{REGLES}` ;
+- installer/pinner/vérifier ce fichier via les mécanismes bootstrap et empreintes existants ;
+- refuser l'exécution plutôt que retomber sur une configuration découverte dans le dépôt cible ;
+- ajouter les régressions argv/configuration correspondantes ;
+- laisser G9 honnêtement non évalué tant qu'un vrai gitleaks n'est pas disponible.
+
 ---
 
 ## Contrats et dépendances entre builders
@@ -119,7 +137,7 @@ Le builder Product & UX ne touche pas à `index.html`, `app.js` ou `style.css` d
 CORE : Provider / Transport / mission artifacts / future Cible
   ├── MCP : transport "mcp", résultats externes, provenance
   ├── WEB : affichage des artefacts par mission et provenance additive
-  ├── SECURITY : invariants egress, policy, secrets, confiance externe
+  ├── SECURITY : autorisation explicite de cible, invariants egress/policy/secrets, confiance externe et règles scanners de confiance
   └── PRODUCT & UX : modèle de cible, point de composition des extensions et contrat de consultation de l'historique
 ```
 
@@ -135,10 +153,17 @@ transports.enregistrer("mcp", executeur)
 - `tools/list` est informatif, jamais une autorité d'autorisation.
 - Les nouveaux champs de provenance doivent être additifs pour Web/API/SARIF.
 
+### Contrat d'autorisation de cible à préserver
+
+- `pipeline.executer(..., cible_autorisee=None)` doit refuser ; seul un booléen `True` explicite autorise la cible.
+- L'API dérive l'autorisation de `cibles_admises()` ; un champ client `cible_autorisee` ne doit jamais influencer cette décision.
+- Le futur descripteur `Cible` de CORE ne doit pas réintroduire d'autorisation implicite par type, chemin ou défaut.
+
 ### Consignes cross-builder actuelles
 
 - **WEB :** ne pas supposer un unique `PHASE3/run`; utiliser les données de mission et tolérer les champs MCP additionnels (`transport`, serveur, outil, protocole, confiance, disponibilité, corrélation).
-- **SECURITY :** définir et tester les invariants d'un backend externe : egress, endpoint contrôlé par registre, secrets, timeout, policy avant appel, confiance et absence de bypass sandbox implicite.
+- **SECURITY :** fermer SEC-G6a avant les chantiers secondaires, puis définir/tester les invariants d'un backend externe : egress, endpoint contrôlé par registre, secrets, timeout, policy avant appel, confiance et absence de bypass sandbox implicite.
+- **CORE / MCP :** tout nouvel appel à `pipeline.executer()` ou nouveau type de cible doit préserver l'autorisation explicite ; aucune cible externe ne doit contourner la liste opérateur et la policy.
 - **PRODUCT & UX :** ne pas créer une deuxième source de vérité pour les types de cible ou les extensions. Définir le contrat d'historique réel avant toute réactivation d'onglet ou de données globales ; ne pas modifier les fichiers UI partagés avant coordination avec WEB.
 
 ---
@@ -155,6 +180,8 @@ transports.enregistrer("mcp", executeur)
 | Annulation HTTP en cours d'appel MCP. | Moyenne | MCP-003 reste ouvert jusqu'à preuve réelle ou solution documentée. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product & UX travaille désormais sur le contrat d'historique hors de ces fichiers ; attendre le handoff WEB avant tout nouveau chantier UI. |
 | Historique global affiché sans source backend persistée. | Élevée produit | Garder l'historique désactivé jusqu'au contrat puis à l'endpoint réel ; aucune donnée de démonstration après une réponse API. |
+| Gitleaks peut charger une configuration hostile du dépôt et masquer des secrets (SEC-G6a). | Haute sécurité | Correctif Security P1 actif : config AGNT explicite, vérifiée et fail-closed ; ne pas déclarer la détection de secrets fiable avant fermeture. |
+| Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
 
 ---
 
@@ -167,6 +194,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 - Pas de serveur MCP tiers ni de credential de test : interopérabilité externe réelle non prouvée à ce stade.
 - Certains tests historiques échouent uniquement parce que `bandit`, `checkov`, `detect-secrets` et `radon` sont absents.
 - L'API conserve actuellement les runs en mémoire et n'expose pas encore de liste persistée de missions ; l'historique produit reste volontairement désactivé.
+- Gitleaks réel est absent : la vulnérabilité de configuration hostile est reproductible par contrat/argv mais sa mesure avec le binaire reste non évaluée.
 
 ---
 
@@ -182,16 +210,20 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | MCP-003 | Annulation HTTP MCP pendant un appel bloquant | P2 | Ouvert |
 | PRODUCT-001 | Endpoint d'historique persistant des missions | P1 | Bloqué par contrat backend ; contrat produit en cours |
 | PRODUCT-002 | Comparaison de runs et vues globales Findings/Reports | P2 | Différé |
+| SEC-G6a | Configuration gitleaks contrôlée par le dépôt cible | P1 haute sécurité | En cours — SECURITY |
+| SEC-G9 | Mesure réelle gitleaks face à un `.gitleaks.toml` hostile | P2 environnement | Bloqué |
+| SEC-B6 | Durcissement garde-fous homoglyphes / espaces | P3 | Différé |
+| SEC-B7 | Borne de taille de requête sortante fournisseur | P3 | Différé |
 
 ---
 
 ## Ordre d'intégration prévisionnel
 
-1. Stabiliser le lot CORE Cible sans casser les contrats actuels.
-2. Finaliser l'alignement MCP sur les extension points CORE et sa preuve E2E contrôlée.
-3. Finaliser le contrat produit d'historique avant toute implémentation backend/UI de cette fonctionnalité.
-4. Examiner les diff/contrats CORE + MCP ensemble et préparer une stratégie de merge ciblée.
-5. Intégrer les contraintes SECURITY sur les transports externes.
+1. Pousser et préserver le correctif Security P0.1 `d1d562f`, puis fermer SEC-G6a avant de considérer le scan de secrets fiable.
+2. Stabiliser le lot CORE Cible sans casser les contrats actuels, notamment l'autorisation explicite de cible.
+3. Finaliser l'alignement MCP sur les extension points CORE et sa preuve E2E contrôlée.
+4. Finaliser le contrat produit d'historique avant toute implémentation backend/UI de cette fonctionnalité.
+5. Examiner les diff/contrats CORE + MCP + SECURITY ensemble et préparer une stratégie de merge ciblée.
 6. Adapter WEB aux contrats stabilisés, sans reconstruire de logique métier côté UI.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
