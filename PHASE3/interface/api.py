@@ -656,6 +656,11 @@ def _capacites() -> dict:
 
 
 def main(argv=None) -> int:
+    # Bootstrap applicatif unique : l'API démarre le transport MCP avant les
+    # lectures de Registry(), jamais dans le worker ni dans une requête.
+    import mcp_bootstrap as MCP_BOOT
+    import transports as CORE_TRANSPORTS
+    MCP_BOOT.initialiser_mcp(CORE_TRANSPORTS)
     ap = argparse.ArgumentParser(description="API de l'interface AGNT (surcouche)")
     ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8141)

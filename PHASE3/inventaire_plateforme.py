@@ -692,6 +692,11 @@ def ecrire_matrice(d: dict) -> str:
 
 
 def main(argv: list[str]) -> int:
+    # Utilitaire CLI : le registre MCP est prêt avant les lectures de Registry().
+    # Aucun bootstrap n'est placé dans les fonctions appelables par une mission.
+    from mcp_bootstrap import initialiser_mcp
+    import transports as CORE_TRANSPORTS
+    initialiser_mcp(CORE_TRANSPORTS)
     verifier = "--verifier" in argv
     d = construis()
     entetes = {"genere_par": "PHASE3/inventaire_plateforme.py", "empreintes_sources": sources(),

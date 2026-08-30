@@ -278,8 +278,19 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
             # Une cible typée est construite une fois par l'orchestrateur, puis remise
             # au backend. Le transport ne reçoit jamais un chemin pour décider lui-même
             # de ce qu'est la cible ; il ne reçoit que cette donnée validée.
-            kind = ("repository" if "repository" in tuple(prov.target_types)
-                    else tuple(prov.target_types or ("repository",))[0])
+            types_cible = tuple(prov.target_types or ())
+            if "repository" in types_cible:
+                kind = "repository"
+            elif "filesystem" in types_cible:
+                kind = "filesystem"
+            else:
+                # Cette façade reçoit aujourd'hui une Path locale. Ne pas la
+                # convertir en faux URL/hôte/image : ces cibles attendent le
+                # descripteur canonique CORE et ne sont pas téléchargées ou montées
+                # implicitement dans Sandbox.
+                raise PipelineError(
+                    f"{prov.id}: cible {types_cible} non supportée par la façade Path "
+                    "— descripteur Cible CORE requis")
             cible_typed = Target(kind, str(cible))
             brut = adapters.executer(
                 prov, sbx, target=cible_typed,
@@ -403,8 +414,11 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
              avec_internes: bool = False, escalade: bool = True,
              egress: bool | None = None,
              moteur_intent: str | None = None,
-             fournisseur_llm: object | None = None) -> Execution:
+             fournisseur_llm: object | None = None, *, registre=None,
+             policy_engine=None, transport_factories: dict | None = None) -> Execution:
     """Exécute une mission de bout en bout.
+
+    `egress` : l'autorisation de sortir (réseau) pour CETTE mission.
 
     `egress` : l'autorisation de sortir (réseau) pour CETTE mission.
     `None` = on s'en tient au profil (donc coupé, aujourd'hui). `True` n'est pas un réglage
@@ -424,6 +438,10 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
     ou une `cible.Cible` déjà construite. Elle est normalisée UNE FOIS à l'entrée
     (`cible.normaliser`) ; une cible non locale est représentée, jamais convertie en
     chemin ni exécutée en sous-processus local.
+
+    ``registre``, ``policy_engine`` et ``transport_factories`` sont des points d'injection
+    de test/runtime compatibles avec le CORE ; en production ils restent absents et le
+    pipeline construit les objets canoniques. Ils ne constituent pas une deuxième autorité.
     """
     if confiance_cible not in CONFIANCES:
         # Pas de repli : une valeur non reconnue vaudrait «controlled» par accident,
@@ -435,7 +453,7 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
     # mission, pas un état que l'appelant aurait dû poser sur le module.
     moteur_intent = MOTEUR_INTENT if moteur_intent is None else moteur_intent
     fournisseur_llm = FOURNISSEUR_LLM if fournisseur_llm is None else fournisseur_llm
-    registre = Registry()
+    registre = Registry() if registre is None else registre
 
     # ---------------------------------------------------------------- 0. cible
     # Normalisation UNIQUE de frontière (2026-08-30) : un Path historique, une chaîne
@@ -644,7 +662,8 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
     # 2026-08-30 sur un RUN réel de l'interface, cible admise et OPA absent : l'écran disait
     # la cause, le journal de mission s'arrêtait à « plan ».
     try:
-        moteur = PO.PolicyEngine(opa=CACHE_BIN / "opa")
+        moteur = (policy_engine if policy_engine is not None
+                  else PO.PolicyEngine(opa=CACHE_BIN / "opa"))
         # MCP-004 : plus de type de cible codé en dur. OPA lit le descripteur STRUCTURÉ
         # porté par le plan (`cible_descr` = Cible.to_dict()), donc le type réel de la
         # cible — pas un littéral "repository" qui mentirait sur une cible filesystem.
@@ -767,7 +786,8 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
                                       else Path(_p.commande[0]).name)
     V = _ContexteVague(miss=miss, registre=registre, exec_=exec_, sbx=sbx, cible=chemin_cible,
                        sortie=sortie, ctx=ctx, trouves=trouves, tous_findings=tous_findings,
-                       domaines=domaines_du_provider, binaires=binaire_de_provider)
+                       domaines=domaines_du_provider, binaires=binaire_de_provider,
+                       transport_factories=dict(transport_factories or {}))
     _vague(plan.steps, V, plan.to_dict(), {"allow": True, "motifs": list(decision.motifs)},
            plan.cree_le, 1)
 
@@ -889,6 +909,11 @@ def _rapport(it, plan, e: Execution) -> dict:
 
 
 def main() -> int:
+    # Ce point d'entrée direct doit avoir le même bootstrap que la CLI principale.
+    # L'enregistrement est explicite et précède le Registry utilisé par executer().
+    from mcp_bootstrap import initialiser_mcp
+    import transports as CORE_TRANSPORTS
+    initialiser_mcp(CORE_TRANSPORTS)
     requete = sys.argv[1] if len(sys.argv) > 1 else "Analyse la sécurité de mon dépôt"
     cible = Path(sys.argv[2]) if len(sys.argv) > 2 else RACINE / "testrepo"
 

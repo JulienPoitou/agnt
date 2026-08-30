@@ -22,11 +22,12 @@ from __future__ import annotations
 import json
 import os
 import select
+import socket
 import signal
 import subprocess
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Mapping, Protocol, Sequence
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
@@ -240,6 +241,7 @@ class _ProcessState:
     process: subprocess.Popen
     stderr: list[str]
     stderr_thread: threading.Thread | None = None
+    stdout_buffer: bytearray = field(default_factory=bytearray)
 
 
 class StdioMCPTransport:
@@ -303,6 +305,7 @@ class StdioMCPTransport:
 
     @staticmethod
     def _tuer(proc: subprocess.Popen) -> None:
+        """Arrête et récolte le processus : pas de zombie après un timeout/close."""
         try:
             os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
         except (OSError, ProcessLookupError):
@@ -311,20 +314,64 @@ class StdioMCPTransport:
             proc.kill()
         except (OSError, ProcessLookupError):
             pass
+        try:
+            proc.wait(timeout=1)
+        except subprocess.TimeoutExpired:
+            # Le processus est déjà isolé dans son groupe ; il n'est pas relancé
+            # et le transport ne retourne jamais avec une session encore active.
+            try:
+                proc.kill()
+                proc.wait(timeout=1)
+            except (OSError, ProcessLookupError, subprocess.TimeoutExpired):
+                pass
 
-    def _lire_ligne(self, proc: subprocess.Popen, timeout: float) -> str:
+    def _fermer(self, state: _ProcessState) -> None:
+        self._tuer(state.process)
+        if state.stderr_thread is not None:
+            state.stderr_thread.join(timeout=1)
+
+    def _lire_ligne(self, state: _ProcessState, timeout: float,
+                    cancel_event: Any = None) -> str:
+        proc = state.process
         if proc.stdout is None:
             raise MCPTransportUnavailable("sortie du serveur MCP stdio absente")
         fd = proc.stdout.fileno()
-        pret, _, _ = select.select([fd], [], [], max(0.001, timeout))
-        if not pret:
-            raise MCPTransportTimeout("serveur MCP stdio : délai dépassé")
-        ligne = proc.stdout.readline()
-        if not ligne:
-            raise MCPTransportUnavailable("serveur MCP stdio fermé sans réponse")
-        if len(ligne.encode("utf-8", "replace")) > MAX_MESSAGE_BYTES:
-            raise MCPProtocolError("message MCP stdio trop volumineux")
-        return ligne
+        debut = time.monotonic()
+        while True:
+            try:
+                # LF : le framing MCP stdio est ligne par ligne.
+                fin = state.stdout_buffer.index(10)
+            except ValueError:
+                fin = -1
+            if fin >= 0:
+                ligne = bytes(state.stdout_buffer[:fin + 1])
+                del state.stdout_buffer[:fin + 1]
+                if len(ligne) > MAX_MESSAGE_BYTES:
+                    raise MCPProtocolError("message MCP stdio trop volumineux")
+                return ligne.decode("utf-8", "replace")
+            if len(state.stdout_buffer) > MAX_MESSAGE_BYTES:
+                raise MCPProtocolError("message MCP stdio trop volumineux")
+            if cancel_event is not None and cancel_event.is_set():
+                raise MCPTransportCancelled("appel MCP annulé")
+            restant = float(timeout) - (time.monotonic() - debut)
+            if restant <= 0:
+                raise MCPTransportTimeout("serveur MCP stdio : délai dépassé")
+            attente = min(restant, 0.05) if cancel_event is not None else restant
+            pret, _, _ = select.select([fd], [], [], attente)
+            if not pret:
+                if cancel_event is not None and cancel_event.is_set():
+                    raise MCPTransportCancelled("appel MCP annulé")
+                if attente < restant:
+                    continue
+                raise MCPTransportTimeout("serveur MCP stdio : délai dépassé")
+            try:
+                morceau = os.read(fd, min(64 * 1024,
+                                         MAX_MESSAGE_BYTES + 1 - len(state.stdout_buffer)))
+            except OSError as exc:
+                raise MCPTransportUnavailable("sortie du serveur MCP stdio illisible") from exc
+            if not morceau:
+                raise MCPTransportUnavailable("serveur MCP stdio fermé sans réponse")
+            state.stdout_buffer.extend(morceau)
 
     def request(self, method: str, params: Mapping[str, Any] | None = None,
                 *, timeout: float, cancel_event: Any = None) -> dict:
@@ -340,24 +387,24 @@ class StdioMCPTransport:
                 proc.stdin.write(json.dumps(demande, ensure_ascii=False) + "\n")
                 proc.stdin.flush()
             except (BrokenPipeError, OSError) as exc:
-                self._tuer(proc)
+                self._fermer(state)
                 self._state = None
                 raise MCPTransportUnavailable("serveur MCP stdio non disponible") from exc
             debut = time.monotonic()
             while True:
                 if cancel_event is not None and cancel_event.is_set():
-                    self._tuer(proc)
+                    self._fermer(state)
                     self._state = None
                     raise MCPTransportCancelled("appel MCP annulé")
                 restant = float(timeout) - (time.monotonic() - debut)
                 if restant <= 0:
-                    self._tuer(proc)
+                    self._fermer(state)
                     self._state = None
                     raise MCPTransportTimeout("serveur MCP stdio : délai dépassé")
                 try:
-                    ligne = self._lire_ligne(proc, restant)
-                except MCPTransportTimeout:
-                    self._tuer(proc)
+                    ligne = self._lire_ligne(state, restant, cancel_event)
+                except (MCPTransportTimeout, MCPTransportCancelled):
+                    self._fermer(state)
                     self._state = None
                     raise
                 try:
@@ -382,7 +429,7 @@ class StdioMCPTransport:
                 }, ensure_ascii=False) + "\n")
                 state.process.stdin.flush()
             except (BrokenPipeError, OSError) as exc:
-                self._tuer(state.process)
+                self._fermer(state)
                 self._state = None
                 raise MCPTransportUnavailable("serveur MCP stdio non disponible") from exc
 
@@ -395,7 +442,8 @@ class StdioMCPTransport:
     def close(self) -> None:
         with self._verrou:
             if self._state is not None:
-                self._tuer(self._state.process)
+                state = self._state
+                self._fermer(state)
                 self._state = None
 
 
@@ -478,11 +526,24 @@ class HTTPMCPTransport:
                     objet = self._corps(response)
             except HTTPError as exc:
                 # Ne pas reprendre le corps ou l'URL : les deux peuvent contenir des
-                # erreurs distantes et des informations d'authentification.
+                # erreurs distantes et des informations d'authentification. Un 408/504
+                # est un délai ; un 4xx/5xx de connexion est une indisponibilité.
+                if exc.code in (408, 504):
+                    raise MCPTransportTimeout("endpoint MCP HTTP : délai dépassé") from None
                 raise MCPTransportUnavailable(
                     f"endpoint MCP HTTP indisponible (HTTP {exc.code})") from None
-            except (URLError, TimeoutError, OSError) as exc:
-                raise MCPTransportTimeout("endpoint MCP HTTP injoignable ou expiré") from None
+            except URLError as exc:
+                # `URLError` couvre aussi ConnectionRefusedError : ne pas transformer
+                # une adresse fermée en timeout, faute de quoi la disponibilité serait
+                # fausse dans le ledger.
+                cause = getattr(exc, "reason", None)
+                if isinstance(cause, (socket.timeout, TimeoutError)):
+                    raise MCPTransportTimeout("endpoint MCP HTTP : délai dépassé") from None
+                raise MCPTransportUnavailable("endpoint MCP HTTP indisponible") from None
+            except (socket.timeout, TimeoutError):
+                raise MCPTransportTimeout("endpoint MCP HTTP : délai dépassé") from None
+            except OSError:
+                raise MCPTransportUnavailable("endpoint MCP HTTP indisponible") from None
             return _valider_reponse(objet)
 
     def notify(self, method: str, params: Mapping[str, Any] | None = None) -> None:
@@ -502,7 +563,18 @@ class HTTPMCPTransport:
             try:
                 with urlopen(req, timeout=10) as response:
                     response.read(1024)
-            except (HTTPError, URLError, TimeoutError, OSError):
+            except HTTPError as exc:
+                if exc.code in (408, 504):
+                    raise MCPTransportTimeout("notification MCP HTTP : délai dépassé") from None
+                raise MCPTransportUnavailable("notification MCP HTTP échouée") from None
+            except URLError as exc:
+                cause = getattr(exc, "reason", None)
+                if isinstance(cause, (socket.timeout, TimeoutError)):
+                    raise MCPTransportTimeout("notification MCP HTTP : délai dépassé") from None
+                raise MCPTransportUnavailable("notification MCP HTTP échouée") from None
+            except (socket.timeout, TimeoutError):
+                raise MCPTransportTimeout("notification MCP HTTP : délai dépassé") from None
+            except OSError:
                 raise MCPTransportUnavailable("notification MCP HTTP échouée") from None
 
     def close(self) -> None:

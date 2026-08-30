@@ -51,6 +51,14 @@ import rapport_humain as RH  # noqa: E402
 import pipeline          # noqa: E402
 import rapport as R      # noqa: E402
 import statuts as ST     # noqa: E402
+import mcp_bootstrap as MCP_BOOT  # noqa: E402
+import transports as CORE_TRANSPORTS  # noqa: E402
+
+
+def initialiser_extensions() -> None:
+    """Bootstrap unique des transports externes avant tout chargement de registre."""
+    MCP_BOOT.initialiser_mcp(CORE_TRANSPORTS)
+
 
 # Index en trois niveaux :
 #   artifacts/<input_digest>/<plan_id>/<run_id>/
@@ -415,6 +423,11 @@ def main(argv: list[str]) -> int:
     except ValueError as e:
         print(f"ERREUR : {e}")
         return 1
+
+    # Point de bootstrap applicatif : une seule fois par processus CLI, avant le
+    # premier Registry(). `lancer()` (API bibliothèque) est appelé par interface.main
+    # qui réalise le même bootstrap, pas par chaque mission.
+    initialiser_extensions()
 
     moteur = options.get("moteur", "auto")
     # Défaut historique conservé — mais il est AFFICHÉ plus bas : muet, ce serait faire
