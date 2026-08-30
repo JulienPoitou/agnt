@@ -68,6 +68,40 @@ verifier_binaire() {  # verifier_binaire <nom> <chemin>
   return 0
 }
 
+# -------------------------------------------------- config gitleaks (SEC-G6a / F7)
+# La grille de détection des secrets est FOURNIE PAR AGNT, jamais par le dépôt analysé :
+# copiée depuis le dépôt de travail ($B/regles), épinglée au manifeste, vérifiée
+# STRICTEMENT. Contrairement aux règles Semgrep (qui évoluent, divergence =
+# avertissement), une divergence ici change la grille d'évaluation des secrets :
+# c'est un REFUS, et l'absence est un refus aussi — pas un repli vers la
+# configuration par défaut de gitleaks ni vers un `.gitleaks.toml` de la cible.
+installer_config_gitleaks() {
+  local attendu reel
+  if [ ! -f "$B/regles/gitleaks.toml" ]; then
+    err "config gitleaks AGNT absente : $B/regles/gitleaks.toml — exécution refusée"
+    return 1
+  fi
+  [ -f "$MANIFESTE" ] || {
+    err "manifeste absent : $MANIFESTE — impossible d'épingler la config gitleaks"
+    return 1
+  }
+  attendu=$(sha_attendu regles gitleaks.toml)
+  if [ -z "$attendu" ]; then
+    err "config gitleaks : aucune empreinte épinglée dans le manifeste (regles.gitleaks.toml.sha256)"
+    return 1
+  fi
+  install -m 0644 "$B/regles/gitleaks.toml" "$RULES/gitleaks.toml"
+  reel=$(sha256sum "$RULES/gitleaks.toml" | cut -d' ' -f1)
+  if [ "$reel" != "$attendu" ]; then
+    err "config gitleaks : SHA-256 inattendu"
+    err "  attendu : $attendu"
+    err "  obtenu  : $reel"
+    err "  REFUSÉE — le dépôt de travail et le manifeste divergent : mettre à jour l'un, pas l'autre"
+    return 1
+  fi
+  log "config gitleaks épinglée : $RULES/gitleaks.toml ($attendu)"
+}
+
 for b in trivy gitleaks opa grype kics; do
   verifier_binaire "$b" "$BIN/$b" || exit 1
 done
@@ -184,6 +218,12 @@ for r in python security-audit javascript golang; do
     curl -fsSL -o "$RULES/$r.yaml" "https://semgrep.dev/c/p/$r"
   }
 done
+
+# ---------------------------------------------------------------- config gitleaks (SEC-G6a / F7)
+# Voir installer_config_gitleaks (définie dans l'en-tête : le harnais test_bootstrap.sh
+# la source pour juger ses quatre faces — absence, épinglage manquant, divergence,
+# conformité — sur le code réel, pas sur une copie).
+installer_config_gitleaks
 
 # ---------------------------------------------------------------- base Trivy
 # 1,3 Go. Sans elle Trivy échoue : « --skip-db-update cannot be specified on the first run ».

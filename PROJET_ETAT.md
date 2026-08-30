@@ -1568,11 +1568,11 @@ aucun correctif appliqué au produit pendant la campagne.
 | G3 | une exécution pilotée par un modèle hostile modifie-t-elle une source de décision ? | **PASS** | sha256 des 4 fichiers de décision identiques avant/après (dont le cas A2, celui où le plan contenait le provider interne) |
 | G4 | un dépôt qui **contient** `capabilities.yaml` / `policy.rego` peut-il les imposer ? | **PASS** | `REGISTRY_PATH = Path(__file__).parent / …` : ancré au module. Mesuré en `chdir` dans un répertoire piégé (faux registre + faux `.rego`) puis rechargement : empreinte inchangée |
 | G5 | un manifeste ou un parser inconnu peut-il se charger tout seul ? | **PASS** | un seul fichier lu par le registre, zéro glob de manifests, `parsers.obtenir()` = lookup dans un dictionnaire d'enregistrement (`obtenir("os")` → `None`) |
-| G6a | qui fixe le jeu de règles de détection des secrets ? | **FAIL (haute)** | argv réel : `gitleaks git --redact --report-format=json --no-banner --report-path=…` — **ni `--config` ni `--source-path`**, cwd = la cible scannée, et la couverture n'enregistre aucun jeu de règles |
+| G6a | qui fixe le jeu de règles de détection des secrets ? | **FAIL (haute)** | argv réel : `gitleaks git --redact --report-format=json --no-banner --report-path=…` — **ni `--config` ni `--source-path`**, cwd = la cible scannée, et la couverture n'enregistre aucun jeu de règles. **→ CORRIGÉ le 2026-08-30 (SEC-G6a/F7)** : `--config={REGLES}/gitleaks.toml` porté par le registre, config fournie par AGNT (`PHASE3/regles/gitleaks.toml`), épinglée au manifeste, installée+vérifiée par bootstrap, montée en lecture seule, absence = refus (`ReglesIntrouvables` avant Popen). Campagne rejouée : 47 cas · 44 PASS · 0 FAIL · 3 N/E. |
 | G6b | ce que la couverture déclare est-il ce qui a tourné ? | **FAIL (moyenne)** | `configs_passees = python, security-audit, javascript` (3) contre `scanners_actives = semgrep:python, semgrep:security-audit` (2), liste **écrite en dur** dans `adapters.py` |
 | G7 | que reçoit l'outil qui lit un dépôt hostile dans son environnement ? | **FAIL (haute)** | `Sandbox.exec` part de `dict(os.environ)` : sur le vrai chemin `Popen`, l'outil a reçu **24 variables dont `GROQ_API_KEY`, `GH_TOKEN`, `GITHUB_TOKEN`** |
 | G8 | le cœur vérifie-t-il l'identité du binaire qu'il lance ? | **FAIL (haute)** | `ARENA_SECOPS_CACHE` déplace `CACHE_BIN` **et** les règles (`/tmp/cache-d-attaquant/bin` obtenu) ; le cœur ne lit jamais `manifeste_dependances.yaml` ; aucune empreinte comparée à l'exécution ; `verifie()` ne teste que l'existence des montages |
-| G9 | le dépôt peut-il imposer son propre `.gitleaks.toml` ? | **NON ÉVALUÉ** | le comportement est dans le binaire, absent ici. La moitié mesurable est en G6a (ni épinglage, ni traçabilité) ; le reste est consigné à rejouer sur la machine source |
+| G9 | le dépôt peut-il imposer son propre `.gitleaks.toml` ? | **NON ÉVALUÉ** | le comportement est dans le binaire, absent ici. La moitié mesurable est en G6a (ni épinglage, ni traçabilité) ; le reste est consigné à rejouer sur la machine source. **→ après le correctif G6a** : le chemin de configuration ne peut plus être influencé par la cible (seule grille admise = montage AGNT, lecture seule, en place avant Popen) ; seule la confirmation du comportement interne de gitleaks reste à faire sur machine outillée |
 
 **Bilan de la batterie : 44 cas · 28 PASS · 13 FAIL · 3 NON ÉVALUÉS** (avant G : 34 · 23 · 9 · 2).
 
@@ -2075,6 +2075,12 @@ rien à juger) — un cas qui ne peut pas mentir dans un sens comme dans l'autre
 patch, E6 et E7 tombent ensemble (39 PASS / 4 FAIL), avec lui **46 cas · 41 PASS · 2 FAIL ·
 3 NON ÉVALUÉS**, les deux FAIL restants restant D4 (décision F2 attendue) et G6a (F7, épinglage
 des règles de secrets, non mesurable sans outils réels).
+
+**Mise à jour 2026-08-30 (après P0.1 et SEC-G6a/F7)** : D4 **corrigé** (autorisation de cible
+fail-closed, commit d1d562f) puis G6a **corrigé** (grille gitleaks fournie par AGNT
+`--config={REGLES}/gitleaks.toml`, épinglée, montée en lecture seule, absente = refus avant
+Popen). Campagne rejouée dans son état actuel : **47 cas · 44 PASS · 0 FAIL · 3 NON ÉVALUÉS**
+(D2/D3 : OPA absent ; G9 : binaire gitleaks absent).
 
 Le même mouvement a produit deux corrections de pré-vol qui n'avaient pas de test parce qu'elles
 ne concernent ni le pipeline ni l'interface : `bootstrap.sh` ne vérifiait pas les binaires qu'il

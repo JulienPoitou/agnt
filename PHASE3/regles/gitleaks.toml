@@ -1,0 +1,22 @@
+# Configuration gitleaks contrôlée par AGNT — SEC-G6a / F7 (2026-08-30).
+#
+# RÈGLE DE SÉCURITÉ : le dépôt analysé n'est JAMAIS la source des règles qui servent à
+# l'évaluer. Cette configuration est la SEULE que gitleaks peut lire pour une mission :
+#
+#   · elle est passée explicitement (`--config={REGLES}/gitleaks.toml`) par le registre,
+#     jamais par la cible ni par un modèle ;
+#   · elle est copiée ici depuis le dépôt de travail par `bootstrap.sh`, épinglée par
+#     SHA-256 dans `manifeste_dependances.yaml`, et vérifiée à l'exécution par
+#     `sandbox.empreintes_conformes()` ;
+#   · elle est montée en LECTURE SEULE dans le sandbox (`--ro-bind <racine_regles>`) ;
+#   · si elle est absente, l'exécution est REFUSÉE avant tout Popen
+#     (`adapters.verifier_regles`) : aucun repli vers la grille par défaut de gitleaks
+#     ni vers un `.gitleaks.toml` présent dans la cible.
+#
+# CONTENU : le jeu par défaut du binaire gitleaks épinglé, SANS aucune règle retirée et
+# SANS allowlist. `useDefault = true` charge les règles intégrées ; ce fichier ne fait
+# qu'ancrer l'exécution sur une grille connue, traçable et épinglée — il ne l'affaiblit
+# pas. La valeur de `sha256` du manifeste verrouille justement ce fait.
+
+[extend]
+useDefault = true

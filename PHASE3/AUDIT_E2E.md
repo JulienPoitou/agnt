@@ -41,7 +41,11 @@ test. Chaque ligne est donc jugée par une exécution, et marquée :
    fail-closed (`None → False`) dans `pipeline.executer`, drapeau CLI `--cible-autorisee`,
    autorisation de l'interface dérivée de `cibles_admises()` (le corps de la requête est
    ignoré). D4 est rejoué en test de comportement (`test_adversaire.py`), plus un relevé de
-   texte : la campagne passe de 2 FAIL à 1 (G6a).
+   texte.
+4. **G6a/F7 est fermé le même jour (SEC-G6a)** : `gitleaks` reçoit `--config={REGLES}/gitleaks.toml`
+   (grille AGNT épinglée au manifeste, montée en lecture seule) et **refuse** avant tout Popen
+   si la grille est absente (`ReglesIntrouvables`, cas G6a2). La campagne passe de 2 FAIL à **0** :
+   47 cas · 44 PASS · 3 NON ÉVALUÉS (D2/D3 : OPA absent ; G9 : binaire gitleaks absent).
 4. L'affichage dans un vrai navigateur (CSS, détails/summary, scroll) n'est jugé par aucun
    automatisation de ce dépôt : le harnais exécute `app.js`, pas le moteur de rendu. Le vérifier
    demande une ouverture réelle de la page — c'est l'étape qui reste à faire à la main, et elle

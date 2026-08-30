@@ -155,6 +155,55 @@ def _resoud(args: list[str], sbx: Sandbox, sortie: str) -> list[str]:
             for a in args]
 
 
+class ReglesIntrouvables(Exception):
+    """Un jeu de règles référencé via {REGLES} n'existe pas dans la racine montée.
+
+    Lever AVANT tout Popen : un outil privé de sa grille de règles ne doit jamais être
+    lancé « pour voir » — il rendrait soit une erreur tardive, soit, pour certains
+    outils, un résultat vide qui se lirait comme une conclusion (SEC-G6a / F7).
+    """
+
+
+def verifier_regles(sbx: Sandbox, argv: list[str]) -> None:
+    """Fail-closed : chaque référence `{REGLES}/…` résolue dans argv DOIT exister.
+
+    La cible analysée n'est jamais la source des règles qui l'évaluent : ces chemins
+    viennent du registre (qui pointe sur `racine_regles`, monté en lecture seule),
+    pas d'un `.gitleaks.toml` du dépôt ni d'un chemin de la cible. Ici on vérifie la
+    PRÉSENCE du fichier sur l'hôte avant l'exécution — l'identité (sha256) est déjà
+    vérifiée par `sandbox.empreintes_conformes` ; un fichier ABSENT est un refus.
+    Fichiers comme répertoires (kics : `{REGLES}/kics/queries`) sont couverts.
+    """
+    prefixe = f"{str(sbx.M_REGLES).rstrip('/')}/"
+    # Les références apparaissent comme valeurs d'argument (`--config=<montage>/x`),
+    # jamais comme argument entier — il faut donc chercher le préfixe DANS chaque
+    # chaîne, pas comparer la chaîne au préfixe.
+    refs: list[tuple[str, str]] = []
+    for a in argv:
+        if not isinstance(a, str):
+            continue
+        i = a.find(prefixe)
+        if i < 0:
+            continue
+        rel = a[i + len(prefixe):]
+        for sep in (" ", "\t", "\n", '"', "'"):
+            rel = rel.split(sep, 1)[0]
+        if rel:
+            refs.append((a, rel))
+    if not refs:
+        return
+    racine = getattr(sbx, "racine_regles", None)
+    if racine is None:
+        raise ReglesIntrouvables(
+            f"racine de règles non fournie au sandbox pour {refs[0][0]!r} — "
+            "exécution refusée, impossible de prouver l'existence de la grille")
+    for a, rel in refs:
+        if not (Path(racine) / rel).exists():
+            raise ReglesIntrouvables(
+                f"jeu de règles introuvable : {Path(racine) / rel} "
+                f"(référencé par {a!r}) — exécution refusée, lancer bootstrap.sh")
+
+
 # Extension du fichier que l'outil écrit, par format DÉCLARÉ. Un format sans extension
 # connue est un bug de déclaration, pas un `.json` par défaut : le défaut silencieul ferait
 # relire un .xml comme du JSON, donc « 0 item ».
@@ -212,6 +261,9 @@ def _lance(prov, sbx: Sandbox, nom_sortie: str) -> tuple:
     argv = _resoud(list(prov.commande) + list(prov.args_obligatoires), sbx, sortie_int)
     argv[0] = _exe(prov)
     argv.append(sbx.M_SCAN)
+    # SEC-G6a / F7 : les jeux de règles référencés doivent exister sur l'hôte AVANT le
+    # Popen — une grille absente n'est pas une grille, et aucun repli implicite.
+    verifier_regles(sbx, argv)
     demande, note = COND.timeout_effectif(prov, sbx.timeout)
     r = sbx.exec(argv, timeout=sbx.delai_effectif(demande))
     return r, _lit_json(sortie_hote), argv, sortie_int, note
@@ -345,13 +397,18 @@ def gitleaks(prov, sbx: Sandbox) -> ResultatBrut:
     regles = _drapeau(argv, "config")
     couv.scanners_actives = [f"gitleaks:{Path(c).name}" for c in regles]
     if not regles:
-        # état réel de l'outil tel qu'on le lance aujourd'hui (constat G6a) : ce n'est pas
-        # une limite technique, c'est le lecteur qui doit savoir qu'il lit un scan dont il
-        # ne connaît pas la grille.
+        # Défense en profondeur : la grille est portée par args_obligatoires (SEC-G6a/F7),
+        # donc ce branchement ne devrait plus jamais se produire — mais si une déclaration
+        # perdait son --config, le lecteur doit voir qu'il lit un scan SANS grille connue
+        # (et la cible pourrait alors imposer son .gitleaks.toml : comportement refusé).
         couv.limites_connues.append(
             "aucun jeu de règles épinglé pour gitleaks : ce sont ses règles par défaut, et "
-            "un `.gitleaks.toml` dans le dépôt scanné pourrait les modifier (comportement "
-            "non mesuré ici, le binaire est absent de cette machine)")
+            "un `.gitleaks.toml` dans le dépôt scanné pourrait les modifier — déclaration "
+            "de provider suspecte, à corriger")
+    else:
+        couv.limites_connues.append(
+            "jeu de règles épinglé : " + ", ".join(f"gitleaks:{Path(c).name}" for c in regles)
+            + " — fourni par AGNT (montés en lecture seule), jamais par le dépôt scanné")
     couv.limites_connues.append(
         "valeur des secrets masquée à la source (--redact) : jamais stockée")
     couv.limites_connues.append(
@@ -390,6 +447,9 @@ def generique_cli(prov, sbx: Sandbox) -> ResultatBrut:
         "DB": sbx.M_DB,
     }
     argv = PM.resoudre_argv(m, _chemins)
+    # SEC-G6a / F7 : mêmes règles qu'en `_lance` — les jeux de règles référencés via
+    # {REGLES} (kics : {REGLES}/kics/queries) doivent exister sur l'hôte AVANT le Popen.
+    verifier_regles(sbx, argv)
     # Barrière de conditions (voir conditions.py) : jugée sur la commande construite,
     # pas sur la déclaration d'un profil. Un outil qui a besoin de sortir est REFUSÉ,
     # il ne rend pas un scan vide présenté comme une conclusion.

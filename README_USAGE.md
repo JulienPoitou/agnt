@@ -379,6 +379,13 @@ les seules variables d'un manifest sont `{BIN} {TARGET} {OUT} {OUT_DIR} {REGLES}
 `{TARGET}` est un chemin monté. Un scanner réseau n'a donc nulle part où recevoir sa cible —
 décision D9, avec ce qu'elle implique sur la politique d'export.
 
+**Gitleaks (secrets).** Depuis le 2026-08-30 (SEC-G6a/F7) la grille de détection des secrets
+est **fournie par AGNT, jamais par le dépôt analysé** : `--config={REGLES}/gitleaks.toml` est
+porté par le registre, le fichier (`PHASE3/regles/gitleaks.toml`, jeu par défaut + aucune
+allowlist) est copié par `bootstrap.sh`, épinglé par SHA-256 dans `manifeste_dependances.yaml`
+et monté en lecture seule. Une grille absente ou divergente est un **refus**, pas un repli vers
+la configuration par défaut ni vers un `.gitleaks.toml` que la cible contiendrait.
+
 **ESLint (JavaScript).** `plugins/eslint.yaml`, capacité `CODE_STATIC_ANALYSIS_JS`. Ce plugin a
 failli ne pas exister pour une raison fausse — « la cage ne fixe pas le répertoire courant », alors
 que `Sandbox.commande()` émet bien un `--chdir` sur le montage de la cible (mesuré dans

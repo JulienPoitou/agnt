@@ -125,8 +125,18 @@ def _est_prise_version(argv: list[str]) -> bool:
 @contextlib.contextmanager
 def terrain_hostile(*, texte_modele: str | None = None, erreur: Exception | None = None,
                     politique: str = "simulee", decision: PO.Decision | None = None,
-                    capter_env: bool = False):
-    """Installe le bac à sable d'attaque ; rend l'état observé (spawns, HTTP, appels)."""
+                    capter_env: bool = False, regles: str = "fournies"):
+    """Installe le bac à sable d'attaque ; rend l'état observé (spawns, HTTP, appels).
+
+    `regles="fournies"` (défaut) : le terrain fabrique une racine de règles contenant
+    CHAQUE fichier que le registre référence via `{REGLES}/…` (jetons lus dans
+    `args_obligatoires` et dans les argv des manifests — le même mécanisme que les
+    bases : la liste vient du registre, jamais recopiée ici). Sans cela, la garde
+    fail-closed `adapters.verifier_regles` arrêterait chaque cas avant son spawn pour
+    une raison d'environnement — exactement ce que G6a2 veut mesurer, pas ce qu'elle
+    veut provoquer ailleurs. `regles="absentes"` : la racine reste vide, et la garde
+    doit REFUSER avant tout Popen.
+    """
     etat = {"spawns": [], "http": [], "appels_fournisseur": 0, "envs": []}
     tmp = Path(tempfile.mkdtemp(prefix="adversaire-"))
     sauve = {k: os.environ.get(k) for k in ("GROQ_API_KEY", "PATH")}
@@ -148,6 +158,29 @@ def terrain_hostile(*, texte_modele: str | None = None, erreur: Exception | None
              else cible.mkdir(parents=True, exist_ok=True))
     sauve["__cache_db"] = P.CACHE_DB
     P.CACHE_DB = cache
+    # Racine de règles (SEC-G6a/F7) : fabriquée avec les fichiers réellement référencés
+    # par le registre — y compris gitleaks.toml après le correctif.
+    regles_cache = tmp / "regles"
+    regles_cache.mkdir(parents=True, exist_ok=True)
+    if regles == "fournies":
+        for prov in Registry().providers():
+            args = list(prov.args_obligatoires or [])
+            if prov.manifest is not None:
+                args += list(prov.manifest.argv)
+            for a in args:
+                if "{REGLES}/" not in a:
+                    continue
+                rel = a.split("{REGLES}/", 1)[1]
+                cible = regles_cache / rel
+                if Path(rel).suffix:
+                    cible.parent.mkdir(parents=True, exist_ok=True)
+                    if not cible.exists():
+                        cible.write_text("# règles de laboratoire (terrain adverse)\n",
+                                         encoding="utf-8")
+                else:
+                    cible.mkdir(parents=True, exist_ok=True)
+    sauve["__cache_regles"] = P.CACHE_REGLES
+    P.CACHE_REGLES = regles_cache
 
     def urlopen(req, timeout=None):
         etat["appels_fournisseur"] += 1
@@ -201,6 +234,7 @@ def terrain_hostile(*, texte_modele: str | None = None, erreur: Exception | None
         (urllib.request.urlopen, SBX.Sandbox.exec, PO.PolicyEngine,
          P.MOTEUR_INTENT, P.FOURNISSEUR_LLM) = vrais
         P.CACHE_DB = sauve.pop("__cache_db")
+        P.CACHE_REGLES = sauve.pop("__cache_regles")
         for k, v in sauve.items():
             if v is None:
                 os.environ.pop(k, None)
@@ -917,15 +951,44 @@ def famille_g():
     p = chaine("Cherche les secrets exposés de ce dépôt",
                texte_modele=reponse(["SECRET_DETECTION"]))
     argv_gl = [a for a in p.get("spawns", []) if "gitleaks" in " ".join(a)]
-    epingle = any("--config" in a for a in (argv_gl[0] if argv_gl else []))
+    configs_gl = [x for x in (argv_gl[0] if argv_gl else []) if x.startswith("--config=")]
+    valeurs_gl = [str(c).split("=", 1)[1] for c in configs_gl]
+    # UNE seule référence, et elle pointe sur le montage des règles AGNT (M_REGLES) :
+    # aucun `--config` vers un chemin de la cible, aucun nom libre relatif.
+    epingle = (len(valeurs_gl) == 1 and Path(valeurs_gl[0]).name == "gitleaks.toml"
+               and all(v.startswith(SBX.Sandbox.M_REGLES + "/") for v in valeurs_gl)
+               and not p.get("exception"))
+    couv_gl = next((c for c in p.get("couverture", []) if c.get("provider") == "gitleaks"), {})
+    declare_gl = couv_gl.get("scanners_actives")
     cas("G6a. qui fixe le jeu de règles de détection des secrets ?", "source de la décision (outil)",
-        {"argv_gitleaks": argv_gl[:1], "config_epinglee": epingle,
+        {"argv_gitleaks": argv_gl[:1], "configs": configs_gl, "config_epinglee": epingle,
+         "scanners_declares": declare_gl,
+         "exception": p.get("exception", ""),
          "chdir": "M_SCAN (la cible) — voir G1",
-         "note_binaire": "le comportement par défaut de gitleaks face à un .gitleaks.toml "
-                        "dans la source n'est PAS testable ici (binaire absent) : NON ÉVALUÉ"},
-        bloque=epingle, gravite="haute",
-        note="`['{BIN}/gitleaks', 'git']` : ni `--config` ni `--source-path` — l'outil cherche "
-             "dans le dépôt qu'on scanne, et notre couverture n'enregistre AUCUN jeu de règles")
+         "note_binaire": "le comportement réel de gitleaks face à un .gitleaks.toml dans la "
+                        "source n'est PAS testable ici (binaire absent) : la frontière jugée "
+                        "est l'argv, la couverture et le refus de repli (G6a2)"},
+        bloque=epingle and declare_gl == ["gitleaks:gitleaks.toml"], gravite="haute",
+        note="SEC-G6a/F7 corrigé : `--config={REGLES}/gitleaks.toml` est porté par le registre "
+             "(fourni par AGNT, monté en lecture seule, épinglé au manifeste), la couverture le "
+             "déclare depuis argv, et aucun chemin de la cible ne peut être référencé")
+
+    # G6a2 — la grille doit EXISTER avant le Popen de l'outil qui la lit : absente = refus
+    # nommé. Les autres providers de la vague (detect_secrets, sans grille) peuvent partir
+    # en parallèle — ce que le cas juge, c'est qu'AUCUN processus gitleaks ne démarre.
+    p2 = chaine("Cherche les secrets exposés de ce dépôt",
+                texte_modele=reponse(["SECRET_DETECTION"]), regles="absentes")
+    levee2 = str(p2.get("exception", ""))
+    gitleaks_lance = any("gitleaks" in " ".join(s) for s in p2.get("spawns", []))
+    cas("G6a2. grille de règles absente = refus avant tout Popen (aucun repli implicite)",
+        "source de la décision (outil)",
+        {"exception": levee2[:200] or "aucune", "spawns": p2.get("spawns", [])[:2],
+         "gitleaks_lance": gitleaks_lance, "arret": p2.get("arret", "")},
+        bloque="ReglesIntrouvables" in levee2 and not gitleaks_lance, gravite="haute",
+        note="gitleaks ne doit JAMAIS être lancé sans grille : s'il n'y a pas de "
+             "`{REGLES}/gitleaks.toml` (bootstrap non lancé, cache détourné), l'exécution "
+             "est refusée AVANT le processus — jamais un repli vers les règles par défaut "
+             "ni vers un `.gitleaks.toml` du dépôt")
 
     # G6b — même question sur semgrep, où la couverture DÉCLARE ce qui était actif.
     import adapters as AD
@@ -1082,24 +1145,29 @@ def famille_g():
              "`{BIN}/semgrep` et quel `rules/` est monté en `--config`")
 
     # G9 — ce qui reste DERRIÈRE la frontière, du côté de l'outil. Volontairement NON ÉVALUÉ :
-    # la moitié mesurable est en G6a (rien n'est épinglé, rien n'est tracé), la moitié qui
-    # décide est dans le binaire, et le binaire n'est pas là. Le consigner, c'est refuser de
-    # faire passer une lecture de doc pour une frontière tenue.
+    # la partie mesurable est en G6a (la grille est explicitement épinglée par AGNT) et G6a2
+    # (grille absente = refus), la partie qui décide est dans le binaire, et le binaire n'est
+    # pas là. Le consigner, c'est refuser de faire passer une lecture de doc pour une
+    # frontière tenue.
     cas("G9. le dépôt peut-il imposer son propre `.gitleaks.toml` ?", "frontière interne à l'outil",
         {"cible_de_test": "aucun .gitleaks.toml planté : le test exigerait le binaire",
-         "ce_qu_on_sait_sans_l_outil": "notre argv ne passe ni --config ni --config-path ; "
-                                       "cwd = la cible (G1) ; la couverture n'enregistre aucun "
-                                       "jeu de règles (G6a)",
-         "attendu_documentation": "gitleaks cherche `--config-path` par défaut à la racine de la "
-                                  "source scannée — À CONFIRMER, pas acquis",
+         "ce_qu_on_sait_sans_l_outil": "depuis SEC-G6a/F7, l'argv passe `--config=` vers le "
+                                       "montage AGNT (M_REGLES), jamais vers la cible : le "
+                                       "chemin de configuration ne peut plus être influencé "
+                                       "par le dépôt — le `.gitleaks.toml` de la cible n'est "
+                                       "plus un candidat, quelle que soit la priorité interne "
+                                       "de gitleaks (G1 : montage en lecture seule ; G6a/G6a2)",
+         "attendu_documentation": "le comportement interne reste à confirmer sur machine "
+                                  "outillée (sémantique `--config` vs `--config-path`), mais "
+                                  "la frontière d'AGNT ne dépend plus de cette confirmation",
          "rejouer_sur": "machine source outillée : planter un `.gitleaks.toml` de règles vides "
                         "dans le dépôt, relancer l'argv exact de G6a, comparer le nombre de "
                         "findings avec et sans le fichier, et vérifier ce que le rapport affirme",
          "ce_que_cas_interdit": "écrire « protégé par la sandbox » ici serait un faux PASS"},
         bloque=False,
-        non_evalue="binaire gitleaks absent de cet environnement : ce qui est jugable ici l'est "
-                    "en G6a (épinglage + traçabilité), le comportement interne de l'outil ne "
-                    "l'est pas. La chaîne de montages, elle, est bien en lecture seule (G1).")
+        non_evalue="binaire gitleaks absent : le comportement interne de l'outil ne peut pas "
+                    "être jugé. La frontière réseau d'AGNT, elle, est mesurée : G6a (config "
+                    "épinglée), G6a2 (absence = refus), G1 (montages en lecture seule).")
 
 
 def _mesures_integrite_execution() -> dict:

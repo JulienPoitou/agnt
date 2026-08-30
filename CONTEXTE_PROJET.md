@@ -149,7 +149,10 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
   module, mesuré en `chdir` dans un répertoire piégé ; G5 aucune auto-découverte de manifeste ni
   d'import à la demande). Quatre FAIL, tous de la même forme — ce qui décide est **laissé dehors** :
   **F7** `gitleaks` lancé sans `--config` (la cible fournit donc son propre jeu de règles, et rien
-  ne le trace) ; **F8** `couverture.scanners_actives` écrit en dur ≠ les 3 `--config` passés ;
+  ne le trace) — **corrigé le 2026-08-30 (SEC-G6a/F7)** : `--config={REGLES}/gitleaks.toml` porté
+  par le registre, config AGNT épinglée (`PHASE3/regles/gitleaks.toml`, sha256 au manifeste),
+  installée par bootstrap (vérifiée strictement), montée en lecture seule, absente = `ReglesIntrouvables`
+  avant tout Popen (cas G6a + G6a2 de la campagne, PASS) ; **F8** `couverture.scanners_actives` écrit en dur ≠ les 3 `--config` passés ;
   **F9** `Sandbox.exec` part de `dict(os.environ)` → `GROQ_API_KEY`, `GH_TOKEN`, `GITHUB_TOKEN`
   atteignent le process qui parse le dépôt de l'attaquant ; **F10** `ARENA_SECOPS_CACHE` déplace la
   racine des binaires et des règles sans re-vérification d'empreinte à l'exécution (le sha256 est

@@ -391,9 +391,14 @@ capabilities:
         cout: faible
         priorite: 100
         commande: ["{BIN}/gitleaks", "git"]
-        # Sans --redact, le champ Secret contient la VALEUR RÉELLE du credential.
-        # Décision actée : la valeur d'un secret n'entre jamais dans notre base.
+        # SEC-G6a / F7 (2026-08-30) : la grille de détection des secrets est FOURNIE par
+        # AGNT ({REGLES}/gitleaks.toml, épinglée au manifeste, montée en lecture seule).
+        # Sans --config, gitleaks lirait un éventuel `.gitleaks.toml` de la CIBLE — la
+        # cible ne décide pas des règles qui servent à l'évaluer.
         args_obligatoires:
+          - "--config={REGLES}/gitleaks.toml"
+          # Sans --redact, le champ Secret contient la VALEUR RÉELLE du credential.
+          # Décision actée : la valeur d'un secret n'entre jamais dans notre base.
           - "--redact"
           - "--report-format=json"
           - "--no-banner"
