@@ -40,9 +40,11 @@ from mcp_transport import (
     DEFAULT_PROTOCOL_VERSION,
     HTTPMCPTransport,
     MCPClient,
+    MCPProtocolError,
     MCPRemoteError,
     MCPTransportCancelled,
     MCPTransportError,
+    MCPTransportUnavailable,
     MCPTransportTimeout,
     StdioMCPTransport,
 )
@@ -60,6 +62,26 @@ MCP_SCHEMA_KEYS = (
 _MCP_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 _ENV_NAME = re.compile(r"^[A-Z_][A-Z0-9_]*$")
 _SHELL_FRAGMENTS = (";", "&&", "||", "|", "`", "$(", ">", "<", "\x00", "\n", "\r")
+# Contrats fermés : une clé MCP inconnue ne doit pas ressembler à une garantie
+# exécutée alors qu'elle est simplement ignorée par le backend.
+_MCP_SPEC_KEYS = frozenset({
+    "server", "server_id", "transport", "endpoint", "command", "auth_env",
+    "tool", "provider_version", "server_version", "tool_version", "protocol_version",
+    "trust", "target_types", "targets", "target_argument", "target_encoding",
+    "argument_schema", "arguments_schema", "result", "timeout_s", "call_timeout_s",
+    "connect_timeout_s", "requires_network", "privileges", "base_fichiers", "coverage",
+    "applicabilite", "limite",
+})
+_MCP_SERVER_KEYS = frozenset({
+    "id", "version", "transport", "endpoint", "command", "auth_env", "protocol_version",
+})
+_MCP_TOOL_KEYS = frozenset({"name", "version", "inputSchema", "description", "annotations"})
+_MCP_RESULT_KEYS = frozenset({"format", "extraction"})
+_MCP_EXTRACTION_KEYS = frozenset({
+    "modele", "items_from", "nested_from", "nested_key", "contexte", "champs",
+    "paquet_depuis_regle", "nettoyage_regle", "jetons_outil", "masquer_large",
+    "separateur", "parser",
+})
 
 
 def _texte(doc: Mapping[str, Any], key: str, *, default: str = "") -> str:
@@ -69,6 +91,14 @@ def _texte(doc: Mapping[str, Any], key: str, *, default: str = "") -> str:
     if not isinstance(value, str):
         raise MCPProviderError(f"MCP: {key!r} doit être une chaîne")
     return value
+
+
+def _refuser_clefs(doc: Mapping[str, Any], admises: frozenset[str], label: str) -> None:
+    inconnues = sorted(set(doc) - admises)
+    if inconnues:
+        raise MCPProviderError(
+            f"MCP: {label} contient des clés inconnues {inconnues} — "
+            "contrat fermé, aucune garantie implicite")
 
 
 def _identifiant(value: str, label: str) -> str:
@@ -218,12 +248,14 @@ def _extraction(doc: Mapping[str, Any], ident: str) -> tuple[str, PM.Extraction]
     result = doc.get("result") or {}
     if not isinstance(result, dict):
         raise MCPProviderError("MCP: result doit être un objet")
+    _refuser_clefs(result, _MCP_RESULT_KEYS, "result")
     fmt = result.get("format", "json")
     if fmt not in PM.FORMATS_SORTIE:
         raise MCPProviderError(f"MCP: format de résultat {fmt!r} non supporté")
     ex = result.get("extraction") or {}
     if not isinstance(ex, dict):
         raise MCPProviderError("MCP: result.extraction doit être un objet")
+    _refuser_clefs(ex, _MCP_EXTRACTION_KEYS, "result.extraction")
     modele = str(ex.get("modele", "plat") or "plat")
     if modele not in PM.MODELES_LECTURE:
         raise MCPProviderError(f"MCP: modèle d'extraction {modele!r} inconnu")
@@ -384,10 +416,12 @@ def _server_doc(spec: Mapping[str, Any]) -> tuple[dict, dict]:
     outil = spec.get("tool") or {}
     if not isinstance(serveur, dict):
         raise MCPProviderError("MCP: server doit être un objet")
+    _refuser_clefs(serveur, _MCP_SERVER_KEYS, "server")
     if isinstance(outil, str):
         outil = {"name": outil}
     if not isinstance(outil, dict):
         raise MCPProviderError("MCP: tool doit être un nom ou un objet")
+    _refuser_clefs(outil, _MCP_TOOL_KEYS, "tool")
     # Les formes imbriquée et plate sont acceptées, mais le contrat interne est
     # toujours un objet. Ne jamais appeler une validation texte sur un dictionnaire
     # uniquement parce qu'une valeur par défaut Python a été évaluée trop tôt.
@@ -409,6 +443,24 @@ def valider(spec: Any, capability: str, provider_id: str,
     """
     if not isinstance(spec, dict):
         raise MCPProviderError(f"{provider_id}: contrat MCP doit être un objet")
+    _refuser_clefs(spec, _MCP_SPEC_KEYS, "contrat")
+    for cle, admises, label in (
+        ("coverage", frozenset({"declares_files"}), "coverage"),
+        ("applicabilite", frozenset({"globs"}), "applicabilite"),
+    ):
+        valeur = spec.get(cle)
+        if valeur is not None:
+            if not isinstance(valeur, dict):
+                raise MCPProviderError(f"MCP: {label} doit être un objet")
+            _refuser_clefs(valeur, admises, label)
+    if "requires_network" in spec and not isinstance(spec["requires_network"], bool):
+        raise MCPProviderError("MCP: requires_network doit être booléen")
+    coverage = spec.get("coverage") or {}
+    if "declares_files" in coverage and not isinstance(coverage["declares_files"], bool):
+        raise MCPProviderError("MCP: coverage.declares_files doit être booléen")
+    applicable = spec.get("applicabilite") or {}
+    if "globs" in applicable:
+        _liste_texte(applicable["globs"], "applicabilite.globs")
     serveur, outil = _server_doc(spec)
     server_value = serveur.get("id", spec.get("server_id", ""))
     tool_value = outil.get("name", spec.get("tool", ""))
@@ -481,7 +533,7 @@ def valider(spec: Any, capability: str, provider_id: str,
                   "base_fichiers": spec.get("base_fichiers", [])}
     try:
         conditions = COND.valider({"id": provider_id, "conditions": conditions})
-    except ValueError as exc:
+    except (TypeError, ValueError) as exc:
         raise MCPProviderError(str(exc)) from None
     if risque not in ("PASSIVE", "ACTIVE", "INTRUSIVE", "DESTRUCTIVE"):
         raise MCPProviderError(f"MCP: risque inconnu {risque!r}")
@@ -532,6 +584,11 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def _erreur_sure(value: Any) -> str:
+    """Réduit et masque tout message remonté par la frontière distante."""
+    return ASS.masquer(str(value or "")[:1000])[0]
+
+
 def _output_from_call(payload: Mapping[str, Any]) -> Any:
     """Transforme le result MCP en données pour l'extracteur, sans l'afficher brut."""
     structured = payload.get("structuredContent")
@@ -576,7 +633,7 @@ class MCPBackend:
         args = self.manifest.arguments_for(target, arguments)
         debut = _now()
         transport = None
-        request_id = ""
+        client = None
         try:
             transport = self._transport()
             client = MCPClient(
@@ -591,7 +648,7 @@ class MCPBackend:
             # si son handshake et tools/call fonctionnent.
             try:
                 tools = client.list_tools(cancel_event=cancel_event)
-                if tools and not any(t.get("name") == self.manifest.tool for t in tools):
+                if not any(t.get("name") == self.manifest.tool for t in tools):
                     raise ProviderUnavailable(
                         "outil MCP approuvé absent de la découverte du serveur")
             except MCPRemoteError as exc:
@@ -606,14 +663,17 @@ class MCPBackend:
                 identity=self.manifest.identity(), capability=self.manifest.capability,
                 status="succeeded", output=output, raw=raw,
                 correlation_id=f"{self.manifest.id}:{self.manifest.tool}",
+                request_id=getattr(client, "last_request_id", ""),
                 started_at=debut, finished_at=_now(), target=target,
                 availability=Availability("available", "handshake et appel réussis", _now()),
             )
         except (MCPTransportTimeout, ProviderTimeout) as exc:
+            erreur = _erreur_sure(exc)
             return ProviderResult(
                 identity=self.manifest.identity(), capability=self.manifest.capability,
-                status="timed_out", error=str(exc), raw={"error": str(exc)},
+                status="timed_out", error=erreur, raw={"error": erreur},
                 correlation_id=f"{self.manifest.id}:{self.manifest.tool}",
+                request_id=getattr(client, "last_request_id", ""),
                 started_at=debut, finished_at=_now(), target=target,
                 availability=Availability("unavailable", "timeout MCP", _now()),
             )
@@ -622,22 +682,50 @@ class MCPBackend:
                 identity=self.manifest.identity(), capability=self.manifest.capability,
                 status="cancelled", error="appel MCP annulé", raw={"error": "appel MCP annulé"},
                 correlation_id=f"{self.manifest.id}:{self.manifest.tool}",
+                request_id=getattr(client, "last_request_id", ""),
                 started_at=debut, finished_at=_now(), target=target,
                 availability=Availability("unknown", "appel annulé", _now()),
             )
-        except (ProviderUnavailable, MCPTransportUnavailable, MCPTransportError) as exc:
+        except MCPRemoteError as exc:
+            # Le serveur est joignable, mais l'outil a rejeté la demande : ce n'est
+            # pas une indisponibilité de transport. Le message a déjà été assaini
+            # par MCPTransport._valider_reponse.
+            erreur = _erreur_sure(exc)
             return ProviderResult(
                 identity=self.manifest.identity(), capability=self.manifest.capability,
-                status="unavailable", error=str(exc), raw={"error": str(exc)},
+                status="failed", error=erreur, raw={"error": erreur},
                 correlation_id=f"{self.manifest.id}:{self.manifest.tool}",
+                request_id=getattr(client, "last_request_id", ""),
                 started_at=debut, finished_at=_now(), target=target,
-                availability=Availability("unavailable", str(exc), _now()),
+                availability=Availability("available", "erreur distante de l'outil", _now()),
+            )
+        except MCPProtocolError as exc:
+            erreur = _erreur_sure(exc)
+            return ProviderResult(
+                identity=self.manifest.identity(), capability=self.manifest.capability,
+                status="invalid", error=erreur, raw={"error": erreur},
+                correlation_id=f"{self.manifest.id}:{self.manifest.tool}",
+                request_id=getattr(client, "last_request_id", ""),
+                started_at=debut, finished_at=_now(), target=target,
+                availability=Availability("unknown", "réponse MCP non conforme", _now()),
+            )
+        except (ProviderUnavailable, MCPTransportUnavailable, MCPTransportError) as exc:
+            erreur = _erreur_sure(exc)
+            return ProviderResult(
+                identity=self.manifest.identity(), capability=self.manifest.capability,
+                status="unavailable", error=erreur, raw={"error": erreur},
+                correlation_id=f"{self.manifest.id}:{self.manifest.tool}",
+                request_id=getattr(client, "last_request_id", ""),
+                started_at=debut, finished_at=_now(), target=target,
+                availability=Availability("unavailable", erreur, _now()),
             )
         except InvalidProviderResult as exc:
+            erreur = _erreur_sure(exc)
             return ProviderResult(
                 identity=self.manifest.identity(), capability=self.manifest.capability,
-                status="invalid", error=str(exc), raw={"error": str(exc)},
+                status="invalid", error=erreur, raw={"error": erreur},
                 correlation_id=f"{self.manifest.id}:{self.manifest.tool}",
+                request_id=getattr(client, "last_request_id", ""),
                 started_at=debut, finished_at=_now(), target=target,
                 availability=Availability("available", "réponse MCP non conforme", _now()),
             )
@@ -647,6 +735,7 @@ class MCPBackend:
                 identity=self.manifest.identity(), capability=self.manifest.capability,
                 status="failed", error=erreur, raw={"error": erreur},
                 correlation_id=f"{self.manifest.id}:{self.manifest.tool}",
+                request_id=getattr(client, "last_request_id", ""),
                 started_at=debut, finished_at=_now(), target=target,
                 availability=Availability("unknown", "échec d'appel MCP", _now()),
             )

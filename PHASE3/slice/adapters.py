@@ -25,6 +25,8 @@ from pathlib import Path
 import extraction as EX
 import conditions as COND
 import provider_manifest as PM
+from provider_contract import Target
+import mcp_provider as MCP
 from sandbox import CACHE_BIN, CACHE_DB, CACHE_REGLES, RACINE_MONTEURS, Sandbox
 
 # Ces deux constantes sont LE préfixe de montage, pas un chemin d'hôte : un littéral séparé
@@ -102,6 +104,16 @@ class ResultatBrut:
     # outil pourrait légitimement avoir une clé de ce nom). C'est ce texte qui permet de
     # conserver le brut d'un outil qui écrit sur stdout plutôt que dans un fichier (`json`).
     texte_brut: str = ""
+    # Résultat du contrat provider. Les providers historiques gardent la valeur par
+    # défaut pour compatibilité ; les backends externes renseignent le statut et les
+    # identifiants sans faire passer leur transport pour une commande locale.
+    statut: str = "succeeded"
+    erreur: str = ""
+    transport: str = "local"
+    correlation_id: str = ""
+    request_id: str = ""
+    identite_provider: dict = field(default_factory=dict)
+    disponibilite: dict = field(default_factory=dict)
 
 
 def resoudre_exe(binaire: str) -> str | None:
@@ -540,25 +552,105 @@ def conserver_brut(sbx: Sandbox, dossier: Path, brut: "ResultatBrut", provider: 
         return None
 
 
+
+def mcp(prov, sbx: Sandbox, *, target: Target | None = None,
+        arguments: dict | None = None, transport_factory=None,
+        cancel_event=None) -> ResultatBrut:
+    """Adapte le contrat MCP au résultat brut commun du pipeline.
+
+    Il n'y a pas de pipeline MCP ici : le backend valide la cible et les arguments,
+    puis le pipeline existant normalise, corrèle, journalise et rapporte la sortie.
+    Les erreurs distantes deviennent des statuts explicites et ne ressemblent jamais
+    à un scan vide réussi.
+    """
+    mani = getattr(prov, "manifest", None)
+    if not isinstance(mani, MCP.MCPManifest):
+        raise TypeError(f"{prov.id}: contrat MCP attendu")
+    if target is None:
+        target = Target("repository", str(sbx.racine_scan or sbx.M_SCAN))
+    demande, note = COND.timeout_effectif(prov, sbx.timeout)
+    resultat = MCP.backend_for(prov, transport_factory=transport_factory).execute(
+        target=target, arguments=arguments, timeout=demande, cancel_event=cancel_event)
+    codes = {
+        "succeeded": 0,
+        "timed_out": 124,
+        "cancelled": 125,
+        "unavailable": 503,
+        "invalid": 502,
+        "failed": 1,
+    }
+    code = codes.get(resultat.status, 1)
+    couv = Couverture(provider=prov.id)
+    if resultat.status == "succeeded":
+        couv.cibles.append(Cible(target.value, "scanned_successfully"))
+    else:
+        couv.cibles.append(Cible(
+            target.value, "not_scanned",
+            resultat.error or f"appel MCP non concluant ({resultat.status})"))
+        couv.limites_connues.append(
+            f"provider MCP {prov.id} : statut {resultat.status}, aucune conclusion de sécurité")
+    couv.scanners_actives = [f"mcp:{mani.server_id}/{mani.tool}"]
+    couv.limites_connues.append(
+        "sortie MCP non fiable : normalisation AGNT appliquée avant reporting")
+    if note:
+        couv.limites_connues.append("note de plafond : " + note)
+    raw = resultat.raw if resultat.raw is not None else {"error": resultat.error}
+    try:
+        texte = json.dumps(raw, ensure_ascii=False, default=str)
+    except (TypeError, ValueError):
+        texte = json.dumps({"error": "réponse MCP non sérialisable"})
+    return ResultatBrut(
+        provider=prov.id,
+        capability=prov.capability,
+        code_retour=code,
+        timeout=resultat.status == "timed_out",
+        fichier=f"mcp_{prov.id}.json",
+        donnees=resultat.output if resultat.status == "succeeded" else None,
+        couverture=couv,
+        stderr=resultat.error,
+        argv=[],
+        texte_brut=texte,
+        statut=resultat.status,
+        erreur=resultat.error,
+        transport="mcp",
+        correlation_id=resultat.correlation_id,
+        request_id=resultat.request_id,
+        identite_provider=resultat.identity.to_dict(),
+        disponibilite=(resultat.availability.to_dict()
+                       if resultat.availability is not None else {}),
+    )
+
+
 ADAPTATEURS = {
     "semgrep": semgrep,
     "trivy": trivy,
     "gitleaks": gitleaks,
 }
 
+# Dispatch par transport, pas par nom d'outil. Un provider HTTP futur pourra ajouter
+# son backend dans cette table sans modifier le plan, le normaliseur ou le pipeline.
+TRANSPORT_ADAPTATEURS = {"mcp": mcp}
 
-def executer(prov, sbx: Sandbox) -> ResultatBrut:
-    """Point d'entrée unique.
 
-    Priorité : un provider déclaré par MANIFEST passe par l'adaptateur générique, sans
-    code spécifique. Les adaptateurs historiques (semgrep, trivy, gitleaks) restent
-    utilisés pour leurs particularités — couverture npm, base pré-peuplée, historique git.
+def executer(prov, sbx: Sandbox, *, target: Target | None = None,
+             arguments: dict | None = None, transport_factory=None,
+             cancel_event=None) -> ResultatBrut:
+    """Point d'entrée unique de l'exécution provider.
+
+    Les providers externes sont dispatchés par leur contrat de transport. Les manifests
+    historiques continuent par l'adaptateur CLI générique ; les trois adaptateurs
+    historiques conservent leurs particularités de couverture.
     """
+    transport = getattr(prov, "transport", "local")
+    fn = TRANSPORT_ADAPTATEURS.get(transport)
+    if fn is not None:
+        return fn(prov, sbx, target=target, arguments=arguments,
+                  transport_factory=transport_factory, cancel_event=cancel_event)
     if getattr(prov, "manifest", None) is not None:
         return generique_cli(prov, sbx)
     fn = ADAPTATEURS.get(prov.id)
     if fn is None:
         raise KeyError(
-            f"aucun adaptateur pour {prov.id!r} et aucun manifest déclaré. "
+            f"aucun adaptateur pour {prov.id!r}, transport {transport!r}, et aucun manifest. "
             f"Adaptateurs existants : {sorted(ADAPTATEURS)}.")
     return fn(prov, sbx)

@@ -171,8 +171,11 @@ def vue_unifiee(f, *, versions: dict | None = None) -> dict:
     asset = loc.get("asset") or _ASSET_DEFAUT
     outil = src.get("tool") or ""
     regle = src.get("canonical_rule_id") or ""
-    version = ""
-    if versions:
+    # Le pipeline peut avoir capturé la version d'un provider externe sans l'ajouter
+    # au dictionnaire des binaires locaux. Elle reste la source prioritaire ; le tableau
+    # `versions` conserve le chemin historique pour les providers locaux.
+    version = str(src.get("version_outil") or "")
+    if not version and versions:
         # la table `contexte.outils` est indexée par NOM d'outil (et non par provider)
         version = str(versions.get(outil) or versions.get(src.get("tool_id") or "") or "")
     vue = {
@@ -182,6 +185,13 @@ def vue_unifiee(f, *, versions: dict | None = None) -> dict:
         "categorie": src.get("categorie") or None,
         "capacite": src.get("capability") or None,
         "provider": src.get("provider") or None,
+        "transport": src.get("transport") or "local",
+        "serveur": {"id": src.get("server_id"),
+                    "version": src.get("server_version")},
+        "outil_provider": {"name": src.get("tool") or outil,
+                           "version": src.get("tool_version")},
+        "protocole": src.get("protocol_version") or None,
+        "confiance_provider": src.get("trust") or None,
         "cible": {"type": asset,
                   "chemin": loc.get("file") or None,
                   "ligne": loc.get("line"),
@@ -529,10 +539,12 @@ def depuis_manifest(brut, mani, outil: str, racines=()) -> list:
         #  · l'identifiant de finding doit être unique dans la mission. Le préfixe à
         #    deux lettres (`se-0001`) faisait collisionner `semgrep` et `semgrep_go`
         #    dans la même exécution — et `par_id[m]` écrasait silencieusement le premier.
+        nom_outil = (getattr(mani, "tool", "") or
+                     getattr(mani, "binaire", "") or outil)
         out.append(Finding(
             id=f"{outil}-{i:04d}",
             source={
-                "tool": (getattr(mani, "binaire", "") or outil),
+                "tool": nom_outil,
                 "provider": outil,
                 "original_rule_id": regle,
                 "canonical_rule_id": f"{outil}:{canon}",
@@ -544,7 +556,16 @@ def depuis_manifest(brut, mani, outil: str, racines=()) -> list:
                 # capacité du provider : la CATÉGORIE du finding vient de la déclaration,
                 # pas d'un dictionnaire de noms d'outils entretenu à la main.
                 "capability": getattr(mani, "capability", "") or None,
-                "provider": getattr(mani, "id", "") or outil,
+                # La provenance externe est structurée ici pour le rapport et l'UI :
+                # un consommateur n'a pas à deviner qu'un tool vient d'un serveur MCP
+                # en lisant un nom de binaire.
+                "transport": getattr(mani, "transport", "local"),
+                "server_id": getattr(mani, "server_id", "") or None,
+                "server_version": getattr(mani, "server_version", "") or None,
+                "tool": nom_outil,
+                "tool_version": getattr(mani, "tool_version", "") or None,
+                "protocol_version": getattr(mani, "protocol_version", "") or None,
+                "trust": getattr(mani, "trust", "trusted_local"),
             },
             identity={"canonical_rule_id": f"{outil}:{canon}",
                       "fingerprint": empreinte},

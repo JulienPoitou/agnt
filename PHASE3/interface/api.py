@@ -286,6 +286,7 @@ def _charger(sortie: str) -> dict:
             "cible": plan.get("cible"),
             "steps": plan.get("steps", []),
             "selection": plan.get("selection", {}),
+            "providers": rapport.get("providers"),
             "autorisation": rapport.get("autorisation", {}),
             "couverture": rapport.get("couverture", {}),
             # Ledger des six étapes par outil (slice/statuts.py) : l'écran doit pouvoir

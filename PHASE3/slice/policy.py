@@ -45,7 +45,8 @@ class PolicyEngine:
     # ------------------------------------------------------------------ entrée
     @staticmethod
     def entree(plan, registre, cible_autorisee: bool,
-               confiance_cible: str = "controlled", profil: dict | None = None) -> dict:
+               confiance_cible: str = "controlled", profil: dict | None = None,
+               cible_type: str = "repository") -> dict:
         """Construit l'entrée d'OPA.
 
         `capability_ids` et non `capabilities` : OPA ignore un champ d'entrée nommé
@@ -80,7 +81,8 @@ class PolicyEngine:
                 ],
                 "empreinte": registre.empreinte(),
             },
-            "cible": {"autorisee": cible_autorisee, "confiance": confiance_cible},
+            "cible": {"autorisee": cible_autorisee, "confiance": confiance_cible,
+                      "type": cible_type},
             # Le moteur DÉCLARE ce qu'il sait faire ; OPA DÉCIDE. Si cette déclaration
             # ment, la garde ne vaut rien — d'où le test dédié.
             # Le profil vient de profils.py, pas d'un dictionnaire improvisé ici.
@@ -89,8 +91,10 @@ class PolicyEngine:
 
     # ------------------------------------------------------------------ décision
     def evaluer(self, plan, registre, cible_autorisee: bool,
-                confiance_cible: str = "controlled", profil: dict | None = None) -> Decision:
-        doc = self.entree(plan, registre, cible_autorisee, confiance_cible, profil)
+                confiance_cible: str = "controlled", profil: dict | None = None,
+                cible_type: str = "repository") -> Decision:
+        doc = self.entree(plan, registre, cible_autorisee, confiance_cible, profil,
+                          cible_type)
         cmd = [
             str(self.opa), "eval",
             "-d", str(self.policy),

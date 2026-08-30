@@ -159,14 +159,18 @@ class MCPClient:
         self.server_protocol_version = ""
         self.server_info: dict[str, Any] = {}
         self.discovered_tools: tuple[dict, ...] = ()
+        self.last_request_id: str = ""
         self._initialise = False
 
     def _call(self, method: str, params: Mapping[str, Any] | None = None,
               *, timeout: float | None = None, cancel_event: Any = None) -> dict:
         if cancel_event is not None and cancel_event.is_set():
             raise MCPTransportCancelled("appel MCP annulé")
-        return self.transport.request(method, params, timeout=timeout or self.timeout,
-                                      cancel_event=cancel_event)
+        result = self.transport.request(method, params, timeout=timeout or self.timeout,
+                                        cancel_event=cancel_event)
+        if isinstance(result, dict) and result.get("id") is not None:
+            self.last_request_id = str(result["id"])[:128]
+        return result
 
     def initialize(self, *, cancel_event: Any = None) -> dict:
         if self._initialise:

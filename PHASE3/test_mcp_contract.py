@@ -138,6 +138,12 @@ def main() -> int:
     except RegistryError:
         malformed = True
     ok("10. une déclaration MCP malformée est refusée au chargement", malformed)
+    try:
+        charge(YAML.replace("          limite:", "          allow_shell:") )
+        cle_inconnue = False
+    except RegistryError:
+        cle_inconnue = True
+    ok("11. une clé MCP inconnue ne peut pas désarmer silencieusement une garde", cle_inconnue)
 
     echecs = [nom for nom, condition, _ in cas if not condition]
     print(f"\n{len(cas) - len(echecs)}/{len(cas)} cas passent")

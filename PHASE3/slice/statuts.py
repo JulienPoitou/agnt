@@ -125,11 +125,18 @@ def construire(registre, plan: dict, decision: dict, raw: list[dict],
         cap_id = prov.capability if prov else next(
             (s.get("capability") for s in (plan.get("steps") or [])
              if s.get("provider") == pid), "")
+        transport = getattr(prov, "transport", "local") if prov else "local"
         binaire = (prov.commande[0] if prov and prov.commande else
-                   (getattr(getattr(prov, "manifest", None), "binaire", "") or pid))
-        outil = getattr(getattr(prov, "manifest", None), "tool_id", "") or ""
-        chemin_exe = resoudre(binaire) if binaire else None
-        dispo = chemin_exe is not None
+                   (getattr(getattr(prov, "manifest", None), "tool", "") or
+                    getattr(getattr(prov, "manifest", None), "binaire", "") or pid))
+        outil = (getattr(getattr(prov, "manifest", None), "tool", "") or
+                 getattr(getattr(prov, "manifest", None), "tool_id", "") or "")
+        # Un provider externe n'a volontairement pas d'exécutable local. Sa
+        # disponibilité de configuration est prouvée par le registre ; la disponibilité
+        # du serveur et de l'outil distant est ensuite portée par le résultat MCP.
+        chemin_exe = ("external" if transport != "local" else
+                      (resoudre(binaire) if binaire else None))
+        dispo = True if transport != "local" else chemin_exe is not None
         n = int((findings_par_provider or {}).get(pid, 0))
         c = couv.get(pid) or {}
         etats = [x.get("etat") for x in (c.get("cibles") or [])]
@@ -176,8 +183,13 @@ def construire(registre, plan: dict, decision: dict, raw: list[dict],
             if mani is not None:
                 att = tuple(getattr(mani, "code_succes", ()) or ())
             codes_ok = att or (0,)
-            if brut.get("timeout"):
-                statut, raison = "echoue", "timeout"
+            if brut.get("timeout") or brut.get("statut") == "timed_out":
+                statut, raison = "echoue", ("timeout" if transport == "local"
+                                            else "timeout provider")
+            elif brut.get("statut") in ("unavailable", "invalid", "failed", "cancelled"):
+                statut, raison = "echoue", (
+                    f"provider {transport} : statut {brut.get('statut')} — "
+                    f"{brut.get('erreur') or 'aucune sortie exploitable'}")
             elif brut.get("code_retour") not in codes_ok:
                 statut, raison = "echoue", (
                     f"code retour {brut.get('code_retour')} hors {list(codes_ok)} "
@@ -198,11 +210,29 @@ def construire(registre, plan: dict, decision: dict, raw: list[dict],
             raison += (f" — ATTENTION : une sortie conservée existe pourtant "
                        f"(code {brut.get('code_retour')})")
 
+        disponibilite = None
+        if transport != "local":
+            disponibilite = (brut or {}).get("disponibilite") or {
+                "status": "unknown",
+                "reason": "aucun résultat MCP conservé",
+                "checked_at": "",
+            }
+
         entry = {
             "provider": pid,
             "capability": cap_id,
             "outil": outil,
             "binaire": binaire,
+            "transport": transport,
+            **({"disponibilite": disponibilite} if disponibilite is not None else {}),
+            "request_id": (brut or {}).get("request_id"),
+            "server_id": getattr(prov, "server_id", "") if prov else "",
+            "tool": getattr(prov, "tool", "") if prov else "",
+            "provider_version": getattr(prov, "provider_version", "") if prov else "",
+            "server_version": getattr(prov, "server_version", "") if prov else "",
+            "tool_version": getattr(prov, "tool_version", "") if prov else "",
+            "protocol_version": getattr(prov, "protocol_version", "") if prov else "",
+            "trust": getattr(prov, "trust", "") if prov else "",
             "disponible": dispo,
             "statut": statut,
             "raison": raison,
