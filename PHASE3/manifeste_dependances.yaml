@@ -179,6 +179,70 @@ binaires:
       seulement). À durcir (hash RECORD) si Semgrep devient un composant de
       production.
 
+  ruff:
+    package: ruff
+    version: "0.16.5"
+    source: https://pypi.org/project/ruff/
+    licence: MIT
+    distribution: pip
+    # Binaire NATIF (le wheel pip de ruff embarque l'exécutable Rust) : contrairement à
+    # radon/bandit, il y a bien un fichier unique à figer, donc un SHA-256 réel — régime le
+    # plus fort des deux, relevé sur le binaire effectivement installé dans le pool.
+    sha256: 024cdfbba8627539cc951908267077e3fd8e710add19f0b31d6cc606d19ddc32
+    note: >
+      Mesuré ici (31/08/2026), hors réseau : `ruff check --isolated --no-cache --select
+      S,E,F --output-format json --quiet PHASE3/testrepo` rend 4 findings (S105 x2, S324,
+      S602) en code 1 ; cible propre → `[]` en code 0. La cible qui écrit un `.ruff.toml`
+      invalide fait échouer ruff SANS `--isolated` (rc=2, scan supprimé) et ne change rien
+      AVEC : c'est la raison pour laquelle le drapeau est dans le plugin, pas une préférence.
+    verification: >
+      Le plugin déclare `version_min: 0.16.5` : `--output-format json` (tableau en racine,
+      clés code/name/location/message/severity/url) est le format lu. `ruff check --format
+      json` a été retiré par ruff : une version plus ancienne ne rendrait pas ce document.
+
+  trufflehog3:
+    package: trufflehog3
+    version: "3.0.10"
+    source: https://pypi.org/project/trufflehog3/
+    licence: GPL-2.0
+    distribution: pip
+    sha256: null
+    distribution_hash: a4d17bc01cd057e668c624c6dba95bc833600a83418bf481a9a081bbb4143157
+    note: >
+      Installé par pip — régime « empreinte du RECORD de la distribution », comme bandit et
+      checkov. Mesuré ici (31/08/2026) hors réseau : `trufflehog3 -f json PHASE3/testrepo`
+      rend 2 findings (high-entropy + règle github-token) en code 2, et `[]` en code 0 sur
+      une cible propre. LE JSON DE L'OUTIL CONTIENT LA VALEUR DU SECRET EN CLAIR (`secret`,
+      `context`) : le plugin ne mappe pas ces deux champs, et l'artefact brut archivé par le
+      run, lui, les contient — limitation écrite dans le plugin, pas gommée.
+    verification: >
+      Projet DISTINCT de TruffleHog v3 (Go, GitHub Releases). L'épingle s'appelle trufflehog3
+      et le plugin aussi : aucune qualification de l'outil amont n'est reprise ici.
+  eslint:
+    package: eslint
+    version: "9.39.5"
+    source: https://www.npmjs.com/package/eslint
+    licence: MIT
+    distribution: npm
+    sha256: null
+    # Pas de binaire unique : ESLint est un arbre de ~90 paquets npm. L'empreinte ci-dessous
+    # est un HASH D'ARBRE, calculé ainsi (reproductible sur la machine d'installation) :
+    #   cd ~/.cache/arena_secops/node \
+    #     && find node_modules -type f | sort | xargs sha256sum | sha256sum
+    # Un SHA-256 de binaire n'aurait aucun sens ici, et `sha256: null` le dit : c'est le régime
+    # « note + méthode » des outils pip, étendu à npm, pas une case laissée vide.
+    distribution_hash: 7c33a96f10284979e0d7262fd9590de0416e5f21ee1b53da138c3e1267c610ba
+    note: >
+      Installé par `npm install --prefix ~/.cache/arena_secops/node eslint@9`. Mesuré ici
+      (31/08/2026) : sur PHASE3/testrepo_js, `--no-config-lookup --format json --rule '<jeu
+      sécurisé>'` rend no-eval + no-script-url en code 1 ; la même cible portant un
+      `eslint.config.mjs` avec `ignores: ["**"]` rend rc=2 SANS le drapeau (le dépôt a décidé
+      de ne pas être scanné) et le même résultat AVEC. Cible saine → `[]`, code 0.
+    verification: >
+      Format lu : tableau de blocs {filePath, messages[]} (`--format json`, API de ESLint 9).
+      ESLint 8 rendait un tableau plat de messages : un `version_min` plus ancien chargerait
+      un manifest qui ne projette rien — d'où le rang de version épinglé ici, pas décoratif.
+
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.

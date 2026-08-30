@@ -8,18 +8,20 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 | fiches | `b647ef29b6ef` |
 | notes | `a9f853547f2a` |
 | matrice_phase1 | `d8819269b585` |
-| registre | `cba82de50df8` |
-| manifeste | `39c32e189f84` |
+| registre | `748b2d9fd97a` |
+| manifeste | `e0cf800ccee6` |
 
 ## Matrice des capacités
 
 | Capacité | dans AGNT | providers (passifs) | entrée | sortie | parser | sandbox | candidats |
 |---|---|---|---|---|---|---|---|
 | CLOUD_POSTURE | absente | 0 | — | — | à écrire | idem | Kingfisher (0.6), PurplePanda (0.6), S3Scanner (0.6), axiom (0.5) |
+| CODE_LINT | **oui** | 1 (1) | repository | findings | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | — |
 | CODE_METRICS | **oui** | 1 (1) | repository | findings | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | — |
 | CODE_STATIC_ANALYSIS | **oui** | 1 (1) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | DefectDojo (0.8333), secureCodeBox (0.5), Bandit (0.375), Bearer (0.25) |
 | CODE_STATIC_ANALYSIS_CUSTOM | **oui** | 1 (1) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | — |
 | CODE_STATIC_ANALYSIS_GO | **oui** | 1 (1) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | — |
+| CODE_STATIC_ANALYSIS_JS | **oui** | 1 (1) | repository | findings | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | — |
 | CODE_STATIC_ANALYSIS_SUITE | **oui** | 1 (1) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | — |
 | CONTAINER_SCAN | absente | 0 | — | — | à écrire | idem | SecretScanner (0.6), Checkov (0.4167), Trivy (0.35), Grype (Anchore) (0.15) |
 | DEPENDENCY_ANALYSIS | **oui** | 3 (3) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | tfsec (1.5), Dependency-Track (1.0), DefectDojo (0.8333), Nuclei (0.6364) |
@@ -31,7 +33,7 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 | LOG_ANALYSIS | absente | 0 | — | — | à écrire | idem | Wazuh (0.5), Zeek (0.5) |
 | MALWARE_ANALYSIS | absente | 0 | — | — | à écrire | idem | IntelOwl (0.5714), Kubescape (ARMO) (0.4286), Linux Malware Detect (0.4286), LOKI (0.4286) |
 | NETWORK_DISCOVERY | absente | 0 | — | — | à écrire | idem | axiom (0.5), Fscan (0.5), MCP for Security (f1tz) (0.5), RustScan (0.5) |
-| SECRET_DETECTION | **oui** | 2 (2) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | Kingfisher (0.6), SecretScanner (0.6), ThreatMapper (0.4286), detect-secrets (0.375) |
+| SECRET_DETECTION | **oui** | 3 (3) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | Kingfisher (0.6), SecretScanner (0.6), ThreatMapper (0.4286), detect-secrets (0.375) |
 | THREAT_INTEL | absente | 0 | — | — | à écrire | idem | IntelOwl (0.5714), LOKI (0.4286), TheHive (0.4286), Recon-ng (0.4) |
 | VULN_MANAGEMENT | absente | 0 | — | — | à écrire | idem | Dependency-Track (1.0), DefectDojo (0.8333) |
 | WEB_ENDPOINT_DISCOVERY | absente | 0 | — | — | à écrire | idem | axiom (0.5), MCP for Security (f1tz) (0.5), ffuf (0.4), SpiderFoot (0.3333) |
@@ -55,10 +57,12 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 
 ## Capacités sous-équipées (un seul provider passif)
 
+- **CODE_LINT** : providers ruff_lint ; mode `un_seul`
 - **CODE_METRICS** : providers radon_cc ; mode `un_seul`
 - **CODE_STATIC_ANALYSIS** : providers semgrep ; mode `un_seul`
 - **CODE_STATIC_ANALYSIS_CUSTOM** : providers bandit_custom ; mode `un_seul`
 - **CODE_STATIC_ANALYSIS_GO** : providers semgrep_go ; mode `un_seul`
+- **CODE_STATIC_ANALYSIS_JS** : providers eslint_js ; mode `un_seul`
 - **CODE_STATIC_ANALYSIS_SUITE** : providers bandit ; mode `un_seul`
 
 ## Outils nommés dans la commande du 2026-08-30, état par rapport à l'inventaire

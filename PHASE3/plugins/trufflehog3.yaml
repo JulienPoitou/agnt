@@ -1,0 +1,64 @@
+# Plugin AGNT — quatrième cas (31/08/2026) : un second détecteur de secrets, hors réseau.
+#
+# NOM HONNÊTE : ce n'est PAS TruffleHog v3 (binaire Go, distribué par GitHub Releases —
+# assets injoignables ici, et aucune distribution pip). trufflehog3 est un projet Python
+# distinct, avec ses propres règles et son propre format. L'appeler « trufflehog » dans le
+# registre serait faire croire à la qualification de l'outil amont.
+id: trufflehog3
+capacites:
+  - SECRET_DETECTION
+entrees:
+  - repository
+binaire: trufflehog3
+outillage: trufflehog3
+version_min: "3.0.10"
+licence: GPL-2.0               # doit être LA licence de l'épingle (règle 4 du chargeur)
+# SECRET_DETECTION est en fan_out avec max_providers = 2, et troncature SANS filtre de
+# disponibilité (intent.choisir_providers, mesuré 31/08/2026) : gitleaks=100 et
+# detect_secrets gardent les deux places, trufflehog3 ne sort jamais du plan. 400 =
+# derrière, volontairement. Le faire compter demande de passer max_providers à 3 —
+# décision de registre, pas de plugin (DECISIONS_PROPOSEES).
+priorite: 400
+cout: faible
+risque: PASSIVE
+description: >
+  Détection de secrets par règles locales + entropie, sur fichiers et historique git.
+  Intéressé comme CONTRE-ÉPREUVE de detect-secrets : les deux n'ont ni les mêmes règles, ni
+  le même traitement de l'entropie, et un secret trouvé par l'un et pas l'autre est une
+  information, pas un bruit.
+execution:
+  args:
+    - "-f"
+    - json
+    - "{TARGET}"
+  # 0 = rien, 2 = secrets trouvés (mesuré ici : 2 findings sur PHASE3/testrepo, rc=2 ;
+  # cible propre → rc=0 et tableau vide). Confondre les deux ferait passer un scan
+  # productif pour une panne — l'inverse est le mode d'échec que tout ce fichier évite.
+  code_succes: [0, 2]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  items_from: "$"
+  champs:
+    regle: rule.id             # high-entropy, github-token…
+    nom_regle: rule.id
+    message: rule.message
+    severite: rule.severity    # MEDIUM/HIGH/LOW : les mots de l'outil, non traduits
+    fichier: path
+    ligne: line
+  # `secret` et `context` NE SONT PAS mappés, et c'est le point de ce plugin : l'outil rend
+  # la valeur du secret dans son JSON (mesuré : "16C7e42F292c6912E7710c838347Ae178B4a" en
+  # clair dans `secret` et dans `context`). Un finding qui cartographie un secret pour
+  # l'afficher le diffuse. `masquer_large` sur message borne le texte libre ; les deux
+  # champs à valeur sont simplement absents de la projection.
+  masquer_large:
+    - message
+requirements:
+  reseau: false
+  privileges: aucun
+  timeout_s: 900
+  sandbox: true
+a_verifier:
+  - "rang 400 + SECRET_DETECTION en fan_out max_providers=2 (troncature aveugle à la disponibilité de l'outil, `intent.choisir_providers`) : ce provider est chargé, validé, et JAMAIS planifié tant que max_providers vaut 2 — ou tant que la troncature ne filtre pas les outils absents. Décision écrite dans PHASE3/DECISIONS_PROPOSEES.md (D10), pas contournée par un rang inventé."
+  - "l'artefact brut de l'outil (sortie JSON archivée par le run, comme pour tout provider) CONTIENT la valeur du secret : la projection ne la reprend pas, le fichier si. À trancher — soit une purge de l'artefact après lecture (mécanisme qui n'existe pas), soit l'assumer et l'écrire dans la doc opérateur. Déclaré, pas résolu silencieusement."

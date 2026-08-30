@@ -1,0 +1,93 @@
+# Plugin AGNT — troisième cas de la voie plugin (31/08/2026) : un outil de lint Python.
+#
+# Grammaire lue par slice/plugins.py, rien d'autre. Aucun fichier du cœur n'a été touché
+# pour faire entrer ruff — ni capabilities.yaml, ni un parser.
+id: ruff_lint
+capacites:
+  - CODE_LINT
+entrees:
+  - repository
+binaire: ruff
+outillage: ruff                # entrée épinglée dans manifeste_dependances.yaml
+version_min: "0.16.5"
+licence: MIT
+# Rang, pas score (leçon écrite dans pip_audit.yaml : le PLUS PETIT gagne). CODE_LINT n'a
+# qu'un provider, rien n'arbitre aujourd'hui — déclaré pour ne pas redevenir un doute.
+priorite: 100
+cout: faible
+risque: PASSIVE
+description: >
+  Lint Python rapide (ruff) : erreurs de code, style, et le port des règles flake8-bandit
+  (S*). Complète semgrep/bandit sur un point précis : ceux-ci sont lents à démarrer et
+  ruff rend en quelques dizaines de millisecondes un avis DIFFÉRENT sur le même fichier —
+  un second lecteur, pas un doublon. Son périmètre de sécurité (S) est un sous-ensemble
+  assumé de celui de bandit : voir a_verifier pour le jour où CODE_STATIC_ANALYSIS passe
+  en fan_out.
+fichiers_requis:
+  - "*.py"
+execution:
+  args:
+    - check
+    # --isolated : la CIBLE ne choisit pas ses règles. Mesuré ici (31/08/2026) sur une
+    # copie de PHASE3/testrepo : un `.ruff.toml` volontairement invalide écrit PAR LA
+    # CIBLE fait échouer ruff (rc=2, « Failed to load configuration ») et supprime le
+    # scan ; avec --isolated, mêmes arguments, mêmes 4 findings, rc=1. Un dépôt analysé
+    # n'a pas à décider s'il est analysé.
+    - --isolated
+    # --no-cache : sans lui ruff crée `.ruff_cache/` DANS la cible — qui est montée en
+    # lecture seule dans la cage. Le dépôt analysé ne doit rien avoir à écrire.
+    - --no-cache
+    - --select
+    - S,E,F
+    - --output-format
+    - json
+    - --quiet
+    - "{TARGET}"
+  # 0 = rien trouvé, 1 = findings (convention documentée de ruff). 2 = erreur de
+  # configuration ou d'exécution : celui-là doit rester un échec, jamais un scan vide.
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  # `ruff check --output-format json` rend un TABLEAU en racine. `modele: plat` +
+  # `items_from: "$"` = « la racine EST la liste des items » : le jeton '$' existe déjà
+  # pour ce cas (checkov en rend une aussi), aucun parser n'est nécessaire.
+  modele: plat
+  items_from: "$"
+  champs:
+    regle: code                # S602, E501… — l'identifiant de la règle ruff
+    nom_regle: name            # subprocess-popen-exec-shell… — le nom lisible
+    fichier: filename
+    ligne: location.row
+    message: message
+    # severity est le mot de ruff lui-même ("error" | "warning", documentés par l'outil) :
+    # il traverse le modèle sans être traduit en HIGH/MEDIUM, faute de correspondance
+    # déclarée par ruff. Le rapport affiche donc « ERROR », pas une gravité inventée ici.
+    severite: severity
+    reference: url             # lien vers la page de documentation de la règle
+  masquer_large:
+    - message
+requirements:
+  reseau: false
+  privileges: aucun
+  timeout_s: 600
+  sandbox: true
+capacite:
+  # Capability NOUVELLE, déclarée par le plugin (le cœur ne connaît pas ruff). Ce n'est pas
+  # un caprice d'écriture : CODE_STATIC_ANALYSIS est en mode « un_seul », donc y accrocher
+  # ruff produirait un provider déclaré et jamais planifié. Créer la capacité rend l'outil
+  # atteignable par une question ; la rendre fan_out plus tard est une décision de registre.
+  description: >
+    Lint Python (ruff) : règles E/F (erreurs et style) et S (port des règles bandit), par
+    fichier et par ligne. Entrée de QUALITÉ de code et seconde lecture de sécurité — les
+    findings S* ne sont pas interchangeables avec ceux de bandit.
+  domaines: [code]
+  entree: [files]
+  sortie: findings
+  mots_cles: [lint, ruff, style, "ligne longue", "ligne trop longue", "import inutilisé",
+             "import inutilise", "variable non utilisée", "variable non utilisee",
+             "code mort", "qualité de code", "qualite de code", "problèmes de syntaxe"]
+a_verifier:
+  - "CODE_STATIC_ANALYSIS est en mode « un_seul » (choisir_providers prend le premier passif) : tant que c'est le cas, un second outil de SAST déclaré sur cette capacité ne sera JAMAIS sélectionné — c'est la raison pour laquelle ruff est posé sur CODE_LINT, et non collé à semgrep. Passer la capacité en fan_out (décision de registre, voir DECISIONS_PROPOSEES) supprimerait cette doublure."
+  - "le port S* de ruff n'est pas équivalent à bandit : mêmes familles, pas même couverture de règles. Aucun finding de l'un ne doit être présenté comme absent chez l'autre."
+  - "filename est rendu en chemin ABSOLU par ruff (mesuré) : la plateforme relativise à l'affichage, pas à l'artefact — vérifier que le rapport humain ne réécrit pas un chemin d'hôte dans un contexte où il n'a rien à faire."

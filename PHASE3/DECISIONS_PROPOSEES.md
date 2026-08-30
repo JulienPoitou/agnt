@@ -228,3 +228,108 @@ dans le moteur.
 
 **D2 est celle qui presse le plus** : elle touche au modèle de données, et tout le reste en
 dépend.
+
+---
+
+# Ajout du 31/08/2026 — catalogue d'outils (SAST / SECRETS / SCA / RECON / WEB / INFRA)
+
+Ce bloc est postérieur à l'en-tête ci-dessus : D1–D6 sont appliquées ou arcivées, les trois
+propositions qui suivent ne le sont pas. Elles naissent toutes d'une mesure rejouée dans
+`PHASE3/test_catalogue_outils.py`, pas d'une préférence.
+
+## D7 — Passer `CODE_STATIC_ANALYSIS` en `fan_out`
+
+**Ce que j'ai mesuré.** `intent.choisir_providers` trie les providers PASSIFS par `priorite`
+croissante et, sauf mode `fan_out`, **prend le premier seul**. `CODE_STATIC_ANALYSIS` n'a pas de
+mode déclaré → un seul. Conséquence vérifiée : `ruff` (rang 400, derrière `semgrep` à 100) est
+chargé, validé, présent dans le registre… et absent de tout plan.
+
+**Le problème.** La voie plugin promet « un fichier de plus, aucun fichier du cœur à toucher ».
+Sur une capacité en `un_seul`, cette promesse ne vaut que si l'outil accepté est le *premier* —
+donc soit on écrase le tool historique (inacceptable : ça change le plan de toute mission de SAST
+de la machine), soit on crée une capacité parallèle (`CODE_LINT`, le choix qui a été fait pour
+ruff), soit l'outil est décoratif.
+
+**Ce que je propose.** `mode_selection: fan_out` + `max_providers: 2` sur `CODE_STATIC_ANALYSIS`,
+et transfert de `ruff_lint` de `CODE_LINT` vers cette capacité (suppression du fichier de
+capacité créée). Deux lecteurs sur le même fichier Python est exactement ce qu'un rapport de
+couverture sait déjà distinguer (`outils_par_vague`).
+
+**Ce que ça ne dit pas.** Que ruff vaut mieux que bandit : les règles `S*` de ruff sont un
+sous-ensemble du port flake8-bandit, pas un équivalent. Et `max_providers: 2` ferait passer
+semgrep + ruff, jamais semgrep + bandit + ruff — si les trois comptent, c'est 3 qu'il faut écrire.
+
+## D8 — Autoriser un manifest à déclarer le répertoire de travail de l'outil
+
+**Ce que j'ai mesuré.** ESLint 9 (npm, installé ici) rendu deux fois sur la même fixture, seul le
+répertoire courant change :
+
+```
+cwd = /tmp                  → rc=2, « all of the files matching the glob pattern … are ignored »
+cwd = ancêtre de la cible   → rc=1, no-eval + no-script-url trouvés
+```
+
+Et `Sandbox.commande()` n'émet **pas** de `--chdir` (délibéré : `sandbox.py`, commentaire « un
+outil qui écrirait dans son cwd échouerait bruyamment »). Le harnais de qualification, lui, lance
+avec `cwd = cible` — il ne verrait jamais le défaut.
+
+**Le problème.** Un outil dont le résultat dépend de l'endroit où l'opérateur a tapé la commande
+n'est pas intégrable : soit il trouve, soit il déclare la cible vide, et les deux se lisent comme un
+scan terminé. C'est le faux négatif silencieux, sous une forme nouvelle.
+
+**Ce que je propose.** Une clé `execution: {cwd: "{TARGET}"}` (valeurs admises : `{TARGET}`,
+`{OUT_DIR}`, `{WORK}`), traduite en `--chdir` par la cage **et** par le sablage des harnais, pour
+qu'un manifeste puisse rendre un outil « sensible au cwd » sans code dans le cœur.
+
+**Ce que ça ne dit pas.** Que ESLint doive être intégré ensuite : il faudra aussi épingler le
+paquet npm (version + `node_modules` reproductibles), ce que le régime actuel des empreintes ne
+sait pas faire pour un arbre de 90 paquets.
+
+## D9 — Un septième jeton pour les cibles qui ne sont pas des chemins
+
+**Ce que j'ai mesuré.** Rien dans la porte d'entrée ne refuse un outil réseau :
+
+```
+verdict d'un plugin avec `entrees: [hote, url]` + `requirements.reseau: true`  →  « chargerait »
+verdict de plugins/propositions/nmap.yaml                                      →  refus pour le
+                                                                                  binaire non épinglé
+garde_chemin.verifier_args(["nmap","-oX",…,"https://cible.example/"])          →  0 violation
+modèle de finding                                                             →  COORDONNEES sait
+                                                                                  url, hote, image,
+                                                                                  ressource (+ masque
+                                                                                  des identifiants d'URL)
+argv avec {URL}                                                                →  refusé : jetons
+                                                                                  admises {BIN} {TARGET}
+                                                                                  {OUT} {OUT_DIR}
+                                                                                  {REGLES} {DB}
+```
+
+**Le problème.** RECON (nmap, httpx, amass, subfinder, naabu, whatweb) et WEB (nuclei, nikto, ffuf,
+gobuster, ZAP) sont absents du registre, et ce n'est pas un manque de manifests : la cible d'une
+mission AGNT est un **chemin monté en lecture seule**, résolu par `{TARGET}`. Un scanner qui prend
+une URL n'a aucun jeton où loger sa cible — et aucun moyen d'être distingué, dans le rapport, d'un
+scan de dépôt.
+
+**Ce que je propose.** Une déclaration explicite du type de cible par capacité (`entree: [repository]`
+| `[url]` | `[hote]`), un jeton correspondant (`{CIBLE}` rendu selon le type), et — parce que ces
+outils *font du trafic* — une politique qui lie ce type de cible à une autorisation d'export de
+mission (`egress`, LOT 3) plutôt qu'au profil par défaut. Un scan réseau sans egress accordé doit
+être refusé à l'exécution, pas rendre « 0 port ouvert ».
+
+**Ce que ça ne dit pas.** Que ces outils seraient utilisables demain sur cette machine : leurs
+binaires viennent de GitHub Releases (CDN injoignable, mesuré 000) ou d'apt (`deb.debian.org`
+injoignable), et `nmap` demande des privilèges que la cage ne donne pas. La décision est sur la
+grammaire, pas sur l'install.
+
+## D10 — `max_providers` de SECRET_DETECTION à 3
+
+**Ce que j'ai mesuré.** La capacité est en `fan_out` avec `max_providers: 2`, et la troncature est
+aveugle à la disponibilité de l'outil (`choisir_providers` ne filtre pas les binaires absents) :
+`gitleaks` (rang 100) garde une place **même quand son binaire n'est pas là**, et éjecte
+`trufflehog3` (rang 400) du plan. Sur cette machine, gitleaks est absent depuis la réinitialisation
+du sandbox.
+
+**Ce que je propose.** Soit `max_providers: 3`, soit — plus près de l'intention — filtrer la
+troncature sur les outils réellement disponibles, en consignant le provider écarté dans la
+couverture (un slot pris par un outil absent doit être *visible*, pas silencieux). Le second choix
+touche au cœur et vaut pour toutes les capacités ; c'est celui que je recommande.

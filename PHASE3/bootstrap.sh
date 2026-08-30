@@ -125,6 +125,20 @@ command -v detect-secrets >/dev/null || { log "detect-secrets"; pip install --qu
 # exactement le silence que ce fichier existe pour casser.
 command -v radon >/dev/null || { log "radon"; pip install --quiet radon==6.0.1; }
 command -v pip-audit >/dev/null || { log "pip-audit"; pip install --quiet pip-audit==2.10.1; }
+# ruff + trufflehog3 : les deux entrées du catalogue d'outils du 31/08/2026 qui sont
+# installables ICI (pip, hors réseau à l'exécution). ruff est un binaire natif dans sa roue
+# pip — un SHA-256 est donc relevable, contrairement aux outils purement Python du pool.
+command -v ruff >/dev/null || { log "ruff"; pip install --quiet ruff==0.16.5; }
+command -v trufflehog3 >/dev/null || { log "trufflehog3"; pip install --quiet trufflehog3==3.0.10; }
+# eslint : seul outil du catalogue passé par npm (registry joignable ici, contrairement aux
+# assets GitHub). Il vit dans le POOL, pas dans le PATH : `npm install -g` échoue sur une
+# machine sans droits, et un outil de scan n'a rien à faire dans l'environnement système.
+[ -x "$BIN/eslint" ] || {
+  log "eslint 9.39.5 (npm, dans le pool)"
+  npm install --no-audit --no-fund --prefix "$C/node" eslint@9.39.5
+  printf '#!/bin/sh\nexec env NODE_PATH="%s/node/node_modules" node %s/node/node_modules/eslint/bin/eslint.js "$@"\n' "$C" "$C" > "$BIN/eslint"
+  chmod +x "$BIN/eslint"
+}
 
 # ---------------------------------------------------------------- grype + kics
 # Étape 4 (2026-08-29) : 2e providers réels (fan-out trivy×grype, checkov×kics).

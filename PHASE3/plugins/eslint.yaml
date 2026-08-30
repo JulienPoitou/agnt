@@ -1,0 +1,87 @@
+# Plugin AGNT — cinquième cas de la voie plugin (31/08/2026) : un SAST JavaScript.
+#
+# Ce fichier a failli ne pas exister. La raison avancée d'abord — « la cage ne fixe pas le
+# répertoire courant, et ESLint décide de scanner ou non selon ce répertoire » — était FAUSSE :
+# `Sandbox.commande()` émet bien un `--chdir` sur le montage de la cible (vérifié dans la
+# batterie). Le vrai point à tenir est ailleurs, et il est mesuré : voir --no-config-lookup.
+id: eslint_js
+capacites:
+  - CODE_STATIC_ANALYSIS_JS
+entrees:
+  - repository
+binaire: eslint
+outillage: eslint            # entrée épinglée dans manifeste_dependances.yaml
+version_min: "9.39.5"
+licence: MIT
+# Capacité propre, pour la même raison que ruff : CODE_STATIC_ANALYSIS est en `un_seul`, donc y
+# brancher un second outil le rend décoratif (DECISIONS_PROPOSEES, D7). Le domaine est de plus
+# réellement distinct — aucune règle d'ESLint ne porte sur du Python.
+priorite: 100
+cout: faible
+risque: PASSIVE
+description: >
+  Règles de sécurité de base sur JavaScript (ESLint 9, sans extension) : eval, URLs
+  javascript:, implicits dangereux, plus le jeu recommandé. Le cœur n'embarque AUCUNE
+  extension : la liste des règles est dans l'argv, pas dans un fichier que le dépôt analysé
+  pourrait remplacer.
+fichiers_requis:
+  - "*.js"
+execution:
+  args:
+    # `--no-config-lookup` : un dépôt analysé NE CHOISIT PAS ce qui est scanné. Mesuré ici sur
+    # une cible portant son propre `eslint.config.mjs` avec `ignores: ["**"]` : sans le drapeau,
+    # ESLint déclare « all of the files … are ignored » et ne rend rien (rc=2, bruyant — mais la
+    # mission échoue pour une raison que le dépôt a choisie) ; avec, mêmes findings.
+    - "--no-config-lookup"
+    - "--format"
+    - json
+    # Le jeu de règles est DANS la commande : rien à épingler hors du manifest, rien à lire dans
+    # la cible. Les identifiants sont ceux documentés par ESLint (aucune extension, aucun plugin).
+    - "--rule"
+    - '{"no-eval":"error","no-implied-eval":"error","no-new-func":"error","no-script-url":"error","no-unsafe-negation":"error","no-unsafe-optional-chaining":"error"}'
+    - "--no-warn-ignored"
+    - "{TARGET}"
+  # 0 = rien trouvé, 1 = findings. 2 reste un ÉCHEC : c'est le code d'ESLint quand aucun
+  # fichier n'est retenu — le rendre « succès » serait accepter un scan vide.
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  # `--format json` rend un TABLEAU de fichiers, chacun portant sa liste `messages`. C'est la
+  # forme déjà déclarée pour checkov : racine-liste + items dans une clé du bloc, avec le nom du
+  # fichier recopié par `contexte`. Aucun parser spécifique, aucune retouche d'extraction.py.
+  modele: imbriqué
+  nested_from: "$"
+  nested_key: messages
+  contexte:
+    fichier_cible: filePath
+  champs:
+    regle: ruleId
+    nom_regle: ruleId
+    message: message
+    fichier: fichier_cible
+    ligne: line
+    # severity est le NOMBRE documenté par ESLint (1 = warning, 2 = error). Il traverse tel quel :
+    # le rendre « HIGH » serait décider à la place de l'outil une correspondance qu'il n'établit
+    # pas (leçon du rang de radon, écrite dans radon.yaml).
+    severite: severity
+  masquer_large:
+    - message
+requirements:
+  reseau: false                # aucune règle distante, aucun téléchargement : `--no-config-lookup` le garantit
+  privileges: aucun
+  timeout_s: 900
+  sandbox: true
+capacite:
+  description: >
+    Règles de sécurité JavaScript de base (ESLint, sans extension) : évaluation de code, URLs
+    javascript:, constructions implicites dangereuses, par fichier et par ligne.
+  domaines: [code]
+  entree: [files]
+  sortie: findings
+  mots_cles: [javascript, js, "code javascript", eval, "script url", eslint, "règles javascript",
+              "regles javascript", XSS]
+a_verifier:
+  - "l'arbre npm installé (~/.cache/arena_secops/node/node_modules) est épinglé par un hash d'arbre de fichiers, pas par un SHA-256 de binaire : ESLint est ~90 paquets. Le mode de calcul est écrit dans l'épingle — à re-productible seulement si `npm ci` donne le même arbre."
+  - "aucune extension (eslint-plugin-security, ui/…) n'est installée : la couverture annoncée est celle des règles fondamentales d'ESLint, pas d'un audit JavaScript complet. Un « 0 finding » ici ne veut pas dire « pas de faille JS »."
+  - "`severity` numérique : tant que le modèle de finding n'aura pas de table déclarée 1→avertissement / 2→erreur, le rapport affichera le nombre. À trancher au registre, pas dans un plugin."

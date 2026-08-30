@@ -16,7 +16,7 @@ comptes_statuts:
 sources_lues:
   PHASE1/07_CATALOGUE_INTEGRATION.csv: aec6543c3e88c6fe
   PHASE1/08_FICHES_PROVIDERS.csv: b647ef29b6ef71e2
-  PHASE3/slice/capabilities.yaml: cba82de50df873fa
+  PHASE3/slice/capabilities.yaml: 748b2d9fd97a9d05
 entrees:
 - source: 0x4m4/hexstrike-ai
   provenance: phase1

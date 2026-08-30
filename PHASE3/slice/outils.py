@@ -40,16 +40,25 @@ class Tool:
     note: str
 
 
+REGIMES_GESTIONNAIRE = ("pip", "npm")
+
+
 def registre(chemin: Path | None = None) -> dict[str, Tool]:
     """Charge les tools déclarés. Échoue bruyamment si une entrée est incomplète :
     un tool sans licence ou sans source n'est pas traçable."""
     doc = yaml.safe_load((chemin or MANIFESTE).read_text(encoding="utf-8")) or {}
     out: dict[str, Tool] = {}
     for tid, e in (doc.get("binaires") or {}).items():
-        pip = (e.get("distribution") == "pip")
+        # Deux régimes, pas un seul : un outil installé par un gestionnaire de paquets n'a pas
+        # de binaire autonome à figer (radon comme ESLint), mais il a une empreinte de
+        # distribution. `npm` rejoint `pip` le 31/08/2026 pour la même raison — et le garde
+        # qui exige « empreinte OU note » reste exact : déclarer un gestionnaire n'est pas
+        # se dispenser de la traçabilité, c'est changer d'empreinte.
+        regime = str(e.get("distribution") or "")
+        gestionnaire = regime in REGIMES_GESTIONNAIRE
         t = Tool(
             id=tid,
-            installation="pip" if pip else "binaire",
+            installation=regime if gestionnaire else "binaire",
             version=str(e.get("version") or ""),
             sha256=str(e.get("sha256") or ""),
             distribution_hash=str(e.get("distribution_hash") or ""),
@@ -62,10 +71,10 @@ def registre(chemin: Path | None = None) -> dict[str, Tool]:
                      if not getattr(t, k)]
         if manquants:
             raise ToolError(f"tool {tid!r} : champs manquants {manquants}")
-        if not pip and not t.sha256:
+        if not gestionnaire and not t.sha256:
             raise ToolError(f"tool {tid!r} : installation binaire sans sha256")
-        if pip and not (t.distribution_hash or t.note):
-            raise ToolError(f"tool {tid!r} : installation pip sans empreinte ni note")
+        if gestionnaire and not (t.distribution_hash or t.note):
+            raise ToolError(f"tool {tid!r} : installation {regime} sans empreinte ni note")
         out[tid] = t
     return out
 

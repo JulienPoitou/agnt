@@ -2381,3 +2381,145 @@ console ne garde aucun état d'avancement dans le serveur — elle relit le jour
 mission ne correspond au run (garde par `pose_le`), le bloc reste vide ; le corps de la vague reste
 au niveau du module pour rester testable sans politique ; les artefacts se fusionnent dans l'ordre
 du plan, y compris quand un outil met trois fois plus de temps qu'un autre.
+
+---
+
+# LOT 4 · catalogue d'outils — trois de plus, un compte rendu de ce qui ne peut pas entrer (31/08/2026)
+
+Le catalogue reçu (SAST / SECRETS / SCA / RECON / WEB / INFRA-CLOUD) a été traité ligne par ligne,
+avec une règle tenue : **un outil n'est « intégré » que s'il a tourné ici**, et ce qui ne tourne
+pas est écrit avec sa cause, pas au conditionnel.
+
+## Ce qui a été fait
+
+**Trois plugins de plus, chacun en un fichier** (`plugins/eslint.yaml`, `plugins/ruff.yaml`,
+`plugins/trufflehog3.yaml`), plus une épingle dans `manifeste_dependances.yaml` et une ligne dans
+`bootstrap.sh` pour chacun. Aucun `capabilities.yaml`, aucun `extraction.py`, aucun
+`parsers_*.py`, aucun `findings.py` n'a été écrit pour eux. Le registre en service, mesuré en
+sortant `registre.Registry()` : **10 capacités** (7 du cœur + 3 créées par des plugins —
+`CODE_METRICS` du 30/08, `CODE_LINT` et `CODE_STATIC_ANALYSIS_JS` de ce lot) et **15 providers**
+(10 du cœur + 5 de plugins : `radon_cc`, `pip_audit`, `ruff_lint`, `trufflehog3`, `eslint_js`).
+
+Exécutions réelles mesurées sur les fixtures du dépôt (`SablageReel`, cage retirée parce que
+`bwrap` est absent — la commande est construite par le cœur, codes admis et couverture compris) :
+
+| outil | cible | résultat mesuré |
+|---|---|---|
+| `ruff check --isolated --no-cache --select S,E,F --output-format json` | `PHASE3/testrepo` | 4 findings (S105 ×2, S324, S602), rc=1 déclaré succès |
+| idem, cible portant un `.ruff.toml` invalide | tmp | **avec** `--isolated` : 2 findings, rc=0 · **sans** : rc=2, « Failed to load configuration », scan supprimé |
+| `eslint --no-config-lookup --format json --rule '{…}'` | `PHASE3/testrepo_js` | 2 findings (`no-eval`, `no-script-url`), rc=1 |
+| idem, cible portant `eslint.config.mjs` avec `ignores: ["**"]` | tmp | **avec** le drapeau : findings intacts · **sans** : rc=2, « all of the files … are ignored » |
+| `trufflehog3 -f json` | `PHASE3/testrepo` | 2 findings, **rc=2 = secrets trouvés** (donc `code_succes: [0, 2]`) |
+| idem, cible sans secret | tmp | `[]`, rc=0 |
+| `checkov -d PHASE3/testrepo_iac --output json --quiet` | dépôt IaC | 37 `failed_checks` **avec et sans** `--skip-download` ; stderr : 0 ligne avec, 68 lignes de traceback urllib3 sans |
+
+**Un défaut du registre corrigé au passage, et il n'est pas cosmétique.** `checkov` est déclaré
+`reseau: false` (et la cage lui coupe le réseau) mais l'outil appelle `api0.prismacloud.io` pour
+sa « guideline » par défaut : sans le drapeau, un run qui trouve 37 non-conformités imprime un
+**traceback d'exception non rattrapée** sur stderr — un opérateur lit une panne là où il y a un
+résultat — et, plus grave, sur une mission à `--egress` accordé il **irait réellement chercher des
+règles à distance** : le même scan rendrait deux résultats selon la cage. `--skip-download` entre
+dans `args_obligatoires` du provider, avec la mesure écrite dans le fichier.
+
+**Un régime d'épinglage de plus.** `slice/outils.py` ne connaissait que `pip` (empreinte de
+distribution) et « binaire » (SHA-256). ESLint est un arbre d'une centaine de paquets npm : la
+case « empreinte » n'avait pas de forme pour ça. `REGIMES_GESTIONNAIRE = ("pip", "npm")` l'ajoute,
+**en gardant l'exigence** (« empreinte OU note, sinon refus ») : l'empreinte épinglée d'ESLint est
+un hash d'arbre (`find node_modules -type f | sort | xargs sha256sum | sha256sum`), la commande de
+calcul est écrite dans le manifeste, `sha256: null` l'est aussi — un champ vide assumé vaut mieux
+qu'un faux binaire figé.
+
+## Défauts trouvés pendant ce lot (les miens, d'abord)
+
+- **J'ai écrit une raison fausse, et la mesure l'a tuée.** Premier jet : ESLint refusé « parce que
+  la cage ne fixe pas le répertoire courant ». C'était lu dans un commentaire de `sandbox.py` (qui
+  parle du cwd *hérité par bwrap*), pas dans la commande émise : `Sandbox.commande()` produit bien
+  `--chdir <montage de la cible>`. Le cas `et la cage fixe bien le répertoire de travail…` le fixe
+  maintenant dans la batterie, avec la correction écrite dans le plugin. Le vrai point à tenir pour
+  ESLint était ailleurs : `--no-config-lookup` (la cible ne choisit pas ce qui est scanné).
+- **Un drapeau recopié d'une aide mal lue.** `trufflehog3` d'abord déclaré avec `-e` « pour garder
+  les règles par défaut » : `--help` dit `-e, --exclude str` — un drapeau **qui consomme l'argument
+  suivant**, donc `-e -f json` avalait `-f`. La correction (drapeau retiré) est tenue par un cas
+  qui interdit sa réapparition dans l'argv.
+- **Cinq cas de `test_plugins` comptaient au lieu de juger** : « deux plugins chargés »,
+  « 8 capacités », « seuls deux fichiers dans le dossier ». Ils sont tombés en rouge dès que le
+  travail a été fait — le signe exact d'un faux invariant. Réécrits sur des faits dérivés : tout le
+  dossier se charge et rien n'est refusé ; registre = 7 du cœur + celles que les plugins créent
+  (recompté, pas deviné) ; `plugins/*.yaml` == le contenu du répertoire, `propositions/` jamais.
+- **Le contrat de `code_succes` était lu à l'envers dans mes attentes.** `adapters.generique_cli`
+  normalise un code **admis** à 0 dans le `ResultatBrut` et écrit « ÉCHEC D'EXÉCUTION » dans la
+  couverture pour un code inespéré. La batterie exige maintenant les deux branches (succès muet
+  sur code déclaré, mention d'échec quand `dataclasses.replace` retire 1 des admis) : un champ de
+  manifest lu par personne n'est pas une garantie.
+- **Le compte de checkov dépend de la façon dont la cible est désignée** (38 en relatif depuis
+  `PHASE3/`, 37 en absolu depuis la racine) : le cas du catalogue n'attend plus un nombre, il
+  exige que les deux variantes du drapeau **coïncident** et qu'il y ait quelque chose. Un attendu
+  chiffré ici aurait été une deuxième façon de figer le hasard.
+- **`-e` / comptes / empreintes : même leçon three times run** — un test qui greppe un nombre ou
+  un littéral casse pour des raisons licites ; la réponse est de remplacer ce qu'il prouvait, pas
+  de relâcher la garde.
+
+## Ce que la grammaire sait dire, mesuré (la question RECON / WEB)
+
+Le catalogue demandait nmap, httpx, amass, subfinder, naabu, whatweb, nuclei, nikto, ffuf,
+gobuster, ZAP. Aucun n'est intégré, et la cause n'est pas la voie plugin :
+
+```
+verdict d'un plugin avec `entrees: [hote, url]` + `requirements.reseau: true`  →  « chargerait »
+refus de plugins/propositions/nmap.yaml                                        →  binaire non épinglé (jamais « reseau »)
+garde_chemin.verifier_args(["nmap","-oX",…,"https://cible.example/"])          →  0 violation
+modèle de finding (F.COORDONNEES + F._nettoie_url)                             →  sait déjà loger url/hote/image/ressource, masque user:***@
+argv portant {URL}                                                              →  REFUSÉ : les jetons admis sont
+                                                                                   {BIN} {TARGET} {OUT} {OUT_DIR} {REGLES} {DB}
+```
+
+C'est-à-dire : la porte d'entrée, la garde de chemins et le modèle de finding sont prêts ; **il
+manque un septième jeton et une politique qui lie « cible qui n'est pas un chemin » à une
+autorisation d'export de mission** (LOT 3). Écrit comme décision D9 dans `DECISIONS_PROPOSEES.md`,
+avec D7 (`CODE_STATIC_ANALYSIS` en `fan_out`, sans quoi tout second outil SAST y est décoratif),
+D8 (répertoire de travail déclarable par un manifeste) et D10 (`SECRET_DETECTION` `max_providers`
+2→3, ou troncature filtrée sur la disponibilité — sans quoi `trufflehog3` est chargé et jamais
+planifié, ce que le fichier du plugin dit lui-même).
+
+## État de l'environnement, mesuré le 31/08 (à ne pas relire comme un progrès d'hier)
+
+```
+github.com 200 · api.github.com 200 · pypi.org 200 · registry.npmjs.org 200
+objects.githubusercontent.com 000 · semgrep.dev 000 · openpolicyagent.org 000 · deb.debian.org 000
+```
+
+La page d'une release se lit, l'asset ne se télécharge pas. Concrètement : `opa` toujours absent
+(tout ce qui passe par `analyser.py`/`pipeline.executer` complet s'arrête à `PolicyError`, rc=2),
+`bwrap` absent (`test_bwrap.sh` → 77 « rien mesuré »), les jeux de règles Semgrep de
+`manifeste_dependances.yaml` irrécupérables (binaire restauré à 1.175.0, pack `python.yaml`
+etc. absents → provider non rejouable ici), et les outils Go (gitleaks, trivy, grype, kics, nmap,
+nuclei, gosec, kube-score, osv-scanner, tfsec) non installables. `trufflehog3`, `ruff`, `eslint`,
+`checkov`, `bandit`, `detect-secrets`, `pip-audit`, `radon` tournent.
+
+## Régression rejouée après ce lot
+
+`test_catalogue_outils` **84/84** (nouveau ; 2 NON ÉVALUÉ : `npm ci` reproductible, intégration
+eslint sans lockfile versionné) · `test_plugins` 94/94 (+4 NON ÉVALUÉ, dont les modèles xml/lignes_json
+faute d'outil installable ici) · vague parallèle 46/46 · grille de qualité 34/34 · escalade 24/24 ·
+modèle de finding 37/37 · statuts 31 · conditions 30 · sélection 13 · empreintes 13 · rapport humain 18 ·
+garde des fous 29 · chemins 48 · env outil 9 · extraction de blocs 14 · interface 34/35 (1 non évaluée) ·
+harnais DOM **103/103** · `plugins.py --verifier` 0 refus · `inventaire_plateforme.py --verifier`
+**0 dérive** après régénération des vues (`INVENTAIRE_PLATEFORME.md`, `inventaire/fiches.json`,
+`pool.yaml`) · `node --check interface/app.js` OK · `pyflakes` muet sur les fichiers du lot.
+Suite du registre (empreinte `cba82de50df8` → `748b2d9fd97a` pour le cœur, `7e4e65fa3044a573` →
+`e0cf800ccee6` avec les épingles) : les tests comparent des empreintes **entre elles**, aucun digest
+n'est codé en dur — c'est pour ça que trois plugins de plus ne cassent pas la batterie d'empreintes.
+
+## Choix de ce lot à ne pas inverser
+
+`trufflehog3` s'appelle `trufflehog3` (ce n'est pas TruffleHog v3, et aucune qualification de
+l'outil amont n'est reprise) ; les valeurs `secret`/`context` ne sont **jamais** mappées dans un
+finding — l'artefact brut de l'outil les contient, c'est une limitation écrite du plugin, pas un
+oubli ; `code_succes` de trufflehog3 garde 2 (le refuserait ferait passer un scan productif pour une
+panne) ; `--isolated` (ruff) et `--no-config-lookup` (ESLint) ne sont pas des réglages de style mais
+les seules barrières mesurées contre une cible qui choisirait ses règles ou supprimerait son scan ;
+`--skip-download` de checkov ne se retire pas au profit d'un `egress` (c'est ce qui rend le résultat
+indépendant de la cage) ; ruff et ESLint sont sur des capacités **créées** parce que
+`CODE_STATIC_ANALYSIS` est en `un_seul` — les y brancher sans D7 les rendrait décoratifs ; et le
+compte `integrated: 8` du pool ne compte pas les plugins (définition de cette vue, pas une capacité
+maximale de la plateforme).

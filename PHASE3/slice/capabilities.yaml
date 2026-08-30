@@ -495,6 +495,15 @@ capabilities:
             - "--output"
             - "json"
             - "--quiet"
+            # 31/08/2026 — checkov télécharge sa « guideline » depuis api0.prismacloud.io par
+            # DÉFAUT, pour un provider déclaré hors réseau. Mesuré sur PHASE3/testrepo_iac :
+            # sans le drapeau, 68 lignes de traceback urllib3 sur stderr pour 38 findings qui
+            # sont PAR AILLEURS identiques ; avec, stderr vide. Deux conséquences, pas une :
+            # un opérateur lit une panne là où il y a un résultat, et — plus grave — sur une
+            # mission à `egress` accordé, l'outil IrAIT réellement chercher des règles à
+            # distance : le même scan rendrait alors deux résultats selon la cage. `--skip-download`
+            # rend le résultat indépendant de l'autorisation de sortie.
+            - "--skip-download"
           output:
             format: json
           extraction:

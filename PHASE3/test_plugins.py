@@ -144,12 +144,16 @@ def lance_reel(prov, cible: Path):
 
 
 # ═════════════════════════════ 1 · ce qui est livré se charge
-print("═══ 1 · les deux plugins du dépôt ═══")
+print("═══ 1 · les plugins du dépôt ═══")
 vue = PL.resumer()
 cas("le dossier chargé est `plugins/`, jamais `plugins/propositions/`",
     Path(vue["dossier"]) == RACINE / "plugins", vue["dossier"])
 chargés = {c["id"]: c for c in vue["charges"]}
-cas("deux plugins chargés, aucun refusé", len(vue["charges"]) == 2 and not vue["refuses"],
+# Ce n'est plus « deux » : le dossier a grandi (ruff, trufflehog3 le 31/08/2026). Un compte
+# figé ne prouve rien — il échoue quand le travail est fait et passe quand il est faux. Ce qui
+# est exigé ici : TOUT le dossier se charge, et rien n'est refusé.
+cas("tout le dossier `plugins/` se charge, et aucun fichier n'est refusé",
+    len(vue["charges"]) == len(PL.fichiers()) and not vue["refuses"],
     json.dumps(vue["refuses"], ensure_ascii=False))
 cas("radon_cc vise une capacité qu'il CRÉE",
     chargés.get("radon_cc", {}).get("capacite_creee") == "CODE_METRICS", chargés.get("radon_cc"))
@@ -306,15 +310,18 @@ reg = REG.Registry()
 coeur = yaml.safe_load((RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8"))
 cas("aucune capacité n'a été écrite à la main dans le registre du cœur pour un plugin",
     len(coeur.get("capabilities") or []) == 7, len(coeur.get("capabilities") or []))
-cas("le registre en service compte 8 capacités (7 du cœur + CODE_METRICS créée par un plugin)",
-    len(reg.capabilities()) == 8, len(reg.capabilities()))
+creees = sorted({c["capacite_creee"] for c in vue["charges"] if c["capacite_creee"]})
+cas("le registre en service = les 7 capacités du cœur + celles que les plugins créent réellement",
+    len(reg.capabilities()) == 7 + len(creees)
+    and set(creees) <= {c.id for c in reg.capabilities()},
+    f"cœur 7 + {creees} = {len(reg.capabilities())}")
 capm = reg.capability("CODE_METRICS")
 cas("la capacité créée porte le vocabulaire déclaré dans le plugin",
     "cyclomatique" in capm.mots_cles, capm.mots_cles[:4])
 cas("une capacité de plugin ne rejoint PAS la suite générique par défaut",
     capm.generique is False, capm.generique)
 cas("les capacités du cœur gardent generique=true (le comportement par défaut n'est pas inversé)",
-    all(c.generique for c in reg.capabilities() if c.id != "CODE_METRICS"),
+    all(c.generique for c in reg.capabilities() if c.id not in set(creees)),
     [c.id for c in reg.capabilities() if not c.generique])
 deps = reg.capability("DEPENDENCY_ANALYSIS")
 ids = [p.id for p in deps.providers]
@@ -609,9 +616,10 @@ cas("aucune capacité n'a été ajoutée à la main dans capabilities.yaml",
 cas("capabilities.yaml déclare toujours ses sept capacités (rien n'y a été greffé)",
     (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8").count("\n  - id: ") == 7,
     (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8").count("\n  - id: "))
-cas("seuls deux plugins sont chargés du dossier du dépôt (rien d'autre n'a été posé là)",
-    set(PL.fichiers()) == {RACINE / "plugins" / "radon.yaml", RACINE / "plugins" / "pip_audit.yaml"},
-    sorted(str(f) for f in PL.fichiers()))
+cas("le dossier chargé est exactement `plugins/*.yaml` — `propositions/` n'y est jamais",
+    set(PL.fichiers()) == set((RACINE / "plugins").glob("*.yaml"))
+    and not any("propositions" in str(f) for f in PL.fichiers()),
+    sorted(f.name for f in PL.fichiers()))
 
 # ═════════════════════════════ 7bis · ce que la console d'opération en dit
 print("═══ 7bis · l'interface voit l'extension ═══")
@@ -629,7 +637,7 @@ cas("/api/capacites cite les providers des plugins parmi ceux des capacités pub
 pla = payload.get("plugins") or {}
 cas("/api/capacites dit QUELS fichiers de plugin sont chargés (l'opérateur doit pouvoir "
     "distinguer la plateforme de cette machine)",
-    sorted(pla.get("fichiers") or []) == ["pip_audit.yaml", "radon.yaml"]
+    sorted(pla.get("fichiers") or []) == sorted(f.name for f in PL.fichiers())
     and len(pla.get("empreinte") or "") == 12, pla)
 
 print("═══ 8 · ce qui reste à démontrer ailleurs ═══")

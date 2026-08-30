@@ -6,8 +6,8 @@
    "fiches": "b647ef29b6ef",
    "notes": "a9f853547f2a",
    "matrice_phase1": "d8819269b585",
-   "registre": "cba82de50df8",
-   "manifeste": "39c32e189f84"
+   "registre": "748b2d9fd97a",
+   "manifeste": "e0cf800ccee6"
   },
   "formule": "valeur / (1 + complexite + risque) — voir l'en-tête du script",
   "nb_fiches": 126,
@@ -101,9 +101,10 @@
   "SECRET_DETECTION": {
    "providers": [
     "gitleaks",
-    "detect_secrets"
+    "detect_secrets",
+    "trufflehog3"
    ],
-   "passifs": 2,
+   "passifs": 3,
    "mode": "fan_out",
    "max": 2,
    "entree": [
@@ -132,9 +133,39 @@
     "iac"
    ]
   },
+  "CODE_LINT": {
+   "providers": [
+    "ruff_lint"
+   ],
+   "passifs": 1,
+   "mode": "un_seul",
+   "max": 1,
+   "entree": [
+    "repository"
+   ],
+   "sortie": "findings",
+   "domaines": [
+    "code"
+   ]
+  },
   "CODE_METRICS": {
    "providers": [
     "radon_cc"
+   ],
+   "passifs": 1,
+   "mode": "un_seul",
+   "max": 1,
+   "entree": [
+    "repository"
+   ],
+   "sortie": "findings",
+   "domaines": [
+    "code"
+   ]
+  },
+  "CODE_STATIC_ANALYSIS_JS": {
+   "providers": [
+    "eslint_js"
    ],
    "passifs": 1,
    "mode": "un_seul",
@@ -3581,7 +3612,7 @@
    "valeur_pour_agnt": {
     "score": 3,
     "priorite": 0.3333,
-    "deja_au_registre": false,
+    "deja_au_registre": true,
     "epingle_au_manifeste": false
    },
    "etat_machine": {

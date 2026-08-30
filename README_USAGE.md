@@ -288,6 +288,63 @@ pastilles que le bilan final. Aucun état intermédiaire n'est inventé pour l'�
 mission ne correspond à ce run, le bloc reste vide plutôt que de montrer l'avancement d'une
 autre.
 
+## Le catalogue d'outils : ce qui entre, ce qui attend (31/08/2026)
+
+Le registre lit six familles d'outils de sécurité. Deux entrées de plus sont passées par la voie
+plugin ce jour, sans retoucher le cœur ; le reste du catalogue est ou bien déjà provider, ou bien
+**bloqué par un fait nommé** — et non par une impression.
+
+| Famille | Dans AGNT aujourd'hui | État mesuré sur cette machine |
+|---|---|---|
+| SAST | `semgrep`, `bandit` (+ variante custom, + Go), `radon_cc`, **`ruff_lint`**, **`eslint_js`** | ruff et bandit tournent ; semgrep a son binaire (1.175.0) mais **pas son jeu de règles** (`semgrep.dev` répond 000, les 4 packs épinglés sont irrécupérables ici) |
+| SECRETS | `gitleaks`, `detect_secrets`, **`trufflehog3`** | detect-secrets et trufflehog3 tournent ; gitleaks est un asset GitHub injoignable |
+| SCA | `trivy`, `grype`, `pip_audit` | pip-audit tourne (et sort sur le réseau, donc refusé sans `--egress`) ; trivy/grype idem gitleaks |
+| INFRA / CLOUD | `checkov`, `kics` | **checkov tourne** : 38 non-conformités sur `PHASE3/testrepo_iac`, hors réseau, depuis la correction `--skip-download` |
+| RECON / WEB | aucun provider | ni capacité, ni binaire installable ; et un `{URL}` n'existe pas comme jeton (voir plus bas) |
+
+**`ruff` (SAST, Python).** `plugins/ruff.yaml`. Sa commande porte `--isolated` et `--no-cache`, et
+ces deux drapeaux ne sont pas une préférence de style : mesuré sur une copie de dépôt contenant un
+`.ruff.toml` **invalide écrit par la cible**, `ruff check --select S,E,F` sort en `rc=2` avec zéro
+résultat — la cible a supprimé son propre scan ; avec `--isolated`, mêmes findings. `--no-cache`
+empêche ruff d'écrire `.ruff_cache/` dans une cible montée en lecture seule. Codes admis : `0`
+(rien) et `1` (findings) — pas `2`.
+
+**`trufflehog3` (SECRETS).** `plugins/trufflehog3.yaml`. Nommé ainsi parce que ce n'est **pas**
+TruffleHog v3 (Go, GitHub Releases, injoignable) : un projet Python distinct, épinglé sous son nom.
+Il sort `2` quand il trouve des secrets — donc `code_succes: [0, 2]`, sinon un scan productif est
+registré comme une panne. Deux champs ne sont pas mappés, `secret` et `context` : l'outil y met la
+valeur en clair, mesuré. La projection du finding n'en contient aucune ; **l'artefact brut de
+l'outil, si** — limitation écrite dans le plugin et dans la batterie, pas gommée.
+
+**`--egress` change ce que ces outils peuvent dire.** Un outil qui appelle un service externe
+(checkov le faisait) rend deux résultats différents selon la cage. C'est la raison pour laquelle la
+correction vaut pour le registre, pas seulement pour ce plugin ou ce test.
+
+**Ce que la grammaire ne sait pas dire (RECON/WEB).** Elle **admet** un plugin qui déclare
+`entrees: [hote, url]` et `requirements.reseau: true` — vérifié : le chargeur dirait
+« chargerait », et le refus de `plugins/propositions/nmap.yaml` porte sur le binaire non épinglé,
+jamais sur le réseau. Le modèle de finding sait déjà loger une URL, un hôte, une image, une
+ressource (et masque `user:***@` dans les URLs d'outils). Ce qui manque est un **septième jeton** :
+les seules variables d'un manifest sont `{BIN} {TARGET} {OUT} {OUT_DIR} {REGLES} {DB}`, et
+`{TARGET}` est un chemin monté. Un scanner réseau n'a donc nulle part où recevoir sa cible —
+décision D9, avec ce qu'elle implique sur la politique d'export.
+
+**ESLint (JavaScript).** `plugins/eslint.yaml`, capacité `CODE_STATIC_ANALYSIS_JS`. Ce plugin a
+failli ne pas exister pour une raison fausse — « la cage ne fixe pas le répertoire courant », alors
+que `Sandbox.commande()` émet bien un `--chdir` sur le montage de la cible (mesuré dans
+`test_catalogue_outils.py`). Ce qui compte est ailleurs : la commande porte `--no-config-lookup`, et
+mesuré sur une cible qui s'auto-exclut (`eslint.config.mjs` avec `ignores: ["**"]`), sans ce drapeau
+ESLint déclare « all of the files … are ignored » et ne rend rien, avec il rend les mêmes findings.
+Le jeu de règles est **dans l'argv** (`--rule '{…}'`), pas dans un fichier que le dépôt analysé
+pourrait remplacer, et il ne contient qu'une demi-douzaine de règles fondamentales : aucun plugin,
+aucune extension npm de sécurité n'est installé. Un « 0 finding » d'ESLint ici ne veut pas dire
+« pas de faille JavaScript ». `code_succes: [0, 1]` — le code 2 (aucun fichier retenu) reste une
+panne.
+
+À relancer après installation complète du pool : `python3 PHASE3/test_catalogue_outils.py`
+(84 cas ; deux se concluent par « NON ÉVALUÉ » quand la machine ne permet pas, et c'est écrit avec
+leur cause).
+
 ## Lire le résultat
 
 Les chemins de `findings.json` (et les clés de cluster) sont **relatifs à la cible**,

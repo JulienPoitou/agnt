@@ -51,7 +51,6 @@ import rapport_humain as RH  # noqa: E402
 import pipeline          # noqa: E402
 import rapport as R      # noqa: E402
 import statuts as ST     # noqa: E402
-from sandbox import CACHE_BIN  # noqa: E402
 
 # Index en trois niveaux :
 #   artifacts/<input_digest>/<plan_id>/<run_id>/
