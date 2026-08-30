@@ -42,6 +42,11 @@ class Cible:
     raison: str = ""
 
 
+# Ce que trivy sait faire dans le mode `fs` qu'on emploie. Sert uniquement à calculer ce qui
+# n'a PAS été activé à partir de ce qui l'a été — jamais l'inverse.
+_TRIVY_SCANNERS = ("vuln", "misconfig", "secret")
+
+
 @dataclass
 class Couverture:
     """Les six états imposés : scanned_successfully, not_found, not_applicable,
@@ -131,6 +136,22 @@ def _lance(prov, sbx: Sandbox, nom_sortie: str) -> tuple:
 
 
 # ------------------------------------------------------------------ Semgrep
+def _drapeau(argv: list[str], nom: str) -> list[str]:
+    """Les valeurs `--nom=valeur` de la commande QUI A ÉTÉ PASSÉE, rien d'autre.
+
+    À quoi ça sert : la couverture est ce que le lecteur croit savoir. Elle était écrite à
+    côté de la commande, en dur — `capabilities.yaml` a pris trois jeux de règles pendant
+    que `adapters.semgrep` en déclarait deux, et le rapport répétait le deux avec assurance
+    (constat G6b de la campagne adverse). Un chiffre recopié à la main d'un YAML vers un
+    attribut de dataclass finit toujours par mentir, et il ment silencieusement.
+
+    Donc : on lit argv. Corollaire utile — quand F7 épinglera un `--config` pour gitleaks,
+    la couverture le déclarera sans qu'on écrive quoi que ce soit.
+    """
+    prefixe = f"--{nom}="
+    return [a[len(prefixe):] for a in argv if isinstance(a, str) and a.startswith(prefixe)]
+
+
 def semgrep(prov, sbx: Sandbox) -> ResultatBrut:
     r, donnees, argv, _ = _lance(prov, sbx, "semgrep.json")
     couv = Couverture(provider=prov.id)
@@ -147,10 +168,15 @@ def semgrep(prov, sbx: Sandbox) -> ResultatBrut:
         couv.limites_connues.append(
             f"{len(erreurs)} erreur(s) Semgrep : " +
             "; ".join(str(e.get("message", ""))[:120] for e in erreurs[:3]))
-    couv.scanners_actives = ["semgrep:python", "semgrep:security-audit"]
+    epingles = _drapeau(argv, "config")
+    couv.scanners_actives = [f"semgrep:{Path(c).stem}" for c in epingles]
+    if not epingles:
+        # aucun --config = le scan ne prouve rien, et le dire est plus utile que de se taire
+        couv.limites_connues.append(
+            "aucun --config passé à semgrep : le scan ne s'appuie sur AUCUN jeu de règles")
     couv.limites_connues.append(
-        "le jeu de règles est épinglé sur python/security-audit : un dépôt d'un autre "
-        "langage ressortirait vide sans erreur")
+        f"jeux de règles épinglés : {', '.join(Path(c).stem for c in epingles) or 'aucun'} — "
+        "un dépôt écrit dans un autre langage ressortirait vide sans erreur")
     return ResultatBrut(prov.id, prov.capability, r.code, r.timeout,
                         "semgrep.json", donnees, couv, (r.stderr or "")[-2000:], argv)
 
@@ -205,8 +231,12 @@ def trivy(prov, sbx: Sandbox) -> ResultatBrut:
     if not couv.a_analyse_quelque_chose():
         couv.cibles.append(Cible(sbx.M_SCAN, "not_scanned",
                                  "aucun manifeste de dépendances exploitable"))
-    couv.scanners_actives = ["trivy:vuln"]
-    couv.scanners_non_applicables = ["trivy:misconfig", "trivy:secret"]
+    actifs = _drapeau(argv, "scanners")
+    actifs = [s for v in actifs for s in v.split(",") if s]
+    couv.scanners_actives = [f"trivy:{s}" for s in actifs]
+    # ce qui est « non applicable » n'est pas une liste à maintenir à jour : c'est ce que
+    # trivy sait faire MOINS ce qu'on a activé, sur la même ligne de commande.
+    couv.scanners_non_applicables = [f"trivy:{s}" for s in _TRIVY_SCANNERS if s not in actifs]
     couv.limites_connues.append(
         "base de vulnérabilités figée au pré-chauffage : les CVE publiées depuis "
         "ne sont pas détectées")
@@ -226,7 +256,16 @@ def gitleaks(prov, sbx: Sandbox) -> ResultatBrut:
         couv.cibles.append(Cible("historique git", "scanned_successfully"))
         for f in sorted({x.get("File", "") for x in (donnees or []) if x.get("File")}):
             couv.cibles.append(Cible(f, "scanned_successfully"))
-    couv.scanners_actives = ["gitleaks:rules"]
+    regles = _drapeau(argv, "config")
+    couv.scanners_actives = [f"gitleaks:{Path(c).name}" for c in regles]
+    if not regles:
+        # état réel de l'outil tel qu'on le lance aujourd'hui (constat G6a) : ce n'est pas
+        # une limite technique, c'est le lecteur qui doit savoir qu'il lit un scan dont il
+        # ne connaît pas la grille.
+        couv.limites_connues.append(
+            "aucun jeu de règles épinglé pour gitleaks : ce sont ses règles par défaut, et "
+            "un `.gitleaks.toml` dans le dépôt scanné pourrait les modifier (comportement "
+            "non mesuré ici, le binaire est absent de cette machine)")
     couv.limites_connues.append(
         "valeur des secrets masquée à la source (--redact) : jamais stockée")
     couv.limites_connues.append(

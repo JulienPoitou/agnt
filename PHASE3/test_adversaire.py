@@ -195,6 +195,9 @@ def chaine(phrase: str, **kw) -> dict:
             preuve["decision"] = e.decision
             preuve["arret"] = e.arret
             preuve["mission"] = e.mission
+            # ce que la COUVERTURE a déclaré, telle que le rapport la lira : sans cette
+            # ligne, un cas ne peut juger que la forme de la commande et pas sa parole
+            preuve["couverture"] = e.couverture
         except Exception as exc:                                       # noqa: BLE001
             preuve["exception"] = f"{type(exc).__name__}: {str(exc)[:180]}"
         preuve["spawns"] = [s for s in etat["spawns"] if not _est_prise_version(s)]
@@ -711,15 +714,26 @@ def famille_g():
     p = chaine("Analyse le code de ce dépôt", texte_modele=reponse(["CODE_STATIC_ANALYSIS"]))
     sg = [a for a in p.get("spawns", []) if "semgrep" in " ".join(a)]
     configs = [x for x in (sg[0] if sg else []) if x.startswith("--config=")]
-    src = (RACINE / "slice/adapters.py").read_text(encoding="utf-8")
-    m = re.search(r"couv\.scanners_actives\s*=\s*\[([^\]]*)\]", src)
-    actifs = [x.strip().strip(chr(34) + chr(39)) for x in (m.group(1).split(",") if m else [])]
+    # ATTENTE RÉÉCRITE, et la justification est la suivante : le cas lisait la liste
+    # LITTÉRALE dans le source de `adapters.py` par regex. Cette forme ne pouvait pas
+    # survivre au correctif, parce que le correctif EST la suppression de la liste littérale
+    # (elle est maintenant lue dans argv). Juger « une regex trouve un crochet dans le
+    # fichier » rendrait le cas faux par construction. Le jugement porte sur ce que le
+    # LECTEUR reçoit : égalité d'ENSEMBLE entre les noms de jeux de règles passés à la
+    # commande et ceux que la couverture déclare — assertion plus forte que « deux compteurs
+    # égaux », et qui rouge si quelqu'un repasse à une liste écrite à côté.
+    couv_sg = next((c for c in p.get("couverture", []) if c.get("provider") == "semgrep"), {})
+    passes = {Path(c).stem for c in configs}
+    declares = {str(x).split(":", 1)[-1] for x in couv_sg.get("scanners_actives", [])}
     cas("G6b. ce que la couverture dit des scanners actifs est-il ce qui a tourné ?",
         "source de la décision (traçabilité)",
-        {"configs_passees": [c.split("/")[-1] for c in configs], "scanners_declares": actifs},
-        bloque=len(actifs) == len(configs), gravite="moyenne",
-        note="liste ÉCRITE EN DUR dans `adapters.semgrep`, pas déduite des `--config` passés : "
-             "le rapport déclare 2 scanners quand 3 jeux de règles sont chargés")
+        {"configs_passees": sorted(Path(c).name for c in configs),
+         "scanners_declares": sorted(declares),
+         "limite_sem": str((couv_sg.get("limites_connues") or [""])[0])[:100]},
+        bloque=bool(passes) and passes == declares, gravite="moyenne",
+        note="corrigé par F8 : la déclaration est LUE dans argv (`adapters._drapeau`) et non "
+             "plus écrite à côté de la commande. Exige aussi qu'au moins un jeu de règles "
+             "soit passé — « aucun --config » ne doit jamais se lire comme un scan complet")
 
     # G7 — l'environnement RÉELLEMENT remis au processus outil. Ce qui compte n'est pas le
     # `env=` que l'adaptateur passe (un simple delta), mais ce que `subprocess.Popen` reçoit :

@@ -61,7 +61,7 @@ GRAVITE_LISIBLE = {"CRITICAL": "critique", "HIGH": "haute", "MEDIUM": "moyenne",
 #     identique et sans effet. C'est la seule substitution de caractère, et elle est là parce
 #     qu'il n'y a pas d'alternative correcte à l'intérieur d'un span.
 #   · cette fonction est IMPORTÉE par rapport.py : un seul endroit où la règle vit. Deux
-#     renduteurs, deux politiques d'échappement, ça s'appelle un trou avec un nom different.
+#     renduteurs, deux politiques d'échappement, ça s'appelle un trou avec un nom différent.
 import re as _re
 
 _MARQUEUR_LIGNE = " ⏎ "

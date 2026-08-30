@@ -1800,3 +1800,53 @@ changeant le test.
 d'approbation qui t'appartient) → F8 (G6b, couverture qui ment sur les scanners actifs —
 vérifiable hors ligne) → F3 → F5/F6 (B6, B7, C3b) → F7/F9/F10 (G6a, G7, G8, qui touchent aux
 binaires et à l'environnement, donc à re-mesurer sur ta machine).
+
+
+---
+
+## Correctif F8 appliqué — la couverture déclare ce qui a tourné (30 août)
+
+**Le défaut, mesuré par G6b :** `adapters.py` écrivait à la main ce qui était actif —
+`couv.scanners_actives = ["semgrep:python", "semgrep:security-audit"]` — pendant que
+`capabilities.yaml` passait **trois** `--config` (python, security-audit, javascript). Le
+rapport affirmait donc deux jeux de règles là où trois étaient chargés. Un compteur recopié
+d'un YAML vers un attribut de dataclass ment forcément un jour, et il ment sans bruit :
+personne ne compare les deux fichiers, et le lecteur, lui, ne voit que la phrase.
+
+**La correction :** un seul lecteur, `adapters._drapeau(argv, nom)`, qui va chercher les
+`--nom=valeur` **dans la commande qui a été passée**. Semgrep et trivy déclarent maintenant
+ce qu'ils ont reçu ; gitleaks, qui ne reçoit aucun `--config` (constat G6a), déclare une liste
+**vide** et une limite explicite plutôt qu'un `gitleaks:rules` inventé. Effet de bord
+souhaité : quand F7 épinglera un `--config` pour gitleaks, la couverture le dira
+automatiquement, sans écriture nouvelle.
+
+Mesuré après correctif (mission à trois capacités, argv réels) :
+
+| provider | scanners_actives | déclaration |
+|---|---|---|
+| semgrep | python, security-audit, **javascript** | les 3 `--config` passés |
+| trivy | `vuln`, non-applicables `misconfig`/`secret` | lu dans `--scanners=vuln` ; le « non applicable » se **déduit** du même calcul, plus de liste à maintenir |
+| gitleaks | *(vide)* + limite « aucun jeu de règles épinglé » | l'état réel, qui est aussi la pré-position de F7 |
+
+**Le cas G6b a dû être réécrit, et c'est le seul endroit de la campagne où je modifie une
+attente avec le correctif — la justification est dans le fichier.** L'attente d'origine
+lisait la *liste littérale dans le source* par regex ; le correctif EST la suppression de
+cette liste, donc le cas serait devenu faux par construction (il aurait vérifié la présence
+d'un motif que la correction a pour objet de faire disparaître). Le jugement porte
+désormais sur l'objet réellement rendu au lecteur : égalité d'**ensemble** entre les noms de
+jeux de règles passés à la commande et ceux que la couverture déclare — plus fort que deux
+compteurs égaux, et rouge si quelqu'un revient à une liste écrite à côté. Vérifié dans les
+deux sens : en remettant la liste en dur, G6b rougit ; en restaurant le correctif, il
+verdit.
+
+**Ce que F8 ne ferme pas, relevé au passage :** `grype` déclare `grype:json`, qui vient de la
+ligne 317 (`f"{m.id}:{m.sortie_format}"`) — le provider mission-mode présente son *format de
+sortie* comme scanner actif. Ce n'est pas un mensonge sur ce qui a tourné, mais ce n'est pas
+une information de couverture non plus. Pas de correctif sans mesure d'impact ; noté ici.
+
+**Batterie après F1 + F4 + F8 : 34 PASS / 7 FAIL / 3 NON ÉVALUÉ** (44 cas, départ
+28/13/3). Les 7 FAIL : G6a (F7, épinglage des règles secrets), G7 (F9, environnement des
+outils), G8 (F10, identité du binaire), D4 (F2, `cible_autorisee` — bloqué sur une décision
+d'approbation), C3b (F6, contrôle du masque au rendu), B6 et B7 (F5, garde-fous de la
+requête et requêtes démesurées). suites hors ligne rejouées : rapport_humain 18/18, chemins
+48/48, selection 13/13, extraction_blocs 14/14, mapping_go 17/17, go et isolateur verts.

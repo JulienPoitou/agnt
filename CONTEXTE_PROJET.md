@@ -179,6 +179,9 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
   qualification. A2/A3 FAIL → PASS, attentes inchangées. `policy.rego` garde le registre
   complet dans son entrée : choix assumé et justifié dans `PROJET_ETAT.md`.
 - Sigma / providers Groupe B : backlog, pas maintenant.
+- **Une couverture se lit dans la commande, jamais à côté.** `adapters._drapeau(argv, n)`
+  extrait les `--n=valeur` réellement passés ; aucun `scanners_actives` écrit en dur. Un
+  compteur recopié d'un YAML vers un attribut ment un jour, silencieusement (constat G6b).
 - **Un texte du dépôt scanné ne décide pas de la forme du document.** Les rendus passent par
   `rapport_humain.sur()` (importée par `rapport.py`) ; un point d'émission qui interpolate une
   valeur d'outil sans elle est un défaut. La règle vit au rendu, jamais au parser : la preuve
