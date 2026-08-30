@@ -237,8 +237,11 @@ def _archiver_mission(e, cible: Path) -> Path | None:
         return None
     sortie = MS.MISSIONS / e.mission / "sortie"
     sortie.mkdir(parents=True, exist_ok=True)
-    src_run = RACINE / "run"
-    if src_run.exists():
+    # Les preuves brutes vivent désormais SOUS la mission (`<mission>/run`), pas dans un
+    # répertoire global. `e.sortie` est le chemin posé par le pipeline — une archive ne doit
+    # jamais dépendre d'un chemin partagé vidé par l'exécution suivante.
+    src_run = Path(e.sortie) if getattr(e, "sortie", "") else None
+    if src_run and src_run.exists():
         for f in sorted(src_run.iterdir()):
             if f.is_file():
                 shutil.copy(f, sortie / f.name)
@@ -454,7 +457,10 @@ def main(argv: list[str]) -> int:
     # Conserver la donnée brute si elle est sûre ; sinon conserver son empreinte, ses
     # métadonnées et une version masquée. Un secret en clair dans nos artefacts serait
     # une fuite que NOUS créons — constaté pour de vrai avec Bandit.
-    src_run = RACINE / "run"
+    # La source est le répertoire de travail DE CETTE mission (`e.sortie`), pas un chemin
+    # global partagé — sinon la mission suivante, en exécutant, effacerait ce que celle-ci
+    # s'apprête à examiner.
+    src_run = Path(e.sortie)
     conservation = {}
     # `raw_*.json` (ce que le cœur a compris) ET `brut_*` (ce que l'outil a écrit) : les
     # deux sont des sorties d'outil, donc les deux passent par le même examen. Oublier les

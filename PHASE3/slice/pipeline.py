@@ -38,7 +38,6 @@ import conditions as COND
 from sandbox import CACHE_BIN, CACHE_DB, CACHE_REGLES, Sandbox
 
 RACINE = Path(__file__).resolve().parent.parent     # PHASE3/
-SORTIE = RACINE / "run"
 
 # Moteur d'intention : "deterministe" (référence) ou "llm".
 # Le LLM ne remplace QUE le matching — jamais le contrat, ni le registre, ni OPA.
@@ -115,19 +114,27 @@ class Execution:
     egress: dict = field(default_factory=dict)
     # Nombre d'outils menés de front dans une vague (0 = suite du profil, aujourd'hui 4).
     vague_parallele: int = 0
+    # Répertoire de travail de CETTE exécution (raw_*/brut_* de la vague). Par mission,
+    # plus par processus : deux missions concurrentes ne se réécrivent pas. Chaîne vide
+    # = exécution arrêtée avant l'étape d'exécution (intent, policy, conditions…).
+    sortie: str = ""
 
 
-def _prepare_sortie() -> Path:
-    """Prépare le répertoire de sortie.
+def _sortie_mission(miss) -> Path:
+    """Répertoire de travail de la mission : `raw_*`/`brut_*` d'une vague, par mission.
 
-    Attention : ce répertoire est BINDÉ dans le sandbox. On vide son CONTENU, on ne le
-    supprime jamais — supprimer un répertoire déjà bindé casse le montage.
+    Avant ce lot, la sortie était un répertoire GLOBAL (`PHASE3/run`) vidé au début de
+    CHAQUE exécution : deux missions concurrentes se réécrivaient l'une l'autre, et le
+    simple fait d'exécuter une mission effaçait les preuves de la précédente. Le dossier
+    de mission (append-only, déjà unique) devient la frontière d'isolation : on crée un
+    sous-répertoire neuf, on ne vide jamais un répertoire partagé.
+
+    Ce répertoire est BINDÉ dans le sandbox : on le crée avant, et on ne le supprime
+    jamais ensuite (supprimer un répertoire déjà bindé casserait le montage).
     """
-    SORTIE.mkdir(parents=True, exist_ok=True)
-    for f in SORTIE.iterdir():
-        if f.is_file():
-            f.unlink()
-    return SORTIE
+    sortie = miss.chemin / "run"
+    sortie.mkdir(parents=True, exist_ok=True)
+    return sortie
 
 
 def _racines_de(cible: Path) -> tuple:
@@ -557,7 +564,10 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         raise
 
     # ---------------------------------------------------------------- 5. exécution
-    sortie = _prepare_sortie()
+    # La sortie vit SOUS la mission, pas dans un répertoire global partagé (multi-mission,
+    # 2026-08-30). Chaque mission écrit ses raw_*/brut_* chez elle : rien à vider, rien à
+    # se disputer entre deux exécutions concurrentes.
+    sortie = _sortie_mission(miss)
     GC.verifier_sortie(sortie / "rapport.json", sortie)
     sbx = Sandbox(
         bwrap=shutil.which("bwrap") or "bwrap",
@@ -578,7 +588,8 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
                       egress=egress_info,
                       run_id=RUN.nouveau_run_id(plan.plan_id, ctx, ctx.input_digest),
                       contexte=ctx.to_dict(),
-                      chemin=rapport_chemin.to_dict())
+                      chemin=rapport_chemin.to_dict(),
+                      sortie=str(sortie))
     MS.consigner(miss, "contexte", run_id=exec_.run_id,
                  contexte_empreinte=ctx.contexte_empreinte,
                  input_digest=ctx.input_digest, input_commit=ctx.input_commit,
@@ -708,16 +719,17 @@ def main() -> int:
     cible = Path(sys.argv[2]) if len(sys.argv) > 2 else RACINE / "testrepo"
 
     e = executer(requete, cible)
-    SORTIE.mkdir(parents=True, exist_ok=True)
-    (SORTIE / "plan.json").write_text(json.dumps(e.plan, ensure_ascii=False, indent=2),
+    sortie = Path(e.sortie) if e.sortie else (RACINE / "run")
+    sortie.mkdir(parents=True, exist_ok=True)
+    (sortie / "plan.json").write_text(json.dumps(e.plan, ensure_ascii=False, indent=2),
                                       encoding="utf-8")
-    (SORTIE / "findings.json").write_text(json.dumps(e.findings, ensure_ascii=False, indent=2),
+    (sortie / "findings.json").write_text(json.dumps(e.findings, ensure_ascii=False, indent=2),
                                           encoding="utf-8")
-    (SORTIE / "clusters.json").write_text(json.dumps(e.clusters, ensure_ascii=False, indent=2),
+    (sortie / "clusters.json").write_text(json.dumps(e.clusters, ensure_ascii=False, indent=2),
                                           encoding="utf-8")
-    (SORTIE / "rapport.json").write_text(json.dumps(e.rapport, ensure_ascii=False, indent=2),
+    (sortie / "rapport.json").write_text(json.dumps(e.rapport, ensure_ascii=False, indent=2),
                                          encoding="utf-8")
-    (SORTIE / "run.json").write_text(
+    (sortie / "run.json").write_text(
         json.dumps({"execution_profile": e.profil,
                     # Présent ici aussi : `analyser.py` et `pipeline.main()` écrivent deux
                     # `run.json` du même fait, et l'un des deux omittrait la garde qu'un
@@ -771,7 +783,7 @@ def main() -> int:
             print(f"     NON analysé : {na['cible']} [{na['etat']}] {na['raison']}")
         for lim in c["limites"]:
             print(f"     limite      : {lim}")
-    print(f"\nécrit dans {SORTIE}")
+    print(f"\nécrit dans {sortie}")
     return 0
 
 
