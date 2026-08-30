@@ -40,6 +40,7 @@
 | **Autorisation de cible explicite** | `cible_autorisee` n'a aucun défaut permissif : seul `True` explicite l'arme ; l'API dérive cette autorisation exclusivement de la liste opérateur `cibles_admises()`. |
 | **Jeux de règles de sécurité contrôlés** | Un scanner ne doit jamais charger une configuration fournie par le dépôt analysé. Une règle doit venir d'une source AGNT de confiance, montée en lecture seule et vérifiée. |
 | **Mode laboratoire propriétaire, pas bypass** | Un mode explicite peut faciliter des tests sur cibles contrôlées, mais ne désactive jamais sandbox, policy, intégrité, autorisation de cible ou redaction ; il ne peut être activé ni par LLM ni par API cliente. |
+| **Agents Pentest AI tiers : valeur, pas étiquette** | Un projet n'est ni retenu ni exclu parce qu'il est « concurrent ». Un agent complet ne devient pas un second orchestrateur ; seule une frontière composant bornée peut être envisagée. Strix est le seul candidat de pilote ultérieur, après les gates existants. |
 
 ---
 
@@ -166,6 +167,15 @@ WEB n'a aucun code à construire sans dupliquer Product & UX ou devancer le lect
 - L'historique est consommé seulement après livraison de `GET /api/missions` par CORE.
 - Les bundles dogfooding, `localStorage`, fixtures et fichiers d'archives ne sont jamais une source d'historique Web.
 - L'exposition d'artefacts ou de téléchargements attend une décision Security explicite.
+
+### STRAT — Réévaluation des agents Pentest AI externes
+
+Évaluation ciblée terminée dans `docs/coordination/PENTEST_AI_AGENT_REEVALUATION.md`, à partir des rapports Phase 1 et des métadonnées publiques actualisées. Aucun code tiers n'a été audité, exécuté ou intégré.
+
+- **Composant candidat, plus tard :** Strix, uniquement comme backend de laboratoire isolé et après les jalons Security/CORE en cours.
+- **Références :** CyberStrikeAI, PentAGI, Decepticon, Shannon, Redamon et CAI.
+- **Écartés pour le produit actuel :** PentestGPT, PentestAgent et GHOSTCREW/PentestAgent MCP.
+- **Aucun pilote ni intégration n'est assigné** ; le rapport fixe les critères d'une décision propriétaire ultérieure.
 
 ### P1 — SECURITY : gate adversarial History / Timeline / Status livré, re-bind requis
 
@@ -336,6 +346,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | SEC-LAB-001 | Mode laboratoire propriétaire borné, testé et audité | P1 pré-publication | En attente après SEC-HIST-001 — aucun handoff associé à `cf1eea6` |
 | SEC-B6 | Durcissement garde-fous homoglyphes / espaces | P3 | Différé |
 | SEC-B7 | Borne de taille de requête sortante fournisseur | P3 | Différé |
+| STRAT-001 | Faisabilité d'un backend Strix dans le Mode Laboratoire Propriétaire | P2 post-intégration | Différé — décision propriétaire requise après SEC-LAB, Cible/Transport et double gate API |
 
 ---
 
@@ -347,5 +358,6 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 4. CORE termine `data.timeline` et `data.executions[]` enrichi à partir des contrats, puis les gates Product/API **et** Security sont lancés contre la même API réelle avec couverture complète. Product & UX valide alors le résultat sans toucher à l'UI partagée.
 5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle. Ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
 6. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après double feu vert produit/Security.
+7. Seulement après ces jalons, le propriétaire pourra décider d'un pilote Strix strictement local et isolé ; aucun agent tiers complet n'est intégré dans le cœur AGNT.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
