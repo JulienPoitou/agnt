@@ -7,24 +7,28 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="maquette" id="ruban">MAQUETTE — schéma issu du code réel, valeurs inventées. Le moteur n'est pas branché.</div>
+<div class="maquette" id="ruban">MAQUETTE — le moteur n'est pas branché (api.py non démarré)</div>
 
 <header class="barre">
   <div class="marque">AGNT<span class="point">.</span></div>
-  <form class="lancer" onsubmit="return false">
-    <label><span>cible</span>
-      <select disabled><option>PHASE3/testrepo</option><option>~/projets/api-paiement</option></select>
+  <form class="lancer" id="form" onsubmit="return false">
+    <label><span>cible</span><select id="cible" disabled><option>—</option></select></label>
+    <label class="q"><span>que veux-tu analyser&nbsp;?</span>
+      <textarea id="question" rows="1" disabled>Analyse ce dépôt et trouve les problèmes de sécurité importants.</textarea>
     </label>
-    <label class="q"><span>que veux-tu analyser ?</span>
-      <textarea disabled rows="1">Analyse ce dépôt et trouve les problèmes de sécurité importants.</textarea>
+    <label><span>modèle</span><input id="modele" disabled placeholder="modèle du fournisseur"></label>
+    <label><span>confiance dans la cible</span>
+      <select id="confiance" disabled><option>controlled</option><option>untrusted</option></select>
     </label>
-    <label><span>modèle</span><select disabled><option>llama-3.3-70b</option></select></label>
-    <button disabled title="non branché : analyser.lancer() n'est pas encore exposé par une API">RUN</button>
+    <label><span>moteur d'intention</span>
+      <select id="moteur" disabled><option>auto</option><option>llm</option><option>deterministe</option></select>
+    </label>
+    <button id="run" disabled title="démarrer api.py pour activer">RUN</button>
   </form>
+  <div class="etat" id="etat">—</div>
 </header>
 
 <main id="poste" class="grille"></main>
-
 <footer class="pied" id="pied"></footer>
 <script src="app.js"></script>
 </body>

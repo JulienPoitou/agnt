@@ -1630,3 +1630,63 @@ c'est une dépendance de produit : l'interface web affichera le rapport, donc **
 rendu) et **F8** (déclarer ce qui a réellement scanné) conditionnent « montrer AGNT à quelqu'un »
 beaucoup plus que F7 et F9, qui ne deviennent bloquants que si un autre que l'opérateur touche à
 la machine.
+
+## Étape 9 — l'interface est branchée : premier RUN réel (2026-08-30)
+
+`PHASE3/interface/` passe de maquette à **surcouche réelle** : `api.py` (stdlib seulement,
+`http.server` + une file à un consommateur), `app.js` qui rend les artefacts de mission, et un
+bouton RUN qui appelle `analyser.lancer()`. **Aucun code de production touché** : `slice/` et
+`policy/` sont à zéro diff — l'API ne fait que transmettre `(question, cible, confiance, moteur)`
+au point d'entrée que la CLI utilise déjà, et relire ce que le moteur a écrit.
+
+### Ce qui a été mesuré, pas supposé
+
+- **Le premier RUN traverse le moteur.** `POST /api/runs` sur `cible_independante` →
+  le pipeline ouvre la mission, choisit son plan, puis **la politique refuse** :
+  `PolicyError : binaire OPA introuvable`. L'écran affiche `refusé par la politique
+  (fail-closed)` avec la raison, pas un 0 constat, pas un 500. C'est l'état attendu sur
+  cette machine (outils non installés) et c'est le bon test : il prouve les trois couches.
+- **Le refus est consigné sur disque**, avant même la décision : `journal.jsonl` de la mission
+  porte `ouverture(requete)` → `confiance(confiance_cible=untrusted, cible_autorisee=**true**)`
+  → `plan(providers=[trivy, grype, gitleaks])`, puis rien. Deux choses d'un coup : la chaîne
+  d'audit fonctionne comme l'étape 6 la dessinait, **et F2 est observable en situation réelle**
+  — on a demandé une cible `untrusted`, le journal enregistre quand même `cible_autorisee: true`
+  parce qu'aucun appelant ne peut le passer à `False`.
+- **Les gardes de bord répondent avant d'exécuter** : cible hors allow-list → `400` + liste des
+  admises ; question > 4000 car. → refus ; `confiance` ou `moteur` inconnu → refus nommés.
+  Traversée de chemin sur le serveur statique → `404`.
+- **`/api/capacites` filtre sur le catalogue publié.** Premier jet : `sorted({p.id for p in
+  reg.providers()})` — le catalogue COMPLET, donc `bandit_custom` apparaissait dans une réponse
+  HTTP. Corrigé depuis (providers = ceux des capacités publiées) : refaire outside le cœur ce
+  que F1 reproche au cœur n'aurait aucun sens.
+
+### Ce que les données réelles ont corrigé dans l'interface (trois mensonges, tous trouvés en
+### lisant un vrai `rapport.json` de dogfooding, pas en relisant ma maquette)
+
+1. `findings.json` absent d'une archive ≠ « 0 constat ». Le champ vaut maintenant `None` et
+   l'écran dit « liste non écrite par cette exécution ». Un zéro affiché à la place d'un
+   inconnu est le défaut que tout le projet combat.
+2. Les stats de regroupement sont sous `clustering` dans `rapport.json` et sous `stats` dans
+   `clusters.json` : la page affichait un bloc « Regroupement » vide sur une exécution qui
+   regroupait 14 findings en 8. Source unique retenue : `clusters.json`, repli nommé.
+3. `d.parent.name` n'est pas un identifiant de mission (ça affichait « Mission rapports »).
+   Affiché comme *dossier d'archive*, l'id de mission n'apparaît que s'il en a la forme.
+
+### Ce que cette interface expose de déjà décidé dans le moteur (et qui n'avait pas à être inventé)
+
+- `plan.json` → `selection` : par capacité, `{choisis, ecartes, motif}`. Le refus de capacité
+  est **une donnée du plan**, pas une faveur de l'UI — le bloc 3 la montre.
+- `confiance="untrusted"` est **lu par la politique** (`policy.rego:92` →
+  `memoire_insuffisante` → motif `memoire_non_bornee_cible_non_fiable`) : le sélecteur de
+  confiance est une vraie frontière, pas un ornement.
+- `Groq.modele` (surchargeable par `GROQ_MODELE`) : le champ « modèle » descend au fournisseur,
+  sans nouvelle décision nulle part.
+
+### Ce qui reste hors d'atteinte ici, et pourquoi c'est écrit
+
+Le chemin « findings réels » n'a **pas** pu être exercé sur cette machine : sans `opa`, la
+mission s'arrête avant l'exécution des outils. La lecture d'archive a été validée sur un vrai
+rapport de dogfooding (6 providers, 14 findings, RAPPORT.md de 4 870 car.), mais **le branchement
+bouton → findings → écran ne sera prouvé que sur la machine source, après `bootstrap.sh`**.
+Aucune phrase de ce relevé ne doit être lue comme « l'interface affiche de vrais constats » :
+elle affiche déjà correctement tout ce qui précède le constat.

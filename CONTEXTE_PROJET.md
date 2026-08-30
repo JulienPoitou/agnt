@@ -167,6 +167,12 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
   par aucun appelant : la CLI n'a pas de notion d'autorisation de cible. La garde
   `input.cible.autorisee == true` de `policy.rego` n'est donc armée qu'en test. À
   traiter avec l'approbation ACTIF de l'étape 7 (même nature de décision), pas à chaud.
+- **Interface web (2026-08-30, étape 9)** : `PHASE3/interface/api.py` est une surcouche —
+  `POST /api/runs` → `analyser.lancer()` → relecture de l'archive de mission. Le cœur n'est pas
+  touché. Le premier RUN réel se termine en `refusé par la politique` (`opa` absent ici), avec la
+  raison à l'écran et le `journal.jsonl` de la mission ouvert sur disque — où l'on voit `confiance
+  = untrusted` côtoyer `cible_autorisee: true` : F2, en situation. Un affichage « 0 constat » est
+  interdit par construction : un fichier absent vaut `None`, pas `[]`.
 - Sigma / providers Groupe B : backlog, pas maintenant.
 
 ## 7. Direction actée (pas à rediscuter)
