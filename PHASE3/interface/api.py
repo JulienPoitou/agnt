@@ -44,6 +44,7 @@ import traceback
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 ICI = Path(__file__).resolve().parent
 RACINE = ICI.parent                      # PHASE3/
@@ -183,6 +184,65 @@ def _vivante(question: str, cible: str, depuis: float) -> dict | None:
     ev["mission"] = retenue.name
     ev["dossier"] = str(retenue)
     return ev
+
+
+def _mission_recente(question: str, cible: str, depuis: float) -> str | None:
+    """Le `mission_id` du dossier de mission correspondant à ce run, ou `None`.
+
+    Même règle de correspondance que `_vivante` (question + cible + horodatage) —
+    dernier recours quand ni le résumé ni l'objet de refus ne portent le mission_id.
+    Ne rend jamais de chemin : seulement le nom du dossier."""
+    try:
+        import mission as _ms
+    except Exception:                                   # noqa: BLE001
+        return None
+    dossier = getattr(_ms, "MISSIONS", None)
+    if dossier is None or not dossier.is_dir():
+        return None
+    for d in sorted(dossier.iterdir(), reverse=True):
+        if not d.is_dir() or d.is_symlink():
+            continue
+        tete = d / "mission.json"
+        if not tete.is_file():
+            continue
+        try:
+            if tete.stat().st_mtime < depuis - 0.5:
+                continue
+            ent = json.loads(tete.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if ent.get("requete") != question:
+            continue
+        if str((ent.get("cible") or {}).get("chemin") or "") not in (cible, str(Path(cible))):
+            continue
+        return d.name
+    return None
+
+
+def _mission_id_du_run(etat: dict) -> str | None:
+    """Le `mission_id` durable associé à ce run, lu dans ce qui a été consigné.
+
+    Le POST `/api/runs` rend un identifiant TEMPORAIRE de file ; le mission_id, lui,
+    n'existe qu'une fois la mission ouverte. Il se lit dans le résumé (succès ou
+    arrêt propre), sinon dans l'objet de refus (fail-closed), sinon par la règle de
+    correspondance de `_mission_recente`. Champ ADDITIF : rien d'existant n'est
+    modifié, aucun chemin n'est exposé."""
+    resume = etat.get("resume") or {}
+    if resume.get("mission"):
+        return str(resume["mission"])
+    donnees = etat.get("donnees") or {}
+    run = donnees.get("run") or {}
+    if run.get("mission"):
+        return str(run["mission"])
+    refus = etat.get("refus") or {}
+    mp = refus.get("mission")
+    if mp:
+        try:
+            return Path(mp).name
+        except (TypeError, ValueError):
+            return None
+    return _mission_recente(etat.get("question") or "", etat.get("cible") or "",
+                            float(etat.get("pose_le") or 0.0))
 
 
 def _marquer(rid: str, **champs) -> None:
@@ -370,7 +430,8 @@ class Gestionnaire(BaseHTTPRequestHandler):
 
     # ---- lecture
     def do_GET(self):  # noqa: N802 (nom imposé par BaseHTTPRequestHandler)
-        chemin = self.path.split("?", 1)[0]
+        partie = urlparse(self.path)
+        chemin = partie.path
         if chemin.startswith("/api/"):
             pass
         elif chemin in ("/", "/index.html"):
@@ -382,6 +443,10 @@ class Gestionnaire(BaseHTTPRequestHandler):
             return self._json({"cibles": cibles_admises()})
         if chemin == "/api/capacites":
             return self._json(_capacites())
+        if chemin == "/api/missions":
+            return self._missions(partie)
+        if chemin.startswith("/api/missions/"):
+            return self._mission_detail(chemin)
         if chemin.startswith("/api/runs/"):
             rid = chemin.rsplit("/", 1)[-1]
             with VERROU:
@@ -397,8 +462,43 @@ class Gestionnaire(BaseHTTPRequestHandler):
                              float(etat.get("pose_le") or 0.0))
                 if v is not None:
                     etat["vivante"] = v
-            return self._json({"id": rid, **etat})
+            # Deux champs ADDITIFS du lecteur d'historique : le mission_id durable (le `id`
+            # du POST est un identifiant de file TEMPORAIRE) et le lien vers son détail.
+            # Absents = mission pas encore ouverte (ou pas d'archive) : `null`, pas d'invention.
+            mission_id = _mission_id_du_run(etat)
+            return self._json({"id": rid, **etat,
+                               "mission_id": mission_id,
+                               "detail_href": f"/api/missions/{mission_id}" if mission_id else None})
         return self.send_error(404)
+
+    # ---- lecture de l'historique (délégation au lecteur canonique, rien n'est projeté ici)
+    def _missions(self, partie):
+        """GET /api/missions — listing paginé. Toujours HTTP 200 ; `items` toujours
+        présent ; vide = `{"items": []}`. Le tri, la pagination, les filtres et la
+        projection vivent dans `slice/mission_history.py`."""
+        import mission_history as MH
+        qs = parse_qs(partie.query)
+        inconnus = [k for k in qs if k not in ("limit", "curseur", *MH.FILTRES_V1)]
+        if inconnus:
+            return self._json({"erreur": "filtre inconnu : " + ", ".join(sorted(inconnus)),
+                               "admis": ["limit", "curseur", *MH.FILTRES_V1]}, 400)
+        try:
+            reponse = MH.lister(limit=(qs.get("limit") or [None])[0],
+                                curseur=(qs.get("curseur") or [None])[0],
+                                status=(qs.get("status") or [None])[0],
+                                target_type=(qs.get("target_type") or [None])[0])
+        except MH.RequeteInvalide as e:
+            return self._json({"erreur": str(e)}, 400)
+        return self._json(reponse)
+
+    def _mission_detail(self, chemin):
+        """GET /api/missions/{mission_id} — le détail projeté, ou 404 SANS chemin."""
+        import mission_history as MH
+        mid = chemin[len("/api/missions/"):]
+        try:
+            return self._json(MH.projeter(mid))
+        except MH.MissionIntrouvable:
+            return self._json({"erreur": f"mission inconnue : {mid[:64]}"}, 404)
 
     # ---- écriture
     def do_POST(self):  # noqa: N802
