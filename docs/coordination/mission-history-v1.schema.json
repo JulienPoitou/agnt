@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agnt.local/contracts/mission-history-v1.schema.json",
+  "title": "AGNT Mission History API v1",
+  "description": "Contract schema. Fixture files may add a top-level $fixture marker that production responses MUST omit.",
+  "oneOf": [
+    {"$ref": "#/$defs/listResponse"},
+    {"$ref": "#/$defs/detailResponse"}
+  ],
+  "$defs": {
+    "timestamp": {"type": "string", "format": "date-time"},
+    "status": {
+      "type": "string",
+      "enum": ["en_file", "en_cours", "termine", "refuse", "erreur", "inconnu"]
+    },
+    "target": {
+      "type": "object",
+      "required": ["type", "display_name"],
+      "properties": {
+        "type": {"type": "string", "minLength": 1, "maxLength": 40},
+        "display_name": {"type": "string", "minLength": 1, "maxLength": 160},
+        "ref": {"type": "string", "maxLength": 160}
+      },
+      "additionalProperties": true
+    },
+    "artifacts": {
+      "type": "object",
+      "required": ["detail", "findings", "clusters", "report"],
+      "properties": {
+        "detail": {"type": "boolean"},
+        "findings": {"type": "boolean"},
+        "clusters": {"type": "boolean"},
+        "report": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "findingsSummary": {
+      "type": "object",
+      "required": ["total", "by_severity"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "by_severity": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": ["mission_id", "detail_href", "request", "target", "status", "created_at", "updated_at", "artifacts"],
+      "properties": {
+        "mission_id": {"type": "string", "pattern": "^m-[A-Za-z0-9-]+$"},
+        "detail_href": {"type": "string", "pattern": "^/api/missions/m-[A-Za-z0-9-]+$"},
+        "request": {
+          "type": "object",
+          "required": ["title"],
+          "properties": {"title": {"type": "string", "minLength": 1, "maxLength": 240}},
+          "additionalProperties": false
+        },
+        "target": {"$ref": "#/$defs/target"},
+        "status": {"$ref": "#/$defs/status"},
+        "created_at": {"$ref": "#/$defs/timestamp"},
+        "updated_at": {"$ref": "#/$defs/timestamp"},
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "completed_at": {"$ref": "#/$defs/timestamp"},
+        "duration_ms": {"type": "integer", "minimum": 0},
+        "run_id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "findings_summary": {"$ref": "#/$defs/findingsSummary"},
+        "clusters_count": {"type": "integer", "minimum": 0},
+        "contributors": {
+          "type": "object",
+          "required": ["count", "kinds"],
+          "properties": {
+            "count": {"type": "integer", "minimum": 0},
+            "kinds": {"type": "array", "items": {"enum": ["local", "mcp", "external"]}, "uniqueItems": true}
+          },
+          "additionalProperties": false
+        },
+        "artifacts": {"$ref": "#/$defs/artifacts"},
+        "incomplete": {"type": "boolean"},
+        "incomplete_reason": {"type": "string", "maxLength": 240}
+      },
+      "additionalProperties": true
+    },
+    "event": {
+      "type": "object",
+      "required": ["sequence", "timestamp", "kind"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "timestamp": {"$ref": "#/$defs/timestamp"},
+        "kind": {"type": "string", "minLength": 1, "maxLength": 80},
+        "status": {"type": "string", "maxLength": 80},
+        "capability": {"type": "string", "maxLength": 160},
+        "provider": {"type": "object"},
+        "safe_message": {"type": "string", "maxLength": 400}
+      },
+      "additionalProperties": false
+    },
+    "listResponse": {
+      "type": "object",
+      "required": ["schema_version", "items", "page"],
+      "properties": {
+        "$fixture": {"type": "string"},
+        "schema_version": {"const": "agnt.history.v1"},
+        "items": {"type": "array", "items": {"$ref": "#/$defs/summary"}},
+        "page": {
+          "type": "object",
+          "required": ["limit", "next_cursor"],
+          "properties": {
+            "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+            "next_cursor": {"type": ["string", "null"]}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "detailResponse": {
+      "type": "object",
+      "required": ["schema_version", "mission", "data", "missing_artifacts"],
+      "properties": {
+        "$fixture": {"type": "string"},
+        "schema_version": {"const": "agnt.history.v1"},
+        "mission": {"$ref": "#/$defs/summary"},
+        "data": {
+          "type": "object",
+          "properties": {
+            "request": {"type": "object"},
+            "intent": {"type": "object"},
+            "plan": {"type": "object"},
+            "findings": {"type": "array", "items": {"type": "object"}},
+            "clusters": {"type": "object"},
+            "report": {"type": "object"},
+            "coverage": {"type": "object"},
+            "executions": {"type": "array", "items": {"type": "object"}},
+            "events": {"type": "array", "items": {"$ref": "#/$defs/event"}}
+          },
+          "additionalProperties": true
+        },
+        "missing_artifacts": {
+          "type": "array",
+          "items": {"enum": ["run", "plan", "intent", "findings", "clusters", "report", "coverage", "events"]},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
