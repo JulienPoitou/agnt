@@ -2082,6 +2082,22 @@ fail-closed, commit d1d562f) puis G6a **corrigé** (grille gitleaks fournie par 
 Popen). Campagne rejouée dans son état actuel : **47 cas · 44 PASS · 0 FAIL · 3 NON ÉVALUÉS**
 (D2/D3 : OPA absent ; G9 : binaire gitleaks absent).
 
+**P1 (même jour) — gate adversarial History / Timeline / Status** : les contrats
+`agnt.history.v1` / `agnt.timeline.v1` / `agnt.execution-status.v1` ne sont pas
+dans ce workspace (vérifié sur toutes les branches et tous les commits) ; Web ne
+doit consommer ces endpoints qu'après validation Security. Livré : un gate
+déterministe (`PHASE3/history_timeline_gate.py` : schéma strict, allowlists
+temporaires, invariants seq/ts, compteurs fail-closed, séparation des
+vocabulaires, aucun assainissement, aucun lecteur de Mission), 81 fixtures
+hostiles/sûres marquées `TEST ONLY — NEVER SERVE AS PRODUCT DATA`
+(`docs/coordination/fixtures/`), un harnais déterministe et hors ligne
+(`PHASE3/test_history_timeline_security.py` : 93 vérifications · 0 échec) et la
+formalisation des règles CORE/MCP/WEB (`docs/coordination/HISTORY_TIMELINE_SECURITY_GATE.md`).
+Runner prêt pour l'API réelle (`--base-url`, `--response-file`, `--fixture-mode`).
+Point de blocage : les trois tests de contrat Product annoncés
+(`docs/coordination/test_mission_*_contract.py`, `test_execution_status_contract.py`)
+sont ABSENTS — à exécuter quand Product/CORE les livrera, puis à re-lier au gate.
+
 Le même mouvement a produit deux corrections de pré-vol qui n'avaient pas de test parce qu'elles
 ne concernent ni le pipeline ni l'interface : `bootstrap.sh` ne vérifiait pas les binaires qu'il
 venait de télécharger, et `sha_attendu()` avalait l'absence de PyYAML — sur une machine neuve, le

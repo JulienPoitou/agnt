@@ -446,6 +446,25 @@ plan dfc88bd69ba80b1c · providers : semgrep, gitleaks, detect_secrets, checkov
 Code de sortie **2** : un refus reste un échec, il ne devient pas un succès parce qu'il est bien
 expliqué. Et une panne qui n'est pas un refus garde son traceback complet.
 
+## Gate Security des projections History / Timeline / Status (30/08/2026)
+
+Avant que l'interface WEB ne consomme `GET /api/missions` et
+`GET /api/missions/{mission_id}` (`data.timeline`, `data.executions[]`,
+provenance MCP), une projection doit passer le **gate de sécurité** :
+
+```bash
+python3 PHASE3/test_history_timeline_security.py   # harnais complet, hors ligne
+python3 PHASE3/history_timeline_gate.py --fixture-mode docs/coordination/fixtures
+python3 PHASE3/history_timeline_gate.py --base-url http://127.0.0.1:8141
+```
+
+Le gate refuse les projections qui exposent secrets, chemins locaux,
+argv/payloads, provenances MCP non normalisées ou des compteurs de findings non
+justifiés ; il n'assainit rien lui-même (CORE doit produire une projection
+sûre). Règles formalisées, vocabulaire et points à confirmer avec MCP sont dans
+`docs/coordination/HISTORY_TIMELINE_SECURITY_GATE.md`. Les fixtures sont
+clairement marquées `TEST ONLY — NEVER SERVE AS PRODUCT DATA`.
+
 ## Ce que le système ne fait pas
 
 - Il n'exécute que des outils **passifs** intégrés et qualifiés (8 à ce jour) —

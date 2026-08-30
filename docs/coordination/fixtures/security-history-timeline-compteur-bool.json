@@ -1,0 +1,92 @@
+{
+  "_marker": "TEST ONLY — NEVER SERVE AS PRODUCT DATA",
+  "scenario": "compteur booléen déguisé",
+  "now": "2026-08-30T12:00:00Z",
+  "expect": {
+    "verdict": "FAIL",
+    "codes": [
+      "compteur-invalide"
+    ]
+  },
+  "response": {
+    "api": "agnt.timeline.v1",
+    "endpoint": "/api/missions/{mission_id}",
+    "data": {
+      "mission_id": "m-20260830-0001",
+      "statut": "termine",
+      "created_at": "2026-08-30T09:00:00Z",
+      "run_id": "r-20260830-0001",
+      "findings_count": true,
+      "findings_artifact": "present",
+      "policy": {
+        "moteur": "opa",
+        "decision": "autorisee",
+        "disponible": true
+      },
+      "providers": [
+        {
+          "provider_id": "semgrep",
+          "provider_kind": "scanner",
+          "availability": "disponible"
+        },
+        {
+          "provider_id": "gitleaks",
+          "provider_kind": "scanner",
+          "availability": "disponible",
+          "provenance": {
+            "provider_id": "gitleaks",
+            "provider_kind": "scanner",
+            "transport": "stdio",
+            "protocol": "mcp",
+            "confidence": "moyenne",
+            "source": "mcp"
+          }
+        }
+      ],
+      "executions": [
+        {
+          "provider_id": "semgrep",
+          "statut": "termine",
+          "findings_count": 1
+        },
+        {
+          "provider_id": "gitleaks",
+          "statut": "termine",
+          "findings_count": 1
+        }
+      ],
+      "timeline": [
+        {
+          "seq": 0,
+          "ts": "2026-08-30T09:00:01Z",
+          "type": "ouverture",
+          "label": "Ouverture de la mission"
+        },
+        {
+          "seq": 1,
+          "ts": "2026-08-30T09:00:02Z",
+          "type": "plan",
+          "label": "Plan établi"
+        },
+        {
+          "seq": 2,
+          "ts": "2026-08-30T09:00:03Z",
+          "type": "contexte",
+          "label": "Contexte collecté"
+        },
+        {
+          "seq": 3,
+          "ts": "2026-08-30T09:00:04Z",
+          "type": "execution",
+          "label": "Exécution des scanners"
+        },
+        {
+          "seq": 4,
+          "ts": "2026-08-30T09:00:05Z",
+          "type": "cloture",
+          "label": "Mission terminée"
+        }
+      ]
+    }
+  }
+}
