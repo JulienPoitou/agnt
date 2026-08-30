@@ -285,13 +285,13 @@ def lancer(mission: str, cible: Path, moteur: str = "auto",
         if fournisseur is None:
             fournisseur = fournisseur_auto
 
-    ancien_moteur, ancien_four = pipeline.MOTEUR_INTENT, pipeline.FOURNISSEUR_LLM
-    try:
-        pipeline.MOTEUR_INTENT = moteur
-        pipeline.FOURNISSEUR_LLM = fournisseur if moteur == "llm" else None
-        e = pipeline.executer(mission, cible, confiance_cible=confiance, egress=egress)
-    finally:
-        pipeline.MOTEUR_INTENT, pipeline.FOURNISSEUR_LLM = ancien_moteur, ancien_four
+    # Le moteur est passé EN PARAMÈTRE, plus posé sur des globales de module : deux missions
+    # concurrentes peuvent choisir deux moteurs différents sans se réécrire l'une l'autre
+    # (multi-mission, 2026-08-30). `pipeline.executer` lit `moteur_intent`/`fournisseur_llm`
+    # locaux et ne mute plus `pipeline.MOTEUR_INTENT`/`FOURNISSEUR_LLM`.
+    e = pipeline.executer(mission, cible, confiance_cible=confiance, egress=egress,
+                          moteur_intent=moteur,
+                          fournisseur_llm=fournisseur if moteur == "llm" else None)
 
     sortie = _archiver_mission(e, cible)
     resume = {
@@ -336,8 +336,6 @@ def main(argv: list[str]) -> int:
     requete = args[1] if len(args) > 1 else "Analyse la sécurité de mon dépôt"
 
     moteur, fournisseur, note = _choisir_moteur(moteur)
-    pipeline.MOTEUR_INTENT = moteur
-    pipeline.FOURNISSEUR_LLM = fournisseur
 
     if not cible.exists():
         print(f"ERREUR : cible introuvable : {cible}")
@@ -363,7 +361,9 @@ def main(argv: list[str]) -> int:
     # retombe sur le déterministe. Il est affiché plus bas, dans le résumé.
 
     try:
-        e = pipeline.executer(requete, cible, confiance_cible=confiance, egress=egress)
+        e = pipeline.executer(requete, cible, confiance_cible=confiance, egress=egress,
+                              moteur_intent=moteur,
+                              fournisseur_llm=fournisseur if moteur == "llm" else None)
     except Exception as exc:                       # noqa: BLE001
         # Un refus d'exécution est une INFORMATION, pas une panne : « quelle dépendance
         # manque, quels outils étaient prêts » se lit sans décoder un traceback. Une panne

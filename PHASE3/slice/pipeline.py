@@ -65,6 +65,13 @@ def outils_par_vague() -> int:
         return 1
     return max(1, min(n, 8))
 
+# Moteur d'intention PAR DÉFAUT d'une exécution. `executer()` les accepte désormais en
+# paramètres (`moteur_intent`, `fournisseur_llm`) : un appelant qui les fournit ne dépend
+# plus de ces globales, et deux missions peuvent choisir deux moteurs différents dans le
+# même processus sans se marcher dessus. Ces deux noms restent lisibles comme DÉFAUT de
+# dernier recours (compatibilité ascendante : les tests et appelants historiques qui les
+# posaient continuent de fonctionner), mais la bibliothèque ne les MUTE plus — c'est le
+# changement qui compte pour le multi-mission, pas l'existence de la constante.
 MOTEUR_INTENT = "deterministe"
 FOURNISSEUR_LLM = None
 
@@ -349,15 +356,24 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
 def executer(requete: str, cible: Path, cible_autorisee: bool = True,
              confiance_cible: str = "controlled",
              avec_internes: bool = False, escalade: bool = True,
-             egress: bool | None = None) -> Execution:
-    """`egress` : l'autorisation de sortir (réseau) pour CETTE mission.
+             egress: bool | None = None,
+             moteur_intent: str | None = None,
+             fournisseur_llm: object | None = None) -> Execution:
+    """Exécute une mission de bout en bout.
 
+    `egress` : l'autorisation de sortir (réseau) pour CETTE mission.
     `None` = on s'en tient au profil (donc coupé, aujourd'hui). `True` n'est pas un réglage
     de confort : c'est une DÉLÉGATION, et elle est traitée comme telle — le profil effectif
     de la mission est reconstruit avec (`dataclasses.replace`), transmis à OPA pour que la
     décision porte la même information que l'exécution, consigné au journal, et inscrit dans
     l'empreinte de contexte par `sandbox.limites_appliquees()`. Un `True` silencieux aurait
     produit des findings dont personne ne peut dire s'ils viennent d'une cage ouverte.
+
+    `moteur_intent` / `fournisseur_llm` : le moteur d'intention de CETTE mission. Ces
+    paramètres rendent le choix d'exécution EXPLICITE et local à l'appel, au lieu de
+    passer par des globales de module mutables (`MOTEUR_INTENT`, `FOURNISSEUR_LLM`) que
+    deux missions concurrentes se disputeraient. `None` = repli sur les globales
+    (comportement historique, conservé pour compatibilité).
     """
     if confiance_cible not in CONFIANCES:
         # Pas de repli : une valeur non reconnue vaudrait «controlled» par accident,
@@ -365,6 +381,10 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         raise PipelineError(
             f"confiance de cible inconnue : {confiance_cible!r} · admises : "
             f"{' | '.join(CONFIANCES)}")
+    # Le moteur d'intention est résolu UNE FOIS, localement : c'est le choix de CETTE
+    # mission, pas un état que l'appelant aurait dû poser sur le module.
+    moteur_intent = MOTEUR_INTENT if moteur_intent is None else moteur_intent
+    fournisseur_llm = FOURNISSEUR_LLM if fournisseur_llm is None else fournisseur_llm
     registre = Registry()
 
     # ---------------------------------------------------------------- 0. mission
@@ -399,11 +419,11 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     # ---------------------------------------------------------------- 1. intention
     # Les garde-fous déterministes s'appliquent dans les DEUX modes : une demande
     # explicitement interdite n'est jamais soumise à un modèle.
-    if MOTEUR_INTENT == "llm" and FOURNISSEUR_LLM is not None:
+    if moteur_intent == "llm" and fournisseur_llm is not None:
         import intent_llm
         it = intent_llm.garde_fous(requete, registre)
         if it is None:
-            it = intent_llm.inferer(requete, registre, FOURNISSEUR_LLM)
+            it = intent_llm.inferer(requete, registre, fournisseur_llm)
     else:
         it = intent.inferer(requete, registre, avec_internes=avec_internes)
 
