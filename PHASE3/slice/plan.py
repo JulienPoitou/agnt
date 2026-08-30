@@ -27,6 +27,7 @@ from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
+import cible as CIB
 from registre import Registry
 
 VERSION_PLAN = "1.1"
@@ -64,21 +65,37 @@ def inventaire(cible: Path, limite: int = 20000) -> list[str]:
 
 
 def filtrer_applicabilite(providers: list[str], registre: Registry,
-                          cible: Path) -> tuple[list[str], dict[str, str]]:
+                          cible) -> tuple[list[str], dict[str, str]]:
     """Écarte AVANT exécution les providers déclarés inapplicables à la cible.
 
     Règles (architecture gelée) :
-      · l'applicabilité est DÉCLARÉE au manifest (globs) — jamais devinée ;
+      · l'applicabilité est DÉCLARÉE au manifest (globs + target_types) — jamais devinée ;
       · sans déclaration, le provider reste éligible (une fausse exclusion est
         pire qu'un not_scanned honnête) ;
       · chaque exclusion porte un motif qui finit dans plan.json.
+
+    Depuis le descripteur de cible (2026-08-30), DEUX conditions s'ajoutent sans se
+    remplacer :
+      · TARGET_TYPES : un provider n'est applicable qu'au TYPE de cible qu'il déclare
+        (`cible.applicable`). C'est la règle unique entre le descripteur et les
+        manifests — un provider local est écarté d'une cible `url`, jamais lancé
+        dessus ;
+      · GLOBS : inchangé, et seulement pour les cibles LOCALES — une cible non locale
+        n'a pas d'inventaire de fichiers, donc pas de filtrage par glob.
     """
-    inv = inventaire(cible)
+    cib = CIB.normaliser(cible)
+    inv = inventaire(cib.chemin_local) if cib.est_local and cib.chemin_local else []
     eligibles, exclus = [], {}
     for pid in providers:
         prov = registre.provider(pid)
+        types = CIB.types_applicables(prov)
+        if not CIB.applicable(cib.type, types):
+            exclus[pid] = (f"type de cible {cib.type!r} hors des types déclarés "
+                           f"{list(types)} — provider non applicable à cette cible")
+            continue
         globs = tuple(prov.manifest.applicable_globs) if prov.manifest else ()
-        if globs and not any(fnmatch.fnmatch(f, g) for f in inv for g in globs):
+        if cib.est_local and globs and not any(
+                fnmatch.fnmatch(f, g) for f in inv for g in globs):
             exclus[pid] = (f"non applicable à cette cible : aucun fichier ne "
                            f"correspond aux globs déclarés {list(globs)}")
         else:
@@ -140,6 +157,11 @@ class Plan:
     # qui a été écarté, et POURQUOI. Hors empreinte : le motif se déduit du
     # registre, or le registre est déjà empreinté — le rejeu n'est pas affecté.
     selection: dict = field(default_factory=dict)
+    # Descripteur STRUCTURÉ de la cible (2026-08-30) — additif, à côté du champ
+    # `cible` (chaîne de compatibilité). C'est lui que le futur Web, les transports
+    # distants et les règles policy liront pour savoir CE qui a été compris :
+    # type, référence sûre, local ou non, chemin éventuel. `{}` = plan antérieur.
+    cible_descr: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -149,6 +171,7 @@ class Plan:
             "requete": self.requete,
             "requete_canonique": self.requete_canonique,
             "cible": self.cible,
+            "cible_descr": self.cible_descr,
             "registre_empreinte": self.registre_empreinte,
             "moteur_intent": self.moteur_intent,
             "cree_le": self.cree_le,
@@ -187,7 +210,8 @@ class Plan:
 
 def construire(requete: str, cible: str, providers: list[str], registre: Registry,
                moteur_intent: str, exclus_applicabilite: dict | None = None,
-               exclus_conditions: dict | None = None) -> Plan:
+               exclus_conditions: dict | None = None,
+               cible_descr: dict | None = None) -> Plan:
     """Construit le plan à partir du registre.
 
     Chaque étape refuse un provider qui n'appartient pas à la capacité demandée :
@@ -267,6 +291,7 @@ def construire(requete: str, cible: str, providers: list[str], registre: Registr
         cree_le=datetime.now(timezone.utc).isoformat(timespec="seconds"),
         plan_id="",
         selection=selection,
+        cible_descr=dict(cible_descr or {}),
     )
     # dataclasses.replace, PAS asdict(**...) : asdict convertit récursivement les Step
     # en dictionnaires, et le plan reconstruit perdrait ses objets typés.

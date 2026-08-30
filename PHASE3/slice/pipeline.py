@@ -23,6 +23,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 import adapters
+import cible as CIB
 import clusterer
 import garde_chemin as GC
 import mission as MS
@@ -360,7 +361,7 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
     _ledger(miss, registre, plan_dict, decision_dict, exec_.raw, exec_.couverture, trouves)
 
 
-def executer(requete: str, cible: Path, cible_autorisee: bool = True,
+def executer(requete: str, cible, cible_autorisee: bool = True,
              confiance_cible: str = "controlled",
              avec_internes: bool = False, escalade: bool = True,
              egress: bool | None = None,
@@ -381,6 +382,11 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     passer par des globales de module mutables (`MOTEUR_INTENT`, `FOURNISSEUR_LLM`) que
     deux missions concurrentes se disputeraient. `None` = repli sur les globales
     (comportement historique, conservé pour compatibilité).
+
+    `cible` : accepte un `Path` (appel historique), une chaîne (chemin local ou URL),
+    ou une `cible.Cible` déjà construite. Elle est normalisée UNE FOIS à l'entrée
+    (`cible.normaliser`) ; une cible non locale est représentée, jamais convertie en
+    chemin ni exécutée en sous-processus local.
     """
     if confiance_cible not in CONFIANCES:
         # Pas de repli : une valeur non reconnue vaudrait «controlled» par accident,
@@ -394,10 +400,22 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     fournisseur_llm = FOURNISSEUR_LLM if fournisseur_llm is None else fournisseur_llm
     registre = Registry()
 
-    # ---------------------------------------------------------------- 0. mission
+    # ---------------------------------------------------------------- 0. cible
+    # Normalisation UNIQUE de frontière (2026-08-30) : un Path historique, une chaîne
+    # (chemin ou URL), ou un descripteur déjà construit deviennent UNE Cible structurée.
+    # En aval, le cœur ne reconvertit plus jamais la cible en Path : il lit le
+    # descripteur (`cib`) et, quand elle existe, sa forme locale (`chemin_cible`).
+    # Une URL n'est donc jamais convertie en chemin, jamais montée, jamais exécutée
+    # en sous-processus local.
+    cib = CIB.normaliser(cible)
+    chemin_cible = cib.chemin_local          # Path | None
+    reference_cible = cib.reference
+
+    # ---------------------------------------------------------------- 0b. mission
     # Le dossier append-only s'ouvre AVANT toute décision : un arrêt (intent non
     # résolu, policy) doit être tracé autant qu'une exécution complète.
-    miss = MS.ouvrir(requete, P.canonicaliser(requete), Path(cible))
+    miss = MS.ouvrir(requete, P.canonicaliser(requete), reference_cible,
+                     cible_descr=cib.to_dict())
     # La confiance APPLIQUÉE est consignée immédiatement, avant la policy : « qu'est-ce
     # qu'on a cru de cette cible ? » doit se relire dans le dossier de mission même si
     # la policy refuse ensuite — et même si OPA est indisponible.
@@ -456,9 +474,12 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
 
     # --------------------------------------------- 1b. applicabilité (étape 3)
     # Filtrage DÉTERMINISTE et déclaratif, AVANT le plan : un provider dont les
-    # globs déclarés ne correspondent à aucun fichier de la cible est écarté avec
-    # motif tracé. Sans déclaration, le provider reste éligible (pas de devinette).
-    provs, exclus = P.filtrer_applicabilite(provs, registre, Path(cible))
+    # target_types ne couvrent pas le type de la cible — ou dont les globs déclarés
+    # ne correspondent à aucun fichier local — est écarté avec motif tracé. Sans
+    # déclaration, le provider reste éligible (pas de devinette). C'est ICI qu'une
+    # cible non locale (url) écarte tous les providers locaux : elle ne descend
+    # jamais vers un sous-processus sandboxé.
+    provs, exclus = P.filtrer_applicabilite(provs, registre, cib)
     if exclus:
         MS.consigner(miss, "applicabilite",
                      ecartes={k: v for k, v in exclus.items()})
@@ -496,8 +517,9 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
                          statuts=st)
 
     # ---------------------------------------------------------------- 2. plan typé
-    plan = P.construire(requete, str(cible), provs, registre, it.moteur,
-                        exclus_applicabilite=exclus, exclus_conditions=exclus_cond)
+    plan = P.construire(requete, reference_cible, provs, registre, it.moteur,
+                        exclus_applicabilite=exclus, exclus_conditions=exclus_cond,
+                        cible_descr=cib.to_dict())
     # La SÉLECTION est consignée avec le plan : « pourquoi ce provider et pas l'autre »
     # se lit dans le journal (choisis, écartés, motif), pas seulement dans plan.json. Le
     # motif vient de `plan.construire` — priorité déclarée, fan_out, ou choix imposé — et
@@ -564,8 +586,18 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     # ---------------------------------------------------------------- 4. garde de chemin
     # OPA a autorisé la cible DEMANDÉE. Ici on vérifie ce qui est RÉELLEMENT accessible :
     # OPA ne peut pas savoir qu'un symlink sort du workspace.
+    # Barrière de défense (2026-08-30) : une cible NON LOCALE n'a pas de chemin. Elle ne
+    # peut pas arriver ici aujourd'hui (aucun provider compatible n'a survécu à
+    # l'applicabilité), mais si un futur transport distant en laissait passer une, elle
+    # ne doit jamais être traitée comme un pseudo-chemin local : refus explicite, pas
+    # de conversion, pas de montage.
+    if chemin_cible is None:
+        raise PipelineError(
+            f"cible non locale {cib.type!r} ({cib.reference_sure()}) sans chemin local : "
+            f"le transport sandbox_cli ne peut pas la prendre en charge — elle doit être "
+            f"routée par un transport distant enregistré, pas montée comme un Path")
     try:
-        rapport_chemin = GC.verifier_cible(cible, [cible])
+        rapport_chemin = GC.verifier_cible(chemin_cible, [chemin_cible])
         for step in plan.steps:
             GC.verifier_args([*step.commande, *step.args])
     except Exception as exc:
@@ -587,7 +619,7 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     sbx = Sandbox(
         bwrap=shutil.which("bwrap") or "bwrap",
         egress_autorise=egress_accorde,
-        racine_scan=cible,
+        racine_scan=chemin_cible,
         racine_regles=CACHE_REGLES,
         racine_db=CACHE_DB,
         sortie=sortie,
@@ -595,7 +627,7 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     )
 
     ctx = RUN.capturer(sbx, PO.POLICY_FILE, registre.empreinte())
-    ctx.input_digest, ctx.input_commit, ctx.working_tree_dirty = RUN.digest_cible(cible)
+    ctx.input_digest, ctx.input_commit, ctx.working_tree_dirty = RUN.digest_cible(chemin_cible)
     exec_ = Execution(plan=plan.to_dict(),
                       decision={"allow": True, "motifs": list(decision.motifs)},
                       intent=it.to_dict(),
@@ -621,7 +653,7 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         domaines_du_provider[_p.id] = dom[0] if dom else None
         binaire_de_provider[_p.id] = (_p.manifest.binaire if _p.manifest is not None
                                       else Path(_p.commande[0]).name)
-    V = _ContexteVague(miss=miss, registre=registre, exec_=exec_, sbx=sbx, cible=cible,
+    V = _ContexteVague(miss=miss, registre=registre, exec_=exec_, sbx=sbx, cible=chemin_cible,
                        sortie=sortie, ctx=ctx, trouves=trouves, tous_findings=tous_findings,
                        domaines=domaines_du_provider, binaires=binaire_de_provider)
     _vague(plan.steps, V, plan.to_dict(), {"allow": True, "motifs": list(decision.motifs)},
@@ -643,8 +675,9 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         declencheurs = STAT.declencheurs_escalade(provisoire, registre, tentes, MAX_ESCALADE)
         if declencheurs:
             noms = [d["suppleant"] for d in declencheurs]
-            plan2 = P.construire(plan.requete, str(cible), noms, registre,
-                                 f"{plan.moteur_intent}+escalade")
+            plan2 = P.construire(plan.requete, reference_cible, noms, registre,
+                                 f"{plan.moteur_intent}+escalade",
+                                 cible_descr=cib.to_dict())
             decision2 = None
             try:
                 decision2 = moteur.evaluer(plan2, registre, cible_autorisee,
