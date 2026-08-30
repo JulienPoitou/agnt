@@ -63,6 +63,21 @@ class PolicyEngine:
                     {"id": c.id, "providers": [p.id for p in c.providers]}
                     for c in registre.capabilities()
                 ],
+                # OPA reçoit une vue déclarative des providers, pas leurs commandes
+                # ni leurs secrets. Cette information permet à la policy de vérifier
+                # qu'un binding MCP (serveur + outil + transport) est bien celui du
+                # registre, au lieu de faire confiance au plan seul.
+                "providers_detail": [
+                    {
+                        "id": p.id,
+                        "capability": p.capability,
+                        "transport": p.transport,
+                        "identity": p.identity.to_dict(),
+                        "target_types": list(p.target_types),
+                        "risk": p.risque,
+                    }
+                    for p in registre.providers()
+                ],
                 "empreinte": registre.empreinte(),
             },
             "cible": {"autorisee": cible_autorisee, "confiance": confiance_cible},
