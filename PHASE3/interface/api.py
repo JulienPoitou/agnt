@@ -8,11 +8,12 @@ dupliquée ici : si elle existait ici, elle serait contournable par la CLI.
 
 Trois lois de ce fichier :
 
-1. **Une exécution à la fois.** `pipeline` écrit ses objets dans `PHASE3/run/` avant que
-   `_archiver_mission` ne les copie sous la mission : ce répertoire est partagé, donc deux
-   runs simultanés se réécriraient l'un l'autre. La file à un consommateur est ce qui
-   rend le partage sûr, pas une politesse. (Rendre `run/` par-exécution = travail sur le
-   pipeline, hors périmètre ici.)
+1. **Une exécution à la fois.** La file à un consommateur sérialise les runs : l'écriture
+   des artefacts est désormais PAR MISSION (`<mission>/run`, posé par le pipeline), donc
+   deux runs ne se réécrivent plus — mais cette interface garde la file parce qu'elle
+   reste la borne de simplicité et de visibilité de ce service (un run en cours se lit,
+   le suivant attend). Ce n'est plus un garde-fou contre un répertoire partagé, c'est un
+   choix d'ordonnancement assumé.
 2. **La cible est un choix, jamais un chemin.** `GET /api/cibles` renvoie une liste
    construite ici ; `POST /api/runs` ne prend qu'un nom de cette liste. Ce n'est pas une
    micro-optimisation : la cage monte `--ro-bind / /`, donc ce qui limite la lecture, c'est
