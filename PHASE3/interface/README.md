@@ -13,9 +13,11 @@ python3 PHASE3/interface/api.py --host 0.0.0.0 --port 8141
 ```
 
 `--ouvert` ouvre le navigateur. Sans `api.py`, la page reste lisible : elle retombe sur
-`donnees_exemple.json` (mêmes clés, valeurs inventées) **en l'affichant** — un bandeau
-« MAQUETTE » se retire tout seul dès que l'API répond. Un écran de démo qui se prend pour un
-écran de résultat est le défaut qu'on veut éviter, pas celui qu'on veut offrir.
+`donnees_exemple.json` (mêmes clés, valeurs inventées) **en l'affichant**. Avec l’API, les
+données d’exemple ne sont jamais rendues : l’utilisateur voit un état d’accueil jusqu’à sa
+première mission. Le bandeau « MAQUETTE / MODE DÉMONSTRATION » ne disparaît qu’après une
+réponse réelle du moteur. Un écran de démo qui se prend pour un écran de résultat est le
+défaut qu'on veut éviter, pas celui qu'on veut offrir.
 
 ## Routes
 

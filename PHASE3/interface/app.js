@@ -22,6 +22,9 @@ const LIBELLE = {CRITICAL: "critique", ERROR: "erreur", HIGH: "haute", WARNING: 
                  MEDIUM: "moyenne", LOW: "basse", INFO: "info", UNKNOWN: "non déclarée"};
 const PASTILLE = {complet: "ok", termine: "ok", en_file: "attention", en_cours: "attention",
                   refuse: "attention", erreur: "erreur"};
+const STATUT_LISIBLE = {complet: "Terminée", termine: "Terminée", en_file: "En attente",
+                        en_cours: "En cours", refuse: "Refusée", erreur: "Échec"};
+const DEMANDE_DEFAUT = "Analyse ce dépôt et trouve les problèmes de sécurité importants.";
 
 function el(nom, classe, texte) {
   const n = document.createElement(nom);
@@ -87,7 +90,8 @@ function blocMission(pere, run) {
   ];
   pastilles.forEach(([l, v]) => {
     if (!existe(v)) return;
-    const p = el("span", "pastille " + (l === "statut" ? etat : ""), l + " · " + v);
+    const lisible = l === "statut" ? (STATUT_LISIBLE[v] || v) : v;
+    const p = el("span", "pastille " + (l === "statut" ? etat : ""), l + " · " + lisible);
     ou.append(p);
   });
   if (run.working_tree_dirty) ou.append(el("span", "pastille erreur", "arbre de travail MODIFIÉ"));
@@ -410,11 +414,17 @@ function blocFindings(pere, d) {
     tete.append(el("span", "ou", "sévérité déclarée par · " + (((f.severity || {}).origine) || "?")));
     e.append(tete);
     const ev = f.evidence || {};
-    ["message", "titre", "description"].forEach((k) => { if (existe(ev[k])) e.append(el("p", "msg", ev[k])); });
-    if (existe(ev.secret)) e.append(el("p", "msg", "valeur : " + ev.secret));
-    if (existe(ev.cwe)) e.append(el("p", "note", "CWE : " + (Array.isArray(ev.cwe) ? ev.cwe.join(", ") : ev.cwe)));
-    if (existe(ev.extrait)) e.append(el("pre", "extrait", ev.extrait));
     const src = f.source || {};
+    const titre = ev.titre || ev.title || ev.message || src.original_rule_id || "Constat de sécurité";
+    e.append(el("h3", "finding-title", titre));
+    if (existe(ev.description) && ev.description !== titre) e.append(el("p", "msg", ev.description));
+    if (existe(ev.message) && ev.message !== titre) e.append(el("p", "msg", ev.message));
+    if (existe(ev.impact)) e.append(el("p", "finding-detail", "Pourquoi c’est important · " + ev.impact));
+    const recommandation = ev.recommandation || ev.recommendation || f.recommandation;
+    if (existe(recommandation)) e.append(el("p", "finding-detail recommendation", "Recommandation · " + recommandation));
+    if (existe(ev.secret)) e.append(el("p", "msg", "Valeur détectée · " + ev.secret));
+    if (existe(ev.cwe)) e.append(el("p", "note", "CWE · " + (Array.isArray(ev.cwe) ? ev.cwe.join(", ") : ev.cwe)));
+    if (existe(ev.extrait)) e.append(el("pre", "extrait", ev.extrait));
     if (existe(src.original_rule_id)) {
       const p = el("p", "note");
       p.append(el("span", "chip", "règle " + src.original_rule_id));
@@ -487,13 +497,17 @@ function blocRapport(pere, texte, run) {
 function rendu(d) {
   const poste = document.getElementById("poste");
   poste.textContent = "";
-  // `cible` est portée par le plan (`chaine.cible`), pas par le résumé de mission ;
-  // le bandeau fusionne les deux sans inventer de champ.
+  const accueil = document.getElementById("welcome");
+  if (accueil) accueil.className = "welcome-state cache";
+  // Lecture progressive : résultat d’abord, exécution et chaîne interne ensuite.
+  // `cible` est portée par le plan (`chaine.cible`), pas par le résumé de mission.
   blocMission(poste, {cible: (d.chaine || {}).cible, ...(d.run || {})});
-  blocCouverture(poste, d.chaine || {}, d.contexte || {});
-  blocChaine(poste, d.chaine || {});
   blocFindings(poste, d);
   blocClusters(poste, d.clusters || {});
+  const execution = blocCouverture(poste, d.chaine || {}, d.contexte || {});
+  execution.className += " technical-section";
+  const decision = blocChaine(poste, d.chaine || {});
+  decision.className += " technical-section";
   blocRapport(poste, d.rapport_markdown, d.run || {});
   const p = document.getElementById("pied");
   p.textContent = "";
@@ -546,10 +560,30 @@ function etatLigne(texte, classe) {
   n.className = "etat " + (classe || "");
 }
 
+function attenteMission(active) {
+  const bouton = document.getElementById("run");
+  if (!bouton) return;
+  bouton.disabled = active;
+  const libelle = bouton.children && bouton.children[0];
+  if (libelle) libelle.textContent = active ? "Mission en cours…" : "Démarrer la mission";
+}
+
 async function lancerUnRun() {
+  const erreurForm = document.getElementById("form-error");
+  if (erreurForm) erreurForm.textContent = "";
+  const question = document.getElementById("question").value.trim();
+  const cible = document.getElementById("cible").value;
+  if (!cible || !question) {
+    if (erreurForm) erreurForm.textContent = "Sélectionnez une cible et décrivez votre demande.";
+    etatLigne("mission incomplète", "erreur");
+    return;
+  }
+  attenteMission(true);
+  const accueil = document.getElementById("welcome");
+  if (accueil) accueil.className = "welcome-state cache";
   const corps = {
-    cible: document.getElementById("cible").value,
-    question: document.getElementById("question").value.trim(),
+    cible,
+    question,
     confiance: document.getElementById("confiance").value,
     moteur: document.getElementById("moteur").value,
   };
@@ -564,15 +598,15 @@ async function lancerUnRun() {
   const envoi = await json("/api/runs", {method: "POST", headers: {"Content-Type": "application/json"},
                                          body: JSON.stringify(corps)});
   if (!envoi.ok) {
-    etatLigne("refusé avant exécution · " + JSON.stringify(envoi.objet.erreur || envoi.objet), "erreur");
+    const detail = (envoi.objet && (envoi.objet.erreur || envoi.objet)) || "aucune réponse exploitable";
+    etatLigne("Mission non démarrée · " + (typeof detail === "string" ? detail : JSON.stringify(detail)), "erreur");
+    attenteMission(false);
     return;
   }
   const id = envoi.objet.id;
   let silences = 0;
   for (;;) {
-    await new Promise((r) => setTimeout(r, id % 2 ? 900 : 1300));   // (l'expression `id % 2`
-    // sur un identifiant de chaîne vaut toujours NaN : le ternaire est mort, le délai est
-    // toujours 1300 ms. Sans effet sur le fonctionnement, relevé sans correction.)
+    await new Promise((r) => setTimeout(r, 1100));
     const e = await json("/api/runs/" + id);
     const o = e.objet || {};
     if (e.status === 404) {
@@ -581,6 +615,7 @@ async function lancerUnRun() {
       // qui, elle, a survécu (journal de mission).
       etatLigne("run " + id + " · inconnu du serveur (redémarrage ?) — la trace est restée "
                 + "dans le dossier de mission", "erreur");
+      attenteMission(false);
       return;
     }
     if (!e.ok) {
@@ -590,14 +625,16 @@ async function lancerUnRun() {
       if (silences < 3) continue;
       etatLigne("run " + id + " · " + (o.erreur || ("plus de réponse du serveur (code " + e.status + ")")),
                 "erreur");
+      attenteMission(false);
       return;
     }
     silences = 0;
-    etatLigne("run " + id + " · " + (o.statut || "?"), PASTILLE[o.statut] || "");
+    etatLigne("Mission " + id + " · " + (STATUT_LISIBLE[o.statut] || o.statut || "état inconnu"), PASTILLE[o.statut] || "");
     blocVivant(o.vivante);
     if (o.statut === "termine" && o.donnees) {
       blocVivant(null);                     // le ledger complet est dans l'archive, plus rien à suivre
       rendu({...o.donnees, maquette: false});
+      attenteMission(false);
       return;
     }
     if (o.statut === "refuse" || o.statut === "erreur") {
@@ -626,6 +663,7 @@ async function lancerUnRun() {
                       // l'écrira lui-même, on ne fabrique pas une table vide.
                       statuts: ((o.refus || {}).statuts)},
              findings: [], clusters: {}});
+      attenteMission(false);
       return;
     }
   }
@@ -633,18 +671,26 @@ async function lancerUnRun() {
 
 async function brancher() {
   const caps = await json("/api/capacites");
-  if (!caps.ok) {                                   // pas d'API → on reste en maquette, en le disant
-    etatLigne("moteur non branché · maquette", "");
+  if (!caps.ok) {                                   // pas d'API → aperçu explicitement étiqueté
+    etatLigne("Moteur non branché · aperçu de démonstration", "erreur");
+    const connexion = document.getElementById("connection-label");
+    if (connexion) connexion.textContent = "Moteur hors ligne";
+    const bloc = connexion && connexion.parentElement;
+    if (bloc) bloc.className = "connection offline";
     return false;
   }
   const cibles = await json("/api/cibles");
   const sel = document.getElementById("cible");
   sel.textContent = "";
-  ((cibles.objet || {}).cibles || []).forEach((c) => {
-    const o = el("option", null, c.nom + (c.langages.length ? " · " + c.langages.join("/") : ""));
+  const listeCibles = ((cibles.objet || {}).cibles || []);
+  listeCibles.forEach((c) => {
+    const langages = Array.isArray(c.langages) ? c.langages : [];
+    const o = el("option", null, c.nom + (langages.length ? " · " + langages.join("/") : ""));
     o.value = c.chemin;
     sel.append(o);
   });
+  // Un vrai <select> adopte sa première option ; le DOM minimal du harnais ne le fait pas.
+  if (listeCibles.length && !sel.value) sel.value = listeCibles[0].chemin;
   const l = (caps.objet || {}).llm || {};
   const champ = document.getElementById("modele");
   champ.disabled = false;
@@ -653,7 +699,11 @@ async function brancher() {
   const conf = document.getElementById("confiance");
   conf.textContent = "";
   ((caps.objet || {}).confiances || ["controlled", "untrusted"]).forEach((x) => conf.append(el("option", null, x)));
-  document.getElementById("question").disabled = false;
+  const question = document.getElementById("question");
+  question.disabled = false;
+  // Le harnais DOM minimal ne parse pas la valeur initiale du textarea ; dans un navigateur,
+  // cette affectation est sans effet puisque le contenu existe déjà.
+  if (!question.value) question.value = DEMANDE_DEFAUT;
   document.getElementById("moteur").disabled = false;
   // Activée seulement quand le serveur répond : une case à cocher avant
   // démarrage serait un contrôle qui n'agit sur rien.
@@ -678,11 +728,16 @@ async function brancher() {
         + (ouvrants.length ? " · ouverte par : " + ouvrants.join(", ") : " · ouverte par aucun profil");
     }
   }
-  sel.disabled = !sel.children.length;
-  document.getElementById("run").disabled = false;
-  document.getElementById("run").onclick = () => { etatLigne("envoi…", ""); lancerUnRun(); };
+  const aDesCibles = sel.children.length > 0;
+  sel.disabled = !aDesCibles;
+  document.getElementById("run").disabled = !aDesCibles;
+  document.getElementById("run").onclick = () => { etatLigne("Préparation de la mission…", ""); lancerUnRun(); };
   document.getElementById("ruban").className = "maquette cache";
-  etatLigne("moteur branché · " + sel.children.length + " cible(s)", "ok");
+  const connexion = document.getElementById("connection-label");
+  if (connexion) connexion.textContent = "Moteur connecté";
+  const blocConnexion = connexion && connexion.parentElement;
+  if (blocConnexion) blocConnexion.className = "connection connected";
+  etatLigne(aDesCibles ? "Moteur connecté · prêt" : "Moteur connecté · aucune cible autorisée", aDesCibles ? "ok" : "erreur");
   const p = document.getElementById("pied");
   p.append(el("div", null, "profils : " + JSON.stringify((caps.objet || {}).profil || {}) +
               " · capacités publiées : " + ((caps.objet || {}).capacites || []).length
@@ -692,10 +747,32 @@ async function brancher() {
   return sel.children.length > 0;
 }
 
+function brancherTheme() {
+  const bouton = document.getElementById("theme");
+  const racine = document.documentElement;
+  if (!bouton || !racine) return;
+  const themes = ["system", "dark", "light"];
+  let courant = "system";
+  try { courant = localStorage.getItem("agnt-theme") || "system"; } catch {}
+  const appliquer = (theme) => {
+    if (theme === "system") racine.removeAttribute("data-theme");
+    else racine.setAttribute("data-theme", theme);
+    bouton.title = "Thème · " + (theme === "system" ? "système" : theme === "dark" ? "sombre" : "clair");
+    bouton.textContent = theme === "light" ? "☀" : theme === "dark" ? "☾" : "◐";
+  };
+  appliquer(courant);
+  bouton.onclick = () => {
+    courant = themes[(themes.indexOf(courant) + 1) % themes.length];
+    try { localStorage.setItem("agnt-theme", courant); } catch {}
+    appliquer(courant);
+  };
+}
+
 async function principal() {
-  const exemple = await json("donnees_exemple.json");
-  if (exemple.ok) rendu(exemple.objet);
+  brancherTheme();
   const reel = await brancher();
-  if (reel && document.getElementById("cible").children.length) etatLigne("prêt", "ok");
+  if (reel) return;                       // surtout : aucune donnée de démo sous un état réel
+  const exemple = await json("donnees_exemple.json");
+  if (exemple.ok) rendu({...exemple.objet, maquette: true});
 }
 principal();

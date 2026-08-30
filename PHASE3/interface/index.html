@@ -3,45 +3,103 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AGNT — mission</title>
+<meta name="color-scheme" content="dark light">
+<title>AGNT — Security orchestration</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="maquette" id="ruban">MAQUETTE — le moteur n'est pas branché (api.py non démarré)</div>
+<div class="maquette" id="ruban" role="status">MAQUETTE / MODE DÉMONSTRATION — données d’aperçu, aucun moteur connecté</div>
 
-<header class="barre">
-  <div class="marque">AGNT<span class="point">.</span></div>
-  <form class="lancer" id="form" onsubmit="return false">
-    <label><span>cible</span><select id="cible" disabled><option>—</option></select></label>
-    <label class="q"><span>que veux-tu analyser&nbsp;?</span>
-      <textarea id="question" rows="1" disabled>Analyse ce dépôt et trouve les problèmes de sécurité importants.</textarea>
-    </label>
-    <label><span>modèle</span><input id="modele" disabled placeholder="modèle du fournisseur"></label>
-    <label><span>confiance dans la cible</span>
-      <select id="confiance" disabled><option>controlled</option><option>untrusted</option></select>
-    </label>
-    <label class="cage"><span>cage r&eacute;seau</span>
-      <input id="egress" type="checkbox" disabled
-             title="Coup&eacute;e par d&eacute;faut : le profil d'ex&eacute;cution lance chaque outil sous `--unshare-net`. "
-                    "Cocher cette case &Eacute;LARGIT la cage pour cette mission seule : les outils dont la fiche "
-                    "d&eacute;clare `reseau: true` pourront joindre leur source. D&eacute;coch&eacute;e, rien n'est envoy&eacute; "
-                    "&mdash; l'absence vaut &laquo; le profil fait foi &raquo;, et c'est un fait diff&eacute;rent d'un refus.">
-      <em id="egress-note">sortie r&eacute;seau autoris&eacute;e pour cette mission (le profil reste ferm&eacute;)</em>
-    </label>
-    <label><span>moteur d'intention</span>
-      <select id="moteur" disabled><option>auto</option><option>llm</option><option>deterministe</option></select>
-    </label>
-    <button id="run" disabled title="démarrer api.py pour activer">RUN</button>
-  </form>
-  <div class="etat" id="etat">—</div>
-  <!-- Ledger VIVANT : ce que le journal de mission a d&eacute;j&agrave; &eacute;crit, relu en cours
-       d'ex&eacute;cution. Rempli par app.js &agrave; partir de `/api/runs/<id>.vivante`, donc vide
-       et masqu&eacute; tant qu'aucune mission n'a consign&eacute; d'&eacute;tat. -->
-  <div class="etat vivante cache" id="vivante"></div>
-</header>
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Navigation principale">
+    <a class="brand" href="#workspace" aria-label="AGNT, accueil">
+      <span class="brand-mark" aria-hidden="true">A</span>
+      <span>AGNT</span>
+    </a>
+    <nav>
+      <a class="nav-item active" href="#workspace" aria-current="page"><span aria-hidden="true">⌂</span> Vue d’ensemble</a>
+      <a class="nav-item" href="#mission"><span aria-hidden="true">◎</span> Mission</a>
+      <span class="nav-item unavailable" aria-disabled="true" title="L’API d’historique n’est pas encore disponible"><span aria-hidden="true">◷</span> Historique <small>Bientôt</small></span>
+      <span class="nav-item unavailable" aria-disabled="true" title="Disponible depuis une mission terminée"><span aria-hidden="true">◇</span> Findings</span>
+      <span class="nav-item unavailable" aria-disabled="true" title="Disponible depuis une mission terminée"><span aria-hidden="true">▤</span> Rapports</span>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="connection"><i id="connection-dot"></i><span id="connection-label">Connexion au moteur…</span></div>
+      <p>Security orchestration platform</p>
+    </div>
+  </aside>
 
-<main id="poste" class="grille"></main>
-<footer class="pied" id="pied"></footer>
+  <div class="workspace" id="workspace">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">ESPACE DE TRAVAIL</p>
+        <h1>Vue d’ensemble</h1>
+      </div>
+      <div class="top-actions">
+        <span class="etat" id="etat" role="status" aria-live="polite">Connexion…</span>
+        <button class="icon-button" id="theme" type="button" aria-label="Changer de thème" title="Thème clair, sombre ou système">◐</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="mission-composer" id="mission" aria-labelledby="composer-title">
+        <div class="composer-intro">
+          <p class="eyebrow accent">NOUVELLE MISSION</p>
+          <h2 id="composer-title">Que souhaitez-vous sécuriser&nbsp;?</h2>
+          <p>Décrivez votre objectif. AGNT sélectionne les capacités autorisées et vous montre exactement ce qui a été exécuté.</p>
+        </div>
+
+        <form class="lancer" id="form" onsubmit="return false" novalidate>
+          <div class="field-grid">
+            <label class="field target-field"><span>Cible</span><select id="cible" disabled required><option>Chargement des cibles…</option></select><small>Répertoire local autorisé par le moteur</small></label>
+            <label class="field question-field"><span>Votre demande</span>
+              <textarea id="question" rows="3" disabled required maxlength="4000" placeholder="Ex. Analyse les risques de sécurité importants de ce dépôt.">Analyse ce dépôt et trouve les problèmes de sécurité importants.</textarea>
+              <small>Formulez votre besoin en langage naturel.</small>
+            </label>
+          </div>
+
+          <details class="advanced">
+            <summary>Options avancées <span>Le mode automatique convient à la plupart des missions</span></summary>
+            <div class="advanced-grid">
+              <label class="field"><span>Moteur</span><select id="moteur" disabled><option>auto</option><option>llm</option><option>deterministe</option></select><small>Interprète la demande et construit le plan.</small></label>
+              <label class="field"><span>Modèle</span><input id="modele" disabled placeholder="Modèle du fournisseur"><small>Laisser vide pour le modèle configuré.</small></label>
+              <label class="field"><span>Confiance dans la cible</span><select id="confiance" disabled><option>controlled</option><option>untrusted</option></select><small>Adapte les garde-fous d’exécution.</small></label>
+              <label class="network-option">
+                <input id="egress" type="checkbox" disabled>
+                <span><b>Demander une sortie réseau</b><small id="egress-note">Le profil d’exécution fait foi.</small></span>
+              </label>
+            </div>
+          </details>
+
+          <div class="composer-actions">
+            <p><i class="trust-dot"></i> Le plan sera vérifié par la policy avant toute exécution.</p>
+            <button class="primary-button" id="run" disabled type="submit"><span>Démarrer la mission</span><b aria-hidden="true">→</b></button>
+          </div>
+          <p class="form-error" id="form-error" role="alert"></p>
+        </form>
+      </section>
+
+      <div class="etat vivante cache live-ledger" id="vivante" aria-live="polite"></div>
+
+      <section class="welcome-state" id="welcome" aria-labelledby="welcome-title">
+        <div class="welcome-icon" aria-hidden="true">◎</div>
+        <div>
+          <p class="eyebrow">PRÊT À ANALYSER</p>
+          <h2 id="welcome-title">Votre prochain résultat commence par une mission.</h2>
+          <p>Sélectionnez une cible et décrivez ce que vous voulez comprendre. Les résultats, limites de couverture et artefacts apparaîtront ici.</p>
+        </div>
+        <div class="feature-list" aria-label="Étapes d’une mission">
+          <span><b>01</b> Intention et plan</span>
+          <span><b>02</b> Exécution contrôlée</span>
+          <span><b>03</b> Findings corrélés</span>
+        </div>
+      </section>
+
+      <div id="poste" class="grille" aria-live="polite"></div>
+    </main>
+    <footer class="pied" id="pied"></footer>
+  </div>
+</div>
 <script src="app.js"></script>
 </body>
 </html>
