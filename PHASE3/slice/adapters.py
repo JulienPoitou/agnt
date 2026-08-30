@@ -25,6 +25,7 @@ from pathlib import Path
 import extraction as EX
 import conditions as COND
 import provider_manifest as PM
+import transports
 from sandbox import CACHE_BIN, CACHE_DB, CACHE_REGLES, RACINE_MONTEURS, Sandbox
 
 # Ces deux constantes sont LE préfixe de montage, pas un chemin d'hôte : un littéral séparé
@@ -548,12 +549,23 @@ ADAPTATEURS = {
 
 
 def executer(prov, sbx: Sandbox) -> ResultatBrut:
-    """Point d'entrée unique.
+    """Point d'entrée unique — dispatché par TRANSPORT, puis par forme de provider.
 
-    Priorité : un provider déclaré par MANIFEST passe par l'adaptateur générique, sans
-    code spécifique. Les adaptateurs historiques (semgrep, trivy, gitleaks) restent
-    utilisés pour leurs particularités — couverture npm, base pré-peuplée, historique git.
+    La frontière (2026-08-30) : un provider déclare SON transport au manifest ; le cœur
+    fournit `sandbox_cli` (sous-processus dans la cage) et DÉLÈGUE tout autre transport à
+    l'exécuteur enregistré (`transports.deleguer`). Un transport non fourni est une erreur
+    nette, jamais un repli silencieux sur le sous-processus — un provider « mcp » exécuté
+    en binaire local serait exactement le mélange Provider/Transport que cette séparation
+    existe pour empêcher.
+
+    Dans `sandbox_cli`, la priorité reste : un provider déclaré par MANIFEST passe par
+    l'adaptateur générique, sans code spécifique ; les adaptateurs historiques (semgrep,
+    trivy, gitleaks) restent utilisés pour leurs particularités — couverture npm, base
+    pré-peuplée, historique git.
     """
+    transport = getattr(prov, "transport", None) or transports.TRANSPORT_SANDBOX_CLI
+    if transport != transports.TRANSPORT_SANDBOX_CLI:
+        return transports.deleguer(transport, prov, sbx)
     if getattr(prov, "manifest", None) is not None:
         return generique_cli(prov, sbx)
     fn = ADAPTATEURS.get(prov.id)

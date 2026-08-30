@@ -178,6 +178,14 @@ class Manifest:
     # validées contre les mêmes placeholders/jetons (aucune chaîne libre). Le cœur
     # résout, le manifest ne décide de rien. Stocké en tuple de paires (frozen).
     env: tuple = ()
+    # TRANSPORT D'EXÉCUTION (2026-08-30) : COMMENT ce provider s'exécute, distinct de CE
+    # QU'IL VEUT (argv/env/sortie). Jusqu'ici ce couplage était implicite — un provider
+    # était forcément un binaire local en sous-processus dans la cage. Le champ le rend
+    # déclaratif : `sandbox_cli` (fourni par le cœur) ou un transport ENREGISTRÉ
+    # (builder-mcp, builder-tools). Validé au chargement contre `transports.connus()` :
+    # un transport inconnu est refusé, jamais deviné — sans quoi un provider « mcp »
+    # serait exécuté en sous-processus local, exactement le mélange à empêcher.
+    transport: str = "sandbox_cli"
 
     def to_dict(self) -> dict:
         return {"id": self.id, "capability": self.capability, "kind": self.kind,
@@ -189,6 +197,7 @@ class Manifest:
                 "tool_id": self.tool_id,
                 "applicabilite": {"globs": list(self.applicable_globs)},
                 "env": {k: v for k, v in self.env},
+                "transport": self.transport,
                 "conditions": {"reseau": self.reseau, "base_fichiers": list(self.base_fichiers),
                                "timeout_s": self.timeout_s, "privileges": self.privileges}}
 
@@ -393,8 +402,34 @@ def valider(doc: dict, capability: str) -> Manifest:
         tool_id=str(doc.get("tool_id") or ""),
         applicable_globs=tuple((doc.get("applicabilite") or {}).get("globs") or []),
         env=tuple(sorted(env_doc.items())),
+        transport=_transport_valide(doc),
         **_conditions(doc),
     )
+
+
+def _transport_valide(doc: dict) -> str:
+    """Refuse un transport d'exécution que rien ne fournit.
+
+    La validation est fail-closed, comme tout le reste du manifest : un `transport` que le
+    cœur ne connaît pas ET qu'aucun agent n'a enregistré est refusé au chargement — jamais
+    deviné, jamais silencieusement rabattu sur `sandbox_cli`. Un provider « mcp » exécuté
+    en sous-processus local serait exactement le mélange Provider/Transport que la
+    séparation existe pour empêcher (2026-08-30).
+    """
+    import transports as TR
+    brut = doc.get("transport")
+    if brut is None:
+        return TR.TRANSPORT_SANDBOX_CLI
+    nom = str(brut).strip()
+    if not nom:
+        raise ManifestError(f"{doc['id']} : transport vide — déclarez un transport ou "
+                            f"omettez le champ (défaut {TR.TRANSPORT_SANDBOX_CLI!r})")
+    if not TR.fournit(nom):
+        raise ManifestError(
+            f"{doc['id']} : transport {nom!r} non fourni — transports connus : "
+            f"{list(TR.connus())}. Enregistrez-le avec transports.enregistrer({nom!r}, "
+            f"exécuteur) avant de déclarer un provider qui l'exige.")
+    return nom
 
 
 NETTOYAGES_REGLE_AUTORISES = ("", "semgrep")
