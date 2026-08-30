@@ -2714,6 +2714,15 @@ mention de chemin `PHASE3` dans un docstring d'`adapters.py`, un mot du README (
 faux positif du tokeniseur (`"\nempreinte"` lu comme un identifiant). Le compte est écrit ici parce
 qu'un « rien de perdu » sans chiffre ne vaut pas mieux qu'un grep.
 
+**La PR #1 est fusionnée dans `main`** — commit `4433af6`, parents `53ab18b` + `c03689c`, message
+« Merge pull request #1 from … », le 30/08/2026 à 11:59:46Z. Deux faits sont vérifiables et pas
+évidents : l'arbre de `main` est **octet pour octet** celui qui a été testé (`git diff c03689c 4433af6`
+vide — GitHub n'a rien « résolu » à notre place, la fusion n'a pas été l'occasion d'un arrangement), et
+les deux lignes sont atteignables depuis `main` (`git rev-list --count 4433af6` = **21 commits** : les
+14 de la PR, les 4 de LOT 2→5, le RÉTABLAGE et les deux commits de fusion). La branche de session
+n'a pas été supprimée. Ce paragraphe est, lui, un commit **après** la fusion, sur cette branche : le
+bilan vit dans `main`, cette note pas encore — à emporter au prochain aller.
+
 Deux points où la comparaison tourne à l'avantage de la fusion plutôt qu'à celui d'un bord : chez eux
 `rapport.py` échappait ce qu'il recopiait (`_sur(..., dans_code_span=True)`, 18 occurrences) sans
 jamais masquer — chez moi le masque passe **avant** (`assainissement`, 24 occurrences de
