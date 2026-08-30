@@ -74,6 +74,7 @@ MODELES_LECTURE = ("plat", "imbriqué", "lignes_json", "csv", "xml")
 
 
 import conditions as COND  # noqa: E402  (aucun cycle : conditions ne lit rien)
+import cible  # noqa: E402  (module feuille : le vocabulaire target_types partagé)
 
 
 class ManifestError(Exception):
@@ -395,7 +396,7 @@ def valider(doc: dict, capability: str) -> Manifest:
             nettoyage_regle=_nettoyage_regle_valide(doc, ex),
         ),
         risque=risque,
-        cibles=tuple(doc.get("target_types", ["repository"])),
+        cibles=_target_types_valides(doc),
         code_succes=tuple(doc.get("code_succes", [0])),
         declare_fichiers=bool((doc.get("coverage") or {}).get("declares_files", False)),
         limite=doc.get("limite", ""),
@@ -430,6 +431,34 @@ def _transport_valide(doc: dict) -> str:
             f"{list(TR.connus())}. Enregistrez-le avec transports.enregistrer({nom!r}, "
             f"exécuteur) avant de déclarer un provider qui l'exige.")
     return nom
+
+
+def _target_types_valides(doc: dict) -> tuple[str, ...]:
+    """Les types de cible qu'un provider sait analyser, validés au chargement.
+
+    Le manifest et le pipeline parlent exactement le même langage : le défaut vient de
+    `cible.TYPE_DEFAUT` (pas d'un littéral dupliqué ici), et la valeur est contrôlée
+    comme une donnée de sécurité — un `target_types` vide, non listé, ou portant un
+    jeton non textuel refuserait le provider au lieu de désarmer l'applicabilité en
+    silence (un provider « applicable à rien » serait exclu partout sans le dire, ou
+    pire, laissé éligible par un lecteur qui devine).
+    """
+    brut = doc.get("target_types", [cible.TYPE_DEFAUT])
+    if isinstance(brut, str):
+        brut = [brut]
+    if not isinstance(brut, (list, tuple)) or not brut:
+        raise ManifestError(
+            f"{doc['id']} : target_types vide — un provider doit déclarer au moins "
+            f"un type de cible (défaut {cible.TYPE_DEFAUT!r})")
+    types: list[str] = []
+    for t in brut:
+        if not isinstance(t, str) or not t.strip():
+            raise ManifestError(
+                f"{doc['id']} : target_types porte {t!r} — types textuels non vides "
+                f"requis (vocabulaire partagé : {list(cible.TYPES_LOCAUX)} locaux, "
+                f"le reste est non local)")
+        types.append(t.strip())
+    return tuple(types)
 
 
 NETTOYAGES_REGLE_AUTORISES = ("", "semgrep")
