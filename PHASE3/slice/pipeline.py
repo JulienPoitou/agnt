@@ -434,6 +434,16 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     else:
         it = intent.inferer(requete, registre, avec_internes=avec_internes)
 
+    # La DÉCISION d'intention est consignée pour tous les états — y compris les arrêts :
+    # « pourquoi cette capacité » se relit dans le journal (motif du matching), pas en
+    # rouvrant plan.json. Un journal qui s'arrête à « intent_rejected » ne dit pas QUOI
+    # a été compris ni pourquoi. Les `motifs` sont les mots-clés qui ont matché, jamais
+    # des noms d'outil (le registre ne les expose pas au moteur d'intention).
+    MS.consigner(miss, "intention", statut=it.statut,
+                 capabilities=list(it.capabilities),
+                 motifs=dict(it.motifs), moteur=it.moteur,
+                 question=it.question, motif=it.motif)
+
     # Un intent non résolu n'exécute RIEN. Ni plan, ni policy, ni outil.
     # C'est testé : c'est la différence entre « il manque une information » et
     # « la demande est refusée », et aucune des deux ne doit produire d'exécution.
@@ -488,8 +498,13 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     # ---------------------------------------------------------------- 2. plan typé
     plan = P.construire(requete, str(cible), provs, registre, it.moteur,
                         exclus_applicabilite=exclus, exclus_conditions=exclus_cond)
+    # La SÉLECTION est consignée avec le plan : « pourquoi ce provider et pas l'autre »
+    # se lit dans le journal (choisis, écartés, motif), pas seulement dans plan.json. Le
+    # motif vient de `plan.construire` — priorité déclarée, fan_out, ou choix imposé — et
+    # c'est exactement la trace que le futur UI consommera pour expliquer une étape.
     MS.consigner(miss, "plan", plan_id=plan.plan_id,
-                 providers=[s.provider for s in plan.steps])
+                 providers=[s.provider for s in plan.steps],
+                 selection=plan.selection)
 
     # ---------------------------------------------------------------- 3. policy
     # Une politique QUI NE PEUT PAS RÉPONDRE n'est pas une politique qui refuse :
