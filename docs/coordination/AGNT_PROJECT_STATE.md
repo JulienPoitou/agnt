@@ -52,7 +52,7 @@
 | CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d`, `729c2c0`, `fed13d6`, `e36c53a` | **P1 actif :** aligner le lecteur/API History sur les contrats Product, avec `data.timeline` et `data.executions[]` structurés ; ne pas réécrire le lecteur livré. |
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d`, `6e04ff8` | Interop stdio terminée dans son périmètre ; aucun nouveau chantier MCP assigné. Raccord Transport CORE réservé à l'intégration coordonnée. |
 | WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
-| SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003`, `cf1eea6` | **P1 actif :** re-bind du gate adversarial sur les contrats Product, sans merge ; Mode laboratoire reprend après ce jalon. |
+| SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003`, `cf1eea6`, `dae445a` | Gate adversarial re-lié au contrat Product ; **P1 actif :** Mode Laboratoire Propriétaire borné, sans bypass ni merge. |
 | DEVOPS / Release / Environnement | `arena/01a05481-agnt` (**DÉCLARÉ**, session Arena issue de `arena/builder-devops`) | `PARTIAL` — reconnaissance/test interrompus, aucune livraison acceptée | aucun commit de livraison rapporté | Corriger le protocole de reconnaissance et rendre un bilan cohérent avant toute écriture de bootstrap, CI, pin ou source. |
 | PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f`, `3f96e255` | Gate black-box livré ; attente contrôlée de l'API CORE réelle pour certification History/Timeline/Status. |
 
@@ -98,7 +98,7 @@
 - Tests adversariaux et de régression ajoutés pour l'autorisation de cible et le journal.
 - SEC-G6a fermé : gitleaks reçoit une configuration AGNT explicite sous `{REGLES}`, épinglée, installée par bootstrap et vérifiée avant tout `Popen`.
 - La cible ne peut plus fournir son propre `.gitleaks.toml` pour réduire la détection ; absence/divergence de règles = refus fail-closed.
-- Gate adversarial History/Timeline/Status ajouté dans `cf1eea6` : runner stdlib, corpus hostile de 81 fixtures et 93 vérifications déclarées vertes ; push du SHA confirmé. Il reste **candidat non re-lié** : son schéma temporaire ne doit pas devenir le contrat API.
+- Gate adversarial History/Timeline/Status re-lié aux contrats Product dans `dae445a` : réponses brutes Product, corpus de 88 fixtures et harnais 46/46 sous deux interpréteurs **DÉCLARÉS** verts. Il complète désormais le gate Product ; son passage contre une API CORE réellement intégrée reste à faire.
 
 ### PRODUCT & UX
 
@@ -187,17 +187,15 @@ Avant toute écriture, DevOps doit produire une matrice de test réconciliée, d
 - **Écartés pour le produit actuel :** PentestGPT, PentestAgent et GHOSTCREW/PentestAgent MCP.
 - **Aucun pilote ni intégration n'est assigné** ; le rapport fixe les critères d'une décision propriétaire ultérieure.
 
-### P1 — SECURITY : gate adversarial History / Timeline / Status livré, re-bind requis
+### P1 — SECURITY : gate adversarial History / Timeline / Status re-lié
 
-Security a livré `cf1eea6` (push **CONFIRMÉ**) : un runner stdlib, 81 fixtures hostiles et un harnais dont les 93 vérifications sont **DÉCLARÉES** vertes. Il protège utilement contre secrets, chemins/artefacts bruts, payloads, faux zéros, contradictions et provenance MCP non fiable.
+Security a livré `dae445a` après le candidat `cf1eea6`. Le re-bind aux trois contrats Product est **DÉCLARÉ** complet : le gate valide les réponses JSON brutes Product, les objets stricts/extensibles, les redactions et les incohérences ; 9 captures/fixtures Product, 18 cas Execution Status, 88 fixtures hostiles et 46 vérifications sous deux interpréteurs sont déclarés conformes.
 
-Un conflit de contrat est toutefois **CONFIRMÉ** par comparaison ciblée des branches distantes : les contrats Product existent sur `arena/01a05425-agnt` (`3f96e255`) et utilisent notamment `schema_version`, `items`/`page`, `status`, `data.timeline`, `sequence`/`timestamp`/`kind`. Le gate Security, construit dans un checkout où ces fichiers étaient absents, attend une enveloppe temporaire `api`/`endpoint`/`data`, le champ `statut` et `seq`/`ts`/`type`. Il rejettera donc une réponse Product conforme.
-
-Conséquence : ne pas demander à CORE d'adopter le dialecte Security et ne pas présenter ce gate comme feu vert de release avant re-bind. **Mission P1 relancée :** Security adapte ses allowlists, runner et fixtures aux trois schémas Product, conserve les contrôles hostiles, puis le gate Product et le gate Security seront exécutés contre la même API CORE intégrée. Les valeurs MCP temporaires (`transport`/`protocol`) restent à confirmer avec MCP. Aucun merge n'est autorisé dans cette mission.
+Le contrat Product demeure l'autorité de forme. Le gate Security est son contrôle d'exposition complémentaire, jamais un dialecte concurrent. Aucune API CORE intégrée n'a encore passé les deux gates : cette validation attend l'alignement CORE, sans merge aveugle. Les vocabulaires MCP temporaires restent soumis à clarification ciblée si CORE/Security remonte un écart concret.
 
 ### P1 — SECURITY : Mode laboratoire propriétaire borné
 
-Le handoff `cf1eea6` ne couvre pas le Mode laboratoire. Ce chantier demandé par le propriétaire est mis en attente du re-bind P1, jamais un bypass générique.
+Le re-bind terminé, ce chantier demandé par le propriétaire devient actif. Il doit fournir un Mode Laboratoire Propriétaire, jamais un bypass générique.
 
 Invariants :
 - activation locale explicite et double opt-in opérateur ;
@@ -301,7 +299,7 @@ transports.enregistrer("mcp", executeur)
 | Compatibilité MCP avec une implémentation tierce indépendante. | Moyenne | Preuve indépendante terminée pour `mcp==2.1.1` en stdio seulement ; ne pas généraliser aux autres SDK, profils ou transports. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product UI est déjà livré ; WEB a été recadré et ne modifie pas ces fichiers. Préparer une adoption ciblée après référence consolidée, jamais une seconde refonte. |
 | History API candidate diverge des contrats Product non visibles sur la branche CORE. | Élevée à l'intégration | Lecteur/API CORE est livré et testé localement, mais doit être aligné sur `agnt.history.v1`, `data.timeline` et `data.executions[]`, puis passer le gate Product/API réel avant activation WEB. |
-| Exposition API History/Timeline/Status de données sensibles ou payloads non allowlistés. | Haute sécurité d'intégration | Gate Security candidat livré (`cf1eea6`), mais son schéma temporaire diverge de façon **confirmée** du contrat Product (`statut` vs `status`, enveloppe et événements). Re-bind obligatoire, puis exécution des deux gates contre la même API ; CORE reste propriétaire de la projection/redaction. Toute clarification MCP sera demandée seulement sur écart précis. |
+| Exposition API History/Timeline/Status de données sensibles ou payloads non allowlistés. | Haute sécurité d'intégration | Gate Security re-lié au contrat Product (`dae445a`, résultat de harnais **DÉCLARÉ**) ; validation encore requise contre l'API CORE intégrée, avec le gate Product. CORE reste propriétaire de la projection/redaction. Toute clarification MCP sera demandée seulement sur écart précis. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
 | Un « bypass » générique pourrait devenir une backdoor publique ou désactiver des garanties de sécurité. | Haute sécurité | Remplacer le concept par un Mode laboratoire propriétaire borné, local, audité et impossible à activer depuis le LLM/API ; Security en est propriétaire. |
 
@@ -343,7 +341,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | PRODUCT-005 | Validation produit des réponses History/Timeline/Status réelles | P1 intégration | Gate livré — dépend du lecteur/API CORE et de captures complètes |
 | GATE-001 | Endpoints CORE requis pour validation API réelle | Intégration | Bloqué — CORE en cours |
 | GATE-002 | Captures CORE couvrant toute la matrice sémantique | Qualité | Ouvert — CORE/MCP/SECURITY |
-| GATE-003 | Corpus hostiles complémentaire au gate Product | Sécurité | Livré candidat — `cf1eea6`; re-bind Product et table MCP obligatoire avant valeur de gate d'intégration |
+| GATE-003 | Corpus hostiles complémentaire au gate Product | Sécurité | Re-lié — `dae445a`, 88 fixtures déclarées ; attente de l'API CORE intégrée pour gate réel |
 | WEB-001 | Adoption de la refonte Product UI et états honnêtes | P1 | En attente de référence consolidée ; carte d'adoption active |
 | WEB-002 | Consommation UI de `/api/missions` et détail | P1 | Bloqué — dépend de CORE History/Timeline et validation Security |
 | WEB-003 | Validation navigateur réelle d'un run terminé | P2 environnement | Bloqué — OPA/bwrap/outils absents |
@@ -352,8 +350,8 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | TIMELINE-003 | Allowlists transport/protocole MCP approuvées avec Security | Sécurité | Ouvert — solliciter MCP uniquement si le re-bind Security remonte un écart précis |
 | SEC-G6a | Configuration gitleaks contrôlée par le dépôt cible | P1 haute sécurité | Terminé — `e5838003`, config AGNT épinglée/fail-closed |
 | SEC-G9 | Mesure réelle gitleaks face à un `.gitleaks.toml` hostile | P2 environnement | Bloqué |
-| SEC-HIST-001 | Gate adversarial d'exposition History/Timeline/Status | P1 intégration sécurité | En cours — re-bind Security assigné sur les contrats Product ; API CORE intégrée ensuite |
-| SEC-LAB-001 | Mode laboratoire propriétaire borné, testé et audité | P1 pré-publication | En attente après SEC-HIST-001 — aucun handoff associé à `cf1eea6` |
+| SEC-HIST-001 | Gate adversarial d'exposition History/Timeline/Status | P1 intégration sécurité | Re-bind terminé — `dae445a` ; passage contre API CORE intégrée requis |
+| SEC-LAB-001 | Mode laboratoire propriétaire borné, testé et audité | P1 pré-publication | En cours — SECURITY, après re-bind History |
 | SEC-B6 | Durcissement garde-fous homoglyphes / espaces | P3 | Différé |
 | SEC-B7 | Borne de taille de requête sortante fournisseur | P3 | Différé |
 | STRAT-001 | Faisabilité d'un backend Strix dans le Mode Laboratoire Propriétaire | P2 post-intégration | Différé — décision propriétaire requise après SEC-LAB, Cible/Transport et double gate API |
@@ -366,8 +364,8 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 
 1. Préserver les correctifs Security poussés P0.1 `d1d562f`, SEC-G6a `e5838003` et le corpus candidat `cf1eea6`; ne pas déclarer G9 mesuré sans vrai gitleaks ni le schéma temporaire Security comme contrat API.
 2. Prendre les trois schémas Product versionnés comme référence de forme, puis CORE aligne son lecteur/API History candidat sur eux en préservant Cible et l'autorisation explicite de cible. Aucun merge n'est implicite dans cette étape.
-3. **Mission Security active :** re-lier son gate au contrat Product, sans perdre les contrôles hostiles ni créer de second format. Consulter MCP seulement si un écart précis de provenance est constaté. Le Mode laboratoire reprend après ce jalon.
-4. CORE termine `data.timeline` et `data.executions[]` enrichi à partir des contrats, puis les gates Product/API **et** Security sont lancés contre la même API réelle avec couverture complète. Product & UX valide alors le résultat sans toucher à l'UI partagée.
+3. **Mission Security active :** implémenter/tester le Mode Laboratoire Propriétaire borné, sans bypass. Consulter MCP seulement si un écart précis de provenance est constaté.
+4. CORE termine `data.timeline` et `data.executions[]` enrichi à partir des contrats, puis les gates Product/API **et** Security re-lié sont lancés contre la même API réelle avec couverture complète. Product & UX valide alors le résultat sans toucher à l'UI partagée.
 5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle. Ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
 6. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après double feu vert produit/Security.
 7. Seulement après ces jalons, le propriétaire pourra décider d'un pilote Strix strictement local et isolé ; aucun agent tiers complet n'est intégré dans le cœur AGNT.
