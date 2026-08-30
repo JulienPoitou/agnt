@@ -36,6 +36,7 @@
 | **Progressive disclosure** | L'UX montre d'abord le résultat métier ; providers et détails techniques restent secondaires. Les données non fiables sont rendues avec `textContent`, jamais `innerHTML`. |
 | **Dimensions de statut séparées** | Statut Mission, applicabilité, sélection, condition, autorisation, disponibilité, exécution, détection et complétude sont distincts ; aucune absence/erreur/refus ne devient `rien_trouve` ou un compteur zéro. |
 | **Forme API History détenue par Product** | Les schémas Product versionnés (`agnt.history.v1`, `agnt.timeline.v1`, `agnt.execution-status.v1`) sont l'autorité pour les noms de champs et enveloppes HTTP. Le gate Security complète ce contrat par des contrôles de fuite/contradiction ; il ne crée jamais un dialecte concurrent. |
+| **Provenance MCP : faits puis projection** | MCP possède les faits de transport/protocole/serveur ; CORE les projette dans la forme Product ; Security valide leur exposition. Aucun builder ne crée une seconde API History ou n'élève une déclaration de provider en confiance AGNT. |
 | **Autorisation de cible explicite** | `cible_autorisee` n'a aucun défaut permissif : seul `True` explicite l'arme ; l'API dérive cette autorisation exclusivement de la liste opérateur `cibles_admises()`. |
 | **Jeux de règles de sécurité contrôlés** | Un scanner ne doit jamais charger une configuration fournie par le dépôt analysé. Une règle doit venir d'une source AGNT de confiance, montée en lecture seule et vérifiée. |
 | **Mode laboratoire propriétaire, pas bypass** | Un mode explicite peut faciliter des tests sur cibles contrôlées, mais ne désactive jamais sandbox, policy, intégrité, autorisation de cible ou redaction ; il ne peut être activé ni par LLM ni par API cliente. |
@@ -47,7 +48,7 @@
 | Builder | Branche | Statut rapporté | Derniers commits | Prochaine mission assignée |
 |---|---|---|---|---|
 | CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d`, `729c2c0`, `fed13d6`, `e36c53a` | **P1 :** aligner History API sur les contrats Product, ajouter `data.timeline` et `data.executions[]` structurés. |
-| MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d` | **P2 :** interopérabilité contre une implémentation MCP indépendante ; **P1 intégration :** raccord final au module CORE canonique à traiter lors de l'intégration coordonnée. |
+| MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d`, `6e04ff8` | **P1 actif :** fournir la table de correspondance des faits MCP vers les contrats Product pour débloquer CORE/Security ; raccord Transport CORE toujours différé à l'intégration coordonnée. |
 | WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
 | SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003`, `cf1eea6` | **P1 actif :** re-bind du gate adversarial sur les contrats Product, sans merge ; Mode laboratoire reprend après ce jalon. |
 | PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f`, `3f96e255` | Gate black-box livré ; attente contrôlée de l'API CORE réelle pour certification History/Timeline/Status. |
@@ -78,6 +79,7 @@
 - Tests contractuels, intégration simulée et serveurs/processus MCP locaux réellement exercés pour HTTP, Streamable HTTP et stdio.
 - Bootstrap MCP explicite, timeout/classification, annulation stdio et HTTP, redaction de secrets et policy/egress fail-closed testés.
 - Annulation HTTP réelle prouvée : fermeture TCP, serveur contrôlé observant EOF/reset, worker rejoint, absence de réponse tardive/retry et statut `cancelled` distinct.
+- Interopérabilité indépendante stdio ajoutée dans `6e04ff8` : SDK officiel `mcp==2.1.1`, handshake/outils/appel réels et 20 tests déclarés verts ; push confirmé. La preuve ne couvre ni HTTP/SSE/streaming ni annulation protocolaire, et le diff ne touche aucun module générique CORE.
 - Compatibilité avec le module Transport CORE encore provisoire : une implémentation locale de `transports.py` existe faute du CORE canonique dans le checkout MCP.
 
 ### WEB
@@ -134,14 +136,17 @@ Le bootstrap MCP et les tests locaux réels sont terminés. Le raccord reste pro
 - adapter le dispatch au nom/signatures canoniques ;
 - rejouer la batterie MCP sur l'arbre intégré.
 
-### P2 — MCP : interopérabilité avec une implémentation indépendante
+### P2 — MCP : interopérabilité avec une implémentation indépendante, preuve bornée terminée
 
-L'annulation HTTP est terminée et prouvée localement (`b6b650d`). La prochaine preuve utile est une compatibilité contrôlée avec une implémentation MCP indépendante, sans serveur public ni credential, et sans toucher aux contrats CORE génériques.
+`6e04ff8` apporte une preuve **DÉCLARÉE** de compatibilité stdio avec le SDK officiel `mcp==2.1.1` : handshake, découverte, appel, timeout, refus, annulation pré-invocation et passage par le pipeline commun. Le push est **CONFIRMÉ** et le diff est limité à la documentation MCP et au test d'interopérabilité.
 
-- Utiliser une implémentation de référence ou tierce locale, pas le serveur de test écrit par MCP lui-même.
-- Exercer seulement les transports/profils réellement supportés.
-- Conserver les statuts structurés (`timed_out`, `cancelled`, `unavailable`, `failed`) et la redaction.
-- Abandonner après une tentative bornée si l'environnement ne permet pas l'installation ; documenter alors le blocage sans contourner la sécurité.
+La portée reste volontairement limitée à stdio : HTTP, Streamable HTTP, SSE, streaming, ressources, prompts, authentification, JSON-RPC malformé et annulation protocolaire ne sont pas démontrés contre cette implémentation. Ne pas rejouer ni élargir cette preuve sans besoin produit explicite.
+
+### P1 — MCP : correspondance des faits MCP vers Product / Security
+
+L'interopérabilité n'est plus le blocage utile. Une comparaison ciblée montre que les faits MCP actuels (`transport` générique/transport serveur, `protocol_version`, disponibilité et confiance internes) ne sont pas encore une projection Product prête à exposer : Product attend notamment une provenance structurée (`provider_kind`, transport physique, objet `protocol`, objet `confidence`, disponibilité et identifiants sûrs) et des dimensions d'exécution distinctes.
+
+Mission active : MCP doit fournir une table de correspondance testée entre ses faits réels et les contrats Product, sans modifier CORE ni construire l'API History. CORE utilisera cette table pour la projection ; Security l'utilisera pour re-lier son gate. Toute absence ou valeur non fiable reste `unknown`/partielle avec motif, jamais une valeur rassurante inventée.
 
 ### PRODUCT & UX — gate API prêt, attente de certification CORE
 
@@ -271,12 +276,12 @@ transports.enregistrer("mcp", executeur)
 | CORE et MCP ont tous deux touché des fichiers centraux (`pipeline`, `registre`, `adapters`, etc.). | Élevée à l'intégration | Le MCP local réimplémente actuellement `transports.py` et utilise un dispatch différent du CORE ; intégration ciblée obligatoire, aucun merge aveugle. |
 | Initialisation du transport MCP avant validation des manifests. | Élevée | Bootstrap explicite `mcp_bootstrap.initialiser_mcp` livré et testé localement ; raccord au module CORE canonique encore requis. |
 | Serveur MCP externe hors sandbox locale. | Élevée | Contrôles Security et provenance/confiance obligatoires ; jamais présenter cela comme sandboxé. |
-| Interopérabilité MCP seulement locale, pas contre un serveur tiers. | Moyenne | HTTP, Streamable HTTP et stdio sont exercés contre des serveurs/processus contrôlés ; compatibilité tierce reste non démontrée. |
+| Interopérabilité MCP seulement locale, pas contre un serveur tiers. | Moyenne | preuve indépendante **DÉCLARÉE** pour le SDK officiel `mcp==2.1.1` en stdio (20 tests déclarés, commit/push confirmés) ; HTTP, Streamable HTTP, SSE et compatibilité générale restent non démontrés. |
 | Contrat Transport ne reçoit pas encore le descripteur `Cible` pour une exécution distante. | Architecturale P1 | Les URL sont représentables et filtrées, mais non exécutables ; évolution conjointe CORE/MCP/SECURITY requise avant support distant réel. |
-| Compatibilité MCP avec une implémentation tierce indépendante. | Moyenne | HTTP, Streamable HTTP et stdio sont prouvés contre serveurs contrôlés internes ; une preuve avec une implémentation indépendante reste à faire. |
+| Compatibilité MCP avec une implémentation tierce indépendante. | Moyenne | Preuve indépendante terminée pour `mcp==2.1.1` en stdio seulement ; ne pas généraliser aux autres SDK, profils ou transports. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product UI est déjà livré ; WEB a été recadré et ne modifie pas ces fichiers. Préparer une adoption ciblée après référence consolidée, jamais une seconde refonte. |
 | History API candidate diverge des contrats Product non visibles sur la branche CORE. | Élevée à l'intégration | Lecteur/API CORE est livré et testé localement, mais doit être aligné sur `agnt.history.v1`, `data.timeline` et `data.executions[]`, puis passer le gate Product/API réel avant activation WEB. |
-| Exposition API History/Timeline/Status de données sensibles ou payloads non allowlistés. | Haute sécurité d'intégration | Gate Security candidat livré (`cf1eea6`), mais son schéma temporaire diverge de façon **confirmée** du contrat Product (`statut` vs `status`, enveloppe et événements). Re-bind obligatoire, puis exécution des deux gates contre la même API ; CORE reste propriétaire de la projection/redaction. |
+| Exposition API History/Timeline/Status de données sensibles ou payloads non allowlistés. | Haute sécurité d'intégration | Gate Security candidat livré (`cf1eea6`), mais son schéma temporaire diverge de façon **confirmée** du contrat Product (`statut` vs `status`, enveloppe et événements). Le mapping MCP/Product est aussi requis pour la provenance. Re-bind obligatoire, puis exécution des deux gates contre la même API ; CORE reste propriétaire de la projection/redaction. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
 | Un « bypass » générique pourrait devenir une backdoor publique ou désactiver des garanties de sécurité. | Haute sécurité | Remplacer le concept par un Mode laboratoire propriétaire borné, local, audité et impossible à activer depuis le LLM/API ; Security en est propriétaire. |
 
@@ -310,7 +315,8 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | MCP-002 | Serveur MCP réel contrôlé | P1 | Terminé localement — HTTP, Streamable HTTP et stdio contrôlés |
 | MCP-003 | Annulation HTTP MCP pendant un appel bloquant | P2 | Terminé — `b6b650d`, preuve socket/worker contrôlée |
 | MCP-004 | Raccord MCP au module Transport CORE canonique | P1 intégration | Ouvert — intégration coordonnée requise |
-| MCP-005 | Interopérabilité avec une implémentation MCP indépendante | P2 | En cours — MCP |
+| MCP-005 | Interopérabilité avec une implémentation MCP indépendante | P2 | Terminé borné — preuve **DÉCLARÉE** `6e04ff8`, SDK `mcp==2.1.1` stdio ; autres transports/SDK non prouvés |
+| MCP-006 | Table de correspondance faits MCP → provenance/statuts Product | P1 intégration | En cours — MCP, sans modification CORE/API |
 | PRODUCT-001 | Endpoint d'historique persistant des missions | P1 | Contrat produit terminé ; implémentation CORE/WEB à planifier |
 | PRODUCT-002 | Comparaison de runs et vues globales Findings/Reports | P2 | Différé |
 | PRODUCT-003 | Timeline et projection sûre de provenance | P2 | Terminé — `226029fa` |
@@ -318,13 +324,13 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | PRODUCT-005 | Validation produit des réponses History/Timeline/Status réelles | P1 intégration | Gate livré — dépend du lecteur/API CORE et de captures complètes |
 | GATE-001 | Endpoints CORE requis pour validation API réelle | Intégration | Bloqué — CORE en cours |
 | GATE-002 | Captures CORE couvrant toute la matrice sémantique | Qualité | Ouvert — CORE/MCP/SECURITY |
-| GATE-003 | Corpus hostiles complémentaire au gate Product | Sécurité | Livré candidat — `cf1eea6`; re-bind Product/MCP obligatoire avant valeur de gate d'intégration |
+| GATE-003 | Corpus hostiles complémentaire au gate Product | Sécurité | Livré candidat — `cf1eea6`; re-bind Product et table MCP obligatoire avant valeur de gate d'intégration |
 | WEB-001 | Adoption de la refonte Product UI et états honnêtes | P1 | En attente de référence consolidée ; carte d'adoption active |
 | WEB-002 | Consommation UI de `/api/missions` et détail | P1 | Bloqué — dépend de CORE History/Timeline et validation Security |
 | WEB-003 | Validation navigateur réelle d'un run terminé | P2 environnement | Bloqué — OPA/bwrap/outils absents |
 | TIMELINE-001 | Projection `data.timeline` dans le lecteur canonique CORE | P1 intégration | En cours — CORE |
 | TIMELINE-002 | Noms source des événements intention/sélection alignés à CORE | Intégration | Ouvert |
-| TIMELINE-003 | Allowlists transport/protocole MCP approuvées avec Security | Sécurité | Ouvert |
+| TIMELINE-003 | Allowlists transport/protocole MCP approuvées avec Security | Sécurité | En cours — mapping MCP/Product demandé avant re-bind Security |
 | SEC-G6a | Configuration gitleaks contrôlée par le dépôt cible | P1 haute sécurité | Terminé — `e5838003`, config AGNT épinglée/fail-closed |
 | SEC-G9 | Mesure réelle gitleaks face à un `.gitleaks.toml` hostile | P2 environnement | Bloqué |
 | SEC-HIST-001 | Gate adversarial d'exposition History/Timeline/Status | P1 intégration sécurité | En cours — re-bind Security assigné sur les contrats Product ; API CORE intégrée ensuite |
@@ -338,10 +344,9 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 
 1. Préserver les correctifs Security poussés P0.1 `d1d562f`, SEC-G6a `e5838003` et le corpus candidat `cf1eea6`; ne pas déclarer G9 mesuré sans vrai gitleaks ni le schéma temporaire Security comme contrat API.
 2. Prendre les trois schémas Product versionnés comme référence de forme, puis CORE aligne son lecteur/API History candidat sur eux en préservant Cible et l'autorisation explicite de cible. Aucun merge n'est implicite dans cette étape.
-3. **Mission Security active :** re-lier son gate au contrat Product et aux décisions MCP de provenance, sans perdre les contrôles hostiles ni créer de second format ; reprendre le Mode laboratoire propriétaire après ce jalon.
-4. CORE termine `data.timeline` et `data.executions[]` enrichi, puis les gates Product/API **et** Security sont lancés contre la même API réelle avec couverture complète. Product & UX valide alors le résultat sans toucher à l'UI partagée.
-5. Prouver l'interopérabilité MCP avec une implémentation indépendante, de manière bornée et isolée ; ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
-6. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle.
-7. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après double feu vert produit/Security.
+3. **Missions actives MCP + Security :** MCP publie le mapping de ses faits vers Product ; Security re-lie son gate à ce mapping et au contrat Product, sans perdre les contrôles hostiles ni créer de second format. Le Mode laboratoire reprend après ce jalon.
+4. CORE termine `data.timeline` et `data.executions[]` enrichi à partir des contrats et du mapping, puis les gates Product/API **et** Security sont lancés contre la même API réelle avec couverture complète. Product & UX valide alors le résultat sans toucher à l'UI partagée.
+5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle. Ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
+6. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après double feu vert produit/Security.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
