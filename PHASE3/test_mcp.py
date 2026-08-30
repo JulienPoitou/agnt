@@ -19,11 +19,13 @@ sys.path.insert(0, str(RACINE / "slice"))
 
 import adapters as A  # noqa: E402
 import findings as F  # noqa: E402
+import mcp_bootstrap as MB  # noqa: E402
 import mission as MS  # noqa: E402
 import pipeline as P  # noqa: E402
 import plan as PL  # noqa: E402
 import policy as PO  # noqa: E402
 import statuts as ST  # noqa: E402
+import transports  # noqa: E402
 from mcp_provider import MCPBackend, backend_for  # noqa: E402
 from mcp_transport import (  # noqa: E402
     MCPRemoteError,
@@ -189,6 +191,9 @@ def main() -> int:
         print(("OK    " if condition else "ECHEC ") + name
               + (f" — {detail}" if detail else ""))
 
+    # Le transport est enregistré explicitement avant le Registry, comme dans le
+    # bootstrap CORE ; le test ne dépend pas d'un import magique de MCP.
+    MB.initialiser_mcp(transports)
     reg = registry()
     prov = reg.provider("review_mcp")
     target = Target("repository", "repo://fixture")

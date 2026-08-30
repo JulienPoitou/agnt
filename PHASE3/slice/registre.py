@@ -259,6 +259,17 @@ class Registry:
                 if "id" not in p:
                     raise RegistryError(f"capacité {c['id']}: provider sans id")
                 transport = str(p.get("transport", "local"))
+                if transport != "local":
+                    # Le transport est une extension du CORE, pas une capacité du
+                    # registre MCP. Un manifest externe ne peut être chargé qu'après
+                    # l'enregistrement explicite de son executor.
+                    try:
+                        import transports as CORE_TRANSPORTS
+                        CORE_TRANSPORTS.obtenir(transport)
+                    except Exception as exc:
+                        raise RegistryError(
+                            f"{p.get('id', '?')}: transport {transport!r} non enregistré "
+                            "par le bootstrap CORE") from None
                 if transport == "local" and "commande" not in p:
                     raise RegistryError(
                         f"capacité {c['id']}: provider local sans commande")

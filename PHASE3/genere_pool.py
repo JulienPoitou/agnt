@@ -64,6 +64,10 @@ def _sha(p: Path) -> str:
 
 
 def main() -> int:
+    # Utilitaire CLI : le même bootstrap explicite que l'application, avant Registry().
+    from mcp_bootstrap import initialiser_mcp
+    import transports as CORE_TRANSPORTS
+    initialiser_mcp(CORE_TRANSPORTS)
     lignes = list(csv.DictReader(open(CATALOGUE, encoding="utf-8")))
     fiches = {r["owner_repo"]: r
               for r in csv.DictReader(open(FICHES, encoding="utf-8"))}

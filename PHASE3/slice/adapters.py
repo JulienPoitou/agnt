@@ -27,6 +27,7 @@ import conditions as COND
 import provider_manifest as PM
 from provider_contract import Target
 import mcp_provider as MCP
+import transports as CORE_TRANSPORTS
 from sandbox import CACHE_BIN, CACHE_DB, CACHE_REGLES, RACINE_MONTEURS, Sandbox
 
 # Ces deux constantes sont LE préfixe de montage, pas un chemin d'hôte : un littéral séparé
@@ -627,23 +628,19 @@ ADAPTATEURS = {
     "gitleaks": gitleaks,
 }
 
-# Dispatch par transport, pas par nom d'outil. Un provider HTTP futur pourra ajouter
-# son backend dans cette table sans modifier le plan, le normaliseur ou le pipeline.
-TRANSPORT_ADAPTATEURS = {"mcp": mcp}
-
-
 def executer(prov, sbx: Sandbox, *, target: Target | None = None,
              arguments: dict | None = None, transport_factory=None,
              cancel_event=None) -> ResultatBrut:
     """Point d'entrée unique de l'exécution provider.
 
-    Les providers externes sont dispatchés par leur contrat de transport. Les manifests
-    historiques continuent par l'adaptateur CLI générique ; les trois adaptateurs
-    historiques conservent leurs particularités de couverture.
+    Le CORE résout les transports externes dans son registre générique. Ce module ne
+    conserve donc pas de table MCP concurrente : ``transports.obtenir`` renvoie
+    l'executor enregistré au bootstrap. Un transport non enregistré échoue sans
+    fallback vers un binaire local ou ``sandbox_cli``.
     """
     transport = getattr(prov, "transport", "local")
-    fn = TRANSPORT_ADAPTATEURS.get(transport)
-    if fn is not None:
+    if transport != "local":
+        fn = CORE_TRANSPORTS.obtenir(transport)
         return fn(prov, sbx, target=target, arguments=arguments,
                   transport_factory=transport_factory, cancel_event=cancel_event)
     if getattr(prov, "manifest", None) is not None:

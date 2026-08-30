@@ -8,6 +8,7 @@ réponse ``tools/list`` une autorisation implicite.
 """
 from __future__ import annotations
 
+import atexit
 import sys
 import tempfile
 from pathlib import Path
@@ -16,7 +17,9 @@ RACINE = Path(__file__).parent
 sys.path.insert(0, str(RACINE / "slice"))
 
 import conditions as COND  # noqa: E402
+import mcp_bootstrap as MB  # noqa: E402
 import plan as PL  # noqa: E402
+import transports  # noqa: E402
 import policy as PO  # noqa: E402
 from provider_contract import ProviderIdentity, Target  # noqa: E402
 from registre import Registry, RegistryError  # noqa: E402
@@ -75,11 +78,29 @@ capabilities:
 """
 
 
+_CONFIGS: list[Path] = []
+
+
+def _nettoyer_configs() -> None:
+    for chemin in _CONFIGS:
+        chemin.unlink(missing_ok=True)
+
+
+atexit.register(_nettoyer_configs)
+
+
 def charge(texte: str = YAML) -> Registry:
-    with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as f:
+    f = tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False)
+    try:
         f.write(texte)
-        nom = f.name
-    return Registry(nom)
+        f.close()
+        reg = Registry(f.name)
+        _CONFIGS.append(Path(f.name))
+        return reg
+    except Exception:
+        f.close()
+        Path(f.name).unlink(missing_ok=True)
+        raise
 
 
 def main() -> int:
@@ -89,6 +110,41 @@ def main() -> int:
         cas.append((nom, bool(condition), detail))
         print(("OK    " if condition else "ECHEC ") + nom + (f" — {detail}" if detail else ""))
 
+    # Fail-closed : un provider MCP ne se charge pas avant l'enregistrement CORE.
+    transports._reinitialiser_pour_test()
+    try:
+        charge()
+        non_enregistre = False
+    except RegistryError:
+        non_enregistre = True
+    ok("0. transport MCP non enregistré = chargement refusé", non_enregistre)
+
+    # Bootstrap explicite du transport CORE avant le chargement du registre.
+    MB.initialiser_mcp(transports)
+    MB.initialiser_mcp(transports)  # vérification idempotente : aucun écrasement
+    ok("0bis. bootstrap MCP n'ajoute qu'un executor CORE", transports.noms() == ("mcp",))
+
+    # Carte de compatibilité minimale : un CORE canonique peut ne pas exposer l'aide
+    # locale ``enregistre``, mais son couple enregistrer/obtenir suffit pour le bootstrap.
+    class CoreCanonicalStub:
+        def __init__(self):
+            self.entries = {}
+
+        def enregistrer(self, nom, executeur):
+            if nom in self.entries:
+                raise RuntimeError("duplicate")
+            self.entries[nom] = executeur
+
+        def obtenir(self, nom):
+            if nom not in self.entries:
+                raise KeyError(nom)
+            return self.entries[nom]
+
+    core_stub = CoreCanonicalStub()
+    MB.initialiser_mcp(core_stub)
+    MB.initialiser_mcp(core_stub)
+    ok("0ter. bootstrap compatible avec le couple CORE enregistrer/obtenir",
+       tuple(core_stub.entries) == ("mcp",))
     reg = charge()
     prov = reg.provider("review_mcp")
     ok("1. provider MCP chargé sans commande locale", prov.transport == "mcp" and prov.commande == [])
@@ -144,8 +200,23 @@ def main() -> int:
     except RegistryError:
         cle_inconnue = True
     ok("11. une clé MCP inconnue ne peut pas désarmer silencieusement une garde", cle_inconnue)
+    faux_token = "ghp_" + "T" * 36
+    try:
+        charge(YAML.replace("https://mcp.example.test/v1",
+                           f"https://user:{faux_token}@mcp.example.test/v1"))
+        endpoint_credential = False
+    except RegistryError as exc:
+        endpoint_credential = faux_token not in str(exc)
+    ok("12. endpoint contenant un faux credential refusé sans fuite", endpoint_credential)
+    url_reg = charge(YAML.replace("target_types: [repository]", "target_types: [url]"))
+    url_prov = url_reg.provider("review_mcp")
+    url_args = url_prov.manifest.arguments_for(
+        Target("url", "https://example.invalid/resource"))
+    ok("13. une URL reste une Target structurée, jamais un faux Path",
+       url_args == {"repository": "https://example.invalid/resource"})
 
     echecs = [nom for nom, condition, _ in cas if not condition]
+    _nettoyer_configs()
     print(f"\n{len(cas) - len(echecs)}/{len(cas)} cas passent")
     return 1 if echecs else 0
 
