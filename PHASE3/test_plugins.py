@@ -589,20 +589,60 @@ sur_base = _git("diff", "--name-only", f"{BASE}...HEAD").split() if BASE else []
 # et "??" à l'ensemble des chemins, et un cas « rien hors de PHASE3 » échouait sur une lettre
 # de statut (mesuré le 31/08/2026, en réécrivant cette section).
 sur_arbre = [l[3:].strip() for l in _git("status", "--porcelain").splitlines() if l.strip()]
+# Les résidus d'atelier ne sont pas des touches : `PHASE3/artifacts/` est écrit PAR les batteries
+# (missions, runs) et `lien_interne` est un reste d'atelier de `labo_securite`. Les laisser dans
+# l'ensemble a fait échouer sept cas pour une raison qui n'était pas le code (mesuré le 31/08/2026
+# au lendemain de la fusion de la PR #1) — un cas qui réagit à la poussière du run est un faux garde-fou.
+RESIDUS = ("PHASE3/artifacts/", "lien_interne")
+sur_arbre = [x for x in sur_arbre if not any(r in x for r in RESIDUS)]
 TOUCHES = sorted({x for x in sur_base + sur_arbre})
 NOMS = {Path(x).name for x in TOUCHES}
-MESURE = bool(BASE) or bool(sur_arbre)
+# « en vol » = il y a un delta entre la branche et `main`, ou des modifications non commitées.
+# Après une fusion, `merge-base HEAD main` devient le commit de fusion lui-même : le delta est vide
+# PAR CONSTRUCTION, et prétendre juger « le lot ne touche que ces fichiers » sur un ensemble vide
+# serait ou bien un échec mensonger, ou bien un succès sans preuve. Les deux sont refusés : les cas
+# git sont NON ÉVALUÉS avec leur cause, et l'invariant est reprise ci-dessous par le CONTENU.
+en_cours = bool(sur_base) or bool(sur_arbre)
+MESURE = en_cours
 HORS_PHASE3 = [x for x in TOUCHES if not x.startswith("PHASE3/")]
 DOCS_RACINE = {"README_USAGE.md", "PROJET_ETAT.md", "CONTEXTE_PROJET.md",
                "PATCHES_A_PORTER.md", ".gitattributes"}
-for attend in ("plugins.py", "registre.py", "intent.py", "adapters.py", "extraction.py",
-               "provider_manifest.py", "pipeline.py", "analyser.py"):
-    cas(f"{attend} porte le changement (et le diff reste borné)",
-        MESURE and attend in NOMS,
-        "aucune base de comparaison (merge-base HEAD main introuvable et arbre propre) : "
-        "rien n'est mesuré" if not MESURE else NOMS and sorted(NOMS)[:16])
-cas("le lot ne touche rien hors de PHASE3, sauf les docs de la racine",
-    MESURE and set(HORS_PHASE3) <= DOCS_RACINE, HORS_PHASE3)
+# Les huit cas « `X.py` porte le changement » qui précédaient ont été RETIRÉS le 31/08/2026 — pas
+# relâchés : ils figeaient la liste des fichiers qu'UN LOT DONNÉ (celui du 30/08) avait touchés, donc
+# ils se mettaient à rouges dès qu'un autre lot était en vol, celui-ci compris. Un attendu qui ne
+# vaut que le jour où il a été écrit n'est pas un garde-fou, c'est une date de commit recopiée dans un
+# test. Ce qu'ils assuraient est repris par les deux cas de CONTENU ci-dessous (qui connaît le
+# mécanisme, et qui l'ignore), qui tiennent que le lot soit en vol, commité ou fusionné.
+if en_cours:
+    cas("le changement en vol ne touche rien hors de PHASE3, sauf les docs de la racine",
+        set(HORS_PHASE3) <= DOCS_RACINE, HORS_PHASE3)
+    cas("et ce changement en vol ne passe pas par un fichier du cœur écrit pour un outil nommé",
+        not [x for x in TOUCHES if Path(x).name.startswith("parsers_")], sorted(
+            Path(x).name for x in TOUCHES if Path(x).name.startswith("parsers_")))
+else:
+    non_evalue("le changement en vol ne touche rien hors de PHASE3",
+               "aucun delta en vol (lot fusionné) — rien à borner ; voir le cas « trois fichiers "
+               "du slice connaissent le mécanisme » pour la version durable de cette exigence")
+
+# L'invariant durable, indépendant de l'état de git : l'extension est bornée par ce que le CONTENU
+# du cœur sait, pas par un diff. Motif serré (`charger_un`, `PluginError`, `plugins.`) — au lieu de
+# `fusionner` et `plugins_used`, qui sont chez nous des homographes honnêtes : « fusionner » au sens
+# de rassembler des findings (`findings.py`, `clusterer.py`) et `plugins_used` comme champ de sortie
+# de detect-secrets. Mesuré le 31/08/2026 : trois fichiers nomment le mécanisme, et aucun de ceux
+# qui tiennent la cage ne le nomme — donc un dépôt ne peut pas élargir sa propre cage depuis un YAML.
+import re as _re                                        # noqa: PLC0415
+_RX = _re.compile(r"charger_un|PluginError|plugins\.|PLUGINS_DEFAUT")
+connus = {f.name for f in (RACINE / "slice").glob("*.py")
+          if _RX.search(f.read_text(encoding="utf-8"))}
+cas("trois fichiers du slice connaissent le mécanisme — ni un de plus",
+    connus == {"plugins.py", "registre.py", "intent.py"}, sorted(connus))
+cas("ni la cage, ni la politique, ni le garde de chemins ne nomment les plugins",
+    not any(_RX.search((RACINE / "slice" / n).read_text(encoding="utf-8"))
+            for n in ("sandbox.py", "policy.py", "profils.py", "garde_chemin.py",
+                      "conditions.py", "assainissement.py")),
+    sorted(n for n in ("sandbox.py", "policy.py", "profils.py", "garde_chemin.py",
+                       "conditions.py", "assainissement.py")
+           if _RX.search((RACINE / "slice" / n).read_text(encoding="utf-8"))))
 PARSERS = sorted(x for x in (RACINE / "slice").glob("parsers_*.py"))
 conrus = [f_.name for f_ in PARSERS
           if any(m in f_.read_text(encoding="utf-8") for m in ("radon", "pip_audit", "pip-audit"))]

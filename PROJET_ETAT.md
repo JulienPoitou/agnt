@@ -2706,6 +2706,40 @@ fois, avec deux méthodes indépendantes.
    gardant les miens, qui sont plus grands (28 003 o contre 18 594 ; 34 167 contre 22 981) et qui
    portent déjà leurs ajouts.
 
+### La batterie réorientée par la fusion elle-même (comptée, pas bricolée)
+
+Le lendemain du merge, `test_plugins` est passé de 0 à **1 rc=1**, huit cas rouges — et ce n'était
+pas la fusion qui avait cassé le code : c'étaient les cas « `plugins.py` porte le changement »,
+« `registre.py` porte le changement », … qui comparaient le diff de travail à `git merge-base HEAD
+main`. Une fois le lot entré dans `main`, ce point de branchement **est** le commit de fusion : le
+delta est vide par construction, et la liste des huit fichiers avec lui. Pire, ces huit cas exigeaient
+de revoir les huit noms dès qu'un AUTRE lot était en vol — le commit de documentation que j'écrivais
+à cet instant suffisait. Un attendu qui ne vaut que le jour où on l'a écrit est une date de commit
+recopiée dans un test, pas un garde-fou.
+
+Résolution en trois gestes, dans cet ordre :
+1. **Résidus exclus** de l'ensemble mesuré (`PHASE3/artifacts/`, `lien_interne`) : les batteries
+   écrivent des missions et des runs dans le dépôt, elles ne peuvent pas en même temps servir de
+   preuve sur « ce que le lot a touché ».
+2. **Les huit cas retirés**, et leur borne conservée là où elle a un sens : « le changement **en vol**
+   ne touche rien hors de `PHASE3`, sauf les docs de la racine » + « et ne passe pas par un
+   `parsers_*.py` écrit pour un outil nommé ». Quand rien n'est en vol, ces deux-là sont déclarés
+   NON ÉVALUÉS avec leur cause — ni rouges mensongers, ni verts par vacuité.
+3. **Repris par le contenu**, donc vrais quel que soit l'état de git : motif serré
+   `charger_un|PluginError|plugins\.|PLUGINS_DEFAUT` — **trois** fichiers du slice nomment le
+   mécanisme (`plugins.py`, `registre.py`, `intent.py`), et **aucun** de ceux qui tiennent la cage
+   (`sandbox.py`, `policy.py`, `profils.py`, `garde_chemin.py`, `conditions.py`, `assainissement.py`) :
+   un dépôt ne peut pas élargir sa propre cage depuis un YAML, et cela se vérifie sans diff. Le motif
+   est serré parce que le large mentait : `fusionner` (rassembler des findings, `findings.py`,
+   `clusterer.py`) et `plugins_used` (un champ de sortie de detect-secrets) sont des homographes, pas
+   des dépendances.
+
+Compte : **89/89 attendus vérifiés** (94 avant, −8 datés, +3 durables), rc=0, plus les quatre
+NON ÉVALUÉ déjà documentés du dossier (bwrap sous les plugins, décision OPA, modèles xml/lignes_json
+faute d'outil installable, rendu navigateur). Le « 94/94 » cité dans la section LOT 2/4 de ce fichier
+est donc **dépassé** : il décrivissait la batterie à son époque, et c'est exactement le défaut que ce
+geste corrige.
+
 **Balayage re-conduit APRÈS résolution**, sur les douze fichiers (les dix en conflit plus
 `README_USAGE.md` et `DECISIONS_PROPOSEES.md`) : **9 lignes** restent propres à la PR et absentes de
 mon fichier. Une par une, aucune n'est fonctionnelle : un mot de leur prose dans ma note adversariale
