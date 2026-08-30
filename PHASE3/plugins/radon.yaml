@@ -1,0 +1,72 @@
+# Plugin AGNT — un fichier, aucun changement du cœur.
+#
+# Ce que le runtime lit ici est intégralement décrit par slice/plugins.py (clés connues,
+# binaire épinglé, licence de l'épingle, sandbox non négociable, cohérence format↔modèle).
+# Le cœur ne connaît pas radon : il connaît un outil qui rend du JSON et un manifeste validé.
+id: radon_cc
+capacites:
+  - CODE_METRICS
+entrees:
+  - repository
+binaire: radon
+outillage: radon            # id épinglé dans manifeste_dependances.yaml (version, licence, source)
+version_min: "6.0.1"
+licence: MIT
+# Rang, pas score : le plus petit gagne (voir le commentaire en tête de pip_audit.yaml).
+# CODE_METRICS n'a que ce provider, donc la valeur n'arbitre rien aujourd'hui — elle est
+# déclarée pour ne pas être relue comme un score le jour où un second outil arrive.
+priorite: 60
+cout: faible
+risque: PASSIVE
+description: >
+  Complexité cyclomatique par bloc (radon cc), au-dessus du seuil D. Outil hors réseau, lecture
+  seule. Ce que la plateforme fait déjà (semgrep, bandit) ne couvre pas la mesure de
+  complexité : ce plugin ajoute une capacité, pas un doublon.
+fichiers_requis:
+  - "*.py"
+execution:
+  args:
+    - cc
+    - --json
+    - --min
+    - D
+    - "{TARGET}"
+sortie:
+  format: json
+lecture:
+  modele: imbriqué
+  # `radon cc --json` rend un objet dont CHAQUE CLÉ est un chemin de fichier et dont la valeur
+  # est la liste des blocs. `nested_key: "*"` = « le conteneur EST la liste » ; `contexte` sur
+  # "*" = « la clé du conteneur devient un champ ». Deux déclarations, pas un parser.
+  nested_from: "$"
+  nested_key: "*"
+  contexte:
+    fichier: "*"
+  champs:
+    regle: rank            # A–F, échelle DOCUMENTÉE par radon — ce n'est pas une sévérité
+    nom_regle: type        # function | method | class
+    fichier: fichier
+    ligne: lineno
+    message: name
+    complexite: complexity
+  masquer_large: []
+requirements:
+  reseau: false
+  privileges: aucun
+  timeout_s: 600
+  sandbox: true
+# Sévérité VOLONTAIREMENT absente de `champs` : radon ne classe pas, il mesure. Un rang F n'est
+# pas « HIGH » — l'écrire serait inventer une classification que l'outil ne produit pas, et le
+# rapport la propagerait comme un avis de sécurité. Le finding garde le rang dans `regle`.
+capacite:
+  description: >
+    Mesure de complexité (radon) : blocs au-dessus du seuil de complexité cyclomatique, par
+    fichier et par ligne. Entrée d'audit humain, pas un finding de vulnérabilité.
+  domaines: [code]
+  entree: [files]
+  sortie: findings
+  mots_cles: [complexité, complexite, cyclomatique, cyclomatic, métriques, metriques,
+             rang, rank, lisibilité, "longueur de fonction"]
+a_verifier:
+  - "seuil D : la fixture PHASE3/testrepo ne déclenche aucun bloc — le cas « exécuté, 0 finding » doit rester distingué d'un échec"
+  - "champs.complexite : la valeur est rendue dans le finding, pas mappée sur un champ structuré du modèle (le modèle de finding n'a pas de slot « mesure »)"

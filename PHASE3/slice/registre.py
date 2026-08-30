@@ -21,6 +21,7 @@ from pathlib import Path
 
 import yaml
 
+import conditions as COND
 import provider_manifest as PM
 
 REGISTRY_PATH = Path(__file__).parent / "capabilities.yaml"
@@ -37,6 +38,16 @@ ETATS_COUVERTURE = (
     "excluded_by_policy",
     "unsupported",
 )
+
+
+# Vocabulaire du registre (2026-08-30) : une clé INCONNUE au niveau d'un provider est
+# refusée au chargement. Découvert en écrivant `test_conditions_outils.py` : une
+# indentation ratée posait `conditions:` à la racine du document, le chargeur l'ignorait,
+# et la garde réseau/base disparaissait sans le moindre message. Une faute de frappe sur
+# une clé de SÉCURITÉ ne doit pas être un silence.
+CLEFS_PROVIDER = ("id", "kind", "mode", "risque", "cout", "priorite", "commande",
+                  "args_obligatoires", "sorties", "preconditions", "manifest",
+                  "conditions")
 
 
 class RegistryError(Exception):
@@ -64,6 +75,11 @@ class Provider:
     # Manifest déclaratif (Phase 5A). Présent → adaptateur générique, aucun code
     # spécifique à l'outil. Absent → adaptateur historique.
     manifest: object = None
+    # Conditions d'exécution déclarées AU NIVEAU DU PROVIDER (2026-08-30) : les outils à
+    # adaptateur historique n'ont pas de manifest, mais ils ont les mêmes besoins (la base
+    # de Trivy, le réseau de tel autre). Validées au chargement par `conditions.valider` :
+    # une clé mal orthographiée refuse le registre, elle ne désarme pas la garde en silence.
+    conditions: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.risque not in RISQUES:
@@ -99,6 +115,18 @@ class Capability:
     # dans l'ordre de priorité. Le motif du choix est tracé dans plan.json.
     mode_selection: str = "un_seul"
     max_providers: int = 1
+    # Vocabulaire ajouté par un plugin qui CRÉE une capacité. Le cœur garde la main :
+    # `intent.inferer` n'utilise ces mots que pour les capacités qu'il ne connaît pas déjà
+    # (voir l'annotation en regard de MOTIFS, côté intent). Sans ce champ, une capacité
+    # créée par plugin serait chargeable… et jamais demandable : exactement le registre
+    # décoratif que la commande du 2026-08-30 interdit de produire.
+    mots_cles: tuple[str, ...] = ()
+    # Une capacité créée par un plugin ne rejoint PAS la suite « demande générique » par
+    # défaut. « Analyse la sécurité de mon dépôt » doit continuer à produire la suite du cœur,
+    # sinon ajouter un outil change le plan de toutes les missions existantes — ce que
+    # l'empreinte de registre est là pour rendre visible, pas pour rendre ordinaire.
+    # Un plugin qui veut sa capacité dans le générique l'écrit : `capacite.generique: true`.
+    generique: bool = True
 
     def __post_init__(self) -> None:
         if not self.providers:
@@ -124,6 +152,13 @@ class Registry:
         self._prov: dict[str, Provider] = {}
         self._charge()
 
+    @property
+    def _registre_de_la_plateforme(self) -> bool:
+        try:
+            return Path(self.chemin).resolve() == Path(REGISTRY_PATH).resolve()
+        except OSError:
+            return False
+
     def _charge(self) -> None:
         if not self.chemin.exists():
             raise RegistryError(f"registre introuvable : {self.chemin}")
@@ -131,6 +166,28 @@ class Registry:
         bruts = doc.get("capabilities")
         if not bruts:
             raise RegistryError("registre vide ou clé 'capabilities' absente")
+        # Plugins (dossier `PHASE3/plugins/*.yaml`). La fusion se fait AVANT la validation
+        # des capacités, volontairement : un plugin est soumis aux mêmes exigences qu'une
+        # entrée écrite à la main — mêmes clés admises, mêmes manifestes validés, même
+        # empreinte. Ce n'est pas un second registre, c'est le même, augmenté.
+        #
+        # Portée : le dossier de plugins ne s'applique qu'AU REGISTRE DE LA PLATEFORME. Un
+        # registre variante (une batterie de tests, un profil restreint passé en argument)
+        # n'hérite pas des plugins globaux — sinon déposer `radon.yaml` ajouterait une capacité
+        # et un provider au registre d'un test qui n'a rien demandé, ce qui est exactement la
+        # façon de rendre une batterie fausse sans toucher à son code. Un plugin qui veut être
+        # lu par un registre variante se pointe avec AGNT_PLUGINS.
+        self._empreinte_plugins, self._plugins_charges = "", []
+        if self._registre_de_la_plateforme:
+            try:
+                import plugins as PL
+                bruts, self._empreinte_plugins, self._plugins_charges = PL.fusionner(doc, bruts)
+            except PL.PluginError as e:
+                # Un plugin inutilisable est un refus, pas un ignoré : le fichier est là pour
+                # être exécuté, et un plugin ignoré silencieusement est une intégration décorative.
+                raise RegistryError(str(e)) from None
+            except ImportError:
+                pass
 
         for c in bruts:
             manquants = [k for k in ("id", "description", "domaines", "entree", "sortie", "providers")
@@ -141,9 +198,28 @@ class Registry:
             for p in c["providers"]:
                 if "id" not in p or "commande" not in p:
                     raise RegistryError(f"capacité {c['id']}: provider sans id ou sans commande")
+                inconnues = [k for k in p if k not in CLEFS_PROVIDER]
+                if inconnues:
+                    raise RegistryError(
+                        f"{p.get('id', '?')}: clé(s) de provider inconnue(s) {inconnues} — "
+                        f"admises : {list(CLEFS_PROVIDER)}. Une clé ignorée équivaut à une "
+                        "garde retirée : le registre refuse plutôt que de charger à moitié.")
                 # Un provider peut être déclaré par MANIFEST : il est validé ICI, au
                 # chargement — donc avant toute exécution, et indépendamment d'OPA.
                 mani = PM.valider(p["manifest"], c["id"]) if "manifest" in p else None
+                cond_brut = p.get("conditions")
+                if cond_brut is not None and mani is not None:
+                    # Deux déclarations pour la même chose = deux vérités possibles. Le
+                    # manifest est l'autorité d'exécution : on refuse plutôt que de choisir.
+                    raise RegistryError(
+                        f"{p['id']} : `conditions` déclaré AUSSI dans le manifest — "
+                        "déclarez-le une seule fois (dans le manifest pour un provider "
+                        "déclaratif, au niveau du provider pour un adaptateur historique)")
+                try:
+                    cond = (COND.valider({"id": p["id"], "conditions": cond_brut})
+                            if cond_brut is not None else {})
+                except ValueError as e:
+                    raise RegistryError(str(e)) from None
                 try:
                     prio = int(p.get("priorite", 100))
                 except (TypeError, ValueError):
@@ -154,6 +230,7 @@ class Registry:
                     id=p["id"],
                     capability=c["id"],
                     manifest=mani,
+                    conditions=cond,
                     kind=p.get("kind", "cli"),
                     mode=p.get("mode", "CLI"),
                     risque=p.get("risque", "PASSIVE"),
@@ -178,6 +255,8 @@ class Registry:
                 providers=tuple(provs),
                 mode_selection=str(c.get("mode_selection", "un_seul")),
                 max_providers=int(c.get("max_providers", 1)),
+                mots_cles=tuple(str(x) for x in (c.get("mots_cles") or ())),
+                generique=bool(c.get("generique", True)),
             )
             if cap.id in self._cap:
                 raise RegistryError(f"capacité en double : {cap.id}")
@@ -202,8 +281,23 @@ class Registry:
 
     def empreinte(self) -> str:
         """Empreinte du registre : un plan rejoué doit pouvoir prouver qu'il a été
-        autorisé contre la même version du registre."""
-        return _sha(self.chemin.read_text(encoding="utf-8"))
+        autorisé contre la même version du registre — et contre le MÊME jeu de plugins.
+
+        L'empreinte des plugins entre dans le calcul (chaîne vide quand aucun plugin n'est
+        chargé, donc les empreintes historiques ne bougent pas) : sans ça, deux machines
+        avec le même `capabilities.yaml` et des plugins différents produiraient le même
+        `plan_id` pour des plans différents. Ce serait un id qui ment.
+        """
+        return _sha(self.chemin.read_text(encoding="utf-8")
+                    + "\0plugins:" + getattr(self, "_empreinte_plugins", ""))
+
+    @property
+    def plugins(self) -> dict:
+        """Ce qui a été fusionné — lu par le diagnostic (CLI `--plugins`, `/api/capacites`)."""
+        return {"empreinte": getattr(self, "_empreinte_plugins", ""),
+                "dossier": str(PLUGINS_DEFAUT) if "PLUGINS_DEFAUT" in globals() else "",
+                "fichiers": list(getattr(self, "_plugins_charges", [])),
+                "applique": self._registre_de_la_plateforme}
 
     # ---------------------------------------------------- rendu pour le LLM
     def publiques(self) -> list[Capability]:

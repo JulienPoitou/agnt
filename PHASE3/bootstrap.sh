@@ -34,19 +34,29 @@ MANIFESTE="$B/manifeste_dependances.yaml"
 # contenir un binaire inattendu. On vérifie le SHA-256 contre le manifeste, et on
 # REFUSE un binaire qui ne correspond pas au lieu de l'utiliser.
 sha_attendu() {  # sha_attendu <section> <nom>
+  # Le `2>/dev/null` qui suivait cette commande a été RETIRÉ le 2026-08-30 (mesuré par
+  # test_bootstrap.sh) : sans PyYAML, `python3` échouait en silence, `attendu` revenait vide,
+  # `verifier_binaire` y lisait « aucune empreinte épinglée » et bootstrap déclarait
+  # « environnement prêt » SANS AVOIR VÉRIFIÉ UN SEUL BINAIRE. Un manifeste illisible est une
+  # panne de vérification, pas une absence d'exigence — l'absence d'empreinte doit rester un
+  # choix du manifeste (sha256: null), jamais un accident d'environnement.
   python3 -c "
 import sys, yaml
 m = yaml.safe_load(open('$MANIFESTE', encoding='utf-8'))
 print((m.get(sys.argv[1], {}).get(sys.argv[2]) or {}).get('sha256') or '')
-" "$1" "$2" 2>/dev/null
+" "$1" "$2"
 }
 
 verifier_binaire() {  # verifier_binaire <nom> <chemin>
   local nom="$1" chemin="$2" attendu reel
   [ -f "$chemin" ] || return 0
   [ -f "$MANIFESTE" ] || { err "manifeste absent : $MANIFESTE"; return 1; }
-  attendu=$(sha_attendu binaires "$nom")
-  [ -z "$attendu" ] && return 0
+  if ! attendu=$(sha_attendu binaires "$nom"); then
+    err "$nom : manifeste illisible ($MANIFESTE) — la vérification d'empreinte n'a pas pu avoir lieu"
+    err "  requis : python3 + PyYAML · sudo apt-get install -y python3-yaml"
+    return 1
+  fi
+  [ -z "$attendu" ] && return 0        # aucune empreinte épinglée pour CE nom : choix du manifeste
   reel=$(sha256sum "$chemin" | cut -d' ' -f1)
   if [ "$reel" != "$attendu" ]; then
     err "$nom : SHA-256 inattendu"
@@ -67,8 +77,15 @@ done
 # sans cette étape, tous les tests d'exécution tombent sur « bwrap: No such file ».
 if ! command -v bwrap >/dev/null 2>&1; then
   log "bubblewrap (apt)"
+  # `sudo -n` ne marche QUE sans mot de passe : sur un poste neuf (WSL fraichement installé),
+  # sudo demande le mot de passe, l'option `-n` fait échouer la commande, et le message
+  # d'avant se bornait à dire « les tests échoueront » — sans dire quoi taper. C'est le
+  # premier écueil réel du premier lancement, il doit être nommable depuis la sortie.
   sudo -n apt-get install -y -qq bubblewrap uidmap >/dev/null 2>&1 \
-    || log "installation de bubblewrap impossible — les tests d'exécution échoueront"
+    || { err "bubblewrap non installé — sans lui, AUCUN outil ne tourne (l'isolateur refuse avant tout Popen)"
+         err "  à lancer à la main : sudo apt-get update && sudo apt-get install -y bubblewrap uidmap"
+         err "  puis revérifier :    bash PHASE3/test_bwrap.sh   (0 = prêt · 77 = rien de mesuré · 1 = bloqué, la cause est affichée)"
+       }
 fi
 
 # ---------------------------------------------------------------- binaires
@@ -79,15 +96,16 @@ fi
 }
 [ -x "$BIN/gitleaks" ] || {
   log "gitleaks $GITLEAKS_VERSION"
-  curl -sL -o /tmp/gl.tgz "https://github.com/gitleaks/gitleaks/releases/download/v$GITLEAKS_VERSION/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+  curl -fsSL -o /tmp/gl.tgz "https://github.com/gitleaks/gitleaks/releases/download/v$GITLEAKS_VERSION/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
   tar -xzf /tmp/gl.tgz -C "$BIN" gitleaks
   rm -f /tmp/gl.tgz
 }
 [ -x "$BIN/opa" ] || {
   log "opa $OPA_VERSION"
-  curl -sL -o "$BIN/opa" "https://openpolicyagent.org/downloads/v$OPA_VERSION/opa_linux_amd64_static"
+  curl -fsSL -o "$BIN/opa" "https://openpolicyagent.org/downloads/v$OPA_VERSION/opa_linux_amd64_static"
 }
 chmod +x "$BIN"/* 2>/dev/null || true
+
 command -v semgrep >/dev/null || { log "semgrep"; pip install --quiet semgrep; }
 # bandit aussi : pip n'est PAS persistant entre les sessions. Sans lui, les deux
 # providers déclaratifs (bandit et bandit_custom) ne produisent rien — et le pipeline
@@ -96,18 +114,29 @@ command -v bandit >/dev/null || { log "bandit"; pip install --quiet bandit; }
 # checkov : provider IAC_SCAN (Phase 5A, décision du 2026-08-28). pip n'est pas
 # persistant — même raison que bandit. Empreinte RECORD dans le manifeste.
 command -v checkov >/dev/null || { log "checkov"; pip install --quiet checkov; }
+# detect-secrets : provider ajouté le 20/… (30/08/2026) sur SECRET_DETECTION en second
+# rôle, derrière gitleaks. Offline (scan de fichiers uniquement). Sans lui, le provider est
+# marqué « outil non disponible » par le registre — le pipeline le dit, il ne le tait pas.
+command -v detect-secrets >/dev/null || { log "detect-secrets"; pip install --quiet detect-secrets; }
+# radon + pip-audit : les deux premiers outils passés par la VOIE PLUGIN (30/08/2026). Ni
+# capabilities.yaml ni un .py du cœur n'ont été touchés pour eux — une entrée dans
+# manifeste_dependances.yaml (la porte) et un fichier dans plugins/. Sans la ligne ci-dessous,
+# le plugin se charge, le provider est sélectionné… et l'outil est introuvable : c'est
+# exactement le silence que ce fichier existe pour casser.
+command -v radon >/dev/null || { log "radon"; pip install --quiet radon==6.0.1; }
+command -v pip-audit >/dev/null || { log "pip-audit"; pip install --quiet pip-audit==2.10.1; }
 
 # ---------------------------------------------------------------- grype + kics
 # Étape 4 (2026-08-29) : 2e providers réels (fan-out trivy×grype, checkov×kics).
 # Tarballs des releases GitHub, empreintes vérifiées par verifier_binaire.
 [ -x "$BIN/grype" ] || {
   log "grype $GRYPE_VERSION"
-  curl -sL -o /tmp/grype.tgz "https://github.com/anchore/grype/releases/download/v$GRYPE_VERSION/grype_${GRYPE_VERSION}_linux_amd64.tar.gz"
+  curl -fsSL -o /tmp/grype.tgz "https://github.com/anchore/grype/releases/download/v$GRYPE_VERSION/grype_${GRYPE_VERSION}_linux_amd64.tar.gz"
   tar -xzf /tmp/grype.tgz -C "$BIN" grype
 }
 [ -x "$BIN/kics" ] || {
   log "kics $KICS_VERSION"
-  curl -sL -o /tmp/kics.tgz "https://github.com/Checkmarx/kics/releases/download/v$KICS_VERSION/kics_${KICS_VERSION}_linux_amd64.tar.gz"
+  curl -fsSL -o /tmp/kics.tgz "https://github.com/Checkmarx/kics/releases/download/v$KICS_VERSION/kics_${KICS_VERSION}_linux_amd64.tar.gz"
   tar -xzf /tmp/kics.tgz -C "$BIN" kics
 }
 # Bibliothèque de requêtes kics (1810 fichiers OPA) : PAS dans le tarball binaire
@@ -115,7 +144,7 @@ command -v checkov >/dev/null || { log "checkov"; pip install --quiet checkov; }
 # extracted-info.zip, sha256 épinglé. Sans elle : « unable to find queries ».
 if [ ! -d "$RULES/kics/queries" ]; then
   log "bibliothèque de requêtes kics (extracted-info.zip)"
-  curl -sL -o /tmp/kics-info.zip "https://github.com/Checkmarx/kics/releases/download/v$KICS_VERSION/extracted-info.zip"
+  curl -fsSL -o /tmp/kics-info.zip "https://github.com/Checkmarx/kics/releases/download/v$KICS_VERSION/extracted-info.zip"
   echo "305fd652d9291fb5f0a3437a4f0a2c953fffa7d2827bb4fd4907c82c1a8cbad9  /tmp/kics-info.zip" | sha256sum -c - || exit 1
   rm -rf /tmp/kics-assets && mkdir -p /tmp/kics-assets
   (cd /tmp/kics-assets && unzip -q /tmp/kics-info.zip "assets/queries/*")
@@ -132,7 +161,7 @@ fi
 for r in python security-audit javascript golang; do
   [ -s "$RULES/$r.yaml" ] || {
     log "règles Semgrep p/$r"
-    curl -sL -o "$RULES/$r.yaml" "https://semgrep.dev/c/p/$r"
+    curl -fsSL -o "$RULES/$r.yaml" "https://semgrep.dev/c/p/$r"
   }
 done
 
@@ -176,6 +205,21 @@ if [ -f "$MANIFESTE" ]; then
   done
 fi
 
+# ---------------------------------------------------------------- vérification APRÈS installation
+# La boucle du haut ne juge que ce qui DÉJÀ dans le cache : sur une machine neuve, elle ne
+# voit rien et passe (c'est voulu — l'absence n'est pas une divergence). Mais rien ne
+# contrôlait ce que le script vient de télécharger lui-même : le README de bootstrap annonce
+# « outils épinglés + empreintes », et une réponse d'erreur écrite dans $BIN/opa (page HTML,
+# troncature, miroir qui sert un autre artefact) partait sagement dans le cache, « environnement
+# prêt » affiché, et le premier scan devait la retrouver plus loin, sous un message d'isolateur.
+# Même fonction, même politique : empreinte épinglée absente du manifeste = on n'invente rien ;
+# présente et divergente = on refuse, avant de dire que l'environnement est prêt.
+for b in trivy gitleaks opa grype kics; do
+  verifier_binaire "$b" "$BIN/$b" || exit 1
+done
+
+# (placé ICI, après le dernier téléchargement — grype et kics sont installés plus bas que
+#  trivy/gitleaks/opa, et une vérification placée entre les deux ne jugerait pas les seconds.)
 log "environnement prêt"
 echo "    cache      : $C   ($(du -sh "$C" 2>/dev/null | cut -f1))"
 echo "    workspace  : $(du -sh --exclude=.cache "$B/.." 2>/dev/null | cut -f1)  (hors cache)"

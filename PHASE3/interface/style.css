@@ -1,0 +1,174 @@
+/* AGNT — interface. Trois décisions tiennent tout le look :
+   1. fond neutre sombre, UN seul accent, les couleurs sont réservées à la sévérité ;
+   2. chiffres grands, labels petits et espacés ;
+   3. traits fins au lieu d'ombres et de dégradés.
+   Pas de framework, pas d'image, pas de police à télécharger. */
+
+:root {
+  --fond: #0e1116;
+  --panneau: #141a21;
+  --panneau-doux: #182028;
+  --trait: #232c37;
+  --texte: #dde5ee;
+  --doux: #8794a5;
+  --accent: #4fd1a5;
+  --critique: #e5484d;
+  --erreur: #f2705f;
+  --haute: #e8944a;
+  --moyenne: #d9c15a;
+  --basse: #7f93ad;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, "Inter", "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; background: var(--fond); color: var(--texte);
+  font: 13.5px/1.55 var(--sans); -webkit-font-smoothing: antialiased;
+}
+
+.maquette {
+  background: #1b1410; color: #e8b98a; border-bottom: 1px solid #3a2a1c;
+  font: 11px/1 var(--mono); letter-spacing: .04em; padding: 8px 20px; text-align: center;
+}
+.maquette.cache { display: none; }
+
+.barre {
+  display: flex; align-items: flex-end; gap: 22px; padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--trait); position: sticky; top: 0;
+  background: color-mix(in srgb, var(--fond) 92%, transparent); backdrop-filter: blur(8px); z-index: 5;
+}
+.marque { font: 700 15px/1 var(--mono); letter-spacing: .16em; padding-bottom: 6px; }
+.marque .point { color: var(--accent); }
+
+.lancer { display: flex; gap: 10px; flex: 1; align-items: flex-end; }
+.lancer label { display: flex; flex-direction: column; gap: 4px; }
+.lancer label span {
+  font: 9.5px/1 var(--sans); text-transform: uppercase; letter-spacing: .14em; color: var(--doux);
+}
+.lancer select, .lancer textarea {
+  background: var(--panneau); color: var(--texte); border: 1px solid var(--trait);
+  border-radius: 6px; padding: 7px 9px; font: 12.5px/1.3 var(--mono);
+}
+.lancer .q { flex: 1; }
+.lancer textarea { resize: none; }
+.lancer button {
+  background: var(--accent); color: #06120d; border: 0; border-radius: 6px;
+  padding: 8px 18px; font: 700 12px/1 var(--sans); letter-spacing: .08em;
+}
+.lancer :disabled { opacity: .45; cursor: not-allowed; }
+
+.grille { max-width: 1140px; margin: 0 auto; padding: 22px 20px 60px; display: grid; gap: 14px; }
+
+/* ---- bandeau ---- */
+.entete {
+  display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: center;
+  background: var(--panneau); border: 1px solid var(--trait); border-radius: 10px; padding: 16px 18px;
+}
+.entete .ou { display: flex; flex-wrap: wrap; gap: 7px 8px; align-items: center; }
+.pastille {
+  font: 11px/1 var(--mono); padding: 5px 9px; border-radius: 999px;
+  border: 1px solid var(--trait); color: var(--doux); white-space: nowrap;
+}
+.pastille.ok { color: var(--accent); border-color: #1d4c3c; }
+.pastille.attention { color: var(--moyenne); border-color: #4a4220; }
+.pastille.erreur { color: var(--critique); border-color: #4c2224; }
+.chiffres { display: flex; gap: 26px; }
+.chiffres div { text-align: right; }
+.chiffres b { display: block; font: 600 27px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.chiffres span { font: 9.5px/1 var(--sans); text-transform: uppercase; letter-spacing: .13em; color: var(--doux); }
+
+/* ---- répartition par sévérité ---- */
+.reparties { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; height: 6px; border-radius: 999px; overflow: hidden; border: 1px solid var(--trait); }
+.reparties i { display: block; }
+.legende { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 9px; }
+.legende span { font: 11px/1 var(--mono); color: var(--doux); display: flex; gap: 6px; align-items: center; }
+.couleur { width: 7px; height: 7px; border-radius: 2px; display: inline-block; }
+
+/* ---- sections ---- */
+section { background: var(--panneau); border: 1px solid var(--trait); border-radius: 10px; padding: 15px 17px 17px; }
+section > h2 {
+  margin: 0 0 12px; font: 600 13px/1 var(--sans); letter-spacing: .01em;
+  display: flex; align-items: baseline; gap: 10px;
+}
+section > h2 em {
+  font: 9.5px/1 var(--mono); color: var(--doux); letter-spacing: .12em; font-style: normal;
+}
+section > h2 small { margin-left: auto; font: 10.5px/1 var(--mono); color: var(--doux); }
+
+/* ---- chaîne de décision ---- */
+.chaine { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.chaine details {
+  background: var(--panneau-doux); border: 1px solid var(--trait); border-radius: 8px; padding: 10px 11px;
+}
+.chaine summary {
+  cursor: pointer; list-style: none; font: 9.5px/1 var(--sans); text-transform: uppercase;
+  letter-spacing: .13em; color: var(--doux);
+}
+.chaine summary::after { content: "→"; float: right; color: var(--trait); }
+.chaine b { display: block; margin-top: 7px; font: 12.5px/1.35 var(--mono); font-weight: 500; }
+.chaine .puce { display: inline-flex; gap: 5px; align-items: center; margin: 5px 5px 0 0; font: 11px/1 var(--mono); color: var(--doux); }
+.chaine .puce.actif { color: var(--accent); }
+.chaine .puce.refuse { color: var(--haute); }
+.chaine pre { margin: 8px 0 0; font: 11px/1.5 var(--mono); color: var(--doux); white-space: pre-wrap; }
+.vraifaux { font: 700 12px/1 var(--mono); }
+.vraifaux.non { color: var(--critique); }
+
+/* ---- tableaux ---- */
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--trait); vertical-align: top; }
+th { font: 9.5px/1 var(--sans); text-transform: uppercase; letter-spacing: .13em; color: var(--doux); font-weight: 500; }
+td { font: 12px/1.45 var(--mono); }
+tr:last-child td { border-bottom: 0; }
+td .raison { color: var(--doux); }
+.outil { display: flex; gap: 8px; align-items: baseline; }
+.oui { color: var(--accent); } .nan { color: var(--haute); } .mort { color: var(--critique); }
+
+/* ---- findings ---- */
+.constat { border: 1px solid var(--trait); border-radius: 8px; padding: 11px 13px; background: var(--panneau-doux); }
+.constats { display: grid; gap: 8px; }
+.constat .tete { display: flex; gap: 9px; align-items: baseline; flex-wrap: wrap; }
+.sev { font: 700 9.5px/1 var(--sans); letter-spacing: .1em; padding: 4px 7px; border-radius: 4px; }
+.constat .ou { margin-left: auto; font: 10.5px/1 var(--mono); color: var(--doux); }
+.constat .ligne { font: 12px/1.4 var(--mono); color: var(--texte); margin-top: 7px; }
+.constat .msg { margin-top: 3px; }
+.constat .extrait {
+  margin: 8px 0 0; padding: 8px 10px; border-left: 2px solid var(--trait); background: #0f141a;
+  font: 11.5px/1.5 var(--mono); color: #b9c6d6; white-space: pre-wrap; overflow-x: auto;
+}
+.chip { font: 10.5px/1 var(--mono); color: var(--doux); border: 1px solid var(--trait); border-radius: 4px; padding: 3px 6px; }
+
+/* ---- grilles de clés/valeurs ---- */
+.cle { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1px; background: var(--trait); border: 1px solid var(--trait); border-radius: 8px; overflow: hidden; }
+.cle div { background: var(--panneau-doux); padding: 8px 11px; }
+.cle span { display: block; font: 9.5px/1 var(--sans); text-transform: uppercase; letter-spacing: .12em; color: var(--doux); }
+.cle b { display: block; margin-top: 4px; font: 11.5px/1.4 var(--mono); font-weight: 500; word-break: break-all; }
+
+/* ---- rapport ---- */
+pre.rapport {
+  margin: 0; padding: 14px 16px; background: #0f141a; border: 1px solid var(--trait); border-radius: 8px;
+  font: 12px/1.65 var(--mono); color: #c3cfdd; white-space: pre-wrap; max-height: 460px; overflow: auto;
+}
+.actions { display: flex; gap: 8px; margin-top: 9px; }
+.actions button {
+  background: transparent; color: var(--doux); border: 1px solid var(--trait); border-radius: 6px;
+  padding: 5px 10px; font: 11px/1 var(--sans); cursor: pointer;
+}
+.actions button:hover { color: var(--texte); border-color: var(--doux); }
+
+.note { color: var(--doux); font: 11.5px/1.5 var(--sans); }
+.pied { max-width: 1140px; margin: 0 auto; padding: 0 20px 40px; color: var(--doux); font: 11px/1.7 var(--mono); }
+
+/* bandeau du mode réel : le modèle est un champ libre (le nom du modèle appartient au
+   fournisseur, la liste fermée serait une promesse), plus l'état du run. */
+.lancer input {
+  background: var(--panneau); color: var(--texte); border: 1px solid var(--trait);
+  border-radius: 6px; padding: 7px 9px; font: 12.5px/1.3 var(--mono); width: 170px;
+}
+.lancer input::placeholder { color: #55616f; }
+.etat { font: 11px/1.4 var(--mono); color: var(--doux); white-space: nowrap; padding-bottom: 6px; }
+.etat.ok { color: var(--accent); }
+.etat.erreur { color: var(--critique); }
+.arbreet { margin: 4px 0 0; padding-left: 16px; }
+.arbreet li { font: 11.5px/1.5 var(--mono); color: var(--doux); }

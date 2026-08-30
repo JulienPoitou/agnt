@@ -77,14 +77,25 @@ imports). Pas de pyproject/Poetry : ce n'est pas un package, c'est un système e
 
 ## 4. État actuel
 
+> Instantané, tenu à jour à la fin de chaque chantier — pas un journal. L'historique
+> détaillé et daté est dans `PROJET_ETAT.md` ; ce qui est Acté §7, les dettes §6.
+
 - Étapes 0-5 closes (cœur, sandbox, extraction, corrélation, fan-out, dogfooding).
-- Étape 6 close : chemin d'utilisation minimal + LLM branché sur l'intention
-  (catalogue uniquement), F2 (domaine nommé > générique), F3 (question sans
-  capacités internes), matching en mot entier.
-- Régression : **21/22 batteries vertes** ; `test_llm_reel` sauté (GROQ_API_KEY
-  absente — saut environnemental, pas un échec).
-- Git : 2 commits (`2b89977` initial, `4323b4c` étape 6), poussés sur
-  **github.com/JulienPoitou/agnt** (branche `main`, dépôt privé, SSH OK).
+- Étape 6 close + quatre chantiers depuis : **6bis** confiance de cible armée sur le
+  chemin utilisateur · **6ter** identité canonique de fichier (`same_file` débloqué,
+  148 findings réels → 5 clusters inter-outils, `clusterer.py` jamais touché) ·
+  **6quater** couverture Go du mapping (le générateur apprenait 0 Go par construction) ·
+  **Clarification LLM** (« testé » ≠ « validé en production »).
+- Registre : **9 providers** (semgrep, bandit, bandit_custom, semgrep_go, trivy, grype,
+  gitleaks, checkov, kics) ; `pool.yaml` à jour (empreinte `0a95593b8ceaa09b` vérifiée
+  le 2026-08-30).
+- **23 batteries** autonomes. Sur la machine de dev d'origine : 21/22 passaient. Dans
+  un sandbox sans outils épinglés : 7/23, et les 16 rouges ont toutes une cause
+  environnementale vérifiée (`opa` ×10, cache de règles, mission préalable, clé Groq) —
+  aucune n'est une régression. Les lancer APRÈS `bootstrap.sh`, sinon le rouge ne veut
+  rien dire.
+- Git : 3 commits de chantier (`f400fe6`, `59d987f`, `6298dae`) sur la branche de session,
+  poussés sur **github.com/JulienPoitou/agnt**.
 - Machine : **2 Go de RAM** — lire les gros fichiers par blocs, pas de modèle LLM local.
 
 ## 5. Comment travailler ici
@@ -111,9 +122,71 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
 - F5 : formulations non-expertes (plafond du matching mots-clés) — rôle du LLM réel.
 - Accents : `intent.py` ne normalise pas, `plan.requete_canonique` oui →
   « vérifie les dependances » (sans accent) → needs_clarification. Vérifié. À traiter avec F5.
+- `Sandbox.M_SCAN` est un chemin d'hôte en dur (`/home/user/PHASE3/mt-scan`) : la
+  canonicisation en connaît une forme, mais la portabilité demande un montage dynamique.
 - `cadre` checkov : dette de modèle, ne pas refaire maintenant.
-- pool.yaml STALE (empreinte 0a95593b8ceaa09b) — régénérer en dernier si le registre bouge.
+- `pool.yaml` : régénérer en dernier si le registre bouge. Vérifié le 2026-08-30 :
+  l'empreinte déclarée (`0a95593b8ceaa09b`) est bien celle de `slice/capabilities.yaml`
+  — la ligne « STALE » qui figurait ici datait de l'ajout de la capacité Go, corrigée.
+- **CRASH TEST SÉCURITÉ : campagne close, 9 FAIL relevés, AUCUN corrigé (en attente de
+  GO).** `PHASE3/test_adversaire.py` · 34 cas · 23 PASS · 9 FAIL · 2 NON ÉVALUÉS. Par gravité :
+  **F1** capacité `interne: true` sélectionnable par le modèle → plan + argv construits
+  (`valider()` compare au catalogue complet, pas à `publiques()` ; `policy.rego` non plus) ;
+  **F2** `cible_autorisee=False` n'est posé par AUCUN appelant, ni production ni test — la garde
+  du `.rego` n'a jamais eu de fausse entrée à évaluer ; **F3** garde-fous pré-LLM contournés par
+  homoglyphes/espaces/conjugaisons ; **F4** le contenu du dépôt scanné écrit dans le rapport
+  (lien cliquable, section `## ` forgée via un `message` ou un NOM de fichier) ; **F5** aucune
+  borne de taille sur la requête sortante ; **F6** le rendu affirme « valeur jamais stockée » sur
+  le secret sans le contrôler. Détail, preuves et candidats : `PROJET_ETAT.md`, « Crash test
+  sécurité — relevé de campagne ».
+- **Famille G (« l'agent peut-il atteindre ce qui décide de lui ? »), 2026-08-30** — règle
+  installée : la **source** de l'autorisation se teste avant son **contenu**. 9 cas
+  (`test_adversaire.py`, G1–G9) : les sources de décision TIENNENT (G1 montage en lecture seule
+  avec une seule `--bind` = la sortie ; G2 aucun profil pilotable par l'environnement ; G3 les 4
+  fichiers de décision ont le même sha256 avant/après une exécution hostile ; G4 ancrage au
+  module, mesuré en `chdir` dans un répertoire piégé ; G5 aucune auto-découverte de manifeste ni
+  d'import à la demande). Quatre FAIL, tous de la même forme — ce qui décide est **laissé dehors** :
+  **F7** `gitleaks` lancé sans `--config` (la cible fournit donc son propre jeu de règles, et rien
+  ne le trace) ; **F8** `couverture.scanners_actives` écrit en dur ≠ les 3 `--config` passés ;
+  **F9** `Sandbox.exec` part de `dict(os.environ)` → `GROQ_API_KEY`, `GH_TOKEN`, `GITHUB_TOKEN`
+  atteignent le process qui parse le dépôt de l'attaquant ; **F10** `ARENA_SECOPS_CACHE` déplace la
+  racine des binaires et des règles sans re-vérification d'empreinte à l'exécution (le sha256 est
+  comparé à l'installation, consigné à la qualification, jamais au moment de lancer). Batterie :
+  44 cas · 28 PASS · 13 FAIL · 3 NON ÉVALUÉS. Détail : `PROJET_ETAT.md`, « famille G ».
+- (relevé n°1, devenu F1 ci-dessus) : Une sortie LLM qui
+  nomme une capacité `interne: true` passe `intent_llm.valider()` : la garde compare au
+  catalogue COMPLET (`registre.capabilities()`), alors que `descr()` et `publiques()`
+  n'exposent que les 5 capacités publiques. Le plan se construit avec le provider interne
+  (`bandit_custom`, donc `bandit` sur la cible) et `policy.rego` ne le refuse pas :
+  `capability_ids` et `providers` transmis à OPA sont le catalogue complet, l'ensemble
+  `couples` contient le couple interne. Impact mesuré : élargissement du périmètre
+  (un outil que le contrat ne propose pas s'exécute), PAS exécution d'une commande
+  forgée — l'argv vient du manifeste et `commande_suspecte` tient. Grave surtout parce
+  que le pool annonce des outils ACTIFS à l'étape 7.
+- `cible_autorisee` (pipeline.py:82) vaut `True` par défaut et n'est posé à `False`
+  par aucun appelant : la CLI n'a pas de notion d'autorisation de cible. La garde
+  `input.cible.autorisee == true` de `policy.rego` n'est donc armée qu'en test. À
+  traiter avec l'approbation ACTIF de l'étape 7 (même nature de décision), pas à chaud.
+- **Interface web (2026-08-30, étape 9)** : `PHASE3/interface/api.py` est une surcouche —
+  `POST /api/runs` → `analyser.lancer()` → relecture de l'archive de mission. Le cœur n'est pas
+  touché. Le premier RUN réel se termine en `refusé par la politique` (`opa` absent ici), avec la
+  raison à l'écran et le `journal.jsonl` de la mission ouvert sur disque — où l'on voit `confiance
+  = untrusted` côtoyer `cible_autorisee: true` : F2, en situation. Un affichage « 0 constat » est
+  interdit par construction : un fichier absent vaut `None`, pas `[]`.
+- **F1 corrigé (2026-08-30)** : `intent_llm.valider()` compare au catalogue **proposé**
+  (`registre.publiques()`), plus au registre entier ; drapeau `avec_internes=False` par défaut,
+  même nom et même sens que le chemin déterministe, soupape explicite conservée pour la
+  qualification. A2/A3 FAIL → PASS, attentes inchangées. `policy.rego` garde le registre
+  complet dans son entrée : choix assumé et justifié dans `PROJET_ETAT.md`.
 - Sigma / providers Groupe B : backlog, pas maintenant.
+- **Une couverture se lit dans la commande, jamais à côté.** `adapters._drapeau(argv, n)`
+  extrait les `--n=valeur` réellement passés ; aucun `scanners_actives` écrit en dur. Un
+  compteur recopié d'un YAML vers un attribut ment un jour, silencieusement (constat G6b).
+- **Un texte du dépôt scanné ne décide pas de la forme du document.** Les rendus passent par
+  `rapport_humain.sur()` (importée par `rapport.py`) ; un point d'émission qui interpolate une
+  valeur d'outil sans elle est un défaut. La règle vit au rendu, jamais au parser : la preuve
+  doit rester lisible et copiable — les identifiants ne sont pas échappés (mesuré par le cas
+  4a de `test_rapport_humain`, qui refuse un échappement de `_`). Ferme C1/C2/C6.
 
 ## 7. Direction actée (pas à rediscuter)
 

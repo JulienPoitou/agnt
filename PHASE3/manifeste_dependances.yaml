@@ -108,6 +108,64 @@ binaires:
       binaires (0 assets, mesuré) — le harnais qualifie des artefacts, pas des
       annonces.
 
+  # detect-secrets : premier outil ÉPINGLÉ à l'occasion d'une extension réelle (30/08/2026).
+  # Régime volontairement celui de semgrep (note, pas de hash) plutôt que bandit : le
+  # « hash RECORD » d'une distribution pip dépend du chemin d'installation, donc l'exiger
+  # ferait refuser le bootstrap sur la machine du user alors qu'il passe ici. La
+  # traçabilité est plus faible, elle est DITE plutôt que simulée.
+  detect-secrets:
+    package: detect-secrets
+    version: "1.5.0"
+    source: https://pypi.org/project/detect-secrets/
+    licence: Apache-2.0
+    distribution: pip
+    sha256: null
+    note: >
+      Installé par pip, donc pas de binaire unique vérifiable par SHA-256. Version épinglée
+      par bootstrap.sh. Mesuré ici avec `python3 -m detect_secrets scan --all-files` sur la
+      fixture PHASE3/testrepo : 4 findings (AWS Access Key, Base64 High Entropy, Secret
+      Keyword, GitHub Token), secrets rendus sous forme d'empreinte et non en clair.
+  # 30/08/2026 — deux outils ajoutés par la voie PLUGIN (LOT 2) : aucune ligne touchée dans
+  # capabilities.yaml, aucun code de provider écrit à la main. L'épingle reste la porte : un
+  # plugin qui ne nomme pas une entrée d'ici est refusé au chargement.
+  radon:
+    package: radon
+    version: "6.0.1"
+    source: https://pypi.org/project/radon/
+    licence: MIT
+    distribution: pip
+    sha256: null
+    note: >
+      Installé par pip, donc pas de binaire unique vérifiable par SHA-256 — régime « note »,
+      comme detect-secrets. Mesuré ici (30/08/2026) sur PHASE3/testrepo :
+      `python3 -m radon cc --json --min D testrepo` rend un objet JSON dont chaque clé est un
+      chemin de fichier, hors réseau. Sortie de test : 0 bloc au seuil D sur la fixture (le
+      provider rend donc « rien d'exploitable », et c'est un résultat, pas un échec).
+    verification: >
+      Le plugin declare `version_min: 6.0.1` : le format `cc --json` (clé = chemin de fichier)
+      est celui lu ; une version inférieure change la structure et le plugin est refusé au
+      chargement, pas ignoré à l'exécution.
+
+  pip-audit:
+    package: pip-audit
+    version: "2.10.1"
+    source: https://pypi.org/project/pip-audit/
+    licence: Apache-2.0
+    distribution: pip
+    sha256: null
+    note: >
+      Installé par pip — régime « note ». Mesuré ici le 30/08/2026 hors sandbox :
+      `python3 -m pip_audit -r testrepo/requirements.txt -f json` a rendu 70 vulnérabilités
+      connues sur 6 paquets de la fixture (PYSEC + alias CVE, descriptions). L'outil CONSULT
+      PyPI à chaque exécution : le plugin déclare donc `reseau: true`, et AGNT refusera de le
+      lancer tant que l'autorisation d'export n'est pas accordée pour la mission. C'est
+      l'état attendu, pas une panne — le refus doit être lisible dans le ledger.
+    verification: >
+      Formats réellement rendus par 2.10.1 : Columns, Json, CycloneDxJson, CycloneDxXml,
+      Markdown. Pas de CSV : la documentation externe qui promet « -f csv » est fausse pour
+      cette version (mesuré : `invalid OutputFormatChoice value: 'csv'`).
+
+
   semgrep:
     version: "1.175.0"
     sha256: null

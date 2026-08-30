@@ -1,0 +1,30 @@
+# Proposition d'intégration — générée par PHASE3/inventaire_plateforme.py. NE PAS ÉDITER À LA MAIN.
+# PROPOSITION, PAS UN PLUGIN : `plugins/propositions/` n'est pas chargé par le runtime ;
+# le copier dans `plugins/` est le seul geste de plus — d'où une grammaire unique,
+# celle que `slice/plugins.py` lit.
+# priorité 1.5 · valeur 3 · complexité 1 · risque 0 · preuve : déclaré (non mesuré ici)
+# dépôt amont : https://github.com/aquasecurity/tfsec · installation : binaire Go · licence déclarée : MIT (projet déprécié au profit de Trivy) → à trancher
+# rôle pour AGNT : outil qui produit des résultats exploitables
+# limite connue : aucune consignée dans la fiche Phase 1 — à vérifier au run
+# verdict du chargeur de plugins (recalculé, pas décrété) : refusé — plugin tfsec.yaml : `binaire` absent — un plugin sans binaire n'est pas lisible
+id: tfsec
+capacites:
+- DEPENDENCY_ANALYSIS
+- IAC_SCAN
+entrees:
+- repository
+sortie:
+  format: json
+lecture:
+  modele: plat
+requirements:
+  reseau: false
+  sandbox: true
+licence: MIT (projet déprécié au profit de Trivy) → à trancher
+a_verifier:
+- 'binaire : quel programme lancer, avec quelle empreinte — à épingler dans manifeste_dependances.yaml
+  (c''est LA porte, pas une formalité)'
+- 'risque : PASSIVE, ACTIVE ou EXPLOIT selon un run, jamais selon la documentation'
+- 'sortie : un run réel, puis `lecture.champs` mappé sur les clés réellement rendues'
+- codes de retour réels (beaucoup de scanners sortent 1 quand ils trouvent)
+- '`lecture.items_from` : la clé qui porte la liste des résultats, à lire dans la sortie'

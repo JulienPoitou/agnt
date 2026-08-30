@@ -115,6 +115,16 @@ def main() -> int:
 
     # ------------------------------------------------ politique de conservation
     print("\n--- politique de conservation déclarée ---")
+    if not (b / "manifeste.json").exists():
+        # Pas de bundle ⇒ rien à examiner. Ce n'est PAS un succès : le cas reste compté comme
+        # échec (cas 2 l'a déjà dit), mais la cause doit être lisible — ici, `analyser.py` a
+        # été refusé parce que le moteur de décision est absent de la machine (opa :
+        # openpolicyagent.org injoignable, mesuré 30/08/2026). Laisser un traceback ferait
+        # passer un blocage d'environnement pour un défaut de la politique de conservation.
+        print("  ÉCHEC 5. politique de conservation non examinée — aucun bundle produit "
+              "(voir cas 1 et 2) ; sur une machine où `bootstrap.sh` installe opa, ce test "
+              "examine `raw_*.json` ET `brut_*` du manifeste réel")
+        return 1
     man = json.loads((b / "manifeste.json").read_text(encoding="utf-8"))
     cons = man.get("conservation_des_sorties") or {}
     cas("5. la politique de conservation est déclarée", bool(cons),

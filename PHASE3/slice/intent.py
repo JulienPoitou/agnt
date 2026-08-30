@@ -19,6 +19,7 @@ tests de paraphrase sont écrits comme CONTRAT, pas comme validation.
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass, field
 
 from registre import Registry
@@ -54,9 +55,17 @@ def _contient(texte_min: str, mot: str) -> bool:
     `plan.requete_canonique`, lui, retire les accents : les deux modules ne
     normalisent donc pas de la même façon. Noté comme dette, pas corrigé à chaud.
     """
-    motif = _CACHE_MOTIFS.get(mot)
+    # Le mot-clé est normalisé LUI AUSSI, à la source, et mis en cache sous cette forme :
+    # les entrées du catalogue sont accentuées (« dépendance », « clé exposée ») et le texte
+    # qu'on lui compare ne l'est plus depuis F5. Ne pas plier les deux côtés reviendrait à
+    # fermer la dette des accents en ouvrant une régression de détection — vérifié sur les
+    # vingt formes de `test_garde_fous`, dont huit qui doivent continuer à résoudre.
+    cle = mot if mot.isascii() and mot == mot.casefold() else canoniques(mot)[0]
+    if not cle:
+        return False
+    motif = _CACHE_MOTIFS.get(cle)
     if motif is None:
-        motif = _CACHE_MOTIFS[mot] = _motif_complet(mot)
+        motif = _CACHE_MOTIFS[cle] = _motif_complet(cle)
     return motif.search(texte_min) is not None
 
 # Capacités demandées, par mot-clé. Ordre significatif : le plus spécifique d'abord.
@@ -124,6 +133,130 @@ AMBIGU = ("un truc", "quelque chose", "n'importe quoi", "je sais pas", "je ne sa
           "on verra", "peu importe")
 
 
+
+# --------------------------------------------------------------------------- normalisation
+# Une seule normalisation pour tout ce qui teste des mots-clés, partagée avec le garde-fou
+# du chemin LLM (`intent_llm.garde_fous`). Avant F5, les deux gardes ne faisaient PAS la même
+# chose de la MÊME liste `INTERDIT` : le déterministe testait en mot entier, le chemin LLM en
+# sous-chaîne minuscule. Une politique de refus dont la sévérité dépend du moteur qui répond
+# n'est pas une politique, c'est un hasard.
+#
+# Ce que la normalisation ferme, dans l'ordre des constats de la campagne (B6) et des dettes :
+#   · les accents — dette notée de longue date : « dependances » (sans accent) ne matchait pas
+#     le motif « dépendance », alors que `plan.requete_canonique`, lui, les retirait. Les deux
+#     modules ne normalisaient pas pareil ; ils le font maintenant.
+#   · les homoglyphes de police et de pleine chasse (𝚎𝚡𝚏 → NFKC), plus un jeu restreint de
+#     confusables cyrilliques et grecs — ceux qu'une requête tapée à la main rencontre.
+#   · les lettres espacées (« e x f i l t r e »), l'astuce classique pour sauter un test de
+#     sous-chaîne, recollées quand elles forment une suite d'au moins trois isolats.
+# Ce qu'elle ne ferme PAS, écrit pour qu'on ne croie pas le contraire : pas l'ensemble d'
+# Unicode confusables, pas les substitutions chiffre/lettre (« 3xfiltr »), pas la
+# reformulation sémantique. Le garde-fou borné l'évident ; le reste relève du modèle, et du
+# fait qu'aucun outil capable de nuancer n'est de toute façon au catalogue.
+_CONFUSABLES = {ord(de): vers for de, vers in (
+    ("\u0435", "e"), ("\u0415", "e"),   # е Е cyrilliques
+    ("\u0430", "a"), ("\u0410", "a"),   # а А
+    ("\u043e", "o"), ("\u041e", "o"),   # о О
+    ("\u0441", "c"), ("\u0421", "c"),   # с С
+    ("\u0440", "p"), ("\u0420", "p"),   # р Р
+    ("\u0443", "y"), ("\u0423", "y"),   # у У
+    ("\u0445", "x"), ("\u0425", "x"),   # х Х
+    ("\u043a", "k"), ("\u041a", "k"),   # к К
+    ("\u0442", "t"), ("\u0422", "t"),   # т Т
+    ("\u0438", "i"), ("\u0418", "i"),   # и И
+    ("\u043d", "h"), ("\u041d", "h"),   # н Н
+    ("\u043c", "m"), ("\u041c", "m"),   # м М
+    ("\u03b1", "a"), ("\u03bf", "o"),   # α ο grecs
+    ("\u03b9", "i"), ("\u03bd", "v"),   # ι ν
+    ("\u2011", "-"), ("\u00a0", " "), ("\u200b", ""), ("\u2060", ""),
+)}
+
+
+def _serre_lettres(t: str) -> str:
+    """Recolle les suites de lettres isolées : « e x f i l t r e » → « exfiltre ».
+
+    Seuil de trois, pas deux : deux lettres isolées côte à côte sont fréquentes sous une
+    phrase normale (« mot de passe », « c est bien ») et les recoller fabriquerait des mots
+    qui n'existent pas — donc des refus qui n'existent pas.
+    """
+    mots = t.split()
+    out, i = [], 0
+    while i < len(mots):
+        if len(mots[i]) == 1:
+            j = i
+            while j < len(mots) and len(mots[j]) == 1:
+                j += 1
+            if j - i >= 3:
+                out.append("".join(mots[i:j]))
+                i = j
+                continue
+        out.append(mots[i])
+        i += 1
+    return " ".join(out)
+
+
+def canoniques(texte: str) -> tuple[str, str]:
+    """(forme canique, forme canique sans séparateurs) d'une entrée.
+
+    La seconde n'existe que pour les listes de REFUS, où sur-refuser ne coûte rien et où un
+    « e-x-f i l! t r e » doit quand même être lu. La première sert au matching en mot entier,
+    qui protège les capacités d'un faux ami (« sca » dans « escale ») : cette protection-là
+    ne se paie pas en élargissant la sélection de capacités.
+    """
+    if not texte:
+        return "", ""
+    t = unicodedata.normalize("NFKC", texte)
+    t = unicodedata.normalize("NFD", t)
+    t = "".join(c for c in t if not unicodedata.combining(c))
+    t = t.translate(_CONFUSABLES).casefold()
+    t = _serre_lettres(t)
+    canique = re.sub(r"[^0-9a-z]+", " ", t).strip()
+    canique = re.sub(r"\s+", " ", canique)
+    return canique, canique.replace(" ", "")
+
+
+# Racines de refus, testées en PRÉFIXE de mot : une conjugaison (« exfiltrez »,
+# « exfiltration ») n'est pas un autre mot. Volontairement limité à trois racines longues,
+# chacune avec sa raison :
+#   exfiltr  — sept caractères, aucun mot français légitime ne les contient
+#   detrui   — remplace la triplette « détruire / détruis / détruit », qui laissait passer
+#              « détruite », « détruirons » et, sans accent, tout le reste
+#   ransomwar — l'orthographe anglaise varie (ransomware), la racine aussi
+# « exploit » n'y est PAS, mesuré : en préfixe il ferait refuser « exploitation des
+# dépendances », une phrase normale, pour un gain nul. C'est un des rares endroits du projet
+# où l'on accepte de moins voir pour ne pas gêner.
+_INTERDIT_RACINES = (
+    ("exfiltr", "exfiltration de données"),
+    ("detrui", "action destructrice"),
+    ("ransomwar", "logiciel malveillant"),
+)
+
+_FILTRE_RACINES: dict[str, "re.Pattern[str]"] = {}
+
+
+def interdit(texte: str) -> tuple[str, str] | None:
+    """Le motif de refus qui s'applique à cette entrée, ou None.
+
+    UN SEUL endroit pour les deux chemins (déterministe et LLM) : c'est la correction du
+    désaccord mesuré entre `intent.inferer` et `intent_llm.garde_fous`, qui testaient la
+    même liste avec deux sévérités différentes.
+    """
+    canique, serre = canoniques(texte)
+    if not canique:
+        return None
+    for mot, motif in INTERDIT:
+        if _contient(canique, mot):          # `_contient` plie la clé lui-même
+            return mot, motif
+    for racine, motif in _INTERDIT_RACINES:
+        filtre = _FILTRE_RACINES.get(racine)
+        if filtre is None:
+            filtre = _FILTRE_RACINES[racine] = re.compile(r"(?<![0-9a-z])" + racine)
+        if filtre.search(canique) or racine in serre:
+            return racine, motif
+    return None
+
+
+
 @dataclass(frozen=True)
 class Intent:
     """Résultat de l'inférence. `statut` décide de la suite — rien d'autre."""
@@ -170,19 +303,30 @@ def inferer(requete: str, registre: Registry, avec_internes: bool = False) -> In
         return Intent("needs_clarification", requete or "",
                       question="Que dois-je analyser, et sur quel dépôt ?")
 
-    bas = texte.lower()
+    # 1. refus : la demande est comprise, mais hors périmètre. Un seul test, partagé avec
+    # le chemin LLM (voir `interdit`) — accents, homoglyphes et lettres espacés inclus.
+    refuse = interdit(texte or "")
+    if refuse:
+        return Intent("rejected", requete, motif=f"demande interdite : {refuse[1]}")
 
-    # 1. refus : la demande est comprise, mais hors périmètre.
-    for mot, motif in INTERDIT:
-        if _contient(bas, mot):
-            return Intent("rejected", requete, motif=f"demande interdite : {motif}")
+    bas, _ = canoniques(texte or "")
 
     # 2. capacités explicitement demandées.
     connues = {c.id for c in registre.capabilities()}
     eligibles = connues if avec_internes else {
         c.id for c in registre.capabilities() if not c.interne}
     trouvees: dict[str, str] = {}
-    for cap_id, mots in MOTIFS.items():
+    # Vocabulaire effectif = celui du cœur, AUGMENTÉ des mots déclarés par les capacités que
+    # le cœur ne connaît pas (capacité créée par un plugin). Un plugin qui ajoute une capacité
+    # sans que rien ne puisse la demander produit un registre décoratif — et c'est le défaut
+    # que `plugins.charger_un` refuse déjà à l'entrée ; cette ligne est l'autre moitié : le
+    # mot déclaré doit réellement servir. Les capacités connues gardent `MOTIFS` intact, donc
+    # la sélection des demandes existantes ne bouge pas d'un octet.
+    vocabulaire = dict(MOTIFS)
+    for cap in registre.capabilities():
+        if cap.id not in vocabulaire and cap.mots_cles:
+            vocabulaire[cap.id] = tuple(cap.mots_cles)
+    for cap_id, mots in vocabulaire.items():
         if cap_id not in connues:
             continue
         # Les capacités internes ne remontent JAMAIS en usage normal — y compris
@@ -212,9 +356,11 @@ def inferer(requete: str, registre: Registry, avec_internes: bool = False) -> In
     # Cas historique préservé : « scan de sécurité complet du dépôt » ne nomme aucun
     # domaine (« sécurité » n'est mot-clé d'aucune capacité) → générique → tout.
     if generique and not trouvees:
+        hors_generique = {c.id for c in registre.capabilities() if not c.generique}
         for cap_id in eligibles:
-            if cap_id not in trouvees:
-                trouvees[cap_id] = "demande générique"
+            if cap_id in trouvees or cap_id in hors_generique:
+                continue
+            trouvees[cap_id] = "demande générique"
 
     if trouvees:
         ordre = [c.id for c in registre.capabilities() if c.id in trouvees]

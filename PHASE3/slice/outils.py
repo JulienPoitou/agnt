@@ -70,6 +70,22 @@ def registre(chemin: Path | None = None) -> dict[str, Tool]:
     return out
 
 
+def regles_epinglees(chemin: Path | None = None) -> dict[str, str]:
+    """`nom de fichier → sha256` pour les jeux de règles du manifeste.
+
+    Ce module est le seul à lire `manifeste_dependances.yaml` : exposer une entrée de plus
+    coûte moins cher qu'un second lecteur qui divergerait du premier le jour où le format
+    bouge. Une règle absente du manifeste n'est pas une erreur ici — c'est `verifie()` côté
+    bootstrap qui décide si le répertoire est complet.
+    """
+    doc = yaml.safe_load((chemin or MANIFESTE).read_text(encoding="utf-8")) or {}
+    out: dict[str, str] = {}
+    for nom, e in (doc.get("regles") or {}).items():
+        if isinstance(e, dict) and e.get("sha256"):
+            out[str(nom)] = str(e["sha256"])
+    return out
+
+
 def outil(tid: str) -> Tool:
     t = registre().get(tid)
     if t is None:

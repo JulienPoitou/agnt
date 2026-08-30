@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AGNT — mission</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="maquette" id="ruban">MAQUETTE — le moteur n'est pas branché (api.py non démarré)</div>
+
+<header class="barre">
+  <div class="marque">AGNT<span class="point">.</span></div>
+  <form class="lancer" id="form" onsubmit="return false">
+    <label><span>cible</span><select id="cible" disabled><option>—</option></select></label>
+    <label class="q"><span>que veux-tu analyser&nbsp;?</span>
+      <textarea id="question" rows="1" disabled>Analyse ce dépôt et trouve les problèmes de sécurité importants.</textarea>
+    </label>
+    <label><span>modèle</span><input id="modele" disabled placeholder="modèle du fournisseur"></label>
+    <label><span>confiance dans la cible</span>
+      <select id="confiance" disabled><option>controlled</option><option>untrusted</option></select>
+    </label>
+    <label><span>moteur d'intention</span>
+      <select id="moteur" disabled><option>auto</option><option>llm</option><option>deterministe</option></select>
+    </label>
+    <button id="run" disabled title="démarrer api.py pour activer">RUN</button>
+  </form>
+  <div class="etat" id="etat">—</div>
+</header>
+
+<main id="poste" class="grille"></main>
+<footer class="pied" id="pied"></footer>
+<script src="app.js"></script>
+</body>
+</html>

@@ -106,8 +106,18 @@ def main() -> int:
     canons = sorted(x.source["canonical_rule_id"] for x in fs_sg)
     cas("4a. canonical_rule_id canonique (aucun préfixe de chemin de montage)",
         all(c.startswith("semgrep_go:go.lang.") for c in canons), f"{canons}")
-    cas("4b. outil déclaré = semgrep_go (trace distincte de semgrep)",
-        all(x.source["tool"] == "semgrep_go" for x in fs_sg))
+    # 4b — ATTENTE MOUVÉE LE 2026-08-30, avec sa raison écrite ici plutôt qu'un test supprimé.
+    # L'intention du cas est intacte : un finding de la capacité Go doit rester RATTACHABLE à
+    # `semgrep_go`, distinct de `semgrep`. Ce qui a changé est le CHAMP qui porte cette
+    # distinction : `source["tool"]` nommait le provider, et le clusterer s'en servait pour
+    # compter les OUTILS d'un cluster — `semgrep` et `semgrep_go` (même moteur, deux jeux de
+    # règles) y comptaient donc comme deux outils indépendants, ce qui sur-évaluait une
+    # convergence dans un rapport de sécurité. `tool` nomme désormais le moteur, `provider`
+    # porte la trace demandée.
+    cas("4b. trace distincte : provider = semgrep_go, outil = semgrep (le moteur)",
+        all(x.source["provider"] == "semgrep_go" and x.source["tool"] == "semgrep"
+            for x in fs_sg),
+        str({(x.source.get("provider"), x.source.get("tool")) for x in fs_sg}))
     cas("4c. gravité = celle de l'outil, origine tracée",
         all(x.severity["origine"] == "semgrep_go" for x in fs_sg)
         and {x.severity["value"] for x in fs_sg} == {"WARNING"},
@@ -147,9 +157,19 @@ def main() -> int:
     res = clusterer.regrouper(fs_sg + fs_tv + fs_gl)
     inter = res.get("clusters_inter_outils", [])
     outils_inter = {outil_par_id[mm] for cl in inter for mm in cl["members"]}
-    cas("7a. cluster inter-outils sur main.go (gitleaks × semgrep_go, même fichier)",
-        len(inter) >= 1 and {"semgrep_go", "gitleaks"} <= outils_inter,
+    # 7a — même déménagement (2026-08-30) : la convergence revendiquée est bien entre
+    # DEUX MOTEURS distincts (gitleaks d'un côté, le moteur semgrep de l'autre). Ce que
+    # l'attendait corrige : `semgrep_go` n'y apparaît plus comme outil, mais doit y
+    # apparaître comme provider — sinon la correction aurait effacé la traçabilité au lieu
+    # de la déplacer.
+    cas("7a. cluster inter-outils sur main.go (gitleaks × moteur semgrep, même fichier)",
+        len(inter) >= 1 and {"semgrep", "gitleaks"} <= outils_inter,
         f"inter={len(inter)} outils={sorted(outils_inter)}")
+    par_id = {f.id: f for f in (fs_sg + fs_tv + fs_gl)}
+    cas("7aa. …et le provider de ce cluster est bien nommé semgrep_go (traçabilité intacte)",
+        any("semgrep_go" in {par_id[m].source.get("provider") for m in c["members"] if m in par_id}
+            for c in inter),
+        "aucun membre de cluster inter-outils ne vient de semgrep_go")
     cas("7b. les CVE trivy (go.mod) restent à part : fichier distinct, pas de collage",
         "trivy" not in outils_inter,
         f"outils inter-outils={sorted(outils_inter)}")

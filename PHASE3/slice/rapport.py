@@ -23,6 +23,13 @@ Jamais : « vulnérable », « confirmé », « votre dépôt contient N vulnér
 
 from __future__ import annotations
 
+# Une seule politique d'échappement pour les deux rendeurs du projet : importer celle de
+# rapport_humain plutôt que d'en réécrire une seconde. Deux copies finissent toujours par
+# diverger, et c'est exactement le défaut que C3b a montré sur le masquage des secrets.
+import assainissement as ASS
+from assainissement import MASQUE
+from rapport_humain import sur as _sur
+
 from datetime import datetime, timezone
 
 # Correspondance raison → phrase lisible. Toute raison inconnue doit apparaître telle
@@ -52,6 +59,30 @@ def _raison_lisible(raison: list[str]) -> str:
         else:
             out.append(RAISONS_LISIBLES.get(r, r))
     return " · ".join(out) if out else "—"
+
+
+def _secret_lisible(valeur) -> str:
+    """Le champ `secret` d'un finding ne traverse jamais le rendu tel quel.
+
+    D'où, mesuré (constat C3b de la campagne adverse) : `depuis_gitleaks` masque la valeur
+    à la source — `--redact` d'abord, remplacement par `<masqué>` ensuite — et le rendu
+    écrivait la valeur en ajoutant « valeur jamais stockée ». L'affirmation était vraie
+    parce qu'un autre morceau du code la rendait vraie, et personne ne le vérifiait au
+    moment où elle était écrite. Un finding foré (`evidence.secret` rempli à la main, ou
+    venu d'un provider qui n'appliquerait pas le masque) ressortait en clair dans le
+    rapport, le ticket, et le mail.
+
+    Le contrôle, ici : ce qui a la forme du masque est affiché ; ce qui ne l'a pas est
+    masqué AU RENDU et le lecteur l'apprend. Jamais « on affiche et on espère », jamais
+    « on supprime en silence » : dans les deux cas le rapport mentrait par omission.
+    """
+    brut = str(valeur or "")
+    masque, n = ASS.masquer(brut)
+    if MASQUE in brut and n == 0:                     # déjà masqué, rien d'autre dedans
+        return _sur(brut, dans_code_span=True)
+    aviso = (f" _(reçue non masquée de l'outil, {n} occurrence(s) masquée(s) au rendu)_"
+             if n else " _(forme non reconnue comme un masque, valeur retirée du rapport)_")
+    return f"`{MASQUE}`{aviso}"
 
 
 def generer(e, cible) -> str:
@@ -106,17 +137,66 @@ def generer(e, cible) -> str:
     for nom, ver in sorted((ctx.get("outils") or {}).items()):
         # Une version illisible est affichée telle quelle : on ne prétend pas qu'un outil
         # a servi si on ne peut pas prouver laquelle de ses versions a servi.
-        A(f"| `{nom}` | `{ver}` |")
+        A(f"| `{_sur(nom, dans_code_span=True)}` | `{_sur(ver, dans_code_span=True)}` |")
     A("")
+    # Statut par outil (les six étapes) : dérivé par slice/statuts.py, jamais saisi.
+    # Absent = exécution antérieure à ce registre — on n'invente pas une table vide.
+    statuts = list(getattr(e, "statuts", []) or [])
+    if statuts:
+        A("### Statut par outil")
+        A("")
+        A("| Outil | Binaire | Étape atteinte | Observations | Pourquoi ça s'arrête là |")
+        A("|---|---|---|---|---|")
+        for st in statuts:
+            A(f"| `{_sur(st['provider'], dans_code_span=True)}` "
+              f"| `{_sur(st['binaire'], dans_code_span=True)}` "
+              f"| **{_sur(st['statut'], dans_code_span=True)}** "
+              f"| {st['findings']} "
+              f"| {_sur(st['raison'])} |")
+        res: dict[str, int] = {}
+        for st in statuts:
+            res[st["statut"]] = res.get(st["statut"], 0) + 1
+        A("")
+        A("- récapitulatif : " + ", ".join(f"{v} {k}" for k, v in sorted(res.items()) if v))
+        if res.get("execute") and not any(k in res for k in
+                                          ("echoue", "non_autorise", "non_disponible",
+                                           "non_applicable", "non_selectionne", "selectionne")):
+            A("- tous les outils du plan se sont terminés sur une sortie conservée.")
+        else:
+            A("- **certains outils n'ont pas abouti** : les observations ci-dessus ne portent "
+              "QUE sur les outils exécutés, jamais sur les refusés, échoués ou écartés.")
+        A("")
+    esc = list(getattr(e, "escalades", []) or [])
+    if esc:
+        A("### Escalade bornée (vague 2)")
+        A("")
+        A("| Capacité | Déclencheur | Suppléant proposé | Décision | Exécuté |")
+        A("|---|---|---|---|---|")
+        for d in esc:
+            dec = d.get("decision") or {}
+            A(f"| `{_sur(d.get('capacite', ''), dans_code_span=True)}` "
+              f"| {_sur(d.get('motif', ''))} "
+              f"| `{_sur(d.get('suppleant', ''), dans_code_span=True)}` "
+              f"| {'**autorisé**' if dec.get('allow') else 'refusé — ' + _sur(', '.join(dec.get('motifs') or []) or 'sans motif')} "
+              f"| {'oui' if d.get('execute') else '**non**'} |")
+        A("")
+        A("- une escalade refusée par la politique **reste affichée** : ce qui a été tenté "
+          "et écarté fait partie du résultat, pas des coulisses.")
+        A("")
+    elif statuts:
+        A("- escalade : aucun déclencheur (aucun outil lancé sans cible analysée).")
+        A("")
     A("### Ce qui a été analysé, et ce qui ne l'a pas été")
     A("")
     for prov, c in (r.get("couverture") or {}).items():
         A(f"**`{prov}`**")
         A("")
         if c.get("analysé"):
-            A(f"- analysé : {', '.join('`%s`' % x for x in c['analysé'])}")
+            A("- analysé : " + ", ".join(
+                f"`{_sur(x, dans_code_span=True)}`" for x in c["analysé"]))
         for na in c.get("non_analysé", []):
-            A(f"- **non analysé** : `{na['cible']}` — `{na['etat']}` — {na['raison']}")
+            A(f"- **non analysé** : `{_sur(na['cible'], dans_code_span=True)}` — "
+              f"`{_sur(na['etat'], dans_code_span=True)}` — {_sur(str(na['raison']))}")
         for lim in c.get("limites", []):
             A(f"- limite : {lim}")
         A("")
@@ -125,7 +205,7 @@ def generer(e, cible) -> str:
     A("| Élément | Digest |")
     A("|---|---|")
     for nom, dg in sorted((ctx.get("regles") or {}).items()):
-        A(f"| règles `{nom}` | `{dg}` |")
+        A(f"| règles `{_sur(nom, dans_code_span=True)}` | `{dg}` |")
     A(f"| base Trivy | `{_l(ctx.get('base_trivy'))}` |")
     A(f"| politique | `{_l(ctx.get('policy'))}` |")
     A(f"| registre | `{_l(ctx.get('registre'))}` |")
@@ -158,14 +238,16 @@ def generer(e, cible) -> str:
         A(f"| Statut | {'**corrélé entre outils**' if inter else 'observé'} |")
         A(f"| Confiance | {CONFIANCES.get(c['confidence'], c['confidence'])} |")
         A(f"| Raison | {_raison_lisible(c['reason'])} |")
-        A(f"| Outils | {', '.join('`%s`' % x for x in outils)} |")
+        A(f"| Outils | {', '.join('`%s`' % _sur(x, dans_code_span=True) for x in outils)} |")
         if paquets:
-            A(f"| Paquets | {', '.join('`%s`' % x for x in paquets)} |")
+            A(f"| Paquets | {', '.join('`%s`' % _sur(x, dans_code_span=True) for x in paquets)} |")
         if cve:
-            A(f"| CVE | {', '.join('`%s`' % x for x in cve[:8])}"
+            A(f"| CVE | {', '.join('`%s`' % _sur(x, dans_code_span=True) for x in cve[:8])}"
               + (f" (+{len(cve) - 8})" if len(cve) > 8 else "") + " |")
         if fichiers:
-            A(f"| Fichiers | {', '.join('`%s`' % x for x in fichiers[:5])}"
+            # mode span : c'est ici que le nom d'un fichier hostile sortait de son `code
+            # span` et devenait une ligne du document (constat C6 de la campagne adverse)
+            A(f"| Fichiers | {', '.join('`%s`' % _sur(x, dans_code_span=True) for x in fichiers[:5])}"
               + (f" (+{len(fichiers) - 5})" if len(fichiers) > 5 else "") + " |")
         A(f"| Findings sources | {', '.join('`%s`' % m for m in membres)} |")
         A("")
@@ -183,9 +265,10 @@ def generer(e, cible) -> str:
         for m in r["non_regroupe"]:
             f = ids.get(m)
             if f:
-                A(f"- `{m}` — {f['source']['tool']} — "
+                A(f"- `{_sur(m, dans_code_span=True)}` — {_sur(f['source']['tool'])} — "
                   f"{f['identity']['canonical_rule_id']} — "
-                  f"{_l(f['location'].get('file'))}:{_l(f['location'].get('line'))}")
+                  f"{_sur(_l(f['location'].get('file')), dans_code_span=True)}"
+                  f":{_l(f['location'].get('line'))}")
         A("")
 
     # ============================================================ 4. PREUVES
@@ -198,25 +281,27 @@ def generer(e, cible) -> str:
         loc = f["location"]
         src = f["source"]
         ev = f.get("evidence") or {}
-        A(f"**`{f['id']}`** — {src['tool']} — `{f['identity']['canonical_rule_id']}`")
+        A(f"**`{_sur(f['id'], dans_code_span=True)}`** — {_sur(src['tool'])} — "
+          f"`{_sur(f['identity']['canonical_rule_id'], dans_code_span=True)}`")
         A("")
-        A(f"- localisation : `{_l(loc.get('file'))}` ligne {_l(loc.get('line'))}")
+        A(f"- localisation : `{_sur(_l(loc.get('file')), dans_code_span=True)}` "
+          f"ligne {_l(loc.get('line'))}")
         if loc.get("package"):
             pm = src.get("package_mapping") or {}
-            A(f"- paquet : `{loc['package']}` "
+            A(f"- paquet : `{_sur(loc['package'], dans_code_span=True)}` "
               f"(mapping : {pm.get('method', '?')}, confiance {pm.get('confidence', '?')})")
         if src.get("version_installee"):
-            A(f"- version installée : `{src['version_installee']}` → "
+            A(f"- version installée : `{_sur(src['version_installee'], dans_code_span=True)}` → "
               f"corrigée dans `{_l(src.get('version_corrigee'))}`")
         sev = f.get("severity") or {}
         A(f"- sévérité : {sev.get('value', '?')} _(origine : {sev.get('origine', '?')})_")
         if ev.get("message"):
-            A(f"- message : {str(ev['message'])[:220]}")
+            A(f"- message : {_sur(str(ev['message'])[:220])}")
         if ev.get("extrait"):
-            A(f"- extrait : `{str(ev['extrait'])[:160]}`")
+            A(f"- extrait : `{_sur(str(ev['extrait'])[:160], dans_code_span=True)}`")
         if ev.get("secret"):
-            A(f"- secret : `{ev['secret']}` _(valeur jamais stockée)_")
-        A(f"- règle source : `{src.get('original_rule_id')}`")
+            A(f"- secret : {_secret_lisible(ev['secret'])}")
+        A(f"- règle source : `{_sur(src.get('original_rule_id'), dans_code_span=True)}`")
         A("")
     if len(e.findings) > 10:
         A(f"_{len(e.findings) - 10} observations supplémentaires dans `findings.json`._")

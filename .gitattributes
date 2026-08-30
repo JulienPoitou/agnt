@@ -1,0 +1,42 @@
+# Le dépôt est cloné sur Windows puis EXÉCUTÉ depuis WSL : si git convertit les fins de
+# ligne, `bash bootstrap.sh` meurt sur la première ligne (« $'\r': command not found ») et
+# `python3` avale des chaînes qui finissent par \r. Ce n'est alors ni une erreur du dépôt ni
+# une erreur de l'outil — c'est le checkout. Forcer LF rend le dépôt indépendant du
+# `core.autocrlf` de la machine.
+#
+# Ce qui est mesuré ici (2026-08-30), pas supposé : `bootstrap.sh` recopié en CRLF meurt à la
+# ligne 13 — « set: pipefail\r: invalid option name » — donc APRÈS avoir commencé à s'exécuter,
+# et son sha256 change (81218b1b… → 2e6be26d…) : toute empreinte épinglée cesse de correspondre.
+# Ce qui n'est PAS mesuré, et donc pas affirmé : le comportement de Python, d'OPA ou des outils
+# sous CRLF (un .py en CRLF s'exécute sans erreur — la conversion ne casse pas tout, elle casse
+# ce dont les OCTETS sont l'identité).
+* text=auto eol=lf
+
+# Ce qui ne doit jamais être touché par une conversion
+*.png  -text
+*.jpg  -text
+*.gif  -text
+*.ico  -text
+*.gz   -text
+*.tgz  -text
+*.zip  -text
+*.db   -text
+*.sqlite -text
+# Les exports d'outils (SARIF) et les notes de la Phase 1 ont leur contenu propre :
+# `*.csv` est en CRLF depuis l'origine, ce n'est pas un accident de checkout à « corriger ».
+*.sarif -text eol=lf
+*.csv  -text
+
+# Les sources du produit, explicites (elles le seraient déjà via text=auto — ces lignes
+# servent de rappel à qui ajouterait une exception plus bas dans le fichier)
+*.py   text eol=lf
+*.sh   text eol=lf
+*.rego text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+*.md   text eol=lf
+*.js   text eol=lf
+*.css  text eol=lf
+*.html text eol=lf

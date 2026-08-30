@@ -7,7 +7,7 @@
 # Un statut « integrated » ici est une CONSÉQUENCE de l'intégration réelle,
 # jamais une déclaration : il suit le registre, il ne le précède pas.
 # ============================================================================
-genere_le: '2026-08-29'
+genere_le: '2026-08-30'
 lignes_catalogue: 324
 lignes_exclues_sans_owner_repo: 15
 comptes_statuts:
@@ -16,7 +16,7 @@ comptes_statuts:
 sources_lues:
   PHASE1/07_CATALOGUE_INTEGRATION.csv: aec6543c3e88c6fe
   PHASE1/08_FICHES_PROVIDERS.csv: b647ef29b6ef71e2
-  PHASE3/slice/capabilities.yaml: 0a95593b8ceaa09b
+  PHASE3/slice/capabilities.yaml: cba82de50df873fa
 entrees:
 - source: 0x4m4/hexstrike-ai
   provenance: phase1

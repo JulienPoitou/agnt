@@ -288,6 +288,12 @@ allowed_target_trust: [controlled]
 allowed_risk: [PASSIVE]
 ```
 
+> **Correction 2026-08-30** : ces noms de champs étaient ceux du dictionnaire, mais
+> `policy.rego` lit `memoire_bornee` et `durci` — la garde de mémoire ne lisait donc rien
+> (et `not <indéfini>` vaut vrai : refus par accident). `Profil.to_dict()` émet
+> désormais les noms lus par la politique ; voir `CONTRAT_PUBLIC.md` §4 et le cas G15 de
+> `test_utilisation.py`. Le bloc ci-dessus reste le relevé de ce qui était écrit à l'étape 6.
+
 `limites_a_prouver` est déclaré mais **ne doit pas être utilisé** tant que les limites ne
 sont pas réellement appliquées : le déclarer sans les appliquer désactiverait la garde de refus.
 

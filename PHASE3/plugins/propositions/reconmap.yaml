@@ -1,0 +1,31 @@
+# Proposition d'intégration — générée par PHASE3/inventaire_plateforme.py. NE PAS ÉDITER À LA MAIN.
+# PROPOSITION, PAS UN PLUGIN : `plugins/propositions/` n'est pas chargé par le runtime ;
+# le copier dans `plugins/` est le seul geste de plus — d'où une grammaire unique,
+# celle que `slice/plugins.py` lit.
+# priorité 0.1333 · valeur 2 · complexité 7 · risque 7 · preuve : déclaré (non mesuré ici)
+# dépôt amont : https://github.com/reconmap/reconmap · installation : paquet · licence déclarée : NPSL (licence non libre : à trancher)
+# rôle pour AGNT : outil qui produit des résultats exploitables
+# limite connue : aucune consignée dans la fiche Phase 1 — à vérifier au run
+# verdict du chargeur de plugins (recalculé, pas décrété) : refusé — plugin reconmap.yaml : `binaire` absent — un plugin sans binaire n'est pas lisible
+id: reconmap
+capacites:
+- NETWORK_DISCOVERY
+entrees:
+- repository
+sortie:
+  format: xml
+lecture:
+  modele: xml
+requirements:
+  reseau: true
+  sandbox: true
+  privileges: root requis
+licence: 'NPSL (licence non libre : à trancher)'
+a_verifier:
+- 'binaire : quel programme lancer, avec quelle empreinte — à épingler dans manifeste_dependances.yaml
+  (c''est LA porte, pas une formalité)'
+- 'risque : PASSIVE, ACTIVE ou EXPLOIT selon un run, jamais selon la documentation'
+- 'sortie : un run réel, puis `lecture.champs` mappé sur les clés réellement rendues'
+- codes de retour réels (beaucoup de scanners sortent 1 quand ils trouvent)
+- 'egress : `reseau: true` sera REFUSÉ tant que l''autorisation d''export n''est pas accordée explicitement
+  pour la mission — ne pas retirer cette garde pour faire passer l''outil'

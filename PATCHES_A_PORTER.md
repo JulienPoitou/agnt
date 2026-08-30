@@ -1,4 +1,8 @@
 # PATCHES À PORTER VERS LE WORKSPACE SOURCE — 2026-08-28 (rév. 2)
+> **⚠️ Artefact daté (2026-08-28), non maintenu depuis.** Trois commits de chantier ont
+> suivi (`f400fe6`, `59d987f`, `6298dae`) : ce qui est décrit ici comme « à porter » est en
+> partie porté, et `_transfert/` n'existe plus. État réel : `PROJET_ETAT.md`.
+
 
 > **Artefact exécutable prêt** : le dossier `_transfert/` contient le patch unifié,
 > la fixture et `APPLIQUER.sh` (testé sur extraction vierge : exit 0). Ce document

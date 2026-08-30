@@ -10,14 +10,19 @@ CONTRAT D'UN FOURNISSEUR :
     · il ne lève pas d'exception métier : une erreur technique remonte et déclenche
       le repli déterministe
 
-Deux implémentations :
+Trois implémentations, à ne pas mettre au même niveau de preuve :
 
-    MockLLM            responses figées, pour tester le CONTRAT et les GARDE-FOUS
-    OpenAICompatible   vrai modèle, derrière un endpoint compatible OpenAI
+    MockLLM            réponses figées — teste le CONTRAT et les GARDE-FOUS, sans réseau
+    Groq               vrai modèle, API compatible OpenAI — branché sur `moteur="auto"`
+    OpenAICompatible   endpoint compatible OpenAI générique — ÉCRIT, JAMAIS EXERCÉ (aucun
+                       chemin du CLI ne l'instancie ; le garder n'engage à rien, l'utiliser
+                       voudrait un besoin mesuré)
 
-Aucun modèle n'était accessible dans l'environnement de développement (pas de clé, pas
-d'endpoint, pas d'ollama). Le mock n'est donc pas un raccourci : c'est ce qui permet de
-tester le contrat sans dépendre d'un fournisseur externe.
+Le mock n'est pas un raccourci : c'est ce qui permet de tester le contrat sans dépendre d'un
+fournisseur externe, y compris ici où aucune clé n'existe. **Attention à la phrase qu'elle
+autorise** : `test_llm_reel.py` prouve que le contrat tient contre un vrai modèle, pas que le
+modèle est robuste — « testé » et « validé en production » ne sont pas le même état, voir
+`PROJET_ETAT.md`, « Clarification — LLM réel testé ≠ LLM réel validé en production ».
 """
 
 from __future__ import annotations
