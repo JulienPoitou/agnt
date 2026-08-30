@@ -47,7 +47,7 @@
 | CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d` | **P1 :** lecteur canonique d'historique Mission et API en lecture seule selon le contrat produit. |
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d` | **P2 :** interopérabilité contre une implémentation MCP indépendante ; **P1 intégration :** raccord final au module CORE canonique à traiter lors de l'intégration coordonnée. |
 | WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
-| SECURITY | `arena/01a05426-agnt` | `PARTIAL` | `d1d562f` — non poussé au handoff | **P1 :** pousser le correctif P0.1 puis fermer SEC-G6a : jeu de règles gitleaks de confiance. |
+| SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003` | **P1 :** gate adversarial de sécurité pour l'exposition History/Timeline/Status, sans implémenter l'API CORE. |
 | PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f` | En attente contrôlée : validation produit de l'API History/Timeline/Status dès livraison CORE ; aucun quatrième contrat à créer maintenant. |
 
 ---
@@ -88,6 +88,8 @@
 - Correctif P0.1 F2/D4 : l'autorisation d'une cible n'est plus implicite dans pipeline, CLI ou API.
 - L'API ignore toute tentative client de définir `cible_autorisee` et utilise uniquement la liste d'admission opérateur.
 - Tests adversariaux et de régression ajoutés pour l'autorisation de cible et le journal.
+- SEC-G6a fermé : gitleaks reçoit une configuration AGNT explicite sous `{REGLES}`, épinglée, installée par bootstrap et vérifiée avant tout `Popen`.
+- La cible ne peut plus fournir son propre `.gitleaks.toml` pour réduire la détection ; absence/divergence de règles = refus fail-closed.
 
 ### PRODUCT & UX
 
@@ -152,15 +154,18 @@ WEB n'a aucun code à construire sans dupliquer Product & UX ou devancer le lect
 - Les bundles dogfooding, `localStorage`, fixtures et fichiers d'archives ne sont jamais une source d'historique Web.
 - L'exposition d'artefacts ou de téléchargements attend une décision Security explicite.
 
-### P1 — SECURITY : jeu de règles gitleaks de confiance
+### P1 — SECURITY : gate adversarial History / Timeline / Status
 
-Avant tout autre chantier Security :
-- pousser le commit P0.1 `d1d562f` sur sa branche ;
-- fermer SEC-G6a en forçant gitleaks à utiliser un fichier `gitleaks.toml` AGNT sous `{REGLES}` ;
-- installer/pinner/vérifier ce fichier via les mécanismes bootstrap et empreintes existants ;
-- refuser l'exécution plutôt que retomber sur une configuration découverte dans le dépôt cible ;
-- ajouter les régressions argv/configuration correspondantes ;
-- laisser G9 honnêtement non évalué tant qu'un vrai gitleaks n'est pas disponible.
+Les correctifs P0.1 et SEC-G6a sont poussés et prouvés structurellement. Ne pas repartir sur G9 ou des installations d'outils absents.
+
+Préparer un gate de sécurité réutilisable qui attaque les projections API futures History/Timeline/Status :
+- redaction serveur avant sérialisation ;
+- allowlists de champs, transport/protocole et reason codes ;
+- payloads journaux/MCP inconnus ou hostiles ;
+- chemins absolus, URL userinfo, tokens, headers, argv, traces et sorties brutes ;
+- séquences timeline dupliquées/manquantes et statuts contradictoires.
+
+Le gate doit tester les réponses/fixtures sans créer un second lecteur de Mission, endpoint, UI ou sanitizer concurrent au CORE.
 
 ---
 
@@ -248,7 +253,7 @@ transports.enregistrer("mcp", executeur)
 | Compatibilité MCP avec une implémentation tierce indépendante. | Moyenne | HTTP, Streamable HTTP et stdio sont prouvés contre serveurs contrôlés internes ; une preuve avec une implémentation indépendante reste à faire. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product UI est déjà livré ; WEB a été recadré et ne modifie pas ces fichiers. Préparer une adoption ciblée après référence consolidée, jamais une seconde refonte. |
 | Historique/timeline/statuts affichés sans source backend persistée. | Élevée produit | Contrats produit terminés ; CORE doit exposer lecteur/API, `data.timeline` et `data.executions[]` enrichi avant toute activation WEB, sans données de démonstration après une réponse API. |
-| Gitleaks peut charger une configuration hostile du dépôt et masquer des secrets (SEC-G6a). | Haute sécurité | Correctif Security P1 actif : config AGNT explicite, vérifiée et fail-closed ; ne pas déclarer la détection de secrets fiable avant fermeture. |
+| Exposition API History/Timeline/Status de données sensibles ou payloads non allowlistés. | Haute sécurité d'intégration | Gate adversarial Security P1 actif avant exposition WEB ; CORE reste propriétaire de la projection/sérialisation. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
 
 ---
@@ -263,7 +268,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 - L'annulation HTTP est démontrée au niveau transport ; aucune notification protocolaire MCP d'annulation n'est revendiquée si le profil ne la fournit pas.
 - Certains tests historiques échouent uniquement parce que `bandit`, `checkov`, `detect-secrets` et `radon` sont absents.
 - L'API conserve actuellement les runs en mémoire et n'expose pas encore de liste persistée de missions ; l'historique produit reste volontairement désactivé.
-- Gitleaks réel est absent : la vulnérabilité de configuration hostile est reproductible par contrat/argv mais sa mesure avec le binaire reste non évaluée.
+- Gitleaks réel est absent : SEC-G6a est fermé côté AGNT par argv/configuration/empreinte ; la mesure du comportement interne du binaire face à un `.gitleaks.toml` hostile reste non évaluée (SEC-G9).
 
 ---
 
@@ -292,8 +297,9 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | TIMELINE-001 | Projection `data.timeline` dans le lecteur canonique CORE | P2 | Ouvert — CORE |
 | TIMELINE-002 | Noms source des événements intention/sélection alignés à CORE | Intégration | Ouvert |
 | TIMELINE-003 | Allowlists transport/protocole MCP approuvées avec Security | Sécurité | Ouvert |
-| SEC-G6a | Configuration gitleaks contrôlée par le dépôt cible | P1 haute sécurité | En cours — SECURITY |
+| SEC-G6a | Configuration gitleaks contrôlée par le dépôt cible | P1 haute sécurité | Terminé — `e5838003`, config AGNT épinglée/fail-closed |
 | SEC-G9 | Mesure réelle gitleaks face à un `.gitleaks.toml` hostile | P2 environnement | Bloqué |
+| SEC-HIST-001 | Gate adversarial d'exposition History/Timeline/Status | P1 intégration sécurité | En cours — SECURITY |
 | SEC-B6 | Durcissement garde-fous homoglyphes / espaces | P3 | Différé |
 | SEC-B7 | Borne de taille de requête sortante fournisseur | P3 | Différé |
 
@@ -301,12 +307,12 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 
 ## Ordre d'intégration prévisionnel
 
-1. Pousser et préserver le correctif Security P0.1 `d1d562f`, puis fermer SEC-G6a avant de considérer le scan de secrets fiable.
-2. Implémenter le lecteur/API d'historique CORE selon le contrat produit, en préservant Cible et l'autorisation explicite de cible.
+1. Préserver les correctifs Security poussés P0.1 `d1d562f` et SEC-G6a `e5838003`; ne pas déclarer G9 mesuré sans vrai gitleaks.
+2. Implémenter le lecteur/API d'historique CORE selon le contrat produit, en préservant Cible et l'autorisation explicite de cible ; Security prépare en parallèle le gate d'exposition.
 3. Prouver l'interopérabilité MCP avec une implémentation indépendante, de manière bornée et isolée ; ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
 4. CORE implémente `data.timeline` et `data.executions[]` enrichi avec le lecteur d'historique selon les contrats produit ; Product & UX valide alors les réponses réelles, sans toucher à l'UI partagée.
 5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle.
-6. Security approuve les allowlists/redaction de provenance et les statuts hostiles avant exposition WEB.
+6. Security exécute son gate adversarial contre l'API CORE intégrée et approuve allowlists/redaction de provenance/statuts avant exposition WEB.
 7. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après feu vert produit/Security.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
