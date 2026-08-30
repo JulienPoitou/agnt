@@ -45,7 +45,7 @@
 | Builder | Branche | Statut rapporté | Derniers commits | Prochaine mission assignée |
 |---|---|---|---|---|
 | CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d` | **P1 :** lecteur canonique d'historique Mission et API en lecture seule selon le contrat produit. |
-| MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a` | **P2 :** annulation HTTP réellement interruptible ; **P1 intégration :** raccord final au module CORE canonique à traiter lors de l'intégration coordonnée. |
+| MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d` | **P2 :** interopérabilité contre une implémentation MCP indépendante ; **P1 intégration :** raccord final au module CORE canonique à traiter lors de l'intégration coordonnée. |
 | WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
 | SECURITY | `arena/01a05426-agnt` | `PARTIAL` | `d1d562f` — non poussé au handoff | **P1 :** pousser le correctif P0.1 puis fermer SEC-G6a : jeu de règles gitleaks de confiance. |
 | PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f` | En attente contrôlée : validation produit de l'API History/Timeline/Status dès livraison CORE ; aucun quatrième contrat à créer maintenant. |
@@ -73,7 +73,8 @@
 - Normalisation des findings MCP dans le chemin commun AGNT.
 - Provenance MCP, corrélation, ledger, reporting, API et SARIF enrichis de façon additive.
 - Tests contractuels, intégration simulée et serveurs/processus MCP locaux réellement exercés pour HTTP, Streamable HTTP et stdio.
-- Bootstrap MCP explicite, timeout/classification, annulation stdio, redaction de secrets et policy/egress fail-closed testés.
+- Bootstrap MCP explicite, timeout/classification, annulation stdio et HTTP, redaction de secrets et policy/egress fail-closed testés.
+- Annulation HTTP réelle prouvée : fermeture TCP, serveur contrôlé observant EOF/reset, worker rejoint, absence de réponse tardive/retry et statut `cancelled` distinct.
 - Compatibilité avec le module Transport CORE encore provisoire : une implémentation locale de `transports.py` existe faute du CORE canonique dans le checkout MCP.
 
 ### WEB
@@ -124,9 +125,14 @@ Le bootstrap MCP et les tests locaux réels sont terminés. Le raccord reste pro
 - adapter le dispatch au nom/signatures canoniques ;
 - rejouer la batterie MCP sur l'arbre intégré.
 
-### P2 — MCP : annulation HTTP réellement interruptible
+### P2 — MCP : interopérabilité avec une implémentation indépendante
 
-Le timeout HTTP est prouvé, mais l'annulation pendant une requête HTTP bloquante reste ouverte. Le prochain lot MCP doit traiter ce comportement sans modifier le pipeline générique ni promettre une annulation protocolaire non démontrée.
+L'annulation HTTP est terminée et prouvée localement (`b6b650d`). La prochaine preuve utile est une compatibilité contrôlée avec une implémentation MCP indépendante, sans serveur public ni credential, et sans toucher aux contrats CORE génériques.
+
+- Utiliser une implémentation de référence ou tierce locale, pas le serveur de test écrit par MCP lui-même.
+- Exercer seulement les transports/profils réellement supportés.
+- Conserver les statuts structurés (`timed_out`, `cancelled`, `unavailable`, `failed`) et la redaction.
+- Abandonner après une tentative bornée si l'environnement ne permet pas l'installation ; documenter alors le blocage sans contourner la sécurité.
 
 ### PRODUCT & UX — attente contrôlée de l'intégration CORE
 
@@ -239,7 +245,7 @@ transports.enregistrer("mcp", executeur)
 | Serveur MCP externe hors sandbox locale. | Élevée | Contrôles Security et provenance/confiance obligatoires ; jamais présenter cela comme sandboxé. |
 | Interopérabilité MCP seulement locale, pas contre un serveur tiers. | Moyenne | HTTP, Streamable HTTP et stdio sont exercés contre des serveurs/processus contrôlés ; compatibilité tierce reste non démontrée. |
 | Contrat Transport ne reçoit pas encore le descripteur `Cible` pour une exécution distante. | Architecturale P1 | Les URL sont représentables et filtrées, mais non exécutables ; évolution conjointe CORE/MCP/SECURITY requise avant support distant réel. |
-| Annulation HTTP en cours d'appel MCP. | Moyenne | Timeout et fermeture de session existent ; interruption réelle d'un appel bloquant reste à prouver/implémenter dans un lot MCP P2. |
+| Compatibilité MCP avec une implémentation tierce indépendante. | Moyenne | HTTP, Streamable HTTP et stdio sont prouvés contre serveurs contrôlés internes ; une preuve avec une implémentation indépendante reste à faire. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product UI est déjà livré ; WEB a été recadré et ne modifie pas ces fichiers. Préparer une adoption ciblée après référence consolidée, jamais une seconde refonte. |
 | Historique/timeline/statuts affichés sans source backend persistée. | Élevée produit | Contrats produit terminés ; CORE doit exposer lecteur/API, `data.timeline` et `data.executions[]` enrichi avant toute activation WEB, sans données de démonstration après une réponse API. |
 | Gitleaks peut charger une configuration hostile du dépôt et masquer des secrets (SEC-G6a). | Haute sécurité | Correctif Security P1 actif : config AGNT explicite, vérifiée et fail-closed ; ne pas déclarer la détection de secrets fiable avant fermeture. |
@@ -254,6 +260,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 - Binaire OPA absent : validation de policy réelle incomplète.
 - `bwrap` et plusieurs outils de scan/caches absents : certaines batteries E2E sont non évaluables.
 - Pas de serveur MCP tiers ni de credential de test : interopérabilité externe réelle non prouvée à ce stade, malgré les tests HTTP/Streamable HTTP/stdio contre serveurs locaux contrôlés.
+- L'annulation HTTP est démontrée au niveau transport ; aucune notification protocolaire MCP d'annulation n'est revendiquée si le profil ne la fournit pas.
 - Certains tests historiques échouent uniquement parce que `bandit`, `checkov`, `detect-secrets` et `radon` sont absents.
 - L'API conserve actuellement les runs en mémoire et n'expose pas encore de liste persistée de missions ; l'historique produit reste volontairement désactivé.
 - Gitleaks réel est absent : la vulnérabilité de configuration hostile est reproductible par contrat/argv mais sa mesure avec le binaire reste non évaluée.
@@ -271,8 +278,9 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | CORE-003 | Validation E2E avec OPA/bwrap/outils | Environnement | Bloqué |
 | MCP-001 | Validation OPA réelle | P1 environnement | Bloqué |
 | MCP-002 | Serveur MCP réel contrôlé | P1 | Terminé localement — HTTP, Streamable HTTP et stdio contrôlés |
-| MCP-003 | Annulation HTTP MCP pendant un appel bloquant | P2 | En cours — MCP |
+| MCP-003 | Annulation HTTP MCP pendant un appel bloquant | P2 | Terminé — `b6b650d`, preuve socket/worker contrôlée |
 | MCP-004 | Raccord MCP au module Transport CORE canonique | P1 intégration | Ouvert — intégration coordonnée requise |
+| MCP-005 | Interopérabilité avec une implémentation MCP indépendante | P2 | En cours — MCP |
 | PRODUCT-001 | Endpoint d'historique persistant des missions | P1 | Contrat produit terminé ; implémentation CORE/WEB à planifier |
 | PRODUCT-002 | Comparaison de runs et vues globales Findings/Reports | P2 | Différé |
 | PRODUCT-003 | Timeline et projection sûre de provenance | P2 | Terminé — `226029fa` |
@@ -295,7 +303,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 
 1. Pousser et préserver le correctif Security P0.1 `d1d562f`, puis fermer SEC-G6a avant de considérer le scan de secrets fiable.
 2. Implémenter le lecteur/API d'historique CORE selon le contrat produit, en préservant Cible et l'autorisation explicite de cible.
-3. Finaliser l'annulation HTTP MCP de manière honnête et isolée ; ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
+3. Prouver l'interopérabilité MCP avec une implémentation indépendante, de manière bornée et isolée ; ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
 4. CORE implémente `data.timeline` et `data.executions[]` enrichi avec le lecteur d'historique selon les contrats produit ; Product & UX valide alors les réponses réelles, sans toucher à l'UI partagée.
 5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle.
 6. Security approuve les allowlists/redaction de provenance et les statuts hostiles avant exposition WEB.
