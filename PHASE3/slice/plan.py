@@ -138,6 +138,18 @@ class Step:
     commande: list[str]          # issue du registre, jamais de l'IA
     args: list[str]              # issue du registre (args_obligatoires)
     sorties: list[str] = field(default_factory=list)
+    # Métadonnées du contrat provider. Elles décrivent la chaîne d'exécution sans
+    # transformer un provider externe en commande locale. Les valeurs viennent du
+    # registre, jamais de l'intention produite par l'IA.
+    transport: str = "local"
+    provider_version: str = ""
+    server_id: str = ""
+    server_version: str = ""
+    tool: str = ""
+    tool_version: str = ""
+    protocol_version: str = ""
+    trust: str = "trusted_local"
+    target_types: tuple[str, ...] = ("repository",)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -235,6 +247,15 @@ def construire(requete: str, cible: str, providers: list[str], registre: Registr
             commande=list(p.commande),
             args=list(p.args_obligatoires),
             sorties=list(p.sorties),
+            transport=p.transport,
+            provider_version=p.provider_version,
+            server_id=p.server_id,
+            server_version=p.server_version,
+            tool=p.tool,
+            tool_version=p.tool_version,
+            protocol_version=p.protocol_version,
+            trust=p.trust,
+            target_types=tuple(p.target_types),
         ))
 
     # Sélection tracée (décision 2026-08-28) : le plan dit QUI a été choisi et
