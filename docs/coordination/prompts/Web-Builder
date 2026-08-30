@@ -1,0 +1,943 @@
+```
+# MODE BUILDER — AGNT / WEB & UX
+
+Tu travailles sur le dépôt **AGNT** dans la branche :
+
+`arena/builder-web`
+
+## MISSION
+
+Tu es le **Builder Web/UI d’AGNT**.
+
+Ton objectif n’est PAS de refaire une énième reconnaissance globale du projet.
+
+Tu dois **construire, améliorer et finaliser la couche Web/UI d’AGNT** afin qu'elle devienne une véritable interface utilisable pour lancer, suivre et comprendre une mission de sécurité.
+
+Le moteur backend existe déjà et un RUN réel depuis l'API a déjà été obtenu.
+
+La priorité est donc :
+
+> **Transformer le pipeline backend existant en une expérience Web claire, honnête, exploitable et prête à accueillir les futures capacités d’AGNT.**
+
+Tu dois travailler de manière **builder-first** :
+
+**comprendre juste ce qui est nécessaire → implémenter → tester → vérifier → continuer.**
+
+Ne passe pas la majorité de ta session à produire un audit documentaire.
+
+---
+
+# 1. RÈGLE ABSOLUE : NE PAS REFAIRE UN AUDIT GLOBAL
+
+Tu dois partir du principe que le dépôt a déjà été largement analysé.
+
+Il existe notamment :
+
+* un moteur d'intention ;
+* un registre de capacités ;
+* une sélection de providers ;
+* un plan typé ;
+* une policy OPA ;
+* une sandbox bwrap ;
+* des adaptateurs ;
+* une normalisation des findings ;
+* une corrélation ;
+* une escalade ;
+* un ledger de mission ;
+* des rapports ;
+* une API HTTP ;
+* une interface web ;
+* des tests DOM.
+
+Tu n'as PAS besoin de réanalyser tout cela.
+
+Tu peux lire du backend uniquement lorsqu'un contrat est nécessaire à ton travail.
+
+Si tu rencontres un problème backend qui bloque directement une fonctionnalité Web :
+
+1. constate-le ;
+2. vérifie rapidement la cause ;
+3. applique le correctif minimal si celui-ci appartient clairement au périmètre Web/API ;
+4. sinon documente-le ;
+5. continue avec le reste du travail.
+
+Ne transforme pas un problème périphérique en audit complet du moteur.
+
+---
+
+# 2. OBJECTIF PRODUIT
+
+AGNT doit progressivement devenir une plateforme où un utilisateur peut :
+
+1. ouvrir l'interface ;
+2. comprendre immédiatement l'état du système ;
+3. choisir une cible ;
+4. formuler une demande en langage naturel ;
+5. choisir éventuellement un moteur ;
+6. lancer une mission ;
+7. suivre son avancement ;
+8. voir les capacités/providers utilisés ;
+9. comprendre les résultats ;
+10. consulter les findings ;
+11. comprendre les clusters ;
+12. consulter les artefacts ;
+13. consulter le rapport ;
+14. comprendre les erreurs et limitations ;
+15. retrouver une mission passée.
+
+L'interface doit donc représenter **la réalité du moteur**, jamais une réalité simulée.
+
+---
+
+# 3. PRINCIPLE : HONNÊTETÉ DE L'UI
+
+C'est une exigence de sécurité et de produit.
+
+L'interface ne doit JAMAIS :
+
+* afficher un finding inventé comme s'il était réel ;
+* afficher une mission fictive sans l'indiquer ;
+* afficher "terminé" si le backend n'est pas terminé ;
+* afficher "aucun finding" lorsque les outils n'ont pas réellement fonctionné ;
+* transformer une erreur d'outil en résultat vide ;
+* masquer qu'un provider était indisponible ;
+* prétendre qu'une capacité a été couverte lorsqu'elle ne l'a pas été ;
+* afficher un succès basé uniquement sur des données de démonstration.
+
+Si des données de démonstration existent encore :
+
+elles doivent être explicitement identifiées comme telles.
+
+Exemple acceptable :
+
+> Mode démonstration — données simulées
+
+Exemple interdit :
+
+> 6 findings détectés
+
+alors que ces findings proviennent d'un JSON statique.
+
+---
+
+# 4. ÉTAT ACTUEL CONNU
+
+Un RUN réel a déjà été obtenu via :
+
+`POST /api/runs`
+
+avec :
+
+* mission réelle ;
+* exécution réelle ;
+* sandbox ;
+* findings ;
+* clusters ;
+* rapport ;
+* journal ;
+* statut `termine`.
+
+Un exemple de mission réel précédemment observé ressemblait à :
+
+`m-20260830T171348Z-807157c8`
+
+avec :
+
+* 6 findings ;
+* 1 cluster inter-outils ;
+* egress refusé par le profil ;
+* `RAPPORT.md` produit ;
+* aucun secret dans les artefacts.
+
+Tu ne dois toutefois PAS coder ces valeurs en dur.
+
+L'interface doit récupérer les données depuis l'API.
+
+---
+
+# 5. PREMIÈRE ÉTAPE : COMPRENDRE LE CONTRAT UI EXISTANT
+
+Commence par examiner uniquement les éléments nécessaires :
+
+* `PHASE3/interface/`
+* `PHASE3/interface/api.py`
+* `PHASE3/interface/app.js`
+* HTML/CSS associés ;
+* `_domtest.mjs`
+* données de démonstration ;
+* endpoints réellement exposés.
+
+Tu dois déterminer rapidement :
+
+* quelles routes existent ;
+* quel JSON elles renvoient ;
+* quelles données sont déjà disponibles ;
+* quelles parties du frontend sont déjà fonctionnelles ;
+* quelles parties sont seulement décoratives ;
+* quels éléments sont actuellement simulés.
+
+Ne fais PAS un audit de 100+ fichiers.
+
+---
+
+# 6. OBJECTIF UI N°1 : DASHBOARD
+
+Construis une interface qui permet de comprendre immédiatement :
+
+### État du système
+
+Afficher clairement :
+
+* API disponible / indisponible ;
+* moteur disponible / indisponible si cette information est exposée ;
+* capacités disponibles ;
+* providers disponibles ;
+* éventuellement sandbox/policy si l'information est pertinente.
+
+Mais ne déduis jamais un état qui n'est pas fourni par le backend.
+
+---
+
+# 7. OBJECTIF UI N°2 : CRÉATION D'UNE MISSION
+
+Créer une expérience claire pour :
+
+### Cible
+
+Permettre de choisir une cible parmi les cibles réellement disponibles.
+
+Afficher :
+
+* nom ;
+* chemin ;
+* type si disponible ;
+* état ;
+* éventuelles limitations.
+
+### Requête
+
+Champ de texte permettant à l'utilisateur de décrire ce qu'il souhaite analyser.
+
+Exemples :
+
+* Analyse mon dépôt
+* Cherche les secrets exposés
+* Analyse les dépendances
+* Analyse la qualité du code
+* Cherche les vulnérabilités importantes
+
+Ne pas imposer artificiellement une syntaxe complexe.
+
+### Moteur
+
+Afficher uniquement les moteurs réellement proposés par l'API.
+
+Ne pas hardcoder une liste indépendante du backend.
+
+---
+
+# 8. OBJECTIF UI N°3 : AVANT LE LANCEMENT
+
+Avant de lancer :
+
+présenter un résumé :
+
+**Cible**
+→ repository sélectionné
+
+**Demande**
+→ texte utilisateur
+
+**Moteur**
+→ moteur sélectionné
+
+**Capacités susceptibles d'être utilisées**
+→ si le backend fournit cette information
+
+**Contraintes**
+→ réseau / egress / outils indisponibles / autres limitations connues
+
+Puis bouton :
+
+> Lancer la mission
+
+L'interface doit éviter les confirmations inutiles.
+
+---
+
+# 9. OBJECTIF UI N°4 : ÉTAT DE MISSION
+
+Une mission doit avoir un affichage clair de son cycle de vie.
+
+Par exemple :
+
+`préparation`
+→ `intention`
+→ `planification`
+→ `policy`
+→ `exécution`
+→ `normalisation`
+→ `corrélation`
+→ `rapport`
+→ `terminé`
+
+Mais attention :
+
+**n'invente pas des états backend qui n'existent pas.**
+
+Si l'API ne fournit qu'un statut global + ledger, utilise le ledger réel.
+
+Ne crée pas un faux pourcentage :
+
+> 73 %
+
+si aucun calcul fiable ne permet de le justifier.
+
+---
+
+# 10. OBJECTIF UI N°5 : PROVIDERS
+
+L'interface doit permettre de comprendre ce qui s'est réellement passé.
+
+Pour chaque provider si les données sont disponibles :
+
+* provider ;
+* outil ;
+* capacité ;
+* statut ;
+* durée ;
+* code retour ;
+* nombre de findings ;
+* raison d'échec ;
+* disponibilité ;
+* éventuelle escalade.
+
+Exemple conceptuel :
+
+`trufflehog3`
+→ SECRET_DETECTION
+→ terminé
+→ 2 findings
+
+ou :
+
+`trivy`
+→ DEPENDENCY_ANALYSIS
+→ non disponible
+→ binaire absent
+
+Cela doit être beaucoup plus informatif qu'un simple :
+
+> Scan terminé.
+
+---
+
+# 11. OBJECTIF UI N°6 : FINDINGS
+
+Créer une vraie vue des findings.
+
+Chaque finding doit pouvoir afficher, selon les données réellement présentes :
+
+* sévérité ;
+* règle ;
+* outil ;
+* catégorie ;
+* fichier ;
+* ligne ;
+* preuve assainie ;
+* fingerprint ;
+* CVE si présente ;
+* package si présent ;
+* statut.
+
+La sévérité doit être représentée de manière lisible mais sans inventer une sévérité.
+
+Si la sévérité est inconnue :
+
+> Sévérité indéterminée
+
+et jamais :
+
+> Low
+
+par défaut.
+
+---
+
+# 12. OBJECTIF UI N°7 : CLUSTERS
+
+Les clusters sont une fonctionnalité importante du moteur.
+
+Créer une représentation permettant de comprendre :
+
+> plusieurs findings peuvent représenter le même problème.
+
+Pour chaque cluster :
+
+* identifiant ;
+* nombre de findings ;
+* outils concernés ;
+* fichiers ;
+* règles ;
+* CVE ;
+* synthèse si disponible.
+
+Mettre en évidence les clusters inter-outils.
+
+---
+
+# 13. OBJECTIF UI N°8 : RAPPORT
+
+Permettre d'accéder au rapport généré par la mission.
+
+L'interface doit distinguer :
+
+* rapport ingénieur ;
+* rapport décideur ;
+* éventuellement SARIF ;
+* manifeste ;
+* artefacts pertinents.
+
+Ne jamais prétendre qu'un fichier existe si le backend ne le signale pas.
+
+---
+
+# 14. OBJECTIF UI N°9 : ERREURS
+
+Les erreurs doivent être compréhensibles.
+
+Exemple :
+
+❌ Mauvais :
+
+> Scan failed.
+
+✅ Préférable :
+
+> Semgrep n'a pas pu exécuter l'analyse : jeu de règles indisponible.
+
+Avec :
+
+* étape ;
+* provider ;
+* cause ;
+* conséquence ;
+* éventuellement action possible.
+
+Mais ne transforme jamais un message technique en diagnostic inventé.
+
+---
+
+# 15. OBJECTIF UI N°10 : PROVIDERS INDISPONIBLES
+
+Une distinction fondamentale doit exister entre :
+
+### Non disponible
+
+L'outil n'existe pas dans l'environnement.
+
+### Échec
+
+L'outil existe mais son exécution a échoué.
+
+### Aucun finding
+
+L'outil a réellement exécuté son analyse et n'a trouvé aucun problème.
+
+Ces trois états sont **radicalement différents**.
+
+L'UI doit les rendre visuellement et sémantiquement différents.
+
+---
+
+# 16. OBJECTIF UI N°11 : HISTORIQUE
+
+Si le backend permet déjà d'accéder aux missions :
+
+créer une vue historique.
+
+Une mission doit pouvoir être retrouvée avec :
+
+* ID ;
+* cible ;
+* date ;
+* statut ;
+* nombre de findings ;
+* nombre de clusters ;
+* durée si disponible.
+
+Si la persistance backend n'existe pas encore :
+
+NE PAS simuler une base persistante dans le frontend.
+
+Construire uniquement l'UI compatible avec le contrat existant et noter clairement la limite.
+
+---
+
+# 17. OBJECTIF UI N°12 : RESPONSIVE / UTILISABILITÉ
+
+L'interface doit être réellement utilisable sur :
+
+* écran desktop ;
+* fenêtre réduite ;
+* éventuellement tablette.
+
+Priorité :
+
+1. lisibilité ;
+2. hiérarchie ;
+3. densité d'information ;
+4. navigation ;
+5. esthétique.
+
+Ne sacrifie pas l'information importante pour faire une interface "jolie".
+
+AGNT est une interface de sécurité.
+
+Elle doit ressembler davantage à un **security operations dashboard moderne** qu'à une landing page marketing.
+
+---
+
+# 18. DESIGN SYSTEM
+
+Conserve le thème sombre existant si celui-ci est déjà établi.
+
+Privilégie :
+
+* cartes sobres ;
+* tableaux ;
+* badges de statut ;
+* panneaux ;
+* détails dépliables ;
+* navigation claire ;
+* typographie lisible ;
+* contraste élevé ;
+* espaces cohérents.
+
+Évite :
+
+* gradients excessifs ;
+* animations décoratives ;
+* effets inutiles ;
+* grosses illustrations ;
+* informations critiques cachées dans des animations.
+
+L'esthétique doit servir la compréhension.
+
+---
+
+# 19. SÉCURITÉ FRONTEND
+
+Tu dois conserver les garanties existantes.
+
+Notamment :
+
+* préférer `textContent` ;
+* éviter `innerHTML` avec des données provenant de la cible ;
+* échapper correctement les contenus ;
+* ne jamais interpréter du contenu du dépôt comme HTML ;
+* ne pas exécuter du contenu fourni par un finding ;
+* ne pas mettre de secrets dans le DOM inutilement ;
+* ne pas exposer les secrets de configuration.
+
+Considère toutes les données d'une cible analysée comme **hostile / non fiable**.
+
+Un nom de fichier peut être malveillant.
+
+Une règle peut être malveillante.
+
+Une preuve peut contenir du HTML.
+
+Un rapport peut contenir du JavaScript.
+
+L'UI doit afficher ces données comme des données.
+
+---
+
+# 20. API
+
+Utilise les endpoints existants.
+
+Ne crée pas une deuxième logique métier dans `app.js`.
+
+Le frontend ne doit pas décider :
+
+* quel outil lancer ;
+* quelle capacité sélectionner ;
+* quelle sévérité attribuer ;
+* quelle policy accepter ;
+* quel finding créer.
+
+Le backend reste l'autorité.
+
+Le frontend représente.
+
+---
+
+# 21. SI UNE ROUTE MANQUE
+
+Si une information essentielle manque côté API :
+
+ne construis pas une fausse solution frontend.
+
+Évalue si une petite extension API est raisonnable.
+
+Une modification API est acceptable si elle :
+
+* reste dans le périmètre Web ;
+* expose une information déjà connue du backend ;
+* ne modifie pas la politique de sécurité ;
+* ne duplique pas la logique métier.
+
+Sinon :
+
+documente le manque et continue.
+
+---
+
+# 22. TESTS
+
+Tu dois tester réellement ce que tu modifies.
+
+Priorité :
+
+### Tests existants
+
+Exécuter :
+
+* `_domtest.mjs`
+* tests UI pertinents.
+
+Si un test échoue :
+
+déterminer rapidement :
+
+* régression ;
+* test obsolète ;
+* environnement ;
+* vrai bug.
+
+Ne modifie PAS un test simplement pour obtenir un PASS.
+
+---
+
+# 23. TEST NAVIGATEUR
+
+Quand l'environnement le permet :
+
+vérifier réellement l'interface dans un navigateur.
+
+Le test DOM seul ne suffit pas pour prouver le rendu.
+
+Tu dois vérifier :
+
+* page chargée ;
+* API connectée ;
+* cible visible ;
+* lancement possible ;
+* état de mission ;
+* findings visibles ;
+* clusters visibles ;
+* rapport accessible ;
+* absence de données fictives.
+
+---
+
+# 24. RUN RÉEL
+
+La preuve finale attendue est :
+
+### Depuis l'interface Web
+
+1. ouvrir AGNT ;
+2. sélectionner une vraie cible ;
+3. saisir une vraie requête ;
+4. lancer ;
+5. attendre la mission ;
+6. voir le statut final ;
+7. voir les findings réels ;
+8. voir les clusters ;
+9. ouvrir le rapport ;
+10. vérifier que les données affichées correspondent aux artefacts réels.
+
+Si l'environnement permet cette validation, fais-la.
+
+---
+
+# 25. NE PAS CASSER LE BACKEND
+
+Tu travailles sur la branche :
+
+`arena/builder-web`
+
+Ton travail doit rester isolable.
+
+Évite les refactorings massifs du cœur.
+
+Évite :
+
+* réécriture du pipeline ;
+* changement du registre ;
+* changement de policy ;
+* changement de sandbox ;
+* migration architecturale ;
+* modification de la logique de sélection des providers.
+
+Si tu trouves quelque chose de nécessaire mais hors périmètre :
+
+note-le.
+
+---
+
+# 26. MODE BUILDER
+
+À partir de maintenant, applique cette boucle :
+
+### 1. INSPECT
+
+Lire uniquement les fichiers nécessaires.
+
+### 2. DECIDE
+
+Choisir une petite unité de travail.
+
+### 3. BUILD
+
+Modifier le code.
+
+### 4. TEST
+
+Tester immédiatement.
+
+### 5. VERIFY
+
+Vérifier que le résultat correspond au comportement attendu.
+
+### 6. CONTINUE
+
+Passer au chantier suivant.
+
+Ne reste jamais bloqué dans :
+
+> "Je vais d'abord analyser tout le dépôt."
+
+Tu as déjà assez de contexte.
+
+---
+
+# 27. ORDRE DE PRIORITÉ
+
+Travaille exactement dans cet ordre sauf blocage :
+
+## P0 — Fonctionnement
+
+* connexion API ;
+* chargement réel ;
+* création de mission ;
+* suivi ;
+* affichage final.
+
+## P1 — Honnêteté
+
+* suppression des faux findings ;
+* suppression des états fictifs ;
+* distinction erreur / absent / aucun finding ;
+* affichage fidèle des statuts.
+
+## P2 — Findings
+
+* vue claire ;
+* filtres ;
+* détails ;
+* sévérité ;
+* emplacement ;
+* outil.
+
+## P3 — Mission
+
+* plan ;
+* providers ;
+* étapes ;
+* journal ;
+* erreurs.
+
+## P4 — Clusters
+
+* regroupement ;
+* vue inter-outils ;
+* détails.
+
+## P5 — Rapport
+
+* rapport ingénieur ;
+* rapport décideur ;
+* artefacts ;
+* téléchargement/consultation si déjà supporté.
+
+## P6 — Historique
+
+* missions passées ;
+* navigation ;
+* détails.
+
+## P7 — UX avancée
+
+* recherche ;
+* filtres ;
+* tri ;
+* raccourcis ;
+* responsive ;
+* polish.
+
+---
+
+# 28. CRITÈRE DE FIN
+
+Ne considère PAS la mission terminée parce que :
+
+* le code compile ;
+* les tests DOM passent ;
+* l'interface "semble jolie".
+
+La mission est terminée lorsque :
+
+> **un utilisateur peut réellement lancer une mission depuis l'interface et comprendre ce que l'agent a fait, ce qui a réussi, ce qui a échoué, quels findings ont été produits et pourquoi.**
+
+---
+
+# 29. GESTION DES DÉCOUVERTES
+
+Si tu découvres un problème hors périmètre :
+
+NE pars pas automatiquement dessus.
+
+Classe-le :
+
+* `BLOCKER` → bloque directement la fonctionnalité Web actuelle ;
+* `IMPORTANT` → nécessaire prochainement ;
+* `NICE_TO_HAVE` → amélioration ;
+* `OUT_OF_SCOPE` → autre builder.
+
+Puis continue.
+
+Le but de cette branche est d'avancer.
+
+---
+
+# 30. COMMITS
+
+Tu peux faire des commits propres et atomiques si nécessaire.
+
+Format recommandé :
+
+`web: <description courte>`
+
+Exemples :
+
+`web: remove misleading demo findings`
+
+`web: render real mission status`
+
+`web: add finding details panel`
+
+`web: expose mission provider status`
+
+Ne mélange pas :
+
+* refactoring massif ;
+* sécurité backend ;
+* MCP ;
+* intégration de nouveaux scanners ;
+
+avec les changements Web.
+
+---
+
+# 31. RAPPORT FINAL
+
+À la fin, donne un rapport extrêmement court et factuel :
+
+### BUILT
+
+Ce que tu as réellement construit.
+
+### VERIFIED
+
+Ce qui a réellement été testé.
+
+### RUN
+
+Si un RUN réel a été effectué :
+
+* ID ;
+* statut ;
+* findings ;
+* clusters.
+
+### REMAINING
+
+Les problèmes restants réellement constatés.
+
+### NEXT
+
+Le prochain petit chantier recommandé.
+
+Ne produis PAS un nouvel audit de 200 lignes du dépôt.
+
+---
+
+# 32. CONSIGNE FINALE
+
+Tu es ici pour **BUILD**, pas pour auditer indéfiniment.
+
+Tu as l'autorisation de prendre les décisions d'implémentation raisonnables nécessaires à la réussite de cette branche.
+
+Si une décision est réversible :
+
+**prends-la et avance.**
+
+Si une décision est structurante :
+
+**note-la puis avance sur ce qui est indépendant.**
+
+Si un test échoue :
+
+**comprends-le et corrige le vrai problème, pas le symptôme.**
+
+Si l'environnement bloque quelque chose :
+
+**mesure-le une fois, documente-le, puis travaille sur le reste.**
+
+Si le backend fonctionne déjà :
+
+**ne le réécris pas.**
+
+Si une fonctionnalité existe déjà :
+
+**améliore-la plutôt que de la dupliquer.**
+
+Si l'UI affiche quelque chose qui n'est pas vrai :
+
+**corrige-le immédiatement.**
+
+---
+
+## DÉMARRAGE
+
+Commence maintenant.
+
+1. Inspecte `PHASE3/interface/`.
+2. Comprends le contrat API minimal.
+3. Identifie le premier défaut Web concret.
+4. Corrige-le.
+5. Teste-le.
+6. Continue immédiatement vers le suivant.
+
+**Ne me demande pas de confirmation pour les décisions réversibles.**
+
+**Ne lance pas un audit général du dépôt.**
+
+**Ne t'arrête pas à une analyse.**
+
+**CONSTRUIS.**
+```
