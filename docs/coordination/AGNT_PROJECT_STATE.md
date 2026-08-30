@@ -55,7 +55,7 @@
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d`, `6e04ff8` | Interop stdio terminée dans son périmètre ; aucun nouveau chantier MCP assigné. Raccord Transport CORE réservé à l'intégration coordonnée. |
 | WEB | `arena/01a0541a-agnt` | `COMPLETED` | `93f8ead` | Carte d'adoption livrée ; attendre CORE + double gate Product/Security avant tout code UI/API. |
 | SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003`, `cf1eea6`, `dae445a` | Gate adversarial re-lié au contrat Product ; **P1 actif :** Mode Laboratoire Propriétaire borné, sans bypass ni merge. |
-| DEVOPS / Release / Environnement | `arena/01a05481-agnt` (**DÉCLARÉ**, session Arena issue de `arena/builder-devops`) | `PARTIAL` — reconnaissance/test interrompus, aucune livraison acceptée | aucun commit de livraison rapporté | Corriger le protocole de reconnaissance et rendre un bilan cohérent avant toute écriture de bootstrap, CI, pin ou source. |
+| DEVOPS / Release / Environnement | `arena/01a05481-agnt` (**DÉCLARÉ**, session Arena issue de `arena/builder-devops`) | `COMPLETED_WITH_LIMITATIONS` — reconnaissance réconciliée, sans implémentation | aucun commit de livraison | Attente d'un accord propriétaire explicite avant bootstrap, doctor, CI, pin, source ou configuration Security. |
 | PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f`, `3f96e255` | Gate black-box livré ; attente contrôlée de l'API CORE réelle pour certification History/Timeline/Status. |
 
 ---
@@ -177,13 +177,15 @@ Aucun code WEB ne doit démarrer avant les prérequis réels :
 
 Les bundles dogfooding, `localStorage`, fixtures et fichiers d'archives ne deviennent jamais une source d'historique. L'exposition d'artefacts/téléchargements attend une décision Security explicite.
 
-### P1 — DEVOPS / Release / Environnement : reconnaissance partielle à corriger
+### P1 — DEVOPS / Release / Environnement : reconnaissance réconciliée, implémentation en attente
 
-Le transcript DevOps reçu est **DÉCLARÉ** et interrompu, sans commit ni livrable final acceptés. La contrainte de branche Arena a été correctement respectée : la session ne pouvait pas basculer sur `arena/builder-devops` et devait travailler sur sa branche épinglée.
+Le handoff DevOps normalisé est accepté comme **reconnaissance** : aucun fichier suivi, pin ou source n'a été modifié, et aucun commit/livrable de code n'est revendiqué. La contrainte de branche Arena a été correctement respectée : la session ne pouvait pas basculer sur `arena/builder-devops` et a travaillé sur sa branche épinglée.
 
-En revanche, le bilan ne doit pas être traité comme un état de release : il mélange une branche de base sans les correctifs Security avec le produit intégré, modifie l'environnement utilisateur pendant les essais, et son total annoncé de 40 suites ne concorde pas avec les catégories affichées. Les constats environnementaux restent utiles comme hypothèses de travail, mais les « défauts » D4/G6a doivent être classés dépendances de branche tant que Security n'est pas intégrée.
+**DÉCLARÉ par DevOps :** 40 suites réconciliées — baseline froide `17 PASS / 2 FAIL / 21 BLOCKED`, diagnostic temporaire outillé `20 PASS / 2 FAIL / 18 BLOCKED`. Les écarts D4/G6a et patchs CORE sont correctement classés dépendances de branche, non défauts du produit intégré. Les blocages OPA, bwrap, binaires/règles/bases et Docker restent environnementaux ; le diagnostic `~/.local`/cache n'est pas une preuve du bootstrap.
 
-Avant toute écriture, DevOps doit produire une matrice de test réconciliée, distinguer froid / environnement temporaire / CI cible, ne pas modifier pin, source ou comportement Security, et signaler exactement les artefacts de test non suivis. Aucun miroir, changement de pin, armement Gitleaks ou merge n'est autorisé sans instruction explicite.
+Une seule notation devra être normalisée dans un futur tableau de release, sans rejouer la suite : `test_catalogue_outils` à 94/96 ne peut pas être intitulé simplement PASS ; ses deux sous-cas Checkov doivent rester explicitement PARTIELS/NON ÉVALUÉS ou BLOCKED selon le prérequis. Cela ne remet pas en cause la réconciliation globale.
+
+Les propositions DevOps (venvs isolés, doctor, CI native, durcissement bootstrap) attendent un accord propriétaire explicite. Aucun miroir, changement de pin, armement Gitleaks, nettoyage des artefacts de test ou merge n'est autorisé avant cet accord.
 
 ### STRAT — Réévaluation des agents Pentest AI externes
 
@@ -362,8 +364,8 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | SEC-B6 | Durcissement garde-fous homoglyphes / espaces | P3 | Différé |
 | SEC-B7 | Borne de taille de requête sortante fournisseur | P3 | Différé |
 | STRAT-001 | Faisabilité d'un backend Strix dans le Mode Laboratoire Propriétaire | P2 post-intégration | Différé — décision propriétaire requise après SEC-LAB, Cible/Transport et double gate API |
-| DEVOPS-001 | Matrice PASS / FAIL / BLOCKED reproductible et réconciliée | P1 environnement | Partiel — rapport DevOps à corriger avant acceptation |
-| DEVOPS-002 | Bootstrap, doctor et CI reproductibles | P1 environnement | Non commencé — nécessite validation explicite des corrections proposées |
+| DEVOPS-001 | Matrice PASS / FAIL / BLOCKED reproductible et réconciliée | P1 environnement | Terminé avec limite — 40 suites déclarées réconciliées ; libellé 94/96 Checkov à normaliser au prochain rapport |
+| DEVOPS-002 | Bootstrap, doctor et CI reproductibles | P1 environnement | Non commencé — propositions reçues, accord propriétaire explicite requis |
 
 ---
 
