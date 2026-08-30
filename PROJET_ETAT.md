@@ -2267,3 +2267,117 @@ true` (sinon ajouter un outil change le plan de toutes les missions existantes �
 la priorité est un rang, le plus petit gagne (déclarer 60 « pour être discret » plaçait pip-audit
 devant trivy et grype et leur volait un scan) ; `fichiers_requis` n'est pas `base_fichiers` (l'un
 parle de la cible, l'autre d'une base côté machine) ; `propositions/` n'est jamais chargé.
+
+
+## LOT 3 — la cage réseau agit, la vague mène plusieurs outils (31/08/2026)
+
+**Ce qui tourne, mesuré sur cette machine.** Trois choses, chacune tenue par un test qui
+l''a trouvée en défaut au moins une fois pendant son écriture :
+
+1. **L'egress est réel.** `Profil.reseau_autorise` pilotait le PLAN seulement ; la cage, elle,
+   coupait le réseau inconditionnellement. Le champ est devenu un effet : `Sandbox.egress_autorise`
+   retire `--unshare-net` de la commande ET retire les variables de proxy neutres — les deux à la
+   fois, parce qu'une cage « autorisée » dont le proxy pointe sur le port 9 est une autorisation
+   sabotée. L'autorité reste unique : `conditions.egress_de` juge la **commande construite**, pas
+   le champ, et deux cas de falsification (`SbxMenteur`, dans les deux sens) échouent si quelqu'un
+   branchait la garde sur la déclaration. Mesuré en lançant un bouchon de `bwrap` qui enregistre
+   son argv et son environnement : les cas 3 à 7 de `test_qualite_plateforme.py` lisent ce fichier,
+   pas une attente.
+2. **Le tri-état est conservé de bout en bout.** `absent` (le profil fait foi) / `true` (délégation
+   de mission) / `false` (refus explicite) se lisent dans `rapport.json`, `run.json` (les DEUX
+   rédacteurs, `analyser.py` et `pipeline.main()`), le journal (`type: egress`, avec `demande` et
+   `delegation`), `/api/runs/<id>` et l'archive relue par la console. L'état de la cage entre dans
+   `limites_appliquees()`, donc dans `contexte_empreinte`, donc dans le `run_id` : deux runs de la
+   même cible sous deux cages ont deux identifiants différents (cas 8 à 10).
+3. **La vague mène jusqu'à quatre outils de front, sans déplacer un seul octet.** Le corps
+   d'exécution est sorti de sa closure en `pipeline._vague(steps_, V, …)` (contexte de mission
+   passé en objet, une seule instance pour les deux vagues). Ordonnancement parallèle, fusion dans
+   l'ordre du PLAN, arrêt désigné par le plan et non par l'horloge, et ledger consigné À CHAQUE
+   DÉPART d'outil — la console relit cette dernière ligne du journal, elle n'a pas de seconde
+   mécanique d'état.
+
+**Défauts trouvés et corrigés dans le lot** (chacun mesuré avant d'être écrit) :
+
+- `Execution.egress` et `Execution.vague_parallele` étaient écrits et lus par personne : le
+  premier décoratif, le second jamais assigné. Les deux sont désormais produits par
+  `executer`, plantés dans le rapport et relus par l'archive.
+- `api._charger` lisait `run.get("profil")` alors que l'archive écrit `execution_profile` — la
+  console n'a JAMAIS affiché le profil d'exécution, y compris depuis LOT 1. Trouvé en branchant
+  le cas 15 de la grille, qui oblige à écrire un vrai `run.json`. Deux écritures de la clé
+  `profil` dans le même littéral `dict` au passage (la seconde gagnait) : retirées.
+- Extraction du corps de `_vague` : `NameError: name 'ctx' is not defined` au premier finding
+  enrichi. Une closure capturait un nom que la fonction extraite ne recevait pas — et ce nom
+  n'était atteignable QUE par un test qui produit un finding : tant que payload rimait avec
+  zéro finding, le défaut dormait. `ctx` est passé par le contexte de vague.
+- Section 7 de `test_plugins.py` prouvait « le cœur a été touché, et seulement lui » en lisant
+  `git status --porcelain` : les trois cas devenaient faux à l'instant du commit (le diff se
+  vide). Réécrits sur des faits absolus — fichiers touchés depuis `merge-base HEAD main`, contenu
+  des `parsers_*.py`, contenu de `capabilities.yaml` (sept capacités, rien de greffé) — et 2 de
+  plus : 94/94. Au passage, `--porcelain` se lit ligne à ligne ; le découpage sur les blancs
+  ajoutait « M » et « ?? » à la liste des chemins et faisait échouer un « rien hors de PHASE3 ».
+- `test_escalade.py` cas 11 comptait les occurrences de `for step in steps_:` pour prouver qu'il
+  n'existe qu'un corps d'exécution : faux dès qu'un chemin séquentiel et une consolidation
+  coexistent. Repris sur l'invariant (un `def _vague`, un `_ContexteVague`, deux appels) + un cas
+  11bis qui exige que ce corps soit au niveau du module, donc testable sans `opa` ni `bwrap`.
+- Instabilité trouvée OUTIL, pas nôtre : `radon 6.0.1` ne rend pas le même ordre de clés d'une
+  invocation à l'autre sur un dépôt inchangé (trois `md5sum` différents de `radon cc -j testrepo`).
+  Le brut archivé de cet outil n'est donc pas reproductible octet pour octet ; les findings, si
+  (comparaison faite sur l'objet JSON, cas 18bis et 18quater). Un payload copié de la doc d'un
+  format n'aurait rien prouvé : le test embarque les octets réellement rendus par l'outil.
+- Le harnais de la batterie vague faisait lever le fautif à t=0 : « quels outils ont eu le temps
+  de démarrer » dépendait alors de l'ordonnanceur — 3 échecs sur 4 rejeux. Le fautif tombe en
+  dernier, et les cas jugent l'arrêt, plus la course.
+- La console écrivait le libellé de la case via `cage.parentElement.querySelector("em")` : dans un
+  navigateur c'était bon, dans le harnais DOM (dont l'arbre est construit à partir des `id` de
+  `index.html`) cela levait un `TypeError` au branchement du formulaire et **31 vérifications sur
+  95 tombaient** pour une raison sans rapport avec le rendu. Repassé par `getElementById`, et le
+  harnais porte maintenant un cas qui interdit la forme `parentElement.querySelector` dans le
+  script — avec une nuance mesurée à la première exécution du cas : il juge le CODE, pas le
+  fichier, sinon un commentaire qui NOMME la forme interdite fait rougir le test qui l'interdit.
+- `api._vivante` importait `from slice import mission` alors que le pipeline fait `import mission`
+  : avec `RACINE` et `RACINE/slice` tous deux sur `sys.path`, ce sont DEUX objets module distincts,
+  donc deux jeux de globaux (chemin des missions, verrou du journal). La lecture était juste par
+  hasard d'horloge ; l'orthographe du pipeline est maintenant la seule des deux.
+- Un refus de politique n'archive pas de `rapport.json` (rien n'a tourné) : c'est l'objet
+  d'exception qui porte l'état affiché. L'état de la cage n'y figurait pas — ajouté, et le cas
+  16nonies de la grille l'exige, avec la ligne de rappel dans le bloc `REFUS D'EXÉCUTION` du CLI
+  (trois écrans plus haut, la demande `--egress` disparaît du champ de vision).
+
+**Bilan de régression** (même machine, après réinitialisation du sandbox et rétablissement des
+commits LOT 1/LOT 2 en `3ea4108`) : `test_vague_parallele` **46/46** (nouveau, six rejeux
+consécutifs identiques) · `test_qualite_plateforme` **34/34** (nouveau) · `test_escalade` 24/24 ·
+`test_plugins` 94/94 · `test_statuts_outils` 31 · `test_conditions_outils` 30 · `test_selection`
+13 · `test_modele_finding` 37 · `test_rapport_humain` 18 · `test_garde_fous` 29 · `test_chemins`
+48 · `test_empreintes` 13 · `test_env_outil` 9 · `test_isolateur` rc=0 · `test_outil_detect_secrets`
+rc=0 · `test_interface` 34/35 (1 non évaluée) · harnais DOM **103/103** (6 cas ajoutés : présence
+des trois éléments de la garde, envoi de `egress` seulement sous case cochée, rendu du ledger
+vivant, et interdiction d'atteindre un élément par son parent — voir le défaut ci-dessous) ·
+`node --check interface/app.js` OK ·
+`python3 -m pyflakes` muet sur les six fichiers touchés du slice, hors imports superflus.
+rc=1 pour cause d'environnement seule, vérifié au message d'exception suite par suite : 8 suites sur
+`policy.PolicyError: binaire OPA introuvable` (`slice`, `intentions`, `utilisation`, `manifest`,
+`correlation`, `tracabilite`, `fanout`, `niveau2`), `test_rapport` sur `cible_independante`
+absente, `test_bundle` cas 5 (aucun bundle produit).
+
+**Bloqué par l'environnement, non contourné** : (a) la mission complète de bout en bout — OPA est
+exige avant les conditions, et `openpolicyagent.org` ne répond pas (`SSL_ERROR_SYSCALL`, http 000
+mesurés ce soir) ; (b) l'application réelle de la garde réseau par le noyau et les montages :
+`bwrap` est cette fois ABSENT (`deb.debian.org` en échec de connexion, `apt-get install`
+impossible) — la cause a changé depuis hier (il était présent et refusait les user namespaces), le
+verdict non : `test_bwrap.sh` ne mesure rien ; (c) le gain de temps de la vague parallèle, qui
+demanderait des outils réels sous cage. PyPI, lui, répond : `pyyaml 6.0.3`, `radon 6.0.1`,
+`pip-audit 2.10.1`, `bandit`, `detect-secrets 1.5.0` ont été réinstallés dans
+`/home/user/.pydeps` avec leurs lanceurs dans `~/.cache/arena_secops/bin` — c'est ce qui a rendu
+les batteries ci-dessus rejouables après la réinitialisation.
+
+**Choix de conception à ne pas inverser** : le défaut est fermé et il est porté par la classe
+(`Sandbox.egress_autorise = False`), pas par les deux instances de profils ; la commande construite
+est la seule autorité sur « l'outil peut-il parler » ; le drapeau et les variables de proxy bougent
+ensemble, jamais l'un sans l'autre ; un élargissement se demande pour UNE mission et se consigne
+avec son auteur ; `--egress` nu et `--egress=peut-être` sont des erreurs, pas des défauts ; aucun
+septième statut n'est ajouté pour dire « en cours » (le ledger vivant reste dans les six étapes,
+par la même fonction que l'état final) ; `AGNT_VAGUE_PARALLELE` illisible vaut 1, pas 4 ; la
+console ne garde aucun état d'avancement dans le serveur — elle relit le journal, et si aucune
+mission ne correspond au run (garde par `pose_le`), le bloc reste vide ; le corps de la vague reste
+au niveau du module pour rester testable sans politique ; les artefacts se fusionnent dans l'ordre
+du plan, y compris quand un outil met trois fois plus de temps qu'un autre.

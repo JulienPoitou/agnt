@@ -172,3 +172,18 @@ pre.rapport {
 .etat.erreur { color: var(--critique); }
 .arbreet { margin: 4px 0 0; padding-left: 16px; }
 .arbreet li { font: 11.5px/1.5 var(--mono); color: var(--doux); }
+
+/* La cage réseau n'est pas une préférence du même rang que « moteur d'intention » :
+   c'est un droit qui se demande, et le cocher &Eacute;LARGIT ce que le profil a fermé.
+   L'accentuation en rouge critique est voulue — un contrôle de sécurité ne doit pas
+   ressembler à un réglage de confort. */
+.lancer label.cage { align-items: flex-start; }
+.lancer label.cage input[type=checkbox] {
+  width: 15px; height: 15px; padding: 0; margin: 2px 0 0; accent-color: var(--critique);
+}
+.lancer label.cage em {
+  font: 11px/1.45 var(--sans); font-style: normal; color: var(--doux); max-width: 24ch;
+}
+/* Le ledger vivant : même typographie que la ligne d'état, mais il contient un
+   tableau complet et doit pouvoir retourner à la ligne. */
+.etat.vivante { white-space: normal; }

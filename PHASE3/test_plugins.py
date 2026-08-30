@@ -553,16 +553,62 @@ cas("un plugin qui demanderait 10 jours hérite du plafond, pas de son chiffre",
 
 # ═════════════════════════════ 7 · les touches réelles du LOT 2
 print("═══ 7 · ce que le lot a touché, et seulement ça ═══")
-diff = subprocess.run(["git", "-C", str(RACINE.parent), "status", "--porcelain"],
-                      capture_output=True, text=True).stdout.split()
-noms = {Path(x).name for x in diff}
+# Défaut TROUVÉ dans cette section et corrigé ici (31/08/2026) : les trois cas ci-dessous
+# lisaient `git status --porcelain`. Ils n'étaient donc vrais QUE tant que le lot restait
+# non commité — le commit de LOT 2 les a fait passer en échec sans que rien ne soit cassé.
+# Un test qui rougit au moment où l'on committe est un test qui finit par être supprimé, et
+# c'est exactement comment une promesse d'extension meurt. Les promesses sont réécrites sur
+# leurs faits propres :
+#   · « le cœur a été touché » → l'ensemble des fichiers modifiés DEPUIS LE POINT DE
+#     BRANCHEMENT (`git merge-base HEAD main`), commits inclus — c'est la définition de
+#     « ce que le lot a touché », et elle ne dépend pas du moment où l'on appuie sur commit ;
+#   · « aucun parser écrit à la main » → le CONTENU des parsers du slice : aucun ne doit
+#     connaître radon ni pip-audit ;
+#   · « aucune capacité ajoutée à la main » → le CONTENU de capabilities.yaml : sept
+#     capacités, et ni CODE_METRICS ni radon n'y figurent.
+# Si le point de branchement est introuvable et l'arbre propre, RIEN n'est mesuré : le cas est
+# déclaré en échec avec sa cause, jamais passé par défaut.
+GIT = ["git", "-C", str(RACINE.parent)]
+
+
+def _git(*args: str) -> str:
+    return subprocess.run(GIT + list(args), capture_output=True, text=True).stdout
+
+
+BASE = _git("merge-base", "HEAD", "main").strip() or None
+sur_base = _git("diff", "--name-only", f"{BASE}...HEAD").split() if BASE else []
+# `--porcelain` se lit LIGNE par ligne : les deux premiers caractères sont l'état, le reste
+# est le chemin. Découper la sortie sur les blancs — ce que faisait le LOT 2 — ajoutait "M"
+# et "??" à l'ensemble des chemins, et un cas « rien hors de PHASE3 » échouait sur une lettre
+# de statut (mesuré le 31/08/2026, en réécrivant cette section).
+sur_arbre = [l[3:].strip() for l in _git("status", "--porcelain").splitlines() if l.strip()]
+TOUCHES = sorted({x for x in sur_base + sur_arbre})
+NOMS = {Path(x).name for x in TOUCHES}
+MESURE = bool(BASE) or bool(sur_arbre)
+HORS_PHASE3 = [x for x in TOUCHES if not x.startswith("PHASE3/")]
+DOCS_RACINE = {"README_USAGE.md", "PROJET_ETAT.md", "CONTEXTE_PROJET.md",
+               "PATCHES_A_PORTER.md", ".gitattributes"}
 for attend in ("plugins.py", "registre.py", "intent.py", "adapters.py", "extraction.py",
                "provider_manifest.py", "pipeline.py", "analyser.py"):
-    cas(f"{attend} porte le changement (et le diff reste borné)", attend in noms, sorted(noms)[:16])
+    cas(f"{attend} porte le changement (et le diff reste borné)",
+        MESURE and attend in NOMS,
+        "aucune base de comparaison (merge-base HEAD main introuvable et arbre propre) : "
+        "rien n'est mesuré" if not MESURE else NOMS and sorted(NOMS)[:16])
+cas("le lot ne touche rien hors de PHASE3, sauf les docs de la racine",
+    MESURE and set(HORS_PHASE3) <= DOCS_RACINE, HORS_PHASE3)
+PARSERS = sorted(x for x in (RACINE / "slice").glob("parsers_*.py"))
+conrus = [f_.name for f_ in PARSERS
+          if any(m in f_.read_text(encoding="utf-8") for m in ("radon", "pip_audit", "pip-audit"))]
 cas("aucun parsers_*.py n'a été écrit pour intégrer les deux outils",
-    not [x for x in diff if "parsers_" in x], [x for x in diff if "parsers_" in x])
+    not conrus and bool(PARSERS),
+    {"parsers_existant": len(PARSERS), "connaissent_les_deux_outils": conrus})
 cas("aucune capacité n'a été ajoutée à la main dans capabilities.yaml",
-    "capabilities.yaml" not in noms, sorted(noms)[:16])
+    "CODE_METRICS" not in (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8")
+    and "radon" not in (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8").lower(),
+    sorted(NOMS)[:16])
+cas("capabilities.yaml déclare toujours ses sept capacités (rien n'y a été greffé)",
+    (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8").count("\n  - id: ") == 7,
+    (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8").count("\n  - id: "))
 cas("seuls deux plugins sont chargés du dossier du dépôt (rien d'autre n'a été posé là)",
     set(PL.fichiers()) == {RACINE / "plugins" / "radon.yaml", RACINE / "plugins" / "pip_audit.yaml"},
     sorted(str(f) for f in PL.fichiers()))

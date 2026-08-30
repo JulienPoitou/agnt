@@ -234,6 +234,60 @@ Trois règles apprises en écrivant ce chemin, toutes mesurées :
   outils et le PATH. Deux règles différentes faisaient annoncer « outil absent » à un outil
   exécutable.
 
+## Élargir la cage, mener les outils de front (31/08/2026)
+
+**Le réseau.** Chaque outil est lancé dans une cage bubblewrap privée de réseau
+(`--unshare-net`), et les variables `HTTP_PROXY`/`HTTPS_PROXY` pointent sur un port mort en
+double ceinture. Ce n'est pas un réglage de confort : le dépôt analysé est une entrée non
+fiable. Jusqu'au 31/08/2026, un outil dont la fiche demandait le réseau (`requirements.reseau:
+true`) était écarté à la sélection et, s'il y survivait, refusé à l'exécution par une cage
+invariablement coupée : le champ `reseau_autorise` des profils ne servait à rien. Il agit
+désormais aux deux endroits — et vaut `false` dans les deux profils livrés, ce qui se vérifie
+(`test_qualite_plateforme.py`, cas 1 à 7).
+
+Pour une mission, l'opérateur peut accorder la sortie :
+
+```bash
+python3 PHASE3/analyser.py PHASE3/testrepo "Analyse les dépendances du dépôt" --egress=true
+```
+
+· `--egress=true` — la cage est ouverte pour **cette mission seule** ; un `true` explicite est
+  exigé, le drapeau nu est refusé (un drapeau de sécurité n'a pas de valeur par défaut muette).
+· `--egress=false` — refus explicite, y compris sur un profil qui autorisait la sortie.
+· absent — le profil fait foi.
+
+« Non demandé », « accordé », « refusé » restent trois faits distincts partout où ils se
+lisent : `rapport.json` et `run.json` (clé `egress`), le journal de mission (`type: egress`,
+avec celui qui a posé la demande), l'archive relue par l'interface. L'état de la cage entre
+aussi dans l'empreinte de contexte, donc dans le `run_id` : un run mené cage ouverte ne peut
+pas se confondre avec un run fermé (cas 8 à 10).
+
+L'interface web expose la même chose par une case, à gauche de « moteur d'intention ». Son
+libellé est lu dans `/api/capacites` : il nomme le profil actif et la liste (vide) des profils
+ouvrant la sortie. Décochée, elle n'envoie **rien** — cocher élargit, ne pas cocher ne
+fabricote pas un refus explicite.
+
+**Les outils de front.** Une vague mène jusqu'à quatre outils en parallèle, réglable et borné :
+
+```bash
+AGNT_VAGUE_PARALLELE=1 python3 PHASE3/analyser.py …   # la suite exacte, le chemin historique
+AGNT_VAGUE_PARALLELE=8 …                               # plafond dur : 99 ne veut pas dire « tout »
+```
+
+Une valeur illisible retombe sur 1. Ce qui est garanti et mesuré (`test_vague_parallele.py`,
+46 cas) : les artefacts sont fusionnés **dans l'ordre du plan**, jamais dans l'ordre
+d'achèvement ; un outil parallèle passe par le même corps d'exécution et écrit les mêmes
+gardes ; la première exception **au sens du plan** interrompt la vague, et un outil non encore
+démarré ne démarre pas. Ce qui n'est **pas** mesuré ici : le gain de temps — la valeur 4 est un
+choix assumé, pas un réglage évalué (aucun outil réseau installable, `bwrap` absent).
+
+**L'état de la mission pendant qu'elle tourne.** Le ledger des six étapes est consigné à chaque
+démarrage d'outil dans `journal.jsonl`. La console relit la dernière de ces lignes
+(`/api/runs/<id>` → champ `vivante`) et l'affiche sous le bandeau d'état, avec les mêmes
+pastilles que le bilan final. Aucun état intermédiaire n'est inventé pour l'écran : si aucune
+mission ne correspond à ce run, le bloc reste vide plutôt que de montrer l'avancement d'une
+autre.
+
 ## Lire le résultat
 
 Les chemins de `findings.json` (et les clés de cluster) sont **relatifs à la cible**,
@@ -282,6 +336,9 @@ expliqué. Et une panne qui n'est pas un refus garde son traceback complet.
 
 - Il n'exécute que des outils **passifs** intégrés et qualifiés (8 à ce jour) —
   aucun scan offensif, aucun outil non qualifié, aucune commande libre.
+- Il ne sort sur le réseau que si on le lui demande, pour une mission, à la main : aucun
+  outil n'hérite d'une sortie par défaut, la demande est consignée avec son auteur, et
+  l'état de la cage change l'empreinte du run.
 - Il n'élargit jamais son périmètre : ce qui est refusé ou écarté est dit, avec
   un motif, dans `plan.json`.
 - Une gravité inconnue reste « indéterminée » — jamais inventée.

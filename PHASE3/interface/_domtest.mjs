@@ -447,6 +447,61 @@ for (const scénario of ["termine", "hostile", "refuse", "erreur", "sans_finding
   (ATTENDUS[scénario] || (() => {}))(doc, out);
 }
 
+/* ------------------------------------------------- LOT 3 : la case cage et le ledger vivant */
+{
+  const ids = new Set([...HTML.matchAll(/id="([a-zA-Z0-9_-]+)"/g)].map((m) => m[1]));
+  vérifie("les trois éléments de la garde réseau existent dans le HTML",
+          ids.has("egress") && ids.has("egress-note") && ids.has("vivante"),
+          [...ids].filter((x) => x.startsWith("egress") || x === "vivante").join(","));
+  // Atteindre un élément par `parentElement.querySelector` cassait tout le branchement dans ce
+  // harnais (son DOM est construit à partir des `id`) tout en fonctionnant dans un vrai
+  // navigateur : le pire type de défaut d'interface, vert ailleurs et mort ici. Le cas existe
+  // pour que la forme ne revienne pas.
+  // Les deux cas qui suivent jugent le CODE, pas le fichier : les commentaires sont retirés,
+  // sinon une explication qui NOMME la forme interdite ferait rougir le test qui l'interdit
+  // (mesuré à la première exécution de ces six cas).
+  const CODE = SOURCE.replace(/^\s*\/\/.*$/gm, "");
+  vérifie("le script ne cherche pas un élément par son parent (harnais sans querySelector)",
+          !/parentElement\.querySelector/.test(CODE),
+          "les éléments de cette page sont atteints par id, y compris les libellés");
+  vérifie("l'envoi ne fabricote pas de refus : `egress` part seulement si la case est cochée",
+          /corps\.egress = true/.test(CODE) && !/corps\.egress = false/.test(CODE),
+          "`false` serait une décision explicite de fermer, que l'opérateur n'a pas prise");
+
+  const docV = documentPour(HTML);
+  let app = null;
+  try {
+    app = new Function("document", "window", "fetch", "setTimeout", "console",
+                       SOURCE + "\n;return {blocVivant};")(
+      docV, {document: docV}, async () => ({ok: false, status: 0, objet: {}}), () => 0,
+      {log() {}, warn() {}, error() {}});
+  } catch (e) {
+    vérifie("le script s'évalue avec les nouveaux éléments", false, String(e));
+  }
+  if (app) {
+    const viv = docV.getElementById("vivante");
+    app.blocVivant({mission: "m-test", en_cours: "radon_cc",
+                    resume: {selectionne: 2, execute: 1},
+                    outils: [{provider: "radon_cc", statut: "selectionne",
+                              raison: "exécution en cours", en_cours: true},
+                             {provider: "bandit", statut: "execute",
+                              raison: "sortie conservée", en_cours: false}]});
+    const txt = viv.textContent;
+    vérifie("ledger vivant : les outils consignés apparaissent",
+            /radon_cc/.test(txt) && /bandit/.test(txt), txt.slice(0, 90));
+    vérifie("ledger vivant : « en cours » se lit avec le vocabulaire des six étapes",
+            /exécution en cours/.test(txt) && /selectionne/.test(txt), txt.slice(0, 90));
+    vérifie("ledger vivant : le nom de la mission et les comptes sont affichés",
+            /m-test/.test(txt) && /selectionne 2/.test(txt), txt.slice(0, 120));
+    app.blocVivant(null);
+    vérifie("ledger vivant : rien à lire ⇒ le bloc se masque, il ne s'affiche pas vide",
+            /cache/.test(viv.className) && viv.textContent === "", viv.className);
+    app.blocVivant({mission: "m-x", outils: null});
+    vérifie("ledger vivant : une réponse sans `outils` ne fait pas tomber la page",
+            /cache/.test(viv.className), viv.className);
+  }
+}
+
 console.log("");
 for (const [nom, ok, détail] of MARQUEURS) {
   if (!ok) échecs++;

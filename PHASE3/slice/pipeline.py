@@ -172,6 +172,175 @@ def _ledger(miss, registre, plan_dict, decision_dict, raw, couverture,
     return st
 
 
+@dataclass
+class _ContexteVague:
+    """Ce qu'une vague touche dans la mission. Un seul objet, construit une fois.
+
+    Listes et dicts MUTABLES volontairement : la vague 2 (escalade) doit écrire dans les mêmes
+    `exec_.raw`, `trouves` et `tous_findings` que la vague 1 — deux copies produiraient deux
+    moitiés d'artefact, et le rapport ne saurait plus lequel est complet.
+    """
+    miss: object
+    registre: object
+    exec_: object
+    sbx: object
+    cible: Path
+    sortie: Path
+    # Le contexte d'exécution (versions d'outils, empreintes) : la vague en a besoin pour
+    # `source.version_outil`. Omis à l'extraction du corps, il donnait un `NameError` sur le
+    # PREMIER finding enrichi — trouvé par `test_vague_parallele.py`, invisible tant
+    # qu'aucun outil ne rendait de finding. Un nom libre dans une fonction extraite est
+    # exactement le défaut que ce lot devait produire, et c'est le test qui l'a eu.
+    ctx: object
+    trouves: dict
+    tous_findings: list
+    domaines: dict
+    binaires: dict
+
+
+def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
+    """Une vague d'exécution — la vague 1 et l'escalade partagent CE CORPS, à la racine du module.
+
+    Extraire la boucle en fonction (plutôt que copier un second cycle pour la vague 2) est ce
+    qui garantit qu'une exécution escaladée passe par TOUTES les gardes de l'exécution normale :
+    brut conservé sur disque, couverture, fingerprints sur chemins normalisés, enrichissement,
+    journal par provider, ledger partiel si elle avorte. Une seconde boucle « simplifiée » est
+    exactement le chemin de côté qui finit par produire des artefacts non comparables.
+
+    Le contexte de mission est passé (`V`), pas capturé : c'est ce qui rend CE corps
+    exécutable par un test sans `opa` ni `bwrap` — la vague se pilote à vide sur des doubles
+    de sandbox, et ses artefacts se comparent. Un corps enfermé dans une closure ne se prouve
+    qu'en rejouant la mission entière, c'est-à-dire qu'il ne se prouve pas sur une machine où
+    la politique est injouable.
+
+    Depuis LOT 3, les outils d'une même vague peuvent tourner de front. Trois choses sont
+    gardées, dans cet ordre, et c'est tout l'intérêt du morceau :
+
+      1. LE MÊME CORPS par outil — la parallelisation porte sur l'ordonnancement, pas sur les
+         gardes : un outil lancé en parallèle écrit son brut, sa couverture, ses findings et sa
+         ligne de journal exactement comme s'il tournait seul.
+      2. DES ARTEFACTS DÉTERMINISTES — les résultats sont collectés puis MERGÉS dans l'ordre du
+         plan, jamais dans l'ordre d'achèvement. Sans ça, deux exécutions du même plan
+         produiraient deux `findings.json` différents (ordre des findings, ordre de `raw`, ordre
+         des lignes du journal) et l'empreinte de résultat ne serait plus une empreinte de
+         résultat mais une empreinte d'horloge.
+      3. UN SEUL POINT D'ARRÊT — la première exception (au sens de l'ordre du plan) interrompt la
+         vague : les outils déjà partis vont à leur terme, ceux qui n'ont pas démarré sont
+         abandonnés. Rien ne tourne « à moitié » et rien ne tourne après une décision de
+         sécurité négative.
+
+    Le ledger est consigné À CHAQUE DÉPART d'outil, pas seulement à la fin : c'est la source des
+    états vivants de la console, et il est produit par la même fonction `statuts.construire` que
+    l'état final — pas par une seconde mécanique d'affichage.
+    """
+    miss, registre, exec_, sbx = V.miss, V.registre, V.exec_, V.sbx
+    cible, sortie = V.cible, V.sortie
+    trouves, tous_findings = V.trouves, V.tous_findings
+    domaines_du_provider = V.domaines
+    binaire_de_provider = V.binaires
+    ctx = V.ctx
+    resultats: dict[str, tuple] = {}
+    erreurs: dict[str, BaseException] = {}
+    verrou = threading.Lock()
+    avorter = threading.Event()
+
+    def _vivant(pid: str) -> None:
+        with verrou:
+            _ledger(miss, registre, plan_dict, decision_dict, list(exec_.raw),
+                    list(exec_.couverture), dict(trouves), en_cours=pid)
+
+    def _un(step) -> None:
+        prov = registre.provider(step.provider)
+        if avorter.is_set():
+            return                      # vague déjà condamnée : on ne lance pas un autre outil
+        _vivant(prov.id)
+        try:
+            brut = adapters.executer(prov, sbx)
+        except Exception as exc:
+            # Un échec d'ADAPTATION (isolateur inutilisable : montages absents, bwrap
+            # manquant) n'est pas une ligne de couverture : `verifie()` refuse avant tout
+            # Popen, et la mission avorte — rien ne doit tourner à moitié. Ce qui manquait,
+            # c'est la trace du motif, nommée par provider. La cause reste l'affaire de
+            # l'appelant (l'exception remonte telle quelle), le journal, lui, doit la dire.
+            with verrou:
+                erreurs[prov.id] = exc
+            avorter.set()
+            return
+        with verrou:
+            resultats[prov.id] = (prov, brut)
+
+    # L'ordonnanceur est la seule partie qui change selon le plafond ; le travail d'un
+    # outil est le même appel dans les deux cas. Deux chemins d'exécution d'un même fait
+    # est le début d'une divergence entre ce qui tourne et ce qui est consigné.
+    plafond = outils_par_vague()
+    if len(steps_) <= 1 or plafond <= 1:
+        for step in steps_:
+            _un(step)
+    else:
+        with ThreadPoolExecutor(max_workers=min(plafond, len(steps_))) as pool:
+            list(pool.map(_un, list(steps_)))
+
+    # ---- consolidation, dans l'ordre du plan (voir la règle 2 ci-dessus)
+    for step in steps_:
+        if step.provider not in resultats:
+            continue
+        prov, brut = resultats[step.provider]
+        (sortie / f"raw_{prov.id}.json").write_text(
+            json.dumps(brut.donnees, ensure_ascii=False, indent=2, default=str),
+            encoding="utf-8")
+        # La sortie brute est conservée À CÔTÉ du JSON re-construit, jamais à sa place :
+        # le JSON dit ce que le cœur a COMPRIS, le brut dit ce que l'outil a ÉCRIT. Les
+        # deux doivent pouvoir être comparés des mois plus tard (demande explicite de la
+        # commande du 2026-08-30, « conserver systématiquement la sortie brute »).
+        nom_brut = adapters.conserver_brut(sbx, sortie, brut, prov.id)
+        exec_.raw.append({
+            "provider": prov.id,
+            "fichier": f"raw_{prov.id}.json",
+            "brut": nom_brut,
+            "code_retour": brut.code_retour,
+            "timeout": brut.timeout,
+            "vague": vague,
+        })
+        exec_.couverture.append(brut.couverture.to_dict())
+
+        # Chemins relativisés aux racines CONNUES (montage isolateur + cible sous
+        # toutes ses formes) AVANT calcul des fingerprints : identité indépendante de
+        # la machine (2026-08-28), élargie aux orthographes du dépôt (2026-08-30).
+        norm = F.normaliser(prov.id, brut.donnees, mani=prov.manifest,
+                            racines=_racines_de(cible))
+        # Trois champs qu'un finding ne peut pas connaître seul, dérivés ici parce que
+        # c'est le pipeline qui détient le registre et le contexte :
+        #   · `categorie` = premier domaine DÉCLARÉ de la capacité (pas un dictionnaire
+        #     d'outils entretenu à la main) ;
+        #   · `horodatage` = l'heure du plan de la vague, pas une invention par finding ;
+        #   · `version_outil` = la version LUE au démarrage, celle qui a produit ces octets.
+        # Un outil muet sur un champ le laisse absent : `vue_unifiee` le déclare dans
+        # `absents`, jamais le normaliseur qui le remplit.
+        for f_ in norm:
+            f_.source["categorie"] = domaines_du_provider.get(prov.id)
+            f_.source["horodatage"] = horodatage
+            f_.source["version_outil"] = ((ctx.outils or {}).get(
+                binaire_de_provider.get(prov.id, "")) or None)
+            f_.source["vague"] = vague
+        tous_findings.extend(norm)
+        trouves[prov.id] = len(norm)
+        MS.consigner(miss, "execution", provider=prov.id, vague=vague,
+                     code_retour=brut.code_retour, timeout=brut.timeout,
+                     findings=len(norm))
+
+    if erreurs:
+        # Le premier fautif AU SENS DU PLAN, pas au sens de l'horloge : le motif consigné
+        # et l'exception remontée doivent être les mêmes d'une exécution à l'autre.
+        coupable = next((s.provider for s in steps_ if s.provider in erreurs), None)
+        exc = erreurs[coupable]
+        _consigner_arret(miss, f"execution_{coupable}", exc)
+        _ledger(miss, registre, plan_dict, decision_dict, exec_.raw, exec_.couverture,
+                trouves, avorte={"provider": coupable, "cause": str(exc)})
+        raise exc
+    # Fin de vague : l'état vivant laisse place à l'état complet, par la même fonction.
+    _ledger(miss, registre, plan_dict, decision_dict, exec_.raw, exec_.couverture, trouves)
+
+
 def executer(requete: str, cible: Path, cible_autorisee: bool = True,
              confiance_cible: str = "controlled",
              avec_internes: bool = False, escalade: bool = True,
@@ -317,6 +486,12 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         try:
             exc.agnt_refus = {
                 "motif": "policy_injoignable",
+                # L'état de la garde d'export voyage avec le refus : un opérateur qui a demandé
+                # `--egress=true` et voit « OPA introuvable » doit savoir que la demande a bien
+                # été enregistrée et sur quel profil — sinon le refus se relit comme si rien n'avait
+                # été demandé. Consigné ici, au même endroit que le ledger, par les mêmes champs
+                # que `rapport.json`.
+                "egress": dict(egress_info),
                 "resume": STAT.resumer(st),
                 "statuts": list(st),
                 "conditions": (plan.to_dict().get("selection") or {}).get("conditions") or {},
@@ -395,141 +570,11 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         domaines_du_provider[_p.id] = dom[0] if dom else None
         binaire_de_provider[_p.id] = (_p.manifest.binaire if _p.manifest is not None
                                       else Path(_p.commande[0]).name)
-    def _vague(steps_, plan_ref, decision_ref, horodatage, vague):
-        """Une vague d'exécution — la vague 1 et l'escalade partagent CE corps.
-
-        Extraire la boucle en fonction (plutôt que copier un second cycle pour la vague 2)
-        est ce qui garantit qu'une exécution escaladée passe par TOUTES les gardes de
-        l'exécution normale : brut conservé sur disque, couverture, fingerprints sur chemins
-        normalisés, enrichissement, journal par provider, ledger partiel si elle avorte.
-        Une seconde boucle « simplifiée » est exactement le chemin de côté qui finit par
-        produire des artefacts non comparables.
-
-        Depuis LOT 3, les outils d'une même vague peuvent tourner de front. Trois choses sont
-        gardées, dans cet ordre, et c'est tout l'intérêt du morceau :
-
-          1. LE MÊME CORPS par outil — la parallelisation porte sur l'ordonnancement, pas sur
-             les gardes : un outil lancé en parallèle écrit son brut, sa couverture, ses
-             findings et sa ligne de journal exactement comme s'il tournait seul.
-          2. DES ARTEFACTS DÉTERMINISTES — les résultats sont collectés puis MERGÉS dans
-             l'ordre du plan, jamais dans l'ordre d'achèvement. Sans ça, deux exécutions du
-             même plan produiraient deux `findings.json` différents (ordre des findings, ordre
-             de `raw`, ordre des lignes du journal) et l'empreinte de résultat ne serait plus
-             une empreinte de résultat mais une empreinte d'horloge.
-          3. UN SEUL POINT D'ARRÊT — la première exception (au sens de l'ordre du plan)
-             interrompt la vague : les outils déjà partis vont à leur terme, ceux qui n'ont
-             pas démarré sont abandonnés. Rien ne tourne « à moitié » et rien ne tourne après
-             une décision de sécurité négative.
-
-        Le ledger est consigné À CHAQUE DÉPART d'outil, pas seulement à la fin : c'est la
-        source des états vivants de la console, et il est produit par la même fonction
-        `statuts.construire` que l'état final — pas par une seconde mécanique d'affichage.
-        """
-        resultats: dict[str, tuple] = {}
-        erreurs: dict[str, BaseException] = {}
-        verrou = threading.Lock()
-        avorter = threading.Event()
-
-        decision_dict = {"allow": True, "motifs": list(decision_ref.motifs)}
-        plan_dict = plan_ref.to_dict()
-
-        def _vivant(pid: str) -> None:
-            with verrou:
-                _ledger(miss, registre, plan_dict, decision_dict, list(exec_.raw),
-                        list(exec_.couverture), dict(trouves), en_cours=pid)
-
-        def _un(step) -> None:
-            prov = registre.provider(step.provider)
-            if avorter.is_set():
-                return                      # vague déjà condamnée : on ne lance pas un autre outil
-            _vivant(prov.id)
-            try:
-                brut = adapters.executer(prov, sbx)
-            except Exception as exc:
-                # Un échec d'ADAPTATION (isolateur inutilisable : montages absents, bwrap
-                # manquant) n'est pas une ligne de couverture : `verifie()` refuse avant tout
-                # Popen, et la mission avorte — rien ne doit tourner à moitié. Ce qui manquait,
-                # c'est la trace du motif, nommée par provider. La cause reste l'affaire de
-                # l'appelant (l'exception remonte telle quelle), le journal, lui, doit la dire.
-                with verrou:
-                    erreurs[prov.id] = exc
-                avorter.set()
-                return
-            with verrou:
-                resultats[prov.id] = (prov, brut)
-
-        # L'ordonnanceur est la seule partie qui change selon le plafond ; le travail d'un
-        # outil est le même appel dans les deux cas. Deux chemins d'exécution d'un même fait
-        # est le début d'une divergence entre ce qui tourne et ce qui est consigné.
-        plafond = outils_par_vague()
-        if len(steps_) <= 1 or plafond <= 1:
-            for step in steps_:
-                _un(step)
-        else:
-            with ThreadPoolExecutor(max_workers=min(plafond, len(steps_))) as pool:
-                list(pool.map(_un, list(steps_)))
-
-        # ---- consolidation, dans l'ordre du plan (voir la règle 2 ci-dessus)
-        for step in steps_:
-            if step.provider not in resultats:
-                continue
-            prov, brut = resultats[step.provider]
-            (sortie / f"raw_{prov.id}.json").write_text(
-                json.dumps(brut.donnees, ensure_ascii=False, indent=2, default=str),
-                encoding="utf-8")
-            # La sortie brute est conservée À CÔTÉ du JSON re-construit, jamais à sa place :
-            # le JSON dit ce que le cœur a COMPRIS, le brut dit ce que l'outil a ÉCRIT. Les
-            # deux doivent pouvoir être comparés des mois plus tard (demande explicite de la
-            # commande du 2026-08-30, « conserver systématiquement la sortie brute »).
-            nom_brut = adapters.conserver_brut(sbx, sortie, brut, prov.id)
-            exec_.raw.append({
-                "provider": prov.id,
-                "fichier": f"raw_{prov.id}.json",
-                "brut": nom_brut,
-                "code_retour": brut.code_retour,
-                "timeout": brut.timeout,
-                "vague": vague,
-            })
-            exec_.couverture.append(brut.couverture.to_dict())
-
-            # Chemins relativisés aux racines CONNUES (montage isolateur + cible sous
-            # toutes ses formes) AVANT calcul des fingerprints : identité indépendante de
-            # la machine (2026-08-28), élargie aux orthographes du dépôt (2026-08-30).
-            norm = F.normaliser(prov.id, brut.donnees, mani=prov.manifest,
-                                racines=_racines_de(cible))
-            # Trois champs qu'un finding ne peut pas connaître seul, dérivés ici parce que
-            # c'est le pipeline qui détient le registre et le contexte :
-            #   · `categorie` = premier domaine DÉCLARÉ de la capacité (pas un dictionnaire
-            #     d'outils entretenu à la main) ;
-            #   · `horodatage` = l'heure du plan de la vague, pas une invention par finding ;
-            #   · `version_outil` = la version LUE au démarrage, celle qui a produit ces octets.
-            # Un outil muet sur un champ le laisse absent : `vue_unifiee` le déclare dans
-            # `absents`, jamais le normaliseur qui le remplit.
-            for f_ in norm:
-                f_.source["categorie"] = domaines_du_provider.get(prov.id)
-                f_.source["horodatage"] = horodatage
-                f_.source["version_outil"] = ((ctx.outils or {}).get(
-                    binaire_de_provider.get(prov.id, "")) or None)
-                f_.source["vague"] = vague
-            tous_findings.extend(norm)
-            trouves[prov.id] = len(norm)
-            MS.consigner(miss, "execution", provider=prov.id, vague=vague,
-                         code_retour=brut.code_retour, timeout=brut.timeout,
-                         findings=len(norm))
-
-        if erreurs:
-            # Le premier fautif AU SENS DU PLAN, pas au sens de l'horloge : le motif consigné
-            # et l'exception remontée doivent être les mêmes d'une exécution à l'autre.
-            coupable = next((s.provider for s in steps_ if s.provider in erreurs), None)
-            exc = erreurs[coupable]
-            _consigner_arret(miss, f"execution_{coupable}", exc)
-            _ledger(miss, registre, plan_dict, decision_dict, exec_.raw, exec_.couverture,
-                    trouves, avorte={"provider": coupable, "cause": str(exc)})
-            raise exc
-        # Fin de vague : l'état vivant laisse place à l'état complet, par la même fonction.
-        _ledger(miss, registre, plan_dict, decision_dict, exec_.raw, exec_.couverture, trouves)
-
-    _vague(plan.steps, plan, decision, plan.cree_le, 1)
+    V = _ContexteVague(miss=miss, registre=registre, exec_=exec_, sbx=sbx, cible=cible,
+                       sortie=sortie, ctx=ctx, trouves=trouves, tous_findings=tous_findings,
+                       domaines=domaines_du_provider, binaires=binaire_de_provider)
+    _vague(plan.steps, V, plan.to_dict(), {"allow": True, "motifs": list(decision.motifs)},
+           plan.cree_le, 1)
 
     # ---------------------------------------------------------------- 4b. escalade bornée
     # Un outil LANCÉ qui n'a pu analyser AUCUNE cible laisse une capacité non couverte.
@@ -565,7 +610,8 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
                          allow=bool(decision2.allow) if decision2 else False,
                          plan_id=(plan2.plan_id if decision2 and decision2.allow else ""))
             if decision2 and decision2.allow:
-                _vague(plan2.steps, plan2, decision2, plan2.cree_le, 2)
+                _vague(plan2.steps, V, plan2.to_dict(),
+                       {"allow": True, "motifs": list(decision2.motifs)}, plan2.cree_le, 2)
                 for d in declencheurs:
                     d["execute"] = True
             else:
@@ -648,6 +694,10 @@ def main() -> int:
                                          encoding="utf-8")
     (SORTIE / "run.json").write_text(
         json.dumps({"execution_profile": e.profil,
+                    # Présent ici aussi : `analyser.py` et `pipeline.main()` écrivent deux
+                    # `run.json` du même fait, et l'un des deux omittrait la garde qu'un
+                    # reliseur lirait comme « aucune garde d'export n'a existé ».
+                    "egress": e.egress,
                     "plan_id": e.plan.get("plan_id"),
                     "input_digest": e.contexte.get("input_digest"),
                     "input_commit": e.contexte.get("input_commit", ""),

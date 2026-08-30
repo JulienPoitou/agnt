@@ -20,6 +20,7 @@ Usage : python3 PHASE3/test_escalade.py
 """
 from __future__ import annotations
 
+import ast
 import sys
 import tempfile
 from pathlib import Path
@@ -210,10 +211,14 @@ pl = (RACINE / "slice" / "pipeline.py").read_text(encoding="utf-8")
 # UN SEUL corps défini (`def _vague(` une fois), APPELÉ par les deux vagues.
 cas("11. la vague 1 et la vague 2 partagent LE MÊME corps d'exécution (pas de boucle bis)",
     pl.count("def _vague(") == 1
-    and "_vague(plan.steps, plan, decision, plan.cree_le, 1)" in pl
-    and "_vague(plan2.steps, plan2, decision2, plan2.cree_le, 2)" in pl
-    and "for step in steps_:" in pl,
-    "un seul corps, deux appels ; la vague 2 ne peut pas avoir son propre chemin")
+    and "_vague(plan.steps, V, plan.to_dict()" in pl
+    and "_vague(plan2.steps, V, plan2.to_dict()" in pl
+    and pl.count("V = _ContexteVague(") == 1,
+    "un seul corps, un seul contexte de mission, deux appels : la vague 2 ne peut pas avoir "
+    "son propre chemin ni sa propre copie d'artefacts")
+cas("11b. le corps de la vague est au niveau du module, donc testable sans `opa` ni `bwrap`",
+    "_vague" in {n.name for n in ast.parse(pl).body if isinstance(n, ast.FunctionDef)},
+    "un corps capturé dans une closure ne se prouve qu'en rejouant la mission entière")
 cas("12. la vague 2 est construite COMME un plan (budget, providers connus) et non lancée à la main",
     "plan2 = P.construire(" in pl, "P.construire applique verifier_budget")
 cas("13. OPA est ré-interrogé sur le plan de la vague 2 avant toute exécution",

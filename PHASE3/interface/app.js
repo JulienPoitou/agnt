@@ -521,6 +521,25 @@ async function json(url, options) {
   return {ok: r.ok, status: r.status, objet};
 }
 
+function blocVivant(v) {
+  // Rendu du ledger en cours d'exécut : le serveur ne fabrique aucun état intermédiaire,
+  // il relit la dernière ligne `statuts` du journal append-only de la mission. Donc ce bloc
+  // et l'état final archivé viennent du même appel `statuts.construire` : ils ne peuvent
+  // pas se contredire.
+  const n = document.getElementById("vivante");
+  if (!n) return;                            // page sans le bloc (harnais DOM sur d'autres vues)
+  n.textContent = "";
+  if (!v || !Array.isArray(v.outils)) { n.className = "etat vivante cache"; return; }
+  n.className = "etat vivante";
+  const r = v.resume || {};
+  const comptes = Object.keys(r).length
+    ? Object.keys(r).map((k) => k + " " + r[k]).join(" · ") : "aucun état consigné";
+  const tete = el("div", null, "journal de mission " + (v.mission || "?") + " — " + comptes
+                  + (v.en_cours ? " — en cours : " + v.en_cours : ""));
+  n.append(tete);
+  n.append(blocStatuts(null, v.outils));
+}
+
 function etatLigne(texte, classe) {
   const n = document.getElementById("etat");
   n.textContent = texte;
@@ -536,6 +555,12 @@ async function lancerUnRun() {
   };
   const modele = document.getElementById("modele").value.trim();
   if (modele) corps.modele = modele;
+  // La case n'envoie RIEN quand elle est décochée. `egress: false` serait une décision
+  // explicite de fermer, lue comme telle dans le rapport : or personne n'a décidé de
+  // fermer, le profil l'est déjà. Renvoyer `false` à chaque run remplaceraait
+  // « non demandé » par « demandé et obtenu : non » &mdash  deux faits différents.
+  const cage = document.getElementById("egress");
+  if (cage && cage.checked) corps.egress = true;
   const envoi = await json("/api/runs", {method: "POST", headers: {"Content-Type": "application/json"},
                                          body: JSON.stringify(corps)});
   if (!envoi.ok) {
@@ -569,7 +594,12 @@ async function lancerUnRun() {
     }
     silences = 0;
     etatLigne("run " + id + " · " + (o.statut || "?"), PASTILLE[o.statut] || "");
-    if (o.statut === "termine" && o.donnees) { rendu({...o.donnees, maquette: false}); return; }
+    blocVivant(o.vivante);
+    if (o.statut === "termine" && o.donnees) {
+      blocVivant(null);                     // le ledger complet est dans l'archive, plus rien à suivre
+      rendu({...o.donnees, maquette: false});
+      return;
+    }
     if (o.statut === "refuse" || o.statut === "erreur") {
       // Le refus de politique est un RÉSULTAT, pas une panne : il porte la raison, et
       // n'affiche aucun constat pour ne pas laisser croire que l'analyse a eu lieu.
@@ -625,6 +655,29 @@ async function brancher() {
   ((caps.objet || {}).confiances || ["controlled", "untrusted"]).forEach((x) => conf.append(el("option", null, x)));
   document.getElementById("question").disabled = false;
   document.getElementById("moteur").disabled = false;
+  // Activée seulement quand le serveur répond : une case à cocher avant
+  // démarrage serait un contrôle qui n'agit sur rien.
+  {
+    // Deux leçons de ce bloc, mesurées : les éléments sont atteints PAR ID et non par
+    // `parentElement.querySelector` — le harnais DOM construit son arbre à partir des `id` de
+    // index.html, et la seconde forme levait un TypeError qui faisait tomber 31 vérifications
+    // pour une raison sans rapport avec le rendu ; et un widget absent ne doit pas empêcher le
+    // reste du formulaire de vivre, donc l'écriture est encadrée et son échec est affiché.
+
+    // Le libellé porte l'état du profil, pas seulement l'intention de la case : « cochée =
+    // sortie autorisée » sans le nom du profil laisserait croire que la cage est ouverte
+    // par l'interface. Elle ne l'est jamais — seule la mission la change.
+    const pr = (caps.objet || {}).profil || {};
+    const ouvrants = (pr.profils_ouvrant_la_sortie || []);
+    const cage = document.getElementById("egress");
+    if (cage) cage.disabled = false;
+    const note = document.getElementById("egress-note");
+    if (note) {
+      note.textContent = "profil " + (pr.nom || "?") + " · sortie réseau "
+        + (pr.reseau_autorise ? "AUTORISÉE par le profil" : "fermée")
+        + (ouvrants.length ? " · ouverte par : " + ouvrants.join(", ") : " · ouverte par aucun profil");
+    }
+  }
   sel.disabled = !sel.children.length;
   document.getElementById("run").disabled = false;
   document.getElementById("run").onclick = () => { etatLigne("envoi…", ""); lancerUnRun(); };

@@ -245,7 +245,11 @@ cas("24. le pipeline enrichit catégorie/horodatage/version depuis le registre e
     # une vague 2 a son propre horodatage — un finding de vague 2 daté de la vague 1 serait
     # une fausse simultanéité.
     and 'f_.source["vague"] = vague' in pl
-    and "_vague(plan2.steps, plan2, decision2, plan2.cree_le, 2)" in pl,
+    # forme de LOT 3 : le contexte de vague est passé, plus capturé (le corps est au niveau du
+    # module pour être jouable sans `opa`). Ce littéral est le TROISIÈME endroit de la batterie où
+    # un grep sur le texte de l'appel tenait lieu d'invariant — quand un invariant dépend de la
+    # forme exacte d'un appel, il faut l'écrire au niveau du comportement, pas du source.
+    and "_vague(plan2.steps, V, plan2.to_dict()" in pl,
     "trois affectations + horodatage par vague")
 fd = (RACINE / "PHASE3" / "slice" / "findings.py").read_text(encoding="utf-8")
 cas("25. le vocabulaire des coordonnées est fermé dans le code (quatre, pas un champ libre)",

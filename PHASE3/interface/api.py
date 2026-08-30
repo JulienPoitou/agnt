@@ -144,7 +144,11 @@ def _vivante(question: str, cible: str, depuis: float) -> dict | None:
     possible de ce chemin, donc c'est la première chose qui est gardée (testée).
     """
     try:
-        from slice import mission as _ms
+        # `import mission`, et pas `from slice import mission` : `RACINE` et `RACINE/slice`
+        # sont tous les deux sur sys.path, donc les deux orthographes chargent DEUX objets
+        # module distincts. Pour une lecture de chemin c'est invisible ; pour un patch de test
+        # (ou un verrou de journal partagé) c'est un silo. Le pipeline, lui, importe `mission`.
+        import mission as _ms
     except Exception:                                   # noqa: BLE001
         return None                                     # pas de slice importable : pas de ledger
     dossier = getattr(_ms, "MISSIONS", None)
@@ -310,11 +314,21 @@ def _charger(sortie: str) -> dict:
             "mission": d.parent.name if d.parent.name.startswith("m-") else None,
             "dossier": str(d),
             "run_id": run.get("run_id"),
-            "profil": run.get("profil"),
             "plan_id": run.get("plan_id"),
             "input_digest": run.get("input_digest"), "input_commit": run.get("input_commit"),
             "working_tree_dirty": run.get("working_tree_dirty"),
             "moteur": intent.get("moteur"), "sortie": str(d),
+            # Les deux faits de LOT 3 qui changent la portée d'un run : est-ce que la cage
+            # laissait sortir, et combien d'outils ont été menés de front. Lus dans le rapport,
+            # avec repli sur run.json (les deux l'écrivent), et jamais recomposés par déduction :
+            # absent d'une archive = absent de l'écran.
+            "egress": rapport.get("egress", run.get("egress")),
+            "outils_par_vague": rapport.get("outils_par_vague", run.get("outils_par_vague")),
+            # Défaut trouvé en branchant le cas 15 de `test_qualite_plateforme.py` :
+            # `run.json` écrit la clé `execution_profile`, cet endroit lisait `profil` — le
+            # profil d'exécution n'a donc jamais été affiché par la console, alors qu'il est la
+            # source du `egress`. Les deux orthographes sont lues, celle de l'archive d'abord.
+            "profil": run.get("execution_profile") or run.get("profil"),
         },
         "rapport_markdown": lire("RAPPORT.md") or "",
     }
@@ -461,7 +475,7 @@ def _capacites() -> dict:
         out["providers"] = sorted({pr.id for c in publiees for pr in c.providers})
         out["note_filtre"] = ("providers = ceux des capacités publiées ; le registre complet "
                               "n'est pas exposé par cette interface")
-        # Estado d'extension de la plateforme : quels fichiers de plugin sont chargés et
+        # État d'extension de la plateforme de la plateforme : quels fichiers de plugin sont chargés et
         # l'empreinte contre laquelle les plans sont autorisés. Un opérateur qui voit huit
         # capacités doit pouvoir savoir que deux viennent de fichiers hors du cœur — sinon
         # « ce que la plateforme sait faire » et « ce qui est installé sur cette machine »
@@ -489,6 +503,14 @@ def _capacites() -> dict:
         import profils as PF
         p = PF.actif()
         out["profil"] = {"nom": p.nom, "memoire_bornee": getattr(p, "memoire_bornee", None),
+                         # L'état de la cage réseau, lu à la source. Cette ligne est la seule
+                         # façon pour l'écran de dire autre chose que « la case est décochée » :
+                         # sans elle, l'opérateur ne sait pas si cocher élargit un périmètre ou
+                         # ouvre ce que rien n'autorise.
+                         "reseau_autorise": bool(getattr(p, "reseau_autorise", False)),
+                         "profils_ouvrant_la_sortie": sorted(
+                             n for n, x in getattr(PF, "PROFILS", {}).items()
+                             if getattr(x, "reseau_autorise", False)),
                          "note": "choisi par le code, pas par l'interface (mesuré G2)"}
     except Exception as e:
         out["profil_erreur"] = f"{type(e).__name__}: {e}"

@@ -373,6 +373,18 @@ def main(argv: list[str]) -> int:
         if etat is None:
             raise
         print(f"REFUS D'EXÉCUTION · {type(exc).__name__} : {exc}")
+        # La portée demandée est rappelée DANS le bloc de refus : c'est lui qu'on colle dans un
+        # ticket, trois écrans plus bas. Sans cette ligne, un refus de mission menée cage ouverte
+        # se relit comme une mission ordinaire.
+        eg = etat.get("egress") or {}
+        if eg:
+            print("cage     : " + (
+                f"sortie réseau ACCORDÉE à cette mission (profil {eg.get('profil') or '?'}, "
+                f"demande {eg.get('demande') or '?'}"
+                + (", par délégation" if eg.get("delegation") else "") + ")"
+                if eg.get("autorise") else
+                f"réseau coupé pour tous les outils (profil {eg.get('profil') or '?'}, "
+                f"demande {eg.get('demande') or '?'})"))
         resume = etat.get("resume") or {}
         comptes = " · ".join(f"{k} {v}" for k, v in resume.items() if v)
         if comptes:
