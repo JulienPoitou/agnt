@@ -41,6 +41,7 @@
 | **Jeux de règles de sécurité contrôlés** | Un scanner ne doit jamais charger une configuration fournie par le dépôt analysé. Une règle doit venir d'une source AGNT de confiance, montée en lecture seule et vérifiée. |
 | **Mode laboratoire propriétaire, pas bypass** | Un mode explicite peut faciliter des tests sur cibles contrôlées, mais ne désactive jamais sandbox, policy, intégrité, autorisation de cible ou redaction ; il ne peut être activé ni par LLM ni par API cliente. |
 | **Agents Pentest AI tiers : valeur, pas étiquette** | Un projet n'est ni retenu ni exclu parce qu'il est « concurrent ». Un agent complet ne devient pas un second orchestrateur ; seule une frontière composant bornée peut être envisagée. Strix est le seul candidat de pilote ultérieur, après les gates existants. |
+| **DevOps : sources et périmètre immuables** | Une reconnaissance ne change ni pin ni source/téléchargement alternatif sans instruction propriétaire. Elle ne transforme pas les correctifs absents d'une branche isolée en défauts du produit intégré. |
 
 ---
 
@@ -52,6 +53,7 @@
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d`, `6e04ff8` | Interop stdio terminée dans son périmètre ; aucun nouveau chantier MCP assigné. Raccord Transport CORE réservé à l'intégration coordonnée. |
 | WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
 | SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003`, `cf1eea6` | **P1 actif :** re-bind du gate adversarial sur les contrats Product, sans merge ; Mode laboratoire reprend après ce jalon. |
+| DEVOPS / Release / Environnement | `arena/01a05481-agnt` (**DÉCLARÉ**, session Arena issue de `arena/builder-devops`) | `PARTIAL` — reconnaissance/test interrompus, aucune livraison acceptée | aucun commit de livraison rapporté | Corriger le protocole de reconnaissance et rendre un bilan cohérent avant toute écriture de bootstrap, CI, pin ou source. |
 | PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f`, `3f96e255` | Gate black-box livré ; attente contrôlée de l'API CORE réelle pour certification History/Timeline/Status. |
 
 ---
@@ -167,6 +169,14 @@ WEB n'a aucun code à construire sans dupliquer Product & UX ou devancer le lect
 - L'historique est consommé seulement après livraison de `GET /api/missions` par CORE.
 - Les bundles dogfooding, `localStorage`, fixtures et fichiers d'archives ne sont jamais une source d'historique Web.
 - L'exposition d'artefacts ou de téléchargements attend une décision Security explicite.
+
+### P1 — DEVOPS / Release / Environnement : reconnaissance partielle à corriger
+
+Le transcript DevOps reçu est **DÉCLARÉ** et interrompu, sans commit ni livrable final acceptés. La contrainte de branche Arena a été correctement respectée : la session ne pouvait pas basculer sur `arena/builder-devops` et devait travailler sur sa branche épinglée.
+
+En revanche, le bilan ne doit pas être traité comme un état de release : il mélange une branche de base sans les correctifs Security avec le produit intégré, modifie l'environnement utilisateur pendant les essais, et son total annoncé de 40 suites ne concorde pas avec les catégories affichées. Les constats environnementaux restent utiles comme hypothèses de travail, mais les « défauts » D4/G6a doivent être classés dépendances de branche tant que Security n'est pas intégrée.
+
+Avant toute écriture, DevOps doit produire une matrice de test réconciliée, distinguer froid / environnement temporaire / CI cible, ne pas modifier pin, source ou comportement Security, et signaler exactement les artefacts de test non suivis. Aucun miroir, changement de pin, armement Gitleaks ou merge n'est autorisé sans instruction explicite.
 
 ### STRAT — Réévaluation des agents Pentest AI externes
 
@@ -347,6 +357,8 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | SEC-B6 | Durcissement garde-fous homoglyphes / espaces | P3 | Différé |
 | SEC-B7 | Borne de taille de requête sortante fournisseur | P3 | Différé |
 | STRAT-001 | Faisabilité d'un backend Strix dans le Mode Laboratoire Propriétaire | P2 post-intégration | Différé — décision propriétaire requise après SEC-LAB, Cible/Transport et double gate API |
+| DEVOPS-001 | Matrice PASS / FAIL / BLOCKED reproductible et réconciliée | P1 environnement | Partiel — rapport DevOps à corriger avant acceptation |
+| DEVOPS-002 | Bootstrap, doctor et CI reproductibles | P1 environnement | Non commencé — nécessite validation explicite des corrections proposées |
 
 ---
 
