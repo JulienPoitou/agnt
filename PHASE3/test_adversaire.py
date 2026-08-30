@@ -932,6 +932,11 @@ def main() -> int:
     print("F1 a été appliqué (intent_llm.valider compare au catalogue PROPOSÉ) : A2 et A3 sont")
     print("passés de FAIL à PASS sans qu'aucune attente de ce fichier soit modifiée — si l'une")
     print("d'elles redevient rouge, c'est que la garde a bougé, pas que le test s'est adouci.")
+    print()
+    print("F4 a été appliqué (rapport_humain.sur(), importé par rapport.py — assainissement au")
+    print("point d'émission, pas au parser) : C1, C2 et C6 sont passés de FAIL à PASS sans")
+    print("qu'aucune attente soit modifiée. Si l'un des trois redevient rouge, c'est qu'un")
+    print("nouveau point d'émission recopie une donnée d'outil sans passer par sur().")
     return 1 if n["FAIL"] else 0
 
 

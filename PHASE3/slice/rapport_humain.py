@@ -41,6 +41,80 @@ GRAVITE_LISIBLE = {"CRITICAL": "critique", "HIGH": "haute", "MEDIUM": "moyenne",
                    "UNKNOWN": "indéterminée"}
 
 
+# --------------------------------------------------------------------------- assainissement
+# Le rapport est du markdown que l'HUMAIN rend, copie, colle dans un ticket. Tout texte qui
+# vient du dépôt scanné — message d'outil, nom de fichier, identifiant de règle — est donc une
+# donnée avec laquelle on compose une MISE EN FORME. La campagne adverse a mesuré trois fois le
+# problème (C1 lien cliquable forgé, C2 titre de section forgé, C6 nom de fichier qui sort de
+# son `code span`) : à chaque fois le moteur disait la vérité sur le fond, et le contenant
+# mentait.
+#
+# Choix assumés, dans l'ordre d'importance :
+#   · on NE SUPPRIME RIEN qui fasse partie de la preuve : un caractère structurant est ÉCHAPPÉ
+#     ou remplacé par un marqueur visible, jamais effacé. Un message tronqué n'est plus une
+#     preuve, c'est une intuition.
+#   · les sauts de ligne deviennent « ⏎ » : c'est ce qui ferme d'un coup les titres forgés,
+#     les fausses lignes de tableau et les fausses listes, sans perdre l'information.
+#   · le backslash est échappé EN PREMIER, sinon on échapperait nos propres échappements.
+#   · dans un `code span`, markdown n'honore PAS le backslash : échapper y serait inefficace,
+#     donc le nom de fichier y est rendu avec une variante inerte du backtick, visuellement
+#     identique et sans effet. C'est la seule substitution de caractère, et elle est là parce
+#     qu'il n'y a pas d'alternative correcte à l'intérieur d'un span.
+#   · cette fonction est IMPORTÉE par rapport.py : un seul endroit où la règle vit. Deux
+#     renduteurs, deux politiques d'échappement, ça s'appelle un trou avec un nom different.
+import re as _re
+
+_MARQUEUR_LIGNE = " ⏎ "
+_CHAPOTEAUX = ("#", ">", "-", "+", "*", "•")          # ce qui, en tête, ferait une STRUCTURE
+# Le `_` en est VOLONTAIREMENT absent : CommonMark ne crée pas d'emphase intramot avec un
+# underscore, donc `CKV_AWS_3`, `semgrep:python.flask.security-audit` et les paquets Python
+# restent copiables tels quels — un id qu'on ne peut pas coller dans une recherche n'est plus
+# une référence, c'est une décoration. Le `*` y est, lui : il emphase à l'intérieur des mots.
+_A_ECHAPPER = "\\`*[]|<>~"
+
+
+def sur(texte, *, dans_code_span: bool = False, limite: int = 600) -> str:
+    """Rend un texte du dépôt inoffensif à l'affichage sans le rendre faux.
+
+    `dans_code_span=True` pour une valeur placée entre backticks (nom de fichier, id) : le
+    backslash n'y a aucun effet, la stratégie y est différente et volontairement plus sèche.
+    """
+    if texte is None:
+        return ""
+    chaine = str(texte)
+    if not chaine:
+        return ""
+    # 1 · une donnée ne décide plus du nombre de lignes du document
+    chaine = chaine.replace("\r\n", _MARQUEUR_LIGNE).replace("\n", _MARQUEUR_LIGNE)
+    chaine = chaine.replace("\r", _MARQUEUR_LIGNE).replace("\t", " ")
+    if dans_code_span:
+        # « | » se traite ici et pas plus loin : dans un tableau GFM, la cellule est découpée
+        # AVANT que le span ne soit rendu — un nom de fichier contenant une barre verticale
+        # fabrique donc une colonne, backticks ou pas.
+        return (chaine.replace("`", "\u02cb").replace("\\", "\u2216")
+                .replace("|", "\\|"))[:limite]
+    # 2 · le conteneur : on neutralise la mise en forme, pas le contenu
+    for c in _A_ECHAPPER:
+        chaine = chaine.replace(c, "\\" + c)
+    # `[x](y)` est la seule forme de lien qu'une DONNÉE peut forger ; échapper les crochets
+    # seuls ne suffit pas (la paire `](` survit et le render l'interprète). On ne ferme pas
+    # une URL nue : l'auto-lien d'une URL isolée est une propriété du visualiseur, pas du
+    # rapport — le rapport, lui, ne doit pas COMPOSER le lien pour le dépôt. C'est aussi pour
+    # ça que l'interface, elle, rend tout en texte (textContent).
+    chaine = chaine.replace("](", "\\]\\(")
+    # 3 · un chapiteau en tête de la VALEUR deviendrait une ligne de structure si la valeur
+    #     est injectée en début de ligne (liste à puces, en-tête de tableau)
+    chaine = _re.sub(r"^(" + "|".join(_re.escape(c) for c in _CHAPOTEAUX) + r")",
+                     lambda m: "\\" + m.group(1), chaine)
+    # 4 · une chaîne de points en tête (« 1. ») ouvrirait une liste ordonnée
+    chaine = _re.sub(r"^(\d+)([.)])", lambda m: m.group(1) + "\\" + m.group(2), chaine)
+    return chaine[:limite]
+
+
+# alias lisible aux endroits où le mot compte (le rapport écrit en français)
+sûr = sur
+
+
 def _gravite_cluster(cluster: dict, par_id: dict) -> tuple[str, int]:
     """Gravité la plus haute parmi les membres, et son rang."""
     meilleure, rang = "UNKNOWN", 0
@@ -63,7 +137,7 @@ def _paquets(cluster: dict, par_id: dict) -> list[str]:
             continue
         p = (f.get("location") or {}).get("package")
         if p and p not in vus:
-            vus.append(p)
+            vus.append(sur(p))
     return vus
 
 
@@ -75,7 +149,7 @@ def _cves(cluster: dict, par_id: dict) -> list[str]:
             continue
         rid = (f.get("source") or {}).get("original_rule_id") or ""
         if rid.upper().startswith("CVE-") and rid not in vus:
-            vus.append(rid)
+            vus.append(sur(rid))
     return vus
 
 
@@ -87,7 +161,7 @@ def _outils(cluster: dict, par_id: dict) -> list[str]:
             continue
         t = (f.get("source") or {}).get("tool")
         if t and t not in vus:
-            vus.append(t)
+            vus.append(sur(t))
     return vus
 
 
@@ -99,7 +173,8 @@ def _fichiers(cluster: dict, par_id: dict) -> list[str]:
             continue
         fic = (f.get("location") or {}).get("file")
         if fic and fic not in vus:
-            vus.append(fic)
+            # asséché ici, jamais aux points d'émission : ces valeurs vont dans des `spans`
+            vus.append(sur(fic, dans_code_span=True))
     return vus
 
 
@@ -156,7 +231,7 @@ def _phrase(cluster: dict, par_id: dict) -> str:
 
     if "ligne_proche" in raisons or "same_file" in raisons:
         if fichiers:
-            nom = fichiers[0].split("/")[-1]
+            nom = fichiers[0].split("/")[-1]        # déjà asséché par _fichiers
             return (f"{n} problème{'s' if n > 1 else ''} de même nature signalé"
                     f"{'s' if n > 1 else ''} dans `{nom}` "
                     f"(gravité {GRAVITE_LISIBLE.get(gravite, gravite)}).")
@@ -165,8 +240,9 @@ def _phrase(cluster: dict, par_id: dict) -> str:
         f = par_id.get(cluster["members"][0]) if cluster["members"] else None
         msg = ((f or {}).get("evidence") or {}).get("message") or ""
         if fichiers:
-            return (f"Un problème est signalé dans `{fichiers[0].split('/')[-1]}` : "
-                    f"{str(msg)[:120].strip()}")
+            return (f"Un problème est signalé dans "
+                    f"`{fichiers[0].split('/')[-1]}` : "     # _fichiers a déjà asséché
+                    f"{sur(str(msg)[:120].strip())}")
         return f"Un problème isolé est signalé (gravité {GRAVITE_LISIBLE.get(gravite, gravite)})."
 
     return (f"{n} observations regroupées "
@@ -232,10 +308,11 @@ def generer(e, cible) -> str:
                 continue
             g = str((f.get("severity") or {}).get("value", "UNKNOWN")).upper()
             outil = (f.get("source") or {}).get("tool", "?")
-            fic = str((f.get("location") or {}).get("file") or "?").split("/")[-1]
+            fic = sur(str((f.get("location") or {}).get("file") or "?").split("/")[-1],
+                      dans_code_span=True)
             ligne = (f.get("location") or {}).get("line")
-            msg = str(((f.get("evidence") or {}).get("message") or ""))[:110]
-            regle = str((f.get("source") or {}).get("original_rule_id") or "")
+            msg = sur(str(((f.get("evidence") or {}).get("message") or ""))[:110])
+            regle = sur(str((f.get("source") or {}).get("original_rule_id") or ""))
             A(f"- **{regle}** — gravité {GRAVITE_LISIBLE.get(g, g)} — "
               f"`{fic}`{':' + str(ligne) if ligne else ''} ({outil})")
             if msg:
@@ -341,7 +418,8 @@ def generer(e, cible) -> str:
     couv = r.get("couverture") or {}
     for prov, c in couv.items():
         analysé = c.get("analysé") or []
-        A(f"- **{prov}** : " + (", ".join(f"`{x.split('/')[-1]}`" for x in analysé[:5])
+        A(f"- **{sur(prov)}** : " + (", ".join(
+            f"`{sur(x.split('/')[-1], dans_code_span=True)}`" for x in analysé[:5])
                                 if analysé else "rien"))
     A("")
 

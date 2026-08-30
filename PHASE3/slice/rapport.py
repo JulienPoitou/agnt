@@ -23,6 +23,11 @@ Jamais : « vulnérable », « confirmé », « votre dépôt contient N vulnér
 
 from __future__ import annotations
 
+# Une seule politique d'échappement pour les deux rendeurs du projet : importer celle de
+# rapport_humain plutôt que d'en réécrire une seconde. Deux copies finissent toujours par
+# diverger, et c'est exactement le défaut que C3b a montré sur le masquage des secrets.
+from rapport_humain import sur as _sur
+
 from datetime import datetime, timezone
 
 # Correspondance raison → phrase lisible. Toute raison inconnue doit apparaître telle
@@ -106,7 +111,7 @@ def generer(e, cible) -> str:
     for nom, ver in sorted((ctx.get("outils") or {}).items()):
         # Une version illisible est affichée telle quelle : on ne prétend pas qu'un outil
         # a servi si on ne peut pas prouver laquelle de ses versions a servi.
-        A(f"| `{nom}` | `{ver}` |")
+        A(f"| `{_sur(nom, dans_code_span=True)}` | `{_sur(ver, dans_code_span=True)}` |")
     A("")
     A("### Ce qui a été analysé, et ce qui ne l'a pas été")
     A("")
@@ -114,9 +119,11 @@ def generer(e, cible) -> str:
         A(f"**`{prov}`**")
         A("")
         if c.get("analysé"):
-            A(f"- analysé : {', '.join('`%s`' % x for x in c['analysé'])}")
+            A("- analysé : " + ", ".join(
+                f"`{_sur(x, dans_code_span=True)}`" for x in c["analysé"]))
         for na in c.get("non_analysé", []):
-            A(f"- **non analysé** : `{na['cible']}` — `{na['etat']}` — {na['raison']}")
+            A(f"- **non analysé** : `{_sur(na['cible'], dans_code_span=True)}` — "
+              f"`{_sur(na['etat'], dans_code_span=True)}` — {_sur(str(na['raison']))}")
         for lim in c.get("limites", []):
             A(f"- limite : {lim}")
         A("")
@@ -125,7 +132,7 @@ def generer(e, cible) -> str:
     A("| Élément | Digest |")
     A("|---|---|")
     for nom, dg in sorted((ctx.get("regles") or {}).items()):
-        A(f"| règles `{nom}` | `{dg}` |")
+        A(f"| règles `{_sur(nom, dans_code_span=True)}` | `{dg}` |")
     A(f"| base Trivy | `{_l(ctx.get('base_trivy'))}` |")
     A(f"| politique | `{_l(ctx.get('policy'))}` |")
     A(f"| registre | `{_l(ctx.get('registre'))}` |")
@@ -158,14 +165,16 @@ def generer(e, cible) -> str:
         A(f"| Statut | {'**corrélé entre outils**' if inter else 'observé'} |")
         A(f"| Confiance | {CONFIANCES.get(c['confidence'], c['confidence'])} |")
         A(f"| Raison | {_raison_lisible(c['reason'])} |")
-        A(f"| Outils | {', '.join('`%s`' % x for x in outils)} |")
+        A(f"| Outils | {', '.join('`%s`' % _sur(x, dans_code_span=True) for x in outils)} |")
         if paquets:
-            A(f"| Paquets | {', '.join('`%s`' % x for x in paquets)} |")
+            A(f"| Paquets | {', '.join('`%s`' % _sur(x, dans_code_span=True) for x in paquets)} |")
         if cve:
-            A(f"| CVE | {', '.join('`%s`' % x for x in cve[:8])}"
+            A(f"| CVE | {', '.join('`%s`' % _sur(x, dans_code_span=True) for x in cve[:8])}"
               + (f" (+{len(cve) - 8})" if len(cve) > 8 else "") + " |")
         if fichiers:
-            A(f"| Fichiers | {', '.join('`%s`' % x for x in fichiers[:5])}"
+            # mode span : c'est ici que le nom d'un fichier hostile sortait de son `code
+            # span` et devenait une ligne du document (constat C6 de la campagne adverse)
+            A(f"| Fichiers | {', '.join('`%s`' % _sur(x, dans_code_span=True) for x in fichiers[:5])}"
               + (f" (+{len(fichiers) - 5})" if len(fichiers) > 5 else "") + " |")
         A(f"| Findings sources | {', '.join('`%s`' % m for m in membres)} |")
         A("")
@@ -183,9 +192,10 @@ def generer(e, cible) -> str:
         for m in r["non_regroupe"]:
             f = ids.get(m)
             if f:
-                A(f"- `{m}` — {f['source']['tool']} — "
+                A(f"- `{_sur(m, dans_code_span=True)}` — {_sur(f['source']['tool'])} — "
                   f"{f['identity']['canonical_rule_id']} — "
-                  f"{_l(f['location'].get('file'))}:{_l(f['location'].get('line'))}")
+                  f"{_sur(_l(f['location'].get('file')), dans_code_span=True)}"
+                  f":{_l(f['location'].get('line'))}")
         A("")
 
     # ============================================================ 4. PREUVES
@@ -198,12 +208,14 @@ def generer(e, cible) -> str:
         loc = f["location"]
         src = f["source"]
         ev = f.get("evidence") or {}
-        A(f"**`{f['id']}`** — {src['tool']} — `{f['identity']['canonical_rule_id']}`")
+        A(f"**`{_sur(f['id'], dans_code_span=True)}`** — {_sur(src['tool'])} — "
+          f"`{_sur(f['identity']['canonical_rule_id'], dans_code_span=True)}`")
         A("")
-        A(f"- localisation : `{_l(loc.get('file'))}` ligne {_l(loc.get('line'))}")
+        A(f"- localisation : `{_sur(_l(loc.get('file')), dans_code_span=True)}` "
+          f"ligne {_l(loc.get('line'))}")
         if loc.get("package"):
             pm = src.get("package_mapping") or {}
-            A(f"- paquet : `{loc['package']}` "
+            A(f"- paquet : `{_sur(loc['package'], dans_code_span=True)}` "
               f"(mapping : {pm.get('method', '?')}, confiance {pm.get('confidence', '?')})")
         if src.get("version_installee"):
             A(f"- version installée : `{src['version_installee']}` → "
@@ -211,12 +223,12 @@ def generer(e, cible) -> str:
         sev = f.get("severity") or {}
         A(f"- sévérité : {sev.get('value', '?')} _(origine : {sev.get('origine', '?')})_")
         if ev.get("message"):
-            A(f"- message : {str(ev['message'])[:220]}")
+            A(f"- message : {_sur(str(ev['message'])[:220])}")
         if ev.get("extrait"):
-            A(f"- extrait : `{str(ev['extrait'])[:160]}`")
+            A(f"- extrait : `{_sur(str(ev['extrait'])[:160], dans_code_span=True)}`")
         if ev.get("secret"):
-            A(f"- secret : `{ev['secret']}` _(valeur jamais stockée)_")
-        A(f"- règle source : `{src.get('original_rule_id')}`")
+            A(f"- secret : `{_sur(ev['secret'], dans_code_span=True)}`")
+        A(f"- règle source : `{_sur(src.get('original_rule_id'), dans_code_span=True)}`")
         A("")
     if len(e.findings) > 10:
         A(f"_{len(e.findings) - 10} observations supplémentaires dans `findings.json`._")

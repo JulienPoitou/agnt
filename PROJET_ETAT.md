@@ -1738,3 +1738,65 @@ départ, objets de mes 6 commits absents). Récupéré par `git fetch` + `git re
 la branche distante — arbre de travail conservé, rien perdu. Nota : `PyYAML` avait disparu de
 l'environnement (le produit l'importe dans `registre.py`, `findings.py`, `outils.py`) ;
 installé dans `/home/user/.pydeps`, hors dépôt, donc rien de nouveau à committer.
+
+
+---
+
+## Correctif F4 appliqué — assainir au rendu (30 août)
+
+**Le défaut, mesuré par la campagne adverse (C1, C2, C6, tous trois relevés avant
+correction) :** les deux rendeurs du projet (`slice/rapport.py`, le markdown machine ;
+`slice/rapport_humain.py`, le résumé humain) collaient dans leur markdown des textes qui
+viennent du dépôt scanné — message d'outil, nom de fichier, identifiant de règle, paquet,
+CVE — sans rien traiter. Le dépôt choisissait donc la **forme** du document : un message
+pouvait y ajouter un titre de section (`## Couverture — 0 faille détectée`), un nom de
+fichier pouvait sortir de son `code span`, et un lien cliquable `[rapport complet](http://…)`
+se retrouvait composé par nos soins dans un document que l'humain copie dans un ticket. Le
+moteur disait vrai sur le fond ; c'est le contenant qui mentait.
+
+**La correction, et pourquoi elle est là :** une seule fonction, `sur(texte, dans_code_span)`
+dans `rapport_humain.py`, importée par `rapport.py` — deux rendeurs avec deux politiques
+d'échappement, c'est un trou avec un nom différent (leçon de C3b, exactement la même forme).
+La règle vit à un endroit. Elle est appliquée **aux points d'émission**, pas au parser : la
+preuve et le nom de fichier doivent rester lisibles, pas devenir du markdown.
+
+Trois propriétés de la fonction, chacune tenant à une mesure :
+- les sauts de ligne deviennent ` ⏎ ` : c'est ce qui ferme à la fois les titres forgés, les
+  fausses lignes de tableau et les fausses listes, sans rien effacer ;
+- dans un `code span`, échapper ne sert à rien (markdown n'y honore pas le backslash) : le
+  backtick y est remplacé par une variante inerte `ˋ`, et `|` devient `\|` parce que GFM
+  découpe les cellules de tableau *avant* de rendre le span ;
+- **le `_` n'est pas échappé** : un id de règle doit rester greppable et collable tel quel.
+  CommonMark ne crée pas d'emphase intramot avec un underscore, la protection est donc
+  gratuite. Ce point précis est une correction de `test_rapport_humain` (cas 4a) : j'avais
+  échappé `_` et le test l'a refusé — c'est le test qui a raison.
+
+**Ce que la correction a découvert en route, qui compte plus qu'elle :** viser « la ligne qui
+pose problème » ne marche pas. Le premier patch, fondé sur un grep du motif `Fichiers |`, a
+laissé C6 rouge — `rapport.py` recopiait le même champ brut à **quatre autres endroits**
+(liste « analysé », index des findings, ligne « localisation », liste par provider), plus un
+dans `rapport_humain.py`. Il a fallu énumérer les points d'émission des deux fichiers (14 au
+total, tous les `A(f"…")` qui interpolent une valeur d'outil) pour fermer le cas. À retenir :
+une surface d'affichage s'énumère, elle ne se déduit pas du nom du bug.
+
+**Mesures après correctif** (aucune attente de test modifiée) :
+
+| | résultat |
+|---|---|
+| `test_adversaire.py` (44 cas) | **33 PASS / 8 FAIL / 3 NON ÉVALUÉ** — C1, C2, C6 passent de FAIL à PASS |
+| progression de la batterie | 28/13/3 (avant F1) → 30/11/3 (F1) → 33/8/3 (F4) |
+| `test_rapport_humain.py` | 18/18 — la lisibilité n'a pas régressé |
+| suites rejouées hors ligne | chemins 48/48 · extraction_blocs 14/14 · mapping_go 17/17 · selection 13/13 · go ✓ · isolateur ✓ |
+| `test_rapport.py`, `test_bundle.py` | échouent **à l'identique avant et après** (rejoué par `git stash` du seul couple rendu) : ils exigent un run réel, donc `opa` |
+
+**Effet de bord assumé, à ne pas vendre comme F6 clos :** la ligne
+`- secret : \`…\` _(valeur jamais stockée)_` affirmait au lecteur que la valeur était masquée
+alors que le rendu ne le contrôlait pas. L'affirmation non vérifiée est tombée. **Le contrôle
+lui-même reste à écrire** (F6 : refuser d'afficher une valeur qui n'a pas la forme du masque),
+et C3b est toujours rouge — c'est voulu, et c'est la preuve que je n'ai pas fermé le cas en
+changeant le test.
+
+**Reste dans la file, dans l'ordre :** F2 (`cible_autorisee`, D4 — bloqué sur une décision
+d'approbation qui t'appartient) → F8 (G6b, couverture qui ment sur les scanners actifs —
+vérifiable hors ligne) → F3 → F5/F6 (B6, B7, C3b) → F7/F9/F10 (G6a, G7, G8, qui touchent aux
+binaires et à l'environnement, donc à re-mesurer sur ta machine).
