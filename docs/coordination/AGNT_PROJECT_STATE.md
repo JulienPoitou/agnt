@@ -46,7 +46,7 @@
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844` | **P1 :** alignement sur le contrat CORE et test contre un serveur MCP contrôlé réel. |
 | WEB | non reçu | en attente de handoff | — | À définir après handoff. |
 | SECURITY | `arena/01a05426-agnt` | `PARTIAL` | `d1d562f` — non poussé au handoff | **P1 :** pousser le correctif P0.1 puis fermer SEC-G6a : jeu de règles gitleaks de confiance. |
-| PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED_WITH_LIMITATIONS` | `18c1aad` | **P1 :** contrat produit/API minimal pour l'historique réel des missions, sans toucher aux fichiers UI partagés. |
+| PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26` | **P2 :** contrat de timeline/provenance sûre, sans toucher aux fichiers UI partagés. |
 
 ---
 
@@ -82,6 +82,8 @@
 - États fiables d'attente, exécution, refus, erreur et perte de connexion.
 - Présentation améliorée des findings et design system responsive avec thèmes clair/sombre/système.
 - Rendu sécurisé maintenu via `textContent`.
+- Contrat versionné d'historique persistant : Mission `1 → 0..1 Run`, schéma `agnt.history.v1`, fixtures anonymisées et tests autonomes.
+- Endpoints produit décidés : `GET /api/missions` et `GET /api/missions/{mission_id}` ; le polling temporaire `GET /api/runs/{submission_id}` reste distinct.
 
 ---
 
@@ -108,14 +110,15 @@ Critères clés :
 - Prouver binding, refus policy/egress, timeout, redaction, provenance et nettoyage de ressources.
 - Ne pas présenter une simulation en mémoire comme une interopérabilité MCP tierce réelle.
 
-### P1 — PRODUCT & UX : contrat d'historique réel des missions
+### P2 — PRODUCT & UX : contrat de timeline et provenance sûre
 
-Définir, sans implémenter un backend ou une nouvelle UI concurrente, le contrat produit qui débloquera l'historique :
-- relation explicite entre une Mission et un Run ;
-- états réellement supportés, identifiants, résumé et détails consultables ;
-- endpoint de listing paginé et endpoint de relecture compatibles avec les routes actuelles ;
-- provenance, confidentialité, rétention et comportement hors ligne ;
-- exemples de réponses et critères d'acceptation pour CORE et WEB.
+Le contrat P1 d'historique est terminé dans `docs/coordination/MISSION_HISTORY_CONTRACT.md` avec schéma, fixtures et tests.
+
+Définir maintenant, sans implémenter backend ou UI, la projection sûre du journal append-only en timeline lisible :
+- ordre, horodatage, états et niveaux de détail non inventés ;
+- provenance MCP additive et redacted ;
+- compatibilité avec `agnt.history.v1` ;
+- critères d'acceptation pour CORE, WEB, MCP et SECURITY.
 
 Le builder Product & UX ne touche pas à `index.html`, `app.js` ou `style.css` dans ce lot afin d'éviter un conflit avec builder-web avant réception de son handoff.
 
@@ -153,6 +156,15 @@ transports.enregistrer("mcp", executeur)
 - `tools/list` est informatif, jamais une autorité d'autorisation.
 - Les nouveaux champs de provenance doivent être additifs pour Web/API/SARIF.
 
+### Contrat produit d'historique à préserver
+
+- Une **Mission** est le dossier persistant visible par l'utilisateur ; un **Run** est son exécution technique. Cardinalité actuelle : `Mission 1 → 0..1 Run`.
+- `mission_id` est l'identifiant persistant visible ; l'ID de `POST /api/runs` reste temporaire pour soumission/polling.
+- Historique : `GET /api/missions`; détail : `GET /api/missions/{mission_id}`. Ne pas détourner `GET /api/runs` en liste d'historique.
+- Statuts canoniques : `en_file`, `en_cours`, `termine`, `refuse`, `erreur`, `inconnu`. `indisponible` décrit une disponibilité, pas le statut d'une mission.
+- Listing sans historique : HTTP 200 avec `items: []`; aucun fallback vers des fixtures ou des données de démonstration.
+- Un compteur à zéro n'est affichable que si un artefact findings lisible prouve réellement zéro ; sinon utiliser `missing_artifacts`.
+
 ### Contrat d'autorisation de cible à préserver
 
 - `pipeline.executer(..., cible_autorisee=None)` doit refuser ; seul un booléen `True` explicite autorise la cible.
@@ -164,7 +176,9 @@ transports.enregistrer("mcp", executeur)
 - **WEB :** ne pas supposer un unique `PHASE3/run`; utiliser les données de mission et tolérer les champs MCP additionnels (`transport`, serveur, outil, protocole, confiance, disponibilité, corrélation).
 - **SECURITY :** fermer SEC-G6a avant les chantiers secondaires, puis définir/tester les invariants d'un backend externe : egress, endpoint contrôlé par registre, secrets, timeout, policy avant appel, confiance et absence de bypass sandbox implicite.
 - **CORE / MCP :** tout nouvel appel à `pipeline.executer()` ou nouveau type de cible doit préserver l'autorisation explicite ; aucune cible externe ne doit contourner la liste opérateur et la policy.
-- **PRODUCT & UX :** ne pas créer une deuxième source de vérité pour les types de cible ou les extensions. Définir le contrat d'historique réel avant toute réactivation d'onglet ou de données globales ; ne pas modifier les fichiers UI partagés avant coordination avec WEB.
+- **PRODUCT & UX :** ne pas créer une deuxième source de vérité pour les types de cible ou les extensions. Le contrat d'historique est terminé ; définir maintenant la timeline/provenance sans modifier les fichiers UI partagés avant coordination avec WEB.
+- **CORE :** implémenter l'historique depuis le lecteur canonique de mission, sans base parallèle, et enrichir le polling par `mission_id` / `detail_href` dès disponibilité.
+- **WEB :** consommer exclusivement `/api/missions` pour l'historique, en utilisant `mission_id` comme référence persistante ; ne jamais reconstruire une liste locale.
 
 ---
 
@@ -179,7 +193,7 @@ transports.enregistrer("mcp", executeur)
 | Cible encore principalement représentée par un `Path`. | Architecturale P1 | Mission CORE active ; Web/MCP/Security ne créent pas d'abstraction concurrente. |
 | Annulation HTTP en cours d'appel MCP. | Moyenne | MCP-003 reste ouvert jusqu'à preuve réelle ou solution documentée. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product & UX travaille désormais sur le contrat d'historique hors de ces fichiers ; attendre le handoff WEB avant tout nouveau chantier UI. |
-| Historique global affiché sans source backend persistée. | Élevée produit | Garder l'historique désactivé jusqu'au contrat puis à l'endpoint réel ; aucune donnée de démonstration après une réponse API. |
+| Historique global affiché sans source backend persistée. | Élevée produit | Contrat P1 terminé ; garder l'historique désactivé jusqu'à l'implémentation réelle de `GET /api/missions`, sans données de démonstration après une réponse API. |
 | Gitleaks peut charger une configuration hostile du dépôt et masquer des secrets (SEC-G6a). | Haute sécurité | Correctif Security P1 actif : config AGNT explicite, vérifiée et fail-closed ; ne pas déclarer la détection de secrets fiable avant fermeture. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
 
@@ -208,8 +222,9 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | MCP-001 | Validation OPA réelle | P1 environnement | Bloqué |
 | MCP-002 | Serveur MCP réel contrôlé | P1 | En cours — MCP |
 | MCP-003 | Annulation HTTP MCP pendant un appel bloquant | P2 | Ouvert |
-| PRODUCT-001 | Endpoint d'historique persistant des missions | P1 | Bloqué par contrat backend ; contrat produit en cours |
+| PRODUCT-001 | Endpoint d'historique persistant des missions | P1 | Contrat produit terminé ; implémentation CORE/WEB à planifier |
 | PRODUCT-002 | Comparaison de runs et vues globales Findings/Reports | P2 | Différé |
+| PRODUCT-003 | Timeline et projection sûre de provenance | P2 | En cours — PRODUCT & UX |
 | SEC-G6a | Configuration gitleaks contrôlée par le dépôt cible | P1 haute sécurité | En cours — SECURITY |
 | SEC-G9 | Mesure réelle gitleaks face à un `.gitleaks.toml` hostile | P2 environnement | Bloqué |
 | SEC-B6 | Durcissement garde-fous homoglyphes / espaces | P3 | Différé |
@@ -222,8 +237,9 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 1. Pousser et préserver le correctif Security P0.1 `d1d562f`, puis fermer SEC-G6a avant de considérer le scan de secrets fiable.
 2. Stabiliser le lot CORE Cible sans casser les contrats actuels, notamment l'autorisation explicite de cible.
 3. Finaliser l'alignement MCP sur les extension points CORE et sa preuve E2E contrôlée.
-4. Finaliser le contrat produit d'historique avant toute implémentation backend/UI de cette fonctionnalité.
-5. Examiner les diff/contrats CORE + MCP + SECURITY ensemble et préparer une stratégie de merge ciblée.
-6. Adapter WEB aux contrats stabilisés, sans reconstruire de logique métier côté UI.
+4. Implémenter l'historique à partir du contrat produit terminé, après stabilisation du lecteur canonique CORE ; ne pas réactiver l'UI avant l'endpoint réel.
+5. Finaliser le contrat produit de timeline/provenance en parallèle, sans toucher à l'UI partagée.
+6. Examiner les diff/contrats CORE + MCP + SECURITY ensemble et préparer une stratégie de merge ciblée.
+7. Adapter WEB aux contrats stabilisés, sans reconstruire de logique métier côté UI.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
