@@ -1,0 +1,100 @@
+# Plugin AGNT — sixième cas de la voie plugin (31/08/2026) : le premier outil dont
+# l'exécution DEMANDE la sortie réseau, donc le premier sur lequel la garde d'export de LOT 3
+# porte pour de vrai et pas sur un double.
+#
+# Ce fichier est un manifeste, pas un adaptateur : `reseau: true` est ADMIS à la déclaration et
+# refusé à l'exécution tant que la mission n'a pas d'autorisation d'export. C'est écrit dans le
+# registre des règles du chargeur (règle 6) — ce plugin en est la première utilisation réelle.
+id: npm_audit
+capacites:
+  - DEPENDENCY_ANALYSIS_JS
+entrees:
+  - repository
+binaire: npm
+outillage: npm              # entrée épinglée dans manifeste_dependances.yaml
+version_min: "10.9.8"
+licence: Artistic-2.0
+# Capacité propre, pas DEPENDENCY_ANALYSIS : la capacité du cœur est en fan_out max_providers = 2
+# avec trivy(100)/grype(110) devant, et la troncature est aveugle à la disponibilité de l'outil
+# (intent.choisir_providers, mesuré). Posé là, npm audit serait chargé, validé, jamais planifié —
+# exactement le défaut que DECISIONS_PROPOSEES (D10) propose de trancher pour trufflehog3.
+# Le périmètre est aussi réellement distinct : npm audit lit un lockfile JS, pas un image ni un
+# manifeste Python.
+priorite: 100
+cout: faible
+risque: PASSIVE
+description: >
+  Audit du lockfile npm contre l'annuaire d'avis de l'écosystème (GHSA) : par paquet vulnérable,
+  la plage de versions concernée, la sévérité et la version de correction disponible. Consult
+    le registre à CHAQUE exécution — c'est un outil à sortie réseau, déclaré comme tel.
+fichiers_requis:
+  - "*package-lock.json"
+execution:
+  args:
+    - audit
+    # `--prefix` porte le lieu du lockfile : npm n'accepte PAS de chemin positionnel, et son
+    # comportement dépend du répertoire courant. Mesuré (31/08/2026) : `npm audit --prefix
+    # <cible> --json` rendu depuis /tmp répond le même rapport que rendu depuis la cible — le
+    # drapeau rend l'outil indépendant de l'endroit où l'opérateur a tapé, ce qu'ESLint n'a pas.
+    - "--prefix"
+    - "{TARGET}"
+    - "--json"
+  # 0 = rien, 1 = vulnérabilités (mesuré sur PHASE3/testrepo : rc=1, 2 paquets). 2 et plus =
+  # erreur (registre injoignable, lockfile illisible) : doit rester un échec.
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  # `npm audit --json` rend {"vulnerabilities": {"<paquet>": {…}}, "metadata": {…}} : un objet
+  # indexé par paquet, une fiche par clé. C'est la seconde forme de `nested_key: "*"` (la
+  # première est la liste de blocs de radon) — ajoutée dans extraction.py le 31/08/2026, parce
+  # qu'un outil indexé par clé qui rend 0 item en silence est le faux négatif que ce projet
+  # pourchasse. Le nom du paquet devient lisible par `contexte` (alias mappé sur "*").
+  modele: imbriqué
+  nested_from: vulnerabilities
+  nested_key: "*"
+  contexte:
+    paquet: "*"
+  champs:
+    regle: name              # npm ne nomme pas de règle : l'entrée EST le paquet
+    nom_regle: name
+    message: range           # la plage concernée, au sens de npm ("<4.17.21")
+    severite: severity       # le mot de npm (critical | high | moderate | low | info)
+    paquet: paquet
+    # `remediation`, et pas `correction` : le modèle de finding ne LIT que `remediation`
+    # (mesuré 31/08/2026 — un alias déclaré que rien ne consomme n'est pas un champ
+    # optionnel, c'est une donnée perdue en silence ; le cas `tout alias déclaré est consommé`
+    # de PHASE3/test_catalogue_outils.py l'interdit désormais pour tout plugin).
+    remediation: fixAvailable.version
+    # `via[]` est un tableau MIXTE (chaîne quand la cause est un paquet dépendant, objet quand
+    # c'est un avis). `[0]` désigne la première entrée, pas « l'entrée qui a une URL » : la
+    # grammaire ne sait pas choisir dans un tableau. Mesuré sur la fixture : les deux paquets
+    # rendent un objet en [0], donc l'URL d'avis et le CWE traversent. Sur un paquet dont [0]
+    # serait une chaîne, le champ ressort None — et non une valeur cherchée plus loin dans le
+    # tableau puis présentée comme certaine.
+    reference: via[0].url
+    cwe: via[0].cwe[0]
+  masquer_large:
+    - message
+requirements:
+  reseau: true               # l'annuaire d'avis est à registry.npmjs.org — refusé sans export accordé
+  privileges: aucun
+  timeout_s: 900
+  sandbox: true
+capacite:
+  description: >
+    Audit des dépendances JavaScript d'un lockfile npm contre l'annuaire d'avis de
+    l'écosystème (GHSA) : paquet, plage de versions concernée, sévérité, version de
+    correction. Outil À SORTIE RÉSEAU : sans autorisation d'export de mission, il est refusé
+    à l'exécution, et ce refus est consigné — ce n'est pas un scan vide.
+  domaines: [code]
+  entree: [files]
+  sortie: findings
+  mots_cles: [npm, "package-lock.json", "dépendances npm", "dependances npm",
+              "dépendances javascript", "dependances javascript", "dépendances js",
+              "audit npm", lockfile, paquets]
+
+a_verifier:
+  - "`via[]` est un tableau MIXTE (chaîne si la cause est un paquet dépendant, objet si c'est un avis). Seule la PREMIÈRE entrée est projetée : `via[0].url` en `reference` et `via[0].cwe[0]` en `cwe`, mesurés sur les deux paquets de la fixture. La CVE reste absente et le finding le dit (`absents` la nomme) : npm la loge dans `via[].cves`, vide sur les deux paquets consultés ce 31/08/2026, et le score CVSS n'est pas dans la sortie d'`audit` du tout. Aplatir le reste aurait demandé `lecture.parser`, donc un fichier de plus que la règle « un outil public = un fichier » : choix assumé, écrit ici au lieu d'être découvert plus tard."
+  - "`remediation` : `fixAvailable` vaut soit un objet (version de correction), soit `false` (aucun correctif disponible). Dans le second cas le champ ressort None — « aucune correction » n'est pas « correction inconnue », et npm ne les distingue pas davantage ; le dictionnaire `absents` du finding ne peut donc pas dire lequel des deux, et c'est l'artefact brut qu'il faut ouvrir."
+  - "la couverture dépend du fait que `package-lock.json` soit résolument à jour : `npm audit` ne vérifie PAS les hashes d'intégrité du lockfile contre le registre, il fait confiance au fichier. Un dépôt dont le lockfile a été édité à la main produit un rapport faux en code 0 — limitation de l'outil, écrite ici, pas découverte par un futur opérateur."

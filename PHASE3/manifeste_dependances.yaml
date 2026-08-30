@@ -243,6 +243,31 @@ binaires:
       ESLint 8 rendait un tableau plat de messages : un `version_min` plus ancien chargerait
       un manifest qui ne projette rien — d'où le rang de version épinglé ici, pas décoratif.
 
+  npm:
+    package: npm
+    version: "10.9.8"
+    source: https://www.npmjs.com/package/npm
+    licence: Artistic-2.0
+    distribution: npm
+    sha256: null
+    distribution_hash: null
+    note: >
+      Régime « note », assumé et nommé : npm n'est PAS téléchargé par bootstrap.sh — c'est le
+      gestionnaire de paquets livré avec le runtime node de la machine. Rien n'est donc épinglé
+      par empreinte ici ; ce qui l'est, c'est le VERSIONNEL (le format `auditReportVersion: 2` lu
+      par le plugin est celui de npm 7+ ; `metadata.vulnerabilities`, lui, a bougé entre majeures).
+      Conséquence honnête : la reproductibilité de ce provider vaut sur une machine donnée, pas
+      d'une machine à l'autre — à durcir en épinglant node + npm par URL et sha256 si ce provider
+      devient un composant de production.
+      Mesuré 31/08/2026 : `npm audit --prefix <cible> --json` depuis /tmp et depuis la cible rend
+      le MÊME rapport (2 paquets vulnérables sur PHASE3/testrepo, rc=1) — contrairement à ESLint,
+      l'outil n'est donc pas sensible au répertoire courant quand `--prefix` est passé.
+    verification: >
+      Aucun téléchargement, donc aucune empreinte à comparer : `bootstrap.sh` vérifie la PRÉSENCE
+      de `npm` et signale son absence (le plugin se chargerait quand même, et l'outil serait
+      introuvable à l'exécution — le silence que ce fichier existe pour casser).
+
+
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.

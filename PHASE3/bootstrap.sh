@@ -133,6 +133,12 @@ command -v trufflehog3 >/dev/null || { log "trufflehog3"; pip install --quiet tr
 # eslint : seul outil du catalogue passé par npm (registry joignable ici, contrairement aux
 # assets GitHub). Il vit dans le POOL, pas dans le PATH : `npm install -g` échoue sur une
 # machine sans droits, et un outil de scan n'a rien à faire dans l'environnement système.
+# npm audit (plugin DEPENDENCY_ANALYSIS_JS, 31/08/2026) : rien à installer — npm est le
+# gestionnaire livré avec node. Ce qui est vérifié est donc sa PRÉSENCE, et son absence est
+# SIGNALÉE : sans ce bloc le plugin se charge, le provider est sélectionné, et l'outil est
+# introuvable à l'exécution.
+command -v npm >/dev/null || log "AVERTISSEMENT : npm absent — le provider npm_audit ne pourra pas tourner (plugin chargé, outil introuvable)"
+
 [ -x "$BIN/eslint" ] || {
   log "eslint 9.39.5 (npm, dans le pool)"
   npm install --no-audit --no-fund --prefix "$C/node" eslint@9.39.5

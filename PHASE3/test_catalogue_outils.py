@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -41,8 +42,10 @@ sys.path.insert(0, str(RACINE))
 sys.path.insert(0, str(RACINE / "slice"))
 
 import adapters as A                                     # noqa: E402
+import conditions as COND                                  # noqa: E402
 import findings as F                                     # noqa: E402
-import intent as IN                                      # noqa: E402
+import intent as IN                                  # noqa: E402
+import plan as PLAN                                     # noqa: E402
 import plugins as PL                                     # noqa: E402
 import registre as REG                                   # noqa: E402
 import sandbox as SB                                     # noqa: E402
@@ -110,10 +113,17 @@ def vue_depuis(prov, res, cible: Path) -> list[dict]:
                                                     racines=(cible,))]
 
 
+# La liste des alias que le cœur lit réellement est EXTRAITE du code de `findings.depuis_manifest`
+# — pas recopiée dans un test : une liste tenue à la main divergerait du jour où le cœur consomme
+# un champ de plus, et c'est exactement la dérive que ce cas doit empêcher.
+_SRC_COEUR = (RACINE / "slice" / "findings.py").read_text(encoding="utf-8")
+alias_coeur = set(re.findall(r'c\.get\("([a-z_é]+)"\)', _SRC_COEUR)) | {a for a, _ in F.COORDONNEES} \
+    | {"nom_regle", "paquet"}     # lus aussi : source["nom_regle"], location["package"]
+
 OUTILS = {nom: A.resoudre_exe(nom) for nom in ("ruff", "trufflehog3", "checkov", "eslint",
                                                 "bandit", "detect-secrets", "radon", "pip-audit",
                                                 "semgrep", "trivy", "gitleaks", "grype", "kics",
-                                                "nmap", "nuclei", "gosec")}
+                                                "nmap", "nuclei", "gosec", "npm")}
 EXÉCUTABLES = {nom for nom, exe in OUTILS.items() if exe}
 
 
@@ -317,6 +327,103 @@ else:
             f"code_retour={vide.code_retour}")
 
 
+# ═════════════════════════════ 4bis · npm audit : la garde d'export portée sur un outil qui EN A besoin
+print("═══ 4bis · npm audit : premier provider à sortie réseau accordée, garde mesurée ═══")
+# Les trois lots précédents mesuraient `egress` sur des doubles et sur des outils hors réseau.
+# npm audit est le premier provider du registre dont l'exécution échoue SANS sortie réseau : la
+# chaîne complète — commande construite → conditions → exécution — devient observable, pas
+# simulée. Les appels au registre npm sont RÉELS ici (c'est ce que `reseau: true` veut dire).
+prov_npm = reg.provider("npm_audit")
+globs_npm = tuple(prov_npm.manifest.applicable_globs or ())
+cas("un plugin à `reseau: true` est ADMIS à la déclaration (règle 6 du chargeur), et son "
+    "glob de verrouillage est projeté sur le provider du cœur",
+    "package-lock.json" in " ".join(globs_npm)
+    and prov_npm.manifest.reseau is True, list(globs_npm))
+with tempfile.TemporaryDirectory(prefix="agnt-sans-lock-") as td:
+    nu = Path(td)
+    (nu / "index.js").write_text("1\n", encoding="utf-8")
+    eligibles, exclus = PLAN.filtrer_applicabilite(["npm_audit"], reg, nu)
+    cas("sans lockfile, le provider est ÉCARTÉ avant exécution, avec un motif écrit (pas un scan vide)",
+        eligibles == [] and "npm_audit" in exclus, exclus)
+
+class CageFidele:
+    """`Sandbox` rejouée sur le seul point qui compte ici : le drapeau qui coupe le réseau.
+
+    `commande()` rend `--unshare-net` quand l'export n'est PAS accordé — comme la vraie cage.
+    La garde est ainsi jugée sur la COMMANDE CONSTRUITES, pas sur un champ : c'est l'invariant
+    posé au LOT 3, et le cas `menteuse` ci-dessous est là pour prouver qu'il tient.
+    """
+    M_DB, racine_db, M_REGLES, timeout = "/db", None, "/reg", 600
+
+    def __init__(self, cible: Path, egress=False, menteuse=False):
+        self.dossier = Path(tempfile.mkdtemp(prefix="agnt-egress-"))
+        self.M_SCAN, self.M_OUT, self.sortie = str(cible), str(self.dossier), self.dossier
+        self.egress_autorise, self.menteuse = egress, menteuse
+
+    def delai_effectif(self, demande):
+        return min(demande or 0, 1800)
+
+    def commande(self, argv):
+        exe = [A.resoudre_exe(str(argv[0])) or str(argv[0]), *argv[1:]]
+        if self.menteuse or not self.egress_autorise:
+            exe = ["--unshare-net", *exe]
+        return exe
+
+    def exec(self, argv, env=None, timeout=None):
+        cmd = self.commande(list(argv))
+        if cmd[0] == "--unshare-net":       # cage fermée : on ne lance pas, on constate le refus
+            raise AssertionError("la cage fermée n'aurait pas dû atteindre l'exécution")
+        r = subprocess.run(cmd, capture_output=True, text=True, cwd=self.M_SCAN,
+                           timeout=timeout or 600)
+        self.argv = list(argv)
+        return types.SimpleNamespace(code=r.returncode, timeout=False,
+                                     stdout=r.stdout, stderr=r.stderr)
+
+cible_npm = RACINE / "testrepo"
+motifs = COND.manquantes(prov_npm, egress=False, racine_db=None)
+cas("cage fermée : la condition refuse, et le motif dit POURQUOI (pas de faux « rien trouvé »)",
+    any("réseau requis" in m for m in motifs), motifs)
+cas("la refuseuse est bien jugée sur la commande, pas sur la déclaration de l'outil",
+    COND.egress_de(CageFidele(cible_npm, egress=False), ["npm", "audit"]) is False
+    and COND.egress_de(CageFidele(cible_npm, egress=True), ["npm", "audit"]) is True, "")
+if OUTILS.get("npm") is None and A.resoudre_exe("npm") is None:
+    non_evalue("exécution réelle de npm audit", "npm absent de cette machine — rien à consulter")
+else:
+    sbx_ouverte = CageFidele(cible_npm, egress=True)
+    res_npm = A.generique_cli(prov_npm, sbx_ouverte)
+    vus_npm = vue_depuis(prov_npm, res_npm, cible_npm)
+    paquets = sorted({(f.get("cible") or {}).get("paquet") for f in vus_npm})
+    cas("cage OUVERTE par l'autorisation de mission : le rapport de l'outil entre dans le modèle",
+        len(vus_npm) == 2 and paquets == ["lodash", "minimist"],
+        json.dumps(paquets, ensure_ascii=False))
+    cas("le correctif disponible est DANS le finding (alias `remediation`, pas `correction`)",
+        any(str(f.get("remediation")).count(".") >= 2 for f in vus_npm),
+        [f.get("remediation") for f in vus_npm])
+    cas("la sévérité reste le mot de npm, en majuscules du modèle (critical → CRITICAL)",
+        {str(f.get("severite")) for f in vus_npm} == {"CRITICAL"},
+        sorted({str(f.get("severite")) for f in vus_npm}))
+    cas("l'avis est référencé SANS rien aplatir de force : via[0].url en reference, via[0].cwe en cwe",
+        all(str(f.get("reference") or "").startswith("https://github.com/advisories/GHSA-")
+            and str(f.get("cwe") or "").startswith("CWE-") for f in vus_npm),
+        [(f.get("reference"), f.get("cwe")) for f in vus_npm])
+    cas("aucune CVE inventée : `via[].cves` est vide chez npm, le finding laisse `cve` absent et le DIT",
+        all(f.get("cve") is None and "cve" in (f.get("absents") or []) for f in vus_npm),
+        [f.get("absents") for f in vus_npm])
+    sbx_ment = CageFidele(cible_npm, egress=True, menteuse=True)
+    try:
+        A.generique_cli(prov_npm, sbx_ment)
+        refuse = False
+        detail = "aucun refus — la garde lit le champ, pas la commande"
+    except A.ConditionRefusee as e:
+        refuse, detail = True, str(e)[:180]
+    cas("cage QUI MENT (export déclaré accordé, `--unshare-net` rendu) : refusée — la commande fait foi",
+        refuse, detail)
+non_evalue("npm audit sous la vraie bulle, réseau accordé",
+           "deux causes indépendantes ici : `bwrap` absent (user namespaces refusés sur cette "
+           "machine) et `opa` absent (la mission complète s'arrête avant l'exécution). Ce qui est "
+           "mesuré ci-dessus est la chaîne commande→conditions→modèle, sur l'outil réel et avec un "
+           "vrai appel au registre ; le `--unshare-net` retiré pour de vrai reste à rejouer ailleurs.")
+
 # ═════════════════════════════ 5 · sélection : portée réelle, inertie assumée
 print("═══ 5 · sélection : qui est vraiment planifié ═══")
 choix = IN.choisir_providers(IN.inferer("Analyse la sécurité de mon dépôt", reg), reg)
@@ -340,6 +447,18 @@ a_verif_ruff = " ".join(str(x) for x in (doc_ruff.get("a_verifier") or []))
 cas("idem pour ruff : la raison pour laquelle il n'est pas branché sur CODE_STATIC_ANALYSIS est écrite",
     "un_seul" in a_verif_ruff and "fan_out" in a_verif_ruff, a_verif_ruff[:180])
 
+
+cas("tout alias déclaré par un plugin est un alias que le cœur CONSOMME (sinon la donnée est perdue)",
+    all(set((reg.provider(pid).manifest.extraction.champs or {})) <= alias_coeur
+        for pid in [c["id"] for c in vue["charges"]] if reg.provider(pid)),
+    {c["id"]: sorted(set((reg.provider(c["id"]).manifest.extraction.champs or {})) - alias_coeur)
+     for c in vue["charges"]
+     if set((reg.provider(c["id"]).manifest.extraction.champs or {})) - alias_coeur})
+cas("et le correctif disponible remonte bien (npm_audit : remediation, pas un alias inventé)",
+    "remediation" in (reg.provider("npm_audit").manifest.extraction.champs or {})
+    and "remediation" in (reg.provider("pip_audit").manifest.extraction.champs or {}),
+    {p2.id: sorted((p2.manifest.extraction.champs or {}))
+     for p2 in (reg.provider("npm_audit"), reg.provider("pip_audit"))})
 
 # ═════════════════════════════ 6 · falsifications
 print("═══ 6 · falsifications (un cas par défaut interdit) ═══")

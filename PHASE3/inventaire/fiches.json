@@ -7,7 +7,7 @@
    "notes": "a9f853547f2a",
    "matrice_phase1": "d8819269b585",
    "registre": "748b2d9fd97a",
-   "manifeste": "e0cf800ccee6"
+   "manifeste": "3438846190ac"
   },
   "formule": "valeur / (1 + complexite + risque) — voir l'en-tête du script",
   "nb_fiches": 126,
@@ -166,6 +166,21 @@
   "CODE_STATIC_ANALYSIS_JS": {
    "providers": [
     "eslint_js"
+   ],
+   "passifs": 1,
+   "mode": "un_seul",
+   "max": 1,
+   "entree": [
+    "repository"
+   ],
+   "sortie": "findings",
+   "domaines": [
+    "code"
+   ]
+  },
+  "DEPENDENCY_ANALYSIS_JS": {
+   "providers": [
+    "npm_audit"
    ],
    "passifs": 1,
    "mode": "un_seul",

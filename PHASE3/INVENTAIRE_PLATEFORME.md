@@ -9,7 +9,7 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 | notes | `a9f853547f2a` |
 | matrice_phase1 | `d8819269b585` |
 | registre | `748b2d9fd97a` |
-| manifeste | `e0cf800ccee6` |
+| manifeste | `3438846190ac` |
 
 ## Matrice des capacités
 
@@ -25,6 +25,7 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 | CODE_STATIC_ANALYSIS_SUITE | **oui** | 1 (1) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | — |
 | CONTAINER_SCAN | absente | 0 | — | — | à écrire | idem | SecretScanner (0.6), Checkov (0.4167), Trivy (0.35), Grype (Anchore) (0.15) |
 | DEPENDENCY_ANALYSIS | **oui** | 3 (3) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | tfsec (1.5), Dependency-Track (1.0), DefectDojo (0.8333), Nuclei (0.6364) |
+| DEPENDENCY_ANALYSIS_JS | **oui** | 1 (1) | repository | findings | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | — |
 | DETECTION_RULES | absente | 0 | — | — | à écrire | idem | Elastic Security (Detection Rules) (0.5), Sigma (0.5), Splunk Security Content (0.5) |
 | ENDPOINT_COLLECTION | absente | 0 | — | — | à écrire | idem | Velociraptor (0.5714), MCPHub (0.3333) |
 | EXPLOITATION | absente | 0 | — | — | à écrire | idem | ThreatMapper (0.4286), AutoSploit (0.2857), MCP Servers Cybersecurity (neptune1212) (0.2857), Metasploit Framework (0.2857) |
@@ -64,6 +65,7 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 - **CODE_STATIC_ANALYSIS_GO** : providers semgrep_go ; mode `un_seul`
 - **CODE_STATIC_ANALYSIS_JS** : providers eslint_js ; mode `un_seul`
 - **CODE_STATIC_ANALYSIS_SUITE** : providers bandit ; mode `un_seul`
+- **DEPENDENCY_ANALYSIS_JS** : providers npm_audit ; mode `un_seul`
 
 ## Outils nommés dans la commande du 2026-08-30, état par rapport à l'inventaire
 

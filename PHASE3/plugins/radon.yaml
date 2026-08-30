@@ -48,7 +48,10 @@ lecture:
     fichier: fichier
     ligne: lineno
     message: name
-    complexite: complexity
+    # `complexite: complexity` y figurait (30/08/2026) et a été RETIRÉ le 31/08 : le modèle de
+    # finding ne lit pas cet alias, et `to_dict()` d'un finding radon ne contient nulle part la
+    # valeur mesurée (vérifié : "44" est absent du finding normalisé). Le nombre reste dans
+    # l'artefact brut `brut_radon_cc.json`, conservé à côté du JSON re-construit par le cœur.
   masquer_large: []
 requirements:
   reseau: false
@@ -69,4 +72,4 @@ capacite:
              rang, rank, lisibilité, "longueur de fonction"]
 a_verifier:
   - "seuil D : la fixture PHASE3/testrepo ne déclenche aucun bloc — le cas « exécuté, 0 finding » doit rester distingué d'un échec"
-  - "champs.complexite : la valeur est rendue dans le finding, pas mappée sur un champ structuré du modèle (le modèle de finding n'a pas de slot « mesure »)"
+  - "la mesure elle-même (complexity) n'a pas de slot dans le modèle de finding : elle n'est PAS rendue dans le finding — retirée de `champs` le 31/08/2026 après mesure, et lisible dans l'artefact brut de l'outil"

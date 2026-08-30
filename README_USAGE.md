@@ -168,6 +168,28 @@ puis l'épingle (version, source, licence, et pour un outil pip une `note` disan
 vérifiable par SHA-256) et une ligne d'installation dans `PHASE3/bootstrap.sh`. Trois touches, dont
 aucune n'est du code.
 
+**Ce que « aucune touche n'est du code » veut dire, et ne veut pas dire.** C'est vrai tant que la
+*forme* de la sortie de l'outil entre dans ce que `lecture:` sait déjà décrire. Deux plugins ont
+quand même demandé une touche de cœur, chaque fois d'un bloc **générique** et daté, jamais d'un
+parser au cas par cas : la liste de blocs par fichier du JSON de radon, puis la valeur-**dict**
+autorisée pour `nested_key: "*"` (npm audit). Un septième outil qui invente une troisième forme de
+sortie se heurtera à la même règle — soit la grammaire l'absorbe, soit l'outil attend un adaptateur,
+et le dire est plus utile que de compter des fichiers.
+
+**`lecture.champs` n'accepte que des alias que le cœur LIT.** Un nom de champ inventé à droite est
+une donnée perdue en silence, pas un champ « pour plus tard ». Mesuré le 31/08/2026 en écrivant la
+garde : `correction: fix_versions` figurait dans `plugins/pip_audit.yaml` depuis sa première
+version, `complexite: complexity` dans `plugins/radon.yaml`, et le modèle de finding ne consomme que
+`regle, nom_regle, fichier, ligne, message, severite, reference, remediation, confiance, cwe, paquet`
+plus les quatre coordonnées — la valeur de correctif n'était donc **jamais** remontée, et le nombre
+de complexité de radon n'apparaissait nulle part dans le finding (vérifié sur `to_dict()`).
+`correction` est devenu `remediation` (le correctif de `lodash`, `4.18.1`, se lit maintenant dans le
+finding), `complexite`/`aliases`/`version` ont été **retirés** : ces valeurs restent dans l'artefact
+brut de l'outil, qui est conservé à côté du JSON re-construit. Un cas de
+`PHASE3/test_catalogue_outils.py` refuse désormais tout alias hors de cette liste, et la liste est
+**extraite du code de `findings.depuis_manifest`**, pas recopiée dans le test — sinon c'est le
+garde-fou qui aurait dérivé en premier.
+
 Le fichier se relit à chaque chargement du registre, et il est soumis **aux mêmes validations**
 qu'une entrée écrite à la main dans `capabilities.yaml` (`provider_manifest.valider`). Ce qui est
 refusé, avec un motif qui nomme le fichier : une clé inconnue (une faute de frappe sur une clé de
@@ -290,15 +312,17 @@ autre.
 
 ## Le catalogue d'outils : ce qui entre, ce qui attend (31/08/2026)
 
-Le registre lit six familles d'outils de sécurité. Deux entrées de plus sont passées par la voie
-plugin ce jour, sans retoucher le cœur ; le reste du catalogue est ou bien déjà provider, ou bien
-**bloqué par un fait nommé** — et non par une impression.
+Le registre lit six familles d'outils de sécurité. Trois entrées de plus sont passées par la voie
+plugin ce jour (`ruff`, `eslint`, `npm audit`), sans retoucher le cœur ; le reste du catalogue est
+ou bien déjà provider, ou bien **bloqué par un fait nommé** — et non par une impression. Le
+chargement porte 6 plugins retenus et 0 refusé ; le registre compte 16 providers et 11 capacités
+(comptés sur `Registry()` vivant, pas recopiés d'un état antérieur du dossier).
 
 | Famille | Dans AGNT aujourd'hui | État mesuré sur cette machine |
 |---|---|---|
 | SAST | `semgrep`, `bandit` (+ variante custom, + Go), `radon_cc`, **`ruff_lint`**, **`eslint_js`** | ruff et bandit tournent ; semgrep a son binaire (1.175.0) mais **pas son jeu de règles** (`semgrep.dev` répond 000, les 4 packs épinglés sont irrécupérables ici) |
 | SECRETS | `gitleaks`, `detect_secrets`, **`trufflehog3`** | detect-secrets et trufflehog3 tournent ; gitleaks est un asset GitHub injoignable |
-| SCA | `trivy`, `grype`, `pip_audit` | pip-audit tourne (et sort sur le réseau, donc refusé sans `--egress`) ; trivy/grype idem gitleaks |
+| SCA | `trivy`, `grype`, `pip_audit`, **`npm_audit`** | pip-audit tourne et **demande** le réseau (donc refusé tant que la sortie n'est pas autorisée) ; `npm audit` tourne pareil, et c'est sur lui que la garde d'export a été mesurée des deux côtés : cage fermée → refus, `egress_autorise: true` → 2 findings lus puis projetés ; trivy/grype idem gitleaks |
 | INFRA / CLOUD | `checkov`, `kics` | **checkov tourne** : 38 non-conformités sur `PHASE3/testrepo_iac`, hors réseau, depuis la correction `--skip-download` |
 | RECON / WEB | aucun provider | ni capacité, ni binaire installable ; et un `{URL}` n'existe pas comme jeton (voir plus bas) |
 
@@ -315,6 +339,25 @@ Il sort `2` quand il trouve des secrets — donc `code_succes: [0, 2]`, sinon un
 registré comme une panne. Deux champs ne sont pas mappés, `secret` et `context` : l'outil y met la
 valeur en clair, mesuré. La projection du finding n'en contient aucune ; **l'artefact brut de
 l'outil, si** — limitation écrite dans le plugin et dans la batterie, pas gommée.
+
+**`npm audit` (SCA, JavaScript).** `plugins/npm_audit.yaml`, 7ᵉ plugin du dossier, et premier
+dont l'exécution **a besoin** de sortir. Déclaration : `npm audit --prefix {TARGET} --json`,
+`code_succes: [0, 1]` (1 = des vulnérabilités trouvées, pas une panne), `reseau: true`, capacité
+`DEPENDENCY_ANALYSIS_JS` **créée par le plugin** — pas posée sous `DEPENDENCY_ANALYSIS` : cette
+capacité est en `max_providers: 2` avec Trivy (rang 100) et Grype (110) devant, donc un plugin
+branché là serait chargé, validé, et **jamais planifié** (leçon D10). `nested_key: "*"` accepte
+désormais les deux formes que rend npm : une liste, ou **un dict unique** (chaque clé = un paquet,
+valeur = sa fiche) — extension de `slice/extraction.py` de même nature que le bloc radon, pas un
+parser écrit à la main. `--prefix` rend l'outil indépendant du répertoire courant, ce qu'ESLint ne
+sait pas faire : c'est pourquoi `eslint` attend encore la décision D8 et pas celui-ci. Mesuré sur
+`PHASE3/testrepo` : `lodash` et `minimist` en `CRITICAL`, `cible.paquet` renseigné,
+`remediation: 4.18.1` et `1.2.8`, `reference` sur l'avis GHSA et `cwe` sur `CWE-471`/`CWE-1321` (par
+`via[0].url` et `via[0].cwe[0]` — la *première* entrée du tableau, pas « celle qui a une URL »).
+`cve` ressort `None` et le finding **le nomme** dans son vecteur `absents` : npm loge la CVE dans
+`via[].cves`, vide ici, et ne rend pas le score CVSS. Trois choses restent volontairement non
+mappées et sont écrites dans le fichier : le reste du `via[]` mixte, `fixAvailable: false` qui ne
+veut pas dire « inconnu », et le fait que l'audit **fait confiance au lockfile** tel qu'il a été
+édité à la main.
 
 **`--egress` change ce que ces outils peuvent dire.** Un outil qui appelle un service externe
 (checkov le faisait) rend deux résultats différents selon la cage. C'est la raison pour laquelle la

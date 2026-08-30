@@ -2455,7 +2455,7 @@ qu'un faux binaire figé.
   `PHASE3/`, 37 en absolu depuis la racine) : le cas du catalogue n'attend plus un nombre, il
   exige que les deux variantes du drapeau **coïncident** et qu'il y ait quelque chose. Un attendu
   chiffré ici aurait été une deuxième façon de figer le hasard.
-- **`-e` / comptes / empreintes : même leçon three times run** — un test qui greppe un nombre ou
+- **`-e`, les comptes, les empreintes : même leçon, trois fois de suite** — un test qui greppe un nombre ou
   un littéral casse pour des raisons licites ; la réponse est de remplacer ce qu'il prouvait, pas
   de relâcher la garde.
 
@@ -2523,3 +2523,143 @@ indépendant de la cage) ; ruff et ESLint sont sur des capacités **créées** p
 `CODE_STATIC_ANALYSIS` est en `un_seul` — les y brancher sans D7 les rendrait décoratifs ; et le
 compte `integrated: 8` du pool ne compte pas les plugins (définition de cette vue, pas une capacité
 maximale de la plateforme).
+
+---
+
+# LOT 5 · `npm audit` — premier outil à qui la sortie réseau est accordée, et une ré-évaluation d'environnement (31/08/2026)
+
+## Ce qui a été fait
+
+**Septième plugin : `PHASE3/plugins/npm_audit.yaml`.** `npm audit --prefix {TARGET} --json`,
+`code_succes: [0, 1]`, `reseau: true`, `fichiers_requis: ["*package-lock.json"]`, capacité
+`DEPENDENCY_ANALYSIS_JS` **créée par le plugin** (le bloc `capacite:` est obligatoire, sinon refus
+« capacité inconnue » — même leçon qu'au premier jet de ruff ; réutiliser `DEPENDENCY_ANALYSIS` eût
+été un piège : `max_providers: 2` avec Trivy 100 et Grype 110 devant, donc le plugin fût chargé,
+validé, **jamais planifié** — la leçon D10 rejouée avant de la subir). Épingle `binaires.npm`
+(`10.9.8`, `sha256: null`, `distribution: npm`, `note` qui explique le régime : rien n'est
+téléchargé, donc la reproductibilité est seulement « sur machine donnée », avec la commande de
+calcul de l'empreinte d'arbre) et bloc dans `PHASE3/bootstrap.sh` qui **vérifie la présence** de npm
+et logge un AVERTISSEMENT sinon (installer Node n'est pas au programme ici : `nodejs.org` répond 000).
+Le chargeur : **6 plugins retenus, 0 refusé** ; le registre : **16 providers, 11 capacités**.
+
+**La forme de sortie a demandé une touche de cœur, générique.** `npm audit` rend
+`{vulnerabilities: {lodash: {…}, minimist: {…}}}` : un dictionnaire dont **chaque valeur est un
+item**, pas une liste. `slice/extraction.py` accepte maintenant les deux pour `nested_key: "*"`
+(bloc de 5 lignes + commentaire daté). C'est le deuxième élargissement de ce type après le bloc
+radon ; la grammaire n'a pas reçu de clef nouvelle, et `test_modele_finding`/`test_catalogue_outils`
+n'ont pas eu à relâcher une attente.
+
+**`--prefix`, ce qui sépare npm audit d'ESLint.** Mesuré hors AGNT : `npm audit --prefix <dir>
+--json` rendu **depuis un autre répertoire** lit bien le lockfile de la cible (rc=1, 2 paquets) —
+l'outil est indépendant du cwd, donc intégrable sans attendre la décision D8 (montage en nom propre
++ cwd posé par la plateforme), contrairement à `eslint -f json` qui impose `run(CWD)` et le
+`--no-config-lookup` posé en dur.
+
+**L'exécution réelle, par le chemin de la plateforme** (double de cage + `generique_cli` +
+`normaliser` + `vue_unifiee`) : 2 findings `CRITICAL` (`lodash`, `minimist`),
+`cible.paquet = "lodash"`, empreinte calculée, `capacite: DEPENDENCY_ANALYSIS_JS`, et
+`remediation: "4.18.1"` (et `1.2.8` pour minimist) **dans le finding**, `reference` pointant l'avis
+GHSA et `cwe` portant `CWE-471` / `CWE-1321`, projetés par `via[0].url` et `via[0].cwe[0]`. Restent
+`None` : `cve`, `confiance`, `version_outil` — et le vecteur `absents` du finding les nomme une par
+une. La CVE n'est pas arrachée au tableau : `via[].cves` est vide sur les deux paquets consultés, et
+le score CVSS n'est pas dans la sortie d'`audit` du tout.
+
+**Le trio egress, mesuré sur un outil qui en a vraiment besoin** — LOT 3 passait au statut
+« NON ÉVALUÉ » pour sa partie conditions, la voici mesurée :
+
+| condition de mission | résultat |
+|---|---|
+| cage fermée (`egress_autorise: false`, défaut) | `ConditionRefusee`, motif : « l'outil rendrait un résultat vide avec le code 0 (refusé pour ne pas produire de faux « rien trouvé ») » |
+| cage ouverte (`egress_autorise: true`) | exécution, 2 findings normalisés et projetés |
+| cage **qui ment** (`egress_autorise: true` mais `--unshare-net` rendu) | refusée — `egress_de` juge la **commande construite**, pas le champ |
+| cible sans `package-lock.json` | provider **écarté avant exécution** par `plan.filtrer_applicabilite`, motif écrit dans `plan.json` |
+
+## Ce que la ré-évaluation de l'environnement a donné (sondage rejoué, hôte par hôte)
+
+`curl -o /dev/null -r 0-512` sur douze hôtes, un par un, ce 31/08 :
+
+```
+registry.npmjs.org            206      api.github.com                200
+codeload.github.com           200      github.com/…/releases/download 302 (200 seulement si -L, mort au hop suivant)
+raw.githubusercontent.com     000      objects.githubusercontent.com   000
+go.dev  dl.google.com  proxy.golang.org  deb.debian.org  nodejs.org  packages.microsoft.com  semgrep.dev   000
+```
+
+Deux lectures qui comptent : **`codeload.github.com` est vivant** — le tarball de
+`returntocorp/semgrep-rules/develop` se télécharge (200, 1 213 898 o) — mais l'arbre est rangé
+**par langage** (`python/`, `javascript/`, `go/`…) et **ne contient aucun pack `python.yaml`
+agrégé** : le pack épinglé par `manifeste_dependances.yaml` est servi par `semgrep.dev` (000), donc
+les deux ne sont pas interchangeables et le provider semgrep reste non rejouable ici. J'ai **refusé
+de poser un faux `rules/python.yaml`** pour faire joli. Mesuré malgré tout, sur l'outil-phare : avec
+le pack absent, `semgrep scan --config=<pool>/rules/python.yaml` sort **rc=7**, stdout vide, et son
+JSON porte `results: []` **plus** `errors[0] = « WARNING: unable to find a config »` — et
+`adapters.semgrep` remonte ces `errors` en `limites_connues` : la garde « un scan vide n'est pas un
+résultat » tient là où elle avait le plus de valeur à tenir. Et `api.github.com` répond 200 :
+**on lit une page de release** (gitleaks, tfsec : version, taille d'asset, licence) **sans pouvoir
+télécharger l'asset** (`objects.githubusercontent.com` = 000). Conclusion écrite et non contournée :
+aucun binaire Go/rust (gitleaks, trivy, grype, tfsec, KICS, gosec, nuclei, httpx, nmap, kube-score,
+osv-scanner) ni aucune toolchain (Go, apt, node) n'est installable ici ; le catalogue ne peut pas
+être couvert par ce chemin.
+
+## Trois défauts trouvés pendant ce tour (les miens, d'abord)
+
+- **Un alias déclaré que le cœur ne lit pas est une donnée perdue en silence.** En écrivant la garde
+  d'alias, `test_catalogue_outils` a rendu rouge trois manifests : `champs.correction: fix_versions`
+  chez pip-audit (le correctif n'a **jamais** été affiché depuis le LOT 2), et `aliases`/`version`
+  inertes ; `champs.complexite: complexity` chez radon, avec dans le fichier une phrase affirmant
+  que « la valeur est rendue dans le finding » — vérification faite sur `Finding.to_dict()`, le `44`
+  de la fixture n'y figure **nulle part**. `correction` → `remediation` (seul alias lu) pour les deux
+  plugins de dépendances, `complexite`/`aliases`/`version` **retirés** (les valeurs restent dans
+  l'artefact brut de l'outil, conservé à côté du JSON re-construit par le cœur, et le fichier le dit).
+  Le cas qui interdit la récurrence **dérive la liste des alias lus depuis le code de
+  `findings.depuis_manifest`** (`re.findall(c.get("…")) + COORDONNEES`) au lieu de la recopier : une
+  liste tenue à la main aurait été le premier élément faux du dispositif.
+- **Ma première mesure egress était fausse, et c'est la leçon la plus chère du tour.** Premier double
+  de cage : `commande()` renvoyait l'`argv` nu dans les deux cas. Résultat : exécution **acceptée**
+  alors que le profil refuse — une fausse validation de la garde, imprimée avec un air sérieux. La
+  garde lit `Sandbox.commande(argv)`, donc le double doit émettre `["--unshare-net", *argv]` quand
+  l'export n'est pas accordé ; c'est ce que fait `CageFidele` dans la batterie, et le troisième cas
+  (la cage menteuse) n'a de sens qu'avec cette émulation.
+- **Un `absents: [cve, cwe, remediation, …]` ne prouvait rien sur l'extracteur.** Le premier run de
+  npm audit listait cinq champs absents, dont `remediation` — j'ai failli conclure que l'extracteur
+  perdait le correctif. La cause était le **nom de l'alias** de mon manifest, pas la projection : le
+  même `EX.champs` rendait bien `"4.18.1"`. Un None dans une vue ne dit pas *où* il est né ; c'est
+  écrit dans `README_USAGE.md` avec le reste de la grammaire.
+
+## Batterie, régression, et comparaison honnête
+
+`PHASE3/test_catalogue_outils.py` passe de 84 à **96/96** : 10 cas `npm audit` (section 4bis — le
+trio egress, l'écartement sans lockfile, le correctif rendu, la référence d'avis, « aucune CVE
+inventée ») et 2 cas sur les alias de `champs`, valables pour **tous** les plugins du dossier. Les appels au registre npm de cette section sont **réels** : c'est ce que
+`reseau: true` veut dire ; le nom de la section le dit pour que personne ne croie à un mock.
+
+Suites rejouées **avant et après**, l'arbre original étant retrouvé entre les deux par `git stash`
+des seuls six fichiers touchés : **les 37 suites rendent exactement les mêmes codes de sortie**, suite
+par suite (20 à 0, 16 à 1, `test_llm_reel` à 2). Les rc=1 sont l'état documenté du dossier, pas des
+régressions : `opa` absent (bundle jamais produit), packs de règles semgrep absents, `test_llm_reel`
+sans sortie réseau. Autrement dit : le nouveau plugin ne déplace aucune suite — et aucune attente n'a
+été relâchée pour l'accommoder, les seuls compteurs touchés de la batterie étant passés de 84 à 95. `test_qualite_plateforme` 34/34,
+`test_modele_finding` 37/37, `test_conditions_outils` 30/30, `test_statuts_outils` 31/31, vague
+parallèle 46/46, escalade 24/24, `test_plugins` OK (+4 avertissements de registre variante,
+comportement voulu), `inventaire_plateforme.py --verifier` **0 dérive** après régénération des vues
+(`INVENTAIRE_PLATEFORME.md` porte la ligne `DEPENDENCY_ANALYSIS_JS` et l'empreinte du manifeste
+passée de `e0cf800ccee6` à `3438846190ac` ; `Registry().plugins` rend `empreinte: 43ddebb19944`,
+`fichiers: [eslint, npm_audit, pip_audit, radon, ruff, trufflehog3].yaml`, `applique: true`, et
+l'empreinte globale du registre suit à `31a3acad6dba` — ces quatre valeurs sont lues sur le registre
+vivant après le dernier octet modifié, pas recopiées d'un run antérieur),
+`genere_pool.py --verifier` 309 entrées, `pyflakes` muet.
+
+## NON ÉVALUÉ ICI (à ne pas relire comme fait)
+
+- **`npm audit` sous la vraie bulle, réseau réellement retiré** : `bwrap` est présent mais les
+  *user namespaces* sont refusés par la machine (`kernel.apparmor_restrict_unprivileged_userns=1`,
+  le même fait qui a gelé les vérifications de `sandbox.py`), donc la garde est mesurée sur la
+  **commande construite**, pas sur l'effet noyau.
+- **Décision OPA sur un profil accordant l'export** : le binaire `opa` est absent et la mission
+  s'arrête avant l'exécution — la section 8 de `test_plugins.py`, `test_bundle` (cas 5, bundle
+  jamais produit) et les cas « NON ÉVALUÉ » de `test_qualite_plateforme` le disent noir sur blanc.
+  LOT 3 garde donc son statut : **la chaîne de conditions est mesurée, la porte de décision ne l'est pas**.
+- **`verifier_binaire` pour npm** : régime « rien n'est téléchargé », il n'y a rien à comparer à une
+  empreinte épinglée — c'est le contenu assumé de la `note` du manifeste, pas un trou de plus.
+- **`npm ci` reproductible / lockfile versionné** : la fixture `PHASE3/testrepo` porte un
+  `package-lock.json` écrit à la main pour le cas d'usage, pas un verrouillage d'approvisionnement.

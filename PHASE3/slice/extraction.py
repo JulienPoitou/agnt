@@ -236,7 +236,13 @@ def extraire(brut, ex: Extraction) -> list[dict]:
         if ex.nested_key == "*" and isinstance(_chemin(brut, ex.nested_from), dict):
             items = []
             for cle, valeur in _chemin(brut, ex.nested_from).items():
-                for element in (valeur or []):
+                # 31/08/2026 — deux formes de valeur, mesurées sur des sorties réelles :
+                #   · une LISTE d'items (radon : chaque clé = un fichier, valeur = ses blocs)
+                #   · un DICT unique (npm audit : chaque clé = un paquet, valeur = sa fiche)
+                # La seconde rendait 0 item en silence — un outil indexé par clé devenait
+               #   « rien trouvé ». Traiter la valeur comme son propre item est la même règle,
+               # pas un cas particulier : c'est le conteneur qui est la liste, ici à plat.
+                for element in ([valeur] if isinstance(valeur, dict) else (valeur or [])):
                     if not isinstance(element, dict):
                         continue
                     plat = dict(element)
