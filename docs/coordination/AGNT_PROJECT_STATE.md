@@ -31,6 +31,8 @@
 | **Journal explicatif append-only** | Le journal porte au minimum l'intention et la sélection de providers ; il ne dépend pas uniquement de `plan.json`. |
 | **Policy avant invocation** | Une policy absente, indisponible ou refusée n'autorise jamais une exécution locale ou externe. |
 | **Cible distincte du sandbox** | Une cible n'est pas automatiquement un `Path` local ; une cible distante ne doit jamais être montée ou exécutée comme un faux chemin local. |
+| **Pas de faux état produit** | Quand l'API répond mais qu'aucune mission n'existe, l'interface affiche un accueil réel, jamais des données de démonstration. |
+| **Progressive disclosure** | L'UX montre d'abord le résultat métier ; providers et détails techniques restent secondaires. Les données non fiables sont rendues avec `textContent`, jamais `innerHTML`. |
 
 ---
 
@@ -42,7 +44,7 @@
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844` | **P1 :** alignement sur le contrat CORE et test contre un serveur MCP contrôlé réel. |
 | WEB | non reçu | en attente de handoff | — | À définir après handoff. |
 | SECURITY | non reçu | en attente de handoff | — | À définir après handoff. |
-| PRODUCT | non reçu | en attente de handoff | — | À définir après handoff. |
+| PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED_WITH_LIMITATIONS` | `18c1aad` | **P1 :** contrat produit/API minimal pour l'historique réel des missions, sans toucher aux fichiers UI partagés. |
 
 ---
 
@@ -64,6 +66,14 @@
 - Normalisation des findings MCP dans le chemin commun AGNT.
 - Provenance MCP, corrélation, ledger, reporting, API et SARIF enrichis de façon additive.
 - Tests contractuels et intégration simulée en mémoire.
+
+### PRODUCT & UX
+
+- Refonte de l'espace mission : navigation, création simplifiée et résultats organisés par progressive disclosure.
+- État d'accueil réel quand l'API répond sans mission ; démos uniquement quand l'API est indisponible et explicitement étiquetées.
+- États fiables d'attente, exécution, refus, erreur et perte de connexion.
+- Présentation améliorée des findings et design system responsive avec thèmes clair/sombre/système.
+- Rendu sécurisé maintenu via `textContent`.
 
 ---
 
@@ -90,6 +100,17 @@ Critères clés :
 - Prouver binding, refus policy/egress, timeout, redaction, provenance et nettoyage de ressources.
 - Ne pas présenter une simulation en mémoire comme une interopérabilité MCP tierce réelle.
 
+### P1 — PRODUCT & UX : contrat d'historique réel des missions
+
+Définir, sans implémenter un backend ou une nouvelle UI concurrente, le contrat produit qui débloquera l'historique :
+- relation explicite entre une Mission et un Run ;
+- états réellement supportés, identifiants, résumé et détails consultables ;
+- endpoint de listing paginé et endpoint de relecture compatibles avec les routes actuelles ;
+- provenance, confidentialité, rétention et comportement hors ligne ;
+- exemples de réponses et critères d'acceptation pour CORE et WEB.
+
+Le builder Product & UX ne touche pas à `index.html`, `app.js` ou `style.css` dans ce lot afin d'éviter un conflit avec builder-web avant réception de son handoff.
+
 ---
 
 ## Contrats et dépendances entre builders
@@ -99,7 +120,7 @@ CORE : Provider / Transport / mission artifacts / future Cible
   ├── MCP : transport "mcp", résultats externes, provenance
   ├── WEB : affichage des artefacts par mission et provenance additive
   ├── SECURITY : invariants egress, policy, secrets, confiance externe
-  └── PRODUCT : modèle de cible et point de composition des extensions
+  └── PRODUCT & UX : modèle de cible, point de composition des extensions et contrat de consultation de l'historique
 ```
 
 ### Contrat MCP à préserver
@@ -118,7 +139,7 @@ transports.enregistrer("mcp", executeur)
 
 - **WEB :** ne pas supposer un unique `PHASE3/run`; utiliser les données de mission et tolérer les champs MCP additionnels (`transport`, serveur, outil, protocole, confiance, disponibilité, corrélation).
 - **SECURITY :** définir et tester les invariants d'un backend externe : egress, endpoint contrôlé par registre, secrets, timeout, policy avant appel, confiance et absence de bypass sandbox implicite.
-- **PRODUCT :** ne pas créer une deuxième source de vérité pour les types de cible ou les extensions ; aider à désigner un point de composition unique pour les transports/plugins.
+- **PRODUCT & UX :** ne pas créer une deuxième source de vérité pour les types de cible ou les extensions. Définir le contrat d'historique réel avant toute réactivation d'onglet ou de données globales ; ne pas modifier les fichiers UI partagés avant coordination avec WEB.
 
 ---
 
@@ -132,6 +153,8 @@ transports.enregistrer("mcp", executeur)
 | Test MCP uniquement simulé. | Élevée pour la preuve d'interopérabilité | Builder MCP crée un serveur contrôlé local et des tests E2E réels. |
 | Cible encore principalement représentée par un `Path`. | Architecturale P1 | Mission CORE active ; Web/MCP/Security ne créent pas d'abstraction concurrente. |
 | Annulation HTTP en cours d'appel MCP. | Moyenne | MCP-003 reste ouvert jusqu'à preuve réelle ou solution documentée. |
+| PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product & UX travaille désormais sur le contrat d'historique hors de ces fichiers ; attendre le handoff WEB avant tout nouveau chantier UI. |
+| Historique global affiché sans source backend persistée. | Élevée produit | Garder l'historique désactivé jusqu'au contrat puis à l'endpoint réel ; aucune donnée de démonstration après une réponse API. |
 
 ---
 
@@ -143,6 +166,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 - `bwrap` et plusieurs outils de scan/caches absents : certaines batteries E2E sont non évaluables.
 - Pas de serveur MCP tiers ni de credential de test : interopérabilité externe réelle non prouvée à ce stade.
 - Certains tests historiques échouent uniquement parce que `bandit`, `checkov`, `detect-secrets` et `radon` sont absents.
+- L'API conserve actuellement les runs en mémoire et n'expose pas encore de liste persistée de missions ; l'historique produit reste volontairement désactivé.
 
 ---
 
@@ -156,6 +180,8 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | MCP-001 | Validation OPA réelle | P1 environnement | Bloqué |
 | MCP-002 | Serveur MCP réel contrôlé | P1 | En cours — MCP |
 | MCP-003 | Annulation HTTP MCP pendant un appel bloquant | P2 | Ouvert |
+| PRODUCT-001 | Endpoint d'historique persistant des missions | P1 | Bloqué par contrat backend ; contrat produit en cours |
+| PRODUCT-002 | Comparaison de runs et vues globales Findings/Reports | P2 | Différé |
 
 ---
 
@@ -163,8 +189,9 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 
 1. Stabiliser le lot CORE Cible sans casser les contrats actuels.
 2. Finaliser l'alignement MCP sur les extension points CORE et sa preuve E2E contrôlée.
-3. Examiner les diff/contrats CORE + MCP ensemble et préparer une stratégie de merge ciblée.
-4. Intégrer les contraintes SECURITY sur les transports externes.
-5. Adapter WEB aux contrats stabilisés, sans reconstruire de logique métier côté UI.
+3. Finaliser le contrat produit d'historique avant toute implémentation backend/UI de cette fonctionnalité.
+4. Examiner les diff/contrats CORE + MCP ensemble et préparer une stratégie de merge ciblée.
+5. Intégrer les contraintes SECURITY sur les transports externes.
+6. Adapter WEB aux contrats stabilisés, sans reconstruire de logique métier côté UI.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
