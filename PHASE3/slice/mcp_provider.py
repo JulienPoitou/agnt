@@ -632,6 +632,18 @@ class MCPBackend:
         # avant la validation des arguments et de la cible.
         args = self.manifest.arguments_for(target, arguments)
         debut = _now()
+        # Une annulation déjà demandée ne crée ni transport, ni session, ni socket.
+        # La cible et les arguments restent validés avant cette sortie anticipée :
+        # l'annulation ne contourne jamais le contrat MCP.
+        if cancel_event is not None and cancel_event.is_set():
+            return ProviderResult(
+                identity=self.manifest.identity(), capability=self.manifest.capability,
+                status="cancelled", error="appel MCP annulé",
+                raw={"error": "appel MCP annulé"},
+                correlation_id=f"{self.manifest.id}:{self.manifest.tool}",
+                request_id="", started_at=debut, finished_at=_now(), target=target,
+                availability=Availability("unknown", "annulation avant invocation", _now()),
+            )
         transport = None
         client = None
         try:

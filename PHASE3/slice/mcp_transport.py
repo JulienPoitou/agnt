@@ -19,6 +19,7 @@ HTTP seulement, et ne sont jamais inclus dans une exception ou une trace.
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import select
@@ -55,7 +56,11 @@ class MCPTransportTimeout(MCPTransportError):
 
 
 class MCPTransportCancelled(MCPTransportError):
-    pass
+    def __init__(self, message: str = "appel MCP annulé", *, request_id: str = ""):
+        super().__init__(message)
+        # L'identifiant est une donnée JSON-RPC courte, jamais une URL, un header
+        # ou un payload. Il permet au ProviderResult annulé de rester corrélé.
+        self.request_id = str(request_id)[:128]
 
 
 class MCPProtocolError(MCPTransportError):
@@ -166,9 +171,17 @@ class MCPClient:
     def _call(self, method: str, params: Mapping[str, Any] | None = None,
               *, timeout: float | None = None, cancel_event: Any = None) -> dict:
         if cancel_event is not None and cancel_event.is_set():
+            self.last_request_id = ""
             raise MCPTransportCancelled("appel MCP annulé")
-        result = self.transport.request(method, params, timeout=timeout or self.timeout,
-                                        cancel_event=cancel_event)
+        try:
+            result = self.transport.request(method, params, timeout=timeout or self.timeout,
+                                            cancel_event=cancel_event)
+        except MCPTransportCancelled as exc:
+            request_id = getattr(exc, "request_id", "")
+            # Ne jamais réutiliser l'identifiant d'une requête précédente si
+            # l'annulation a eu lieu avant qu'un nouvel appel ne parte.
+            self.last_request_id = str(request_id)[:128] if request_id else ""
+            raise
         if isinstance(result, dict) and result.get("id") is not None:
             self.last_request_id = str(result["id"])[:128]
         return result
@@ -403,7 +416,11 @@ class StdioMCPTransport:
                     raise MCPTransportTimeout("serveur MCP stdio : délai dépassé")
                 try:
                     ligne = self._lire_ligne(state, restant, cancel_event)
-                except (MCPTransportTimeout, MCPTransportCancelled):
+                except MCPTransportCancelled as exc:
+                    self._fermer(state)
+                    self._state = None
+                    raise MCPTransportCancelled(str(exc), request_id=str(ident)) from None
+                except MCPTransportTimeout:
                     self._fermer(state)
                     self._state = None
                     raise
@@ -447,6 +464,24 @@ class StdioMCPTransport:
                 self._state = None
 
 
+@dataclass
+class _HTTPCallState:
+    """État privé d'un appel HTTP cancellable.
+
+    L'état appartient à une invocation et non au module : il n'existe donc pas de
+    table globale de requêtes ni de session partagée entre missions. Le worker est
+    uniquement une aide de la stdlib pour que le thread appelant puisse fermer la
+    connexion pendant ``getresponse``/``read``.
+    """
+
+    connection: http.client.HTTPConnection | None = None
+    verrou: threading.Lock = field(default_factory=threading.Lock)
+    annule: bool = False
+    termine: threading.Event = field(default_factory=threading.Event)
+    resultat: tuple[int, dict[str, str], bytes] | None = None
+    erreur: BaseException | None = None
+
+
 class HTTPMCPTransport:
     """Transport HTTP MCP avec session et token référencé par nom d'environnement."""
 
@@ -466,15 +501,10 @@ class HTTPMCPTransport:
         self._ids = _CompteurJSONRPC()
         self._verrou = threading.RLock()
 
-    def _corps(self, response) -> dict:
-        data = response.read(self.max_response_bytes + 1)
+    def _decoder(self, data: bytes, content_type: str = "") -> dict:
         if len(data) > self.max_response_bytes:
             raise MCPProtocolError("réponse MCP HTTP trop volumineuse")
-        try:
-            content_type = (response.headers.get("Content-Type") or "").lower()
-        except AttributeError:
-            content_type = ""
-        if "text/event-stream" in content_type:
+        if "text/event-stream" in (content_type or "").lower():
             # Streamable HTTP peut rendre un ou plusieurs événements SSE. Seuls les
             # événements `data:` JSON sont candidats ; les commentaires sont ignorés.
             objets = []
@@ -496,6 +526,160 @@ class HTTPMCPTransport:
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise MCPProtocolError("réponse MCP HTTP non JSON") from exc
 
+    def _corps(self, response) -> dict:
+        data = response.read(self.max_response_bytes + 1)
+        try:
+            content_type = (response.headers.get("Content-Type") or "").lower()
+        except AttributeError:
+            content_type = ""
+        return self._decoder(data, content_type)
+
+    def _endpoint(self) -> tuple[object, str]:
+        parts = urlsplit(self.endpoint)
+        chemin = parts.path or "/"
+        if parts.query:
+            chemin += "?" + parts.query
+        return parts, chemin
+
+    @staticmethod
+    def _tete(entetes: Mapping[str, str], nom: str) -> str:
+        """Lit un header HTTP sans dépendre de sa casse."""
+        attendu = nom.casefold()
+        return next((str(v) for k, v in entetes.items()
+                     if str(k).casefold() == attendu), "")
+
+    def _headers(self) -> dict[str, str]:
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream",
+            "User-Agent": self.user_agent,
+        }
+        if self.session_id:
+            headers["Mcp-Session-Id"] = self.session_id
+        if self.auth_env:
+            token = os.environ.get(self.auth_env)
+            if token:
+                headers["Authorization"] = f"Bearer {token}"
+        return headers
+
+    @staticmethod
+    def _fermer_appel_http(state: _HTTPCallState) -> None:
+        """Ferme le handle de l'appel courant, sans conserver d'état global."""
+        with state.verrou:
+            state.annule = True
+            connection = state.connection
+        if connection is not None:
+            # ``HTTPResponse`` peut lire depuis un ``makefile`` interne : fermer
+            # uniquement HTTPConnection n'interrompt pas toujours ce lecteur sur
+            # toutes les versions Python. Le shutdown TCP réveille d'abord la
+            # lecture, puis close libère le handle.
+            sock = getattr(connection, "sock", None)
+            if sock is not None:
+                try:
+                    sock.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+            try:
+                connection.close()
+            except OSError:
+                pass
+
+    def _nouvelle_connexion(self, parts, timeout: float) -> http.client.HTTPConnection:
+        try:
+            port = parts.port
+        except ValueError:
+            raise MCPTransportUnavailable("endpoint MCP HTTP indisponible") from None
+        if not parts.hostname:
+            raise MCPTransportUnavailable("endpoint MCP HTTP indisponible")
+        classe = (http.client.HTTPSConnection
+                  if parts.scheme == "https" else http.client.HTTPConnection)
+        return classe(parts.hostname, port, timeout=max(0.001, float(timeout)))
+
+    def _request_cancellable(self, payload: bytes, headers: dict[str, str],
+                             *, timeout: float, cancel_event: Any,
+                             request_id: str) -> dict:
+        """Exécute un appel HTTP dont la socket peut être fermée par l'appelant.
+
+        ``urllib`` ne rend pas son socket disponible pendant ``read``. Ici, un worker
+        court possède une connexion ``http.client`` par invocation ; le thread appelant
+        observe ``cancel_event``, ferme cette connexion, puis attend la fin du worker.
+        La fermeture est donc réelle côté TCP, et aucune réponse du worker annulé n'est
+        remise au décodage MCP.
+        """
+        parts, chemin = self._endpoint()
+        state = _HTTPCallState()
+
+        def travailler() -> None:
+            connection = None
+            try:
+                connection = self._nouvelle_connexion(parts, timeout)
+                with state.verrou:
+                    state.connection = connection
+                    deja_annule = state.annule
+                if deja_annule:
+                    return
+                connection.connect()
+                with state.verrou:
+                    deja_annule = state.annule
+                if deja_annule:
+                    return
+                # La socket reçoit le délai de l'appel. L'annulation, elle, passe
+                # par close() depuis le thread appelant et reste donc distincte.
+                if connection.sock is not None:
+                    connection.sock.settimeout(max(0.001, float(timeout)))
+                connection.request("POST", chemin, body=payload,
+                                   headers={**headers, "Connection": "close"})
+                response = connection.getresponse()
+                data = response.read(self.max_response_bytes + 1)
+                entetes = {str(k): str(v) for k, v in response.getheaders()}
+                with state.verrou:
+                    if not state.annule:
+                        state.resultat = (int(response.status), entetes, data)
+            except BaseException as exc:  # la classification reste dans le thread appelant
+                with state.verrou:
+                    if not state.annule:
+                        state.erreur = exc
+            finally:
+                if connection is not None:
+                    try:
+                        connection.close()
+                    except OSError:
+                        pass
+                state.termine.set()
+
+        worker = threading.Thread(target=travailler, name="agnt-mcp-http", daemon=False)
+        worker.start()
+        while not state.termine.wait(0.01):
+            if cancel_event is not None and cancel_event.is_set():
+                self._fermer_appel_http(state)
+                worker.join()
+                raise MCPTransportCancelled(request_id=request_id) from None
+        # ``termine`` est posé après fermeture de la connexion ; join est normalement
+        # immédiat et rend la garantie de nettoyage observable par le test.
+        worker.join()
+        with state.verrou:
+            erreur = state.erreur
+            resultat = state.resultat
+        if cancel_event is not None and cancel_event.is_set() and resultat is None:
+            self._fermer_appel_http(state)
+            raise MCPTransportCancelled(request_id=request_id) from None
+        if erreur is not None:
+            if isinstance(erreur, (socket.timeout, TimeoutError)):
+                raise MCPTransportTimeout("endpoint MCP HTTP : délai dépassé") from None
+            raise MCPTransportUnavailable("endpoint MCP HTTP indisponible") from None
+        if resultat is None:
+            raise MCPTransportUnavailable("endpoint MCP HTTP indisponible") from None
+        status, entetes, data = resultat
+        if status in (408, 504):
+            raise MCPTransportTimeout("endpoint MCP HTTP : délai dépassé") from None
+        if status >= 400:
+            raise MCPTransportUnavailable(
+                f"endpoint MCP HTTP indisponible (HTTP {status})") from None
+        sid = self._tete(entetes, "Mcp-Session-Id")
+        if sid:
+            self.session_id = sid[:512]
+        return _valider_reponse(self._decoder(data, self._tete(entetes, "Content-Type")))
+
     def request(self, method: str, params: Mapping[str, Any] | None = None,
                 *, timeout: float, cancel_event: Any = None) -> dict:
         if cancel_event is not None and cancel_event.is_set():
@@ -504,17 +688,11 @@ class HTTPMCPTransport:
             ident = self._ids.suivant()
             payload = json.dumps({"jsonrpc": "2.0", "id": ident, "method": method,
                                   "params": dict(params or {})}, ensure_ascii=False).encode()
-            headers = {
-                "Content-Type": "application/json",
-                "Accept": "application/json, text/event-stream",
-                "User-Agent": self.user_agent,
-            }
-            if self.session_id:
-                headers["Mcp-Session-Id"] = self.session_id
-            if self.auth_env:
-                token = os.environ.get(self.auth_env)
-                if token:
-                    headers["Authorization"] = f"Bearer {token}"
+            headers = self._headers()
+            if cancel_event is not None:
+                return self._request_cancellable(
+                    payload, headers, timeout=max(0.001, float(timeout)),
+                    cancel_event=cancel_event, request_id=str(ident))
             req = Request(self.endpoint, data=payload, headers=headers, method="POST")
             try:
                 with urlopen(req, timeout=max(0.001, float(timeout))) as response:

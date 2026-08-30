@@ -14,7 +14,7 @@ Date de la vérification : **2026-08-30 UTC**.
 | Handshake, découverte et appel JSON-RPC | **IMPLEMENTED + VERIFIED** | faux transport + HTTP/stdio/Streamable HTTP locaux ; aucun serveur tiers |
 | Transport stdio sans shell + transport HTTP/Streamable HTTP | **IMPLEMENTED + VERIFIED** | chaque mode exercé par serveur/processus local contrôlé ; tiers non exercés |
 | Timeout | **IMPLEMENTED + VERIFIED** | HTTP et stdio réels + doubles : `timed_out`, couverture `not_scanned`, ledger |
-| Annulation et fermeture de session | **IMPLEMENTED + PARTIALLY VERIFIED** | annulation/fermeture stdio réelles ; annulation HTTP réelle non prouvée |
+| Annulation et fermeture de session | **IMPLEMENTED + VERIFIED** | annulation HTTP par fermeture TCP + annulation stdio réelles ; aucune notification MCP d'annulation revendiquée |
 | Erreurs serveur / outil / réponse non conforme | **IMPLEMENTED + VERIFIED** | `unavailable`, `failed` et `invalid` testés séparément sur HTTP réel |
 | Secrets et sorties distantes non fiables | **IMPLEMENTED + VERIFIED** | réponse, URL et message d'erreur masqués avant `ProviderResult`/brut |
 | Sandbox / frontière de confiance serveur distant | **IMPLEMENTED + PARTIALLY VERIFIED** | MCP n'est pas présenté comme sandbox local ; serveur local contrôlé hors sandbox |
@@ -43,6 +43,9 @@ PYTHONPATH=PHASE3/slice /tmp/agnt-venv/bin/python PHASE3/test_mcp_policy_gate.py
 
 PYTHONPATH=PHASE3/slice /tmp/agnt-venv/bin/python PHASE3/test_mcp_stdio.py
 8/8 cas passent
+
+PYTHONPATH=PHASE3/slice /tmp/agnt-venv/bin/python PHASE3/test_mcp_http_cancel.py
+17/17 cas passent
 ```
 
 `test_mcp_e2e.py` démarre un `ThreadingHTTPServer` MCP local sur loopback et port éphémère,
@@ -55,6 +58,12 @@ trop grande, handshake incomplet, réponse lente et endpoint fermé.
 Il vérifie le même cycle, l'outil lié, la cible injectée, ainsi que l'annulation et la récolte
 du processus après succès comme après timeout. Le mode stdio est donc prouvé contre un processus
 réel ; aucune compatibilité avec un serveur MCP tiers n'est revendiquée.
+
+`test_mcp_http_cancel.py` utilise un serveur HTTP local dont `tools/call` bloque après réception.
+Le `cancel_event` ferme la socket HTTP active, le serveur observe EOF/reset, le résultat est
+`cancelled` avec son `request_id`, aucun résultat tardif n'est normalisé, et la requête suivante
+obtient une nouvelle session. Le test distingue ce chemin d'un timeout, d'une fermeture serveur,
+d'une erreur JSON-RPC et d'une annulation précoce sans connexion.
 
 `test_mcp_policy_gate.py` utilise un double de la frontière policy et prouve que le refus policy,
 la policy indisponible et l'egress fermé n'atteignent pas le transport.
@@ -102,9 +111,9 @@ avoir compilé contre le CORE absent.
 - Les serveurs/processus MCP des tests sont réels mais exclusivement contrôlés et locaux ; aucune
   compatibilité avec un serveur tiers, un proxy ou une variante de framing non testée n'est
   revendiquée.
-- MCP-003 reste ouvert : l'annulation HTTP pendant un appel bloquant n'est pas démontrée. Le
-  timeout ferme la session côté client ; l'arrêt du handler serveur n'est pas une annulation
-  protocolaire MCP. Une vraie annulation devra utiliser le mécanisme de cancellation MCP/HTTP
-  retenu par le CORE, avec preuve d'un serveur qui l'observe.
+- MCP-003 est **IMPLEMENTED + VERIFIED** au niveau transport HTTP : l'annulation volontaire
+  ferme la connexion TCP active et le serveur contrôlé observe EOF/reset. Cela ne constitue pas
+  une notification protocolaire MCP d'annulation : aucun mécanisme serveur de type cancellation
+  n'est inventé ni revendiqué.
 - Les échecs historiques liés à des exécutables/cache locaux absents ne sont pas comptés comme
   validation MCP.
