@@ -928,7 +928,10 @@ def main() -> int:
     print("-" * 78)
     for r in [x for x in RESULTATS if x["etat"] == "FAIL"]:
         print(f"RELEVÉ  [{(r['gravite'] or 'à qualifier'):<10}] {r['nom']}  ({r['frontiere']})")
-    print("\nAucun correctif appliqué pendant la campagne (consigne de revue).")
+    print("\nAucun correctif appliqué PENDANT la campagne (consigne de revue). Après clôture,")
+    print("F1 a été appliqué (intent_llm.valider compare au catalogue PROPOSÉ) : A2 et A3 sont")
+    print("passés de FAIL à PASS sans qu'aucune attente de ce fichier soit modifiée — si l'une")
+    print("d'elles redevient rouge, c'est que la garde a bougé, pas que le test s'est adouci.")
     return 1 if n["FAIL"] else 0
 
 

@@ -1540,8 +1540,8 @@ un arrêt se relit), `arrêts n'exécutent rien`, `dégradation honnête` : tous
    pire des deux.
 
 **À savoir pour ne pas « réparer » un vert :** `python3 PHASE3/test_adversaire.py` sort en
-code `1` — c'est l'état attendu de la campagne (13 FAIL après la famille G), pas une casse
-de plus. Rendre cette
+code `1` — c'est l'état attendu de la batterie (11 FAIL après le correctif F1, 13 avant), pas
+une casse de plus. Rendre cette
 batterie verte en modifiant ses attentes serait exactement l'erreur interdite.
 
 **Aucun de ces six correctifs n'est appliqué.** La campagne est close, la cartographie est
@@ -1690,3 +1690,51 @@ rapport de dogfooding (6 providers, 14 findings, RAPPORT.md de 4 870 car.), mais
 bouton → findings → écran ne sera prouvé que sur la machine source, après `bootstrap.sh`**.
 Aucune phrase de ce relevé ne doit être lue comme « l'interface affiche de vrais constats » :
 elle affiche déjà correctement tout ce qui précède le constat.
+
+
+## Correctif F1 appliqué (2026-08-30, après clôture de la campagne)
+
+La campagne est close et son relevé écrit : la consigne « aucun correctif » levait, l'opérateur
+a fixé l'ordre **G → F1 → F2 → F4 → F3 → F5/F6**. Premier item fait.
+
+**`slice/intent_llm.py` — `valider()` compare désormais au catalogue PROPOSÉ, pas au registre
+entier.** Le défaut (A2/A3) : `connues = {c.id for c in registre.capabilities()}` incluait les
+capacités `interne: true`, alors que `descr()` ne les montre jamais au modèle — le modèle
+pouvait donc élargir son propre périmètre en citant un outil que personne ne lui avait
+proposé (`CODE_STATIC_ANALYSIS_CUSTOM` → `bandit` sur la cible, `allow: True`, argv sortant).
+
+Forme du correctif, et pourquoi cette forme :
+
+- même règle, **même nom de drapeau** que le chemin déterministe (`intent.inferer(…,
+  avec_internes=False)`, `intent.py:181`) : les deux moteurs refusent pour la même raison, et
+  un relecteur peut les comparer ligne à ligne ;
+- le chemin vers une capacité interne n'est **pas supprimé**, il devient explicite :
+  `valider(rep, registre, avec_internes=True)` — ce que la qualification de provider exige ;
+- le motif de refus **distingue** les deux fautes (« inconnues du registre » vs « non
+  proposées au modèle (internes) ») : les confondre enverrait chercher le bug du mauvais côté ;
+- `SortieInvalide` → `inferer` retombe sur le déterministe, qui exclut déjà l'interne :
+  la mission continue, tracée `moteur: deterministe(repli:SortieInvalide)`.
+
+**Preuves, dans cet ordre :**
+
+| | résultat |
+|---|---|
+| `intent_llm.valider({interne})` par défaut | refusé, motif nommé `non proposées au modèle (internes)` ✓ |
+| idem avec `avec_internes=True` | accepté, les deux capacités conservées ✓ (la soupape vit) |
+| capacité inventée | toujours refusée, motif `inconnues du registre` ✓ (garde existante intacte) |
+| batterie adverse, **attentes non modifiées** | A2 **FAIL → PASS**, A3 **FAIL → PASS**, famille A 9/9 · total 44 cas : 30 PASS / 11 FAIL / 3 NON ÉVALUÉS (avant : 28/13/3) |
+| rejeu avec/sans le correctif sur les suites exigeant `opa` | **identique** (`PolicyError: binaire OPA introuvable` dans les deux états) : pas de régression imputable à F1 |
+
+**Ce que F1 ne ferme pas, et qui reste à décider :** `policy.rego` reçoit toujours le registre
+complet (`capability_ids`, `capabilities_detail`) et son ensemble `couples` contient donc le
+couple interne. Choix assumé : *le registre déclare ce qui existe*, et un provider interne doit
+pouvoir être autorisé quand un appelant explicite le demande — rétrécir l'entrée d'OPA
+casserait la qualification de provider (`test_outils_pool_mission.py`), ce qui serait corriger
+un trou de périmètre en cassant un test. La frontière qui compte est la **sélection**, et elle
+est fermée. À rouvrir seulement si un troisième chemin que `valider()` ne borde pas apparaît.
+
+**Environnement :** le sandbox a été re-cloné en cours d'étape (HEAD revenu au commit de
+départ, objets de mes 6 commits absents). Récupéré par `git fetch` + `git reset --mixed` sur
+la branche distante — arbre de travail conservé, rien perdu. Nota : `PyYAML` avait disparu de
+l'environnement (le produit l'importe dans `registre.py`, `findings.py`, `outils.py`) ;
+installé dans `/home/user/.pydeps`, hors dépôt, donc rien de nouveau à committer.

@@ -45,25 +45,46 @@ class ReponseLLM:
     fournisseur: str = ""
 
 
-def valider(rep: ReponseLLM, registre: Registry) -> Intent:
+def valider(rep: ReponseLLM, registre: Registry, avec_internes: bool = False) -> Intent:
     """Valide une réponse LLM contre le registre et produit un Intent.
 
     Lève SortieInvalide si le contrat n'est pas respecté. On ne devine jamais :
     une capacité inconnue est rejetée, pas interprétée.
+
+    `avec_internes`, par défaut `False` : la comparaison se fait sur le catalogue qui a été
+    PROPOSÉ au modèle (`registre.publiques()`, la même liste que `descr()`), pas sur le
+    registre entier. Une capacité `interne: true` existe — elle sert à qualifier des
+    providers — mais elle n'est jamais nommée dans la proposition : la valider contre le
+    catalogue complet laissait le modèle élargir le périmètre tout seul, en citant un outil
+    que personne ne lui avait montré (constat A2/A3 de la campagne adverse, 2026-08-30).
+
+    Ce n'est pas une règle nouvelle : `intent.inferer(avec_internes=…)` l'applique déjà au
+    chemin déterministe, avec le même drapeau et la même valeur par défaut. Les deux moteurs
+    refusent donc pour la même raison. Le chemin qui mène à une capacité interne n'est pas
+    supprimé — il devient explicite : un appelant qui la réclame le passe en argument.
     """
     if rep.statut not in STATUTS:
         raise SortieInvalide(f"statut inconnu : {rep.statut!r}")
 
     connues = {c.id for c in registre.capabilities()}
+    proposees = connues if avec_internes else {c.id for c in registre.publiques()}
 
     if rep.statut == "resolved":
         caps = tuple(rep.capabilities or ())
         if not caps:
             raise SortieInvalide("resolved sans capacités")
         inconnues = sorted(set(caps) - connues)
-        if inconnues:
-            # Le point critique : le LLM ne peut pas inventer une capacité.
-            raise SortieInvalide(f"capacités inconnues du registre : {inconnues}")
+        hors_proposition = sorted((set(caps) & connues) - proposees)
+        if inconnues or hors_proposition:
+            # Le point critique : le LLM ne peut ni inventer une capacité, ni en réclamer
+            # une qui n'était pas dans la proposition. Les deux sont nommés séparément —
+            # confondre « inconnue » et « interne » ferait chercher le bug du mauvais côté.
+            morceaux = []
+            if inconnues:
+                morceaux.append(f"inconnues du registre : {inconnues}")
+            if hors_proposition:
+                morceaux.append(f"non proposées au modèle (internes) : {hors_proposition}")
+            raise SortieInvalide("capacités refusées — " + " · ".join(morceaux))
         ordre = tuple(c.id for c in registre.capabilities() if c.id in set(caps))
         return Intent("resolved", "", capabilities=ordre, moteur=f"llm:{rep.fournisseur}")
 

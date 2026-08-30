@@ -173,6 +173,11 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
   raison à l'écran et le `journal.jsonl` de la mission ouvert sur disque — où l'on voit `confiance
   = untrusted` côtoyer `cible_autorisee: true` : F2, en situation. Un affichage « 0 constat » est
   interdit par construction : un fichier absent vaut `None`, pas `[]`.
+- **F1 corrigé (2026-08-30)** : `intent_llm.valider()` compare au catalogue **proposé**
+  (`registre.publiques()`), plus au registre entier ; drapeau `avec_internes=False` par défaut,
+  même nom et même sens que le chemin déterministe, soupape explicite conservée pour la
+  qualification. A2/A3 FAIL → PASS, attentes inchangées. `policy.rego` garde le registre
+  complet dans son entrée : choix assumé et justifié dans `PROJET_ETAT.md`.
 - Sigma / providers Groupe B : backlog, pas maintenant.
 
 ## 7. Direction actée (pas à rediscuter)
