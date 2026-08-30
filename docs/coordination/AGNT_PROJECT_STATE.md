@@ -47,7 +47,7 @@
 
 | Builder | Branche | Statut rapporté | Derniers commits | Prochaine mission assignée |
 |---|---|---|---|---|
-| CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d`, `729c2c0`, `fed13d6`, `e36c53a` | **P1 :** aligner History API sur les contrats Product, ajouter `data.timeline` et `data.executions[]` structurés. |
+| CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d`, `729c2c0`, `fed13d6`, `e36c53a` | **P1 actif :** aligner le lecteur/API History sur les contrats Product, avec `data.timeline` et `data.executions[]` structurés ; ne pas réécrire le lecteur livré. |
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d`, `6e04ff8` | Interop stdio terminée dans son périmètre ; aucun nouveau chantier MCP assigné. Raccord Transport CORE réservé à l'intégration coordonnée. |
 | WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
 | SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003`, `cf1eea6` | **P1 actif :** re-bind du gate adversarial sur les contrats Product, sans merge ; Mode laboratoire reprend après ce jalon. |
