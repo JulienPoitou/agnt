@@ -83,10 +83,11 @@ requirements:
   sandbox: true
 capacite:
   description: >
-    Audit des dépendances JavaScript d'un lockfile npm contre l'annuaire d'avis de
-    l'écosystème (GHSA) : paquet, plage de versions concernée, sévérité, version de
-    correction. Outil À SORTIE RÉSEAU : sans autorisation d'export de mission, il est refusé
-    à l'exécution, et ce refus est consigné — ce n'est pas un scan vide.
+    Audit des dépendances JavaScript d'un lockfile contre l'annuaire d'avis de l'écosystème
+    (GHSA) : paquet, plage de versions concernée, sévérité, version de correction. Outil À
+    SORTIE RÉSEAU : sans autorisation d'export de mission, il est refusé à l'exécution, et ce
+    refus est consigné — ce n'est pas un scan vide.
+    (Aucun nom d'outil : cette description est envoyée au moteur d'intention.)
   domaines: [code]
   entree: [files]
   sortie: findings

@@ -63,8 +63,9 @@ requirements:
 # rapport la propagerait comme un avis de sécurité. Le finding garde le rang dans `regle`.
 capacite:
   description: >
-    Mesure de complexité (radon) : blocs au-dessus du seuil de complexité cyclomatique, par
-    fichier et par ligne. Entrée d'audit humain, pas un finding de vulnérabilité.
+    Mesure de complexité : blocs au-dessus du seuil de complexité cyclomatique, par fichier
+    et par ligne. Entrée d'audit humain, pas un finding de vulnérabilité.
+    (Aucun nom d'outil : cette description est envoyée au moteur d'intention.)
   domaines: [code]
   entree: [files]
   sortie: findings

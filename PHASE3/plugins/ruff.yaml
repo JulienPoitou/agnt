@@ -78,9 +78,13 @@ capacite:
   # ruff produirait un provider déclaré et jamais planifié. Créer la capacité rend l'outil
   # atteignable par une question ; la rendre fan_out plus tard est une décision de registre.
   description: >
-    Lint Python (ruff) : règles E/F (erreurs et style) et S (port des règles bandit), par
-    fichier et par ligne. Entrée de QUALITÉ de code et seconde lecture de sécurité — les
-    findings S* ne sont pas interchangeables avec ceux de bandit.
+    Lint Python : règles d'erreurs et de style, plus le port d'un jeu de règles de
+    sécurité, par fichier et par ligne. Entrée de QUALITÉ de code et seconde lecture de
+    sécurité — ses findings de sécurité ne sont PAS interchangeables avec ceux de
+    l'analyse statique dédiée : mêmes familles, pas même couverture de règles.
+    (Aucun nom d'outil ici : cette description est envoyée au moteur d'intention, qui ne
+    doit connaître que des capacités — jamais un binaire. Voir `intent_llm` et le test
+    « F2 » de test_utilisation.)
   domaines: [code]
   entree: [files]
   sortie: findings

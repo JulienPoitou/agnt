@@ -32,16 +32,60 @@ binaires:
     taille_approx: 21M
 
   opa:
-    version: "1.20.0"
-    sha256: 4e4c65be08ed27e7375d816d446a444e65ba101806014c7a51b2a7652c2a942a
-    source: https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static
+    version: "0.70.0"
+    sha256: 00d114b94fdb1606a48cccdfc73c9ccdc62c38721150131ae578d5ff3df5c084
+    source: https://registry.npmjs.org/agent-control-specification-opa-linux-x64/-/agent-control-specification-opa-linux-x64-0.3.1-beta.0.tgz
     licence: Apache-2.0
-    taille_approx: 59M
+    taille_approx: 44M
     role: moteur
-    note: >
-      Empreinte de la branche « latest » au 2026-08-27. Elle changera à chaque nouvelle
-      release d'OPA : c'est attendu, mais alors ce manifeste doit être mis à jour
-      explicitement, et les suites de tests relancées.
+    # ───────────────────────────────────────────────────────────── RÉ-ÉPINGLAGE ÉCRIT
+    # Remplace l'épingle précédente (1.20.0, openpolicyagent.org/downloads/latest).
+    # Trois choses sont vraies en même temps, et aucune n'est arrangée :
+    #
+    #  1. LA VERSION N'EST PLUS CELLE QUI ÉTAIT DÉCLARÉE. 0.70.0 (31/10/2024) et non
+    #     1.20.0. La déclarer, c'est laisser `sandbox.empreintes_conformes` faire son
+    #     travail : sans ré-épinglage, la garde refuse l'exécution — ce qu'elle a fait,
+    #     mesuré le 2026-08-30 (« empreinte divergente du manifeste épinglé »), preuve
+    #     que F10 tient. La masquer en éditant le code de la garde aurait transformé un
+    #     contrôle qui fonctionne en contrôle décoratif.
+    #
+    #  2. L'ORIGINE EST UN TIERS, PAS L'AMONT. `openpolicyagent.org` (000) et les assets
+    #     de release GitHub (`objects.githubusercontent.com`, 000) sont injoignables
+    #     depuis cette machine ; il n'existe aucun canal vers un binaire OPA publié par
+    #     le projet OPA. Le paquet npm ci-dessus en est le seul vestige atteignable, et
+    #     son binaire est « peuplé par scripts/fetch-opa.mjs au moment du publish » —
+    #     c'est-à-dire récupéré par un script d'un tiers, à une date qu'on ne peut pas
+    #     rejouer. C'est un saut d'approvisionnement que la règle 3 du chargeur de
+    #     plugins interdit pour un OUTIL. Il est accepté ici pour le MOTEUR DE DÉCISION,
+    #     en le disant, et avec les deux mesures ci-dessous.
+    #
+    #     CE QUI A ÉTÉ VÉRIFIÉ (mesuré, pas supposé) :
+    #       · le binaire est un ELF x86-64 natif, 44 233 928 o, portant les chaînes
+    #         `github.com/open-policy-agent/opa` ;
+    #       · `opa version` rend Build Commit 2ea031ea04e6a8afbc5dd22f656131dc3cfc5a7d,
+    #         commit qui EXISTE dans open-policy-agent/opa, d'Ashutosh Narkar (mainteneur
+    #         OPA), daté 2024-10-30, message « Prepare v0.70.0 release » — cohérent avec
+    #         le Build Timestamp 2024-10-31 du binaire ;
+    #       · `policy.rego` s'évalue CORRECTEMENT dessus, aux quatre cas qui décident :
+    #         allow, cible_non_autorisee, memoire_non_bornee_cible_non_fiable,
+    #         commande_suspecte — mêmes motifs, même forme de sortie `-f raw`.
+    #
+    #     CE QUI N'A PAS PU ÊTRE VÉRIFIÉ, ET NE DOIT PAS ÊTRE LU COMME ACQUIS :
+    #       · aucune comparaison à un checksum publié par le projet OPA pour la release
+    #         0.70.0 (CDN injoignable). La provenance est CORROBORÉE par le commit de
+    #         build, elle n'est pas prouvée cryptographiquement.
+    #
+    #  3. LA DÉCISION DE CONFIANCE NE REPOSE DONC PAS SUR LE BINAIRE. Elle repose sur
+    #     `policy/policy.rego`, versionné dans ce dépôt, évalué par ce binaire et par
+    #     aucun autre. Un binaire substitué qui rendrait une décision différente est
+    #     détecté par le COMPORTEMENT, pas seulement par l'empreinte : c'est l'objet du
+    #     cas de batterie ajouté à `test_qualite_plateforme.py` (les quatre cas ci-dessus
+    #     rejoués sur le binaire réel). L'empreinte protège l'identité, le test protège
+    #     la décision — les deux sont nécessaires, aucun ne remplace l'autre.
+    #
+    # Dès qu'un canal vers openpolicyagent.org ou vers les assets GitHub redevient
+    # joignable : revenir à un binaire publié par le projet OPA, ré-épingler, relancer
+    # la batterie, et SUPPRIMER ce bloc.
 
   bandit:
     package: bandit

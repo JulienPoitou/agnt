@@ -54,6 +54,17 @@ lecture:
   # champs à valeur sont simplement absents de la projection.
   masquer_large:
     - message
+  # 31/08/2026 — la question ouverte du bloc `a_verifier` ci-dessous est TRANCHÉE, et
+  # tranchée par la purge : `secret` et `context` sont déclarés porteurs du secret, donc
+  # l'assainissement masque leur valeur par STRUCTURE dans les artefacts, sans dépendre
+  # d'un motif. Sans cette ligne, `raw_trufflehog3.redacted.json` partait avec le jeton
+  # en clair — mesuré sur un run réel : l'AWS key était masquée (40 caractères, attrapée
+  # par l'heuristique) et le jeton GitHub NON (36 caractères, sans son `ghp_`).
+  # Le reste de la sortie (règle, chemin, ligne, sévérité, id) est conservé : c'est
+  # l'intérêt du masquage structurel par rapport au retrait de l'artefact.
+  champs_secrets:
+    - secret
+    - context
 requirements:
   reseau: false
   privileges: aucun
@@ -61,4 +72,4 @@ requirements:
   sandbox: true
 a_verifier:
   - "rang 400 + SECRET_DETECTION en fan_out max_providers=2 (troncature aveugle à la disponibilité de l'outil, `intent.choisir_providers`) : ce provider est chargé, validé, et JAMAIS planifié tant que max_providers vaut 2 — ou tant que la troncature ne filtre pas les outils absents. Décision écrite dans PHASE3/DECISIONS_PROPOSEES.md (D10), pas contournée par un rang inventé."
-  - "l'artefact brut de l'outil (sortie JSON archivée par le run, comme pour tout provider) CONTIENT la valeur du secret : la projection ne la reprend pas, le fichier si. À trancher — soit une purge de l'artefact après lecture (mécanisme qui n'existe pas), soit l'assumer et l'écrire dans la doc opérateur. Déclaré, pas résolu silencieusement."
+  - "RÉSOLU le 31/08/2026 — l'artefact brut contenait la valeur du secret : la projection ne la reprenait pas, le fichier si. La purge existe maintenant et elle est DÉCLARATIVE : `champs_secrets` (ci-dessus) désigne `secret` et `context`, l'assainissement masque leur valeur par structure dans `raw_*` et `brut_*`. Le mécanisme est en plus auto-vérifié (`Verdict.assaini`) : si un motif subsistait après masquage, l'artefact serait RETENU (empreinte seule) au lieu d'être publié sous un nom qui ment."

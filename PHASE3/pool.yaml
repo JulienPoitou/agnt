@@ -12,7 +12,7 @@ lignes_catalogue: 324
 lignes_exclues_sans_owner_repo: 15
 comptes_statuts:
   non_approuve: 301
-  integrated: 8
+  integrated: 15
 sources_lues:
   PHASE1/07_CATALOGUE_INTEGRATION.csv: aec6543c3e88c6fe
   PHASE1/08_FICHES_PROVIDERS.csv: b647ef29b6ef71e2
@@ -2482,8 +2482,8 @@ entrees:
   providers: []
   tool:
     id: opa
-    version: 1.20.0
-    sha256: 4e4c65be08ed27e7375d816d446a444e65ba101806014c7a51b2a7652c2a942a
+    version: 0.70.0
+    sha256: 00d114b94fdb1606a48cccdfc73c9ccdc62c38721150131ae578d5ff3df5c084
     distribution_hash: null
     licence: Apache-2.0
     role: moteur
@@ -3256,3 +3256,122 @@ entrees:
     maturite: élevée
     licence: BSD
     interet: analyse de trafic, riche mais lourd
+- source: hors-catalogue/detect-secrets
+  provenance: registre
+  verdict_phase1: null
+  forme: cli
+  capacites:
+  - SECRET_DETECTION
+  statut_technique: verified
+  statut_operationnel: integrated
+  providers:
+  - detect_secrets
+  tool:
+    id: detect-secrets
+    version: 1.5.0
+    sha256: null
+    distribution_hash: null
+    licence: Apache-2.0
+    role: outil
+- source: hors-catalogue/eslint
+  provenance: registre
+  verdict_phase1: null
+  forme: cli
+  capacites:
+  - CODE_STATIC_ANALYSIS_JS
+  statut_technique: verified
+  statut_operationnel: integrated
+  providers:
+  - eslint_js
+  tool:
+    id: eslint
+    version: 9.39.5
+    sha256: null
+    distribution_hash: 7c33a96f10284979e0d7262fd9590de0416e5f21ee1b53da138c3e1267c610ba
+    licence: MIT
+    role: outil
+- source: hors-catalogue/npm
+  provenance: registre
+  verdict_phase1: null
+  forme: cli
+  capacites:
+  - DEPENDENCY_ANALYSIS_JS
+  statut_technique: verified
+  statut_operationnel: integrated
+  providers:
+  - npm_audit
+  tool:
+    id: npm
+    version: 10.9.8
+    sha256: null
+    distribution_hash: null
+    licence: Artistic-2.0
+    role: outil
+- source: hors-catalogue/pip-audit
+  provenance: registre
+  verdict_phase1: null
+  forme: cli
+  capacites:
+  - DEPENDENCY_ANALYSIS
+  statut_technique: verified
+  statut_operationnel: integrated
+  providers:
+  - pip_audit
+  tool:
+    id: pip-audit
+    version: 2.10.1
+    sha256: null
+    distribution_hash: null
+    licence: Apache-2.0
+    role: outil
+- source: hors-catalogue/radon
+  provenance: registre
+  verdict_phase1: null
+  forme: cli
+  capacites:
+  - CODE_METRICS
+  statut_technique: verified
+  statut_operationnel: integrated
+  providers:
+  - radon_cc
+  tool:
+    id: radon
+    version: 6.0.1
+    sha256: null
+    distribution_hash: null
+    licence: MIT
+    role: outil
+- source: hors-catalogue/ruff
+  provenance: registre
+  verdict_phase1: null
+  forme: cli
+  capacites:
+  - CODE_LINT
+  statut_technique: verified
+  statut_operationnel: integrated
+  providers:
+  - ruff_lint
+  tool:
+    id: ruff
+    version: 0.16.5
+    sha256: 024cdfbba8627539cc951908267077e3fd8e710add19f0b31d6cc606d19ddc32
+    distribution_hash: null
+    licence: MIT
+    role: outil
+- source: hors-catalogue/trufflehog3
+  provenance: registre
+  verdict_phase1: null
+  forme: cli
+  capacites:
+  - SECRET_DETECTION
+  statut_technique: verified
+  statut_operationnel: integrated
+  providers:
+  - trufflehog3
+  tool:
+    id: trufflehog3
+    version: 3.0.10
+    sha256: null
+    distribution_hash: a4d17bc01cd057e668c624c6dba95bc833600a83418bf481a9a081bbb4143157
+    licence: GPL-2.0
+    role: outil

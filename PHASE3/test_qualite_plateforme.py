@@ -212,20 +212,36 @@ MS.MISSIONS = dossier_vivant
 # bloc — le cas aurait porté sur une mission sans journal de statuts, donc sur rien).
 question_vivant = "Analyse la complexité cyclomatique du dépôt"
 pose_le = time.time()
-refus = None
+# Ce bloc testait une PANNE sous le nom d'un REFUS.
+#
+# `PolicyError` ne veut pas dire « la politique a refusé » : `policy.py` ne le lève que
+# pour une infrastructure OPA cassée (binaire introuvable, délai dépassé, sortie
+# illisible). Un REFUS de politique, lui, ne lève rien du tout — il rend un
+# `Execution(arret="policy")` : c'est la mission qui s'arrête, pas l'outil qui casse.
+# Attendre une exception revenait donc à vérifier qu'OPA était en panne.
+#
+# Le scénario produit maintenant un refus RÉEL : `confiance="untrusted"` (cible non
+# autorisée) donne `arret="policy"`, mesuré. Et l'invariant testé est le bon — un refus
+# de politique n'efface pas du journal le fait « qui était disponible ».
+code_vivant, etat_vivant = None, {}
 try:
-    analyser.lancer(question_vivant, RACINE / "testrepo", moteur="deterministe", egress=True)
-except Exception as exc:                                # noqa: BLE001 — OPA refuse, c'est le cas
-    refus = exc
+    code_vivant, etat_vivant = analyser.lancer(
+        question_vivant, RACINE / "testrepo", moteur="deterministe",
+        confiance="untrusted", egress=True)
+except Exception as exc:                                # noqa: BLE001
+    etat_vivant = {"exception": f"{type(exc).__name__}: {exc}"}
 mission_dir = next(iter(sorted(dossier_vivant.iterdir())), None)
 journal_vivant = ((mission_dir or tmp) / "journal.jsonl")
 _evenements = [json.loads(l) for l in journal_vivant.read_text(encoding="utf-8").splitlines()
                if l.strip()] if journal_vivant.exists() else []
 cas("16quater. OPA a refusé, et le journal dit QUAND même qui était disponible",
-    type(refus).__name__ == "PolicyError"
+    code_vivant == 2 and etat_vivant.get("statut") == "policy"
+    # L'invariant, explicitement : un refus de politique n'efface NI la disponibilité
+    # (qui était là, indépendamment de l'autorisation), NI le ledger, NI l'arrêt nommé.
+    and any(e["type"] == "disponibilite" for e in _evenements)
     and any(e["type"] == "statuts" for e in _evenements)
     and any(e["type"] == "arret" for e in _evenements),
-    {"exception": type(refus).__name__ if refus else None,
+    {"code": code_vivant, "statut": etat_vivant.get("statut"),
      "types": [e["type"] for e in _evenements]})
 eg = next((e for e in _evenements if e["type"] == "egress"), {})
 cas("16octies. la ligne `egress` du journal porte la demande, l'accord, le profil et la délégation",
@@ -239,14 +255,14 @@ if mission_dir is not None:
         {"vivante": None if v is None else {k: str(v[k])[:60] for k in ("mission", "resume")}})
     cas("16sexies. et refuse toute mission antérieure à la demande : aucun emprunt d'avancement",
         API._vivante(question_vivant, str(RACINE / "testrepo"), time.time() + 60) is None)
-    refus_etat = getattr(refus, "agnt_refus", None) or {}
     cas("16nonies. le refus emporte l'état de la cage : la demande est lisible sans relire le journal",
-        refus_etat.get("egress", {}).get("autorise") is True
-        and refus_etat.get("egress", {}).get("delegation") is True
-        and refus_etat.get("resume") is not None,
-        {"egress": refus_etat.get("egress"), "resume": refus_etat.get("resume"),
-         "note": "un refus n'archive pas de `rapport.json` (rien n'a tourné) : c'est l'objet "
-                 "d'erreur qui porte l'état, et les deux lisent les mêmes champs"})
+        etat_vivant.get("egress", {}).get("autorise") is True
+        and etat_vivant.get("egress", {}).get("delegation") is True
+        and etat_vivant.get("statut") is not None,
+        {"egress": etat_vivant.get("egress"), "statut": etat_vivant.get("statut"),
+         "note": "un refus n'archive pas de `rapport.json` (rien n'a tourné) : c'est le "
+                 "résumé renvoyé par `lancer` qui porte l'état, et l'écran et le journal "
+                 "lisent les mêmes champs"})
 MS.MISSIONS = RACINE / "artifacts" / "missions"
 
 # ═══════════════════════════ 4 · falsifications

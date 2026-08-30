@@ -96,12 +96,22 @@ class Verdict:
     digest: str
     taille: int
     texte_masque: str = ""
+    # 31/08/2026 — le masquage est VÉRIFIÉ, pas supposé.
+    #
+    # Mesuré sur le premier RUN réel : `raw_trufflehog3.redacted.json` contenait encore
+    # `"secret": "16C7e42F292c6912E7710c838347Ae178B4a"` en clair. Le motif `ghp_…` ne
+    # pouvait pas le voir — trufflehog3 rend la valeur SANS son préfixe dans ce champ —
+    # et le nom du fichier affirmait néanmoins une réduction que nous n'avions pas
+    # obtenue. Un artefact nommé « .redacted » qui fuit est pire qu'un artefact brut
+    # assumé : il éteint la vigilance de celui qui le relit.
+    assaini: bool = True
 
     def to_dict(self) -> dict:
         d = {"digest": self.digest, "size": self.taille, "stored": self.sur}
         if not self.sur:
-            d["reason"] = "secret_detected"
+            d["reason"] = "secret_detected" if self.assaini else "secret_non_masquable"
             d["redactions"] = self.occurrences
+            d["sanitized"] = self.assaini
         return d
 
 
@@ -147,6 +157,85 @@ def masquer_large(texte: str) -> tuple[str, int]:
     return "".join(out), total
 
 
+def _scalaires(obj):
+    """Toutes les chaînes feuilles d'un objet JSON, quelle que soit la profondeur."""
+    if isinstance(obj, str):
+        yield obj
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            yield from _scalaires(v)
+    elif isinstance(obj, (list, tuple)):
+        for v in obj:
+            yield from _scalaires(v)
+
+
+def valeurs_secretes(donnees, chemins) -> set[str]:
+    """Récolte, dans une sortie DÉJÀ PARSÉE, les valeurs des champs DÉCLARÉS secrets.
+
+    Le masquage par motif (`masquer`, `masquer_large`) devine ; celui-ci sait. Quand le
+    manifest déclare `champs_secrets: [secret, context]`, l'outil nous a déjà dit où est
+    la valeur — il n'y a plus rien à reconnaître, seulement à remplacer. C'est ce qui
+    permet de masquer un jeton déshabillé de son préfixe, cas où AUCUN motif ne peut
+    réussir (mesuré : `secret` rendu sans le `ghp_` par trufflehog3).
+
+    Les valeurs trop courtes sont écartées : remplacer « 4 » ou « None » par `<masqué>`
+    détruirait la lisibilité de l'artefact sans rien protéger.
+
+    Les valeurs DÉJÀ masquées sont écartées aussi, et c'est plus subtil qu'il n'y
+    paraît : la sortie d'un outil arrive souvent déjà partiellement masquée (masquage à
+    la capture, `sandbox.py`). Récolter `<masqué>"` comme si c'était un secret, puis le
+    remplacer par `<masqué>`, mange le guillemet fermant du JSON — mesuré le 31/08/2026 :
+    `"secret": "<masqué>,` au lieu de `"secret": "<masqué>",`, donc un artefact invalide
+    produit par le mécanisme même qui devait le protéger. Ce qui est déjà masqué n'est
+    plus un secret : c'est la preuve que la protection a eu lieu.
+    """
+    out: set[str] = set()
+    if not donnees or not chemins:
+        return out
+    items = donnees if isinstance(donnees, list) else [donnees]
+    # Format `custom` : le cœur enveloppe les items dans {"parser", "items"}.
+    if isinstance(donnees, dict) and isinstance(donnees.get("items"), list):
+        items = donnees["items"]
+    noms = {str(c) for c in chemins}
+
+    def _visiter(obj) -> None:
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if str(k) in noms:
+                    out.update(s for s in _scalaires(v)
+                               if len(s.strip()) >= 6 and MASQUE not in s)
+                else:
+                    _visiter(v)
+        elif isinstance(obj, list):
+            for v in obj:
+                _visiter(v)
+
+    for it in items:
+        _visiter(it)
+    return out
+
+
+def masquer_valeurs(texte: str, valeurs) -> tuple[str, int]:
+    """Remplace des littéraux EXACTS. Retourne (texte, nombre de remplacements).
+
+    Les valeurs les plus longues d'abord : deux secrets dont l'un est préfixe de l'autre
+    ne doivent pas laisser un résidu après remplacement du plus court.
+    """
+    if not texte or not valeurs:
+        return texte or "", 0
+    total = 0
+    for v in sorted({str(x) for x in valeurs if str(x).strip()}, key=len, reverse=True):
+        if len(v) < 6 or MASQUE in v:
+            # Voir `valeurs_secretes` : remplacer un masque par un masque ne protège rien
+            # et casse la syntaxe du JSON environnant.
+            continue
+        n = texte.count(v)
+        if n:
+            texte = texte.replace(v, MASQUE)
+            total += n
+    return texte, total
+
+
 def contient_secret(texte: str, large: bool = False) -> int:
     """Nombre d'occurrences de secret. 0 = sûr.
 
@@ -169,7 +258,7 @@ def digeste(texte: str) -> str:
     return hashlib.sha256((texte or "").encode("utf-8", "replace")).hexdigest()[:16]
 
 
-def examiner(texte: str) -> Verdict:
+def examiner(texte: str, valeurs=()) -> Verdict:
     """Applique la politique de conservation à une sortie.
 
     Sûre  → conservée telle quelle.
@@ -183,27 +272,42 @@ def examiner(texte: str) -> Verdict:
     Les findings, eux, restent masqués au jeu précis, champ par champ, via
     `masquer_large` déclaré dans le manifest : là un faux positif détruirait une donnée
     utile de façon systématique.
+
+    `valeurs` : littéraux déjà connus (champs déclarés `champs_secrets` par le manifest),
+    masqués EN PLUS des motifs. Deux voies complémentaires, et il les faut les deux :
+    les motifs attrapent un secret que personne n'a déclaré, les valeurs attrapent un
+    secret que les motifs ne peuvent pas reconnaître.
+
+    Le RÉSULTAT est ré-examiné. Un masquage non vérifié n'est pas un masquage : c'est
+    une intention. Si un motif subsiste après masquage, `assaini=False` et l'appelant
+    doit s'abstenir de publier — jamais la valeur en clair, sous aucun nom.
     """
     texte = texte or ""
     n = contient_secret(texte, large=True)
-    if n == 0:
+    valeurs = set(valeurs or ())
+    if n == 0 and not valeurs:
         return Verdict(sur=True, occurrences=0, digest=digeste(texte),
                        taille=len(texte), texte_masque=texte)
     masque, _ = masquer_large(texte)
-    return Verdict(sur=False, occurrences=n, digest=digeste(texte),
-                   taille=len(texte), texte_masque=masque)
+    masque, nv = masquer_valeurs(masque, valeurs)
+    restants = contient_secret(masque, large=True)
+    return Verdict(sur=False, occurrences=n + nv, digest=digeste(texte),
+                   taille=len(texte), texte_masque=masque, assaini=(restants == 0))
 
 
-def examiner_fichier(chemin) -> Verdict:
+def examiner_fichier(chemin, valeurs=()) -> Verdict:
     from pathlib import Path
     p = Path(chemin)
     if not p.exists():
         return Verdict(sur=True, occurrences=0, digest="absent", taille=0)
     try:
-        return examiner(p.read_text(encoding="utf-8", errors="replace"))
+        return examiner(p.read_text(encoding="utf-8", errors="replace"), valeurs=valeurs)
     except OSError as e:
+        # Illisible n'est PAS « sûr » : un fichier qu'on ne peut pas lire est un fichier
+        # dont on ne peut rien affirmer. `assaini=False` pour qu'il ne soit pas publié
+        # sous un nom qui prétend le contraire.
         return Verdict(sur=False, occurrences=0, digest="illisible", taille=0,
-                       texte_masque=f"<illisible : {e}>")
+                       texte_masque=f"<illisible : {e}>", assaini=False)
 
 
 def assainir_recursivement(obj):

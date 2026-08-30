@@ -658,10 +658,16 @@ def famille_e():
     # montage absent », l'écran l'avait reçu, et le journal de mission s'arrêtait à « contexte ».
     # L'isolateur doit continuer d'avorter avant tout Popen — rien ne doit tourner à moitié :
     # c'est la trace du motif qui manquait, pas la décision.
-    # Le cas est jugé dans le sens de la machine : ici l'environnement est incomplet et l'arrêt
-    # doit être nommé ; sur une machine où bootstrap a été lancé, l'exécution réussit et il n'y
-    # a rien à consigner — le cas se déclare alors NON ÉVALUÉ, jamais un succès volé par
-    # l'absence d'incident.
+    #
+    # RECONSTRUCTION du 31/08/2026 — ce cas mesurait la MAUVAISE chose et se déclarait
+    # PASS pour une raison accidentelle. Il attendait une exception de la mission ; or
+    # l'exception qu'il recevait venait d'un BINAIRE ABSENT (`_exe` → FileNotFoundError),
+    # pas de la cage. Les deux avortent, mais seul le second est une exigence de sécurité.
+    # Depuis que la disponibilité est filtrée avant le plan (D10), un outil absent
+    # n'atteint plus l'exécution — le scénario accidentel a disparu et le cas est passé
+    # NON ÉVALUÉ. Ce n'est pas l'invariant qui était faux, c'est le moyen de l'atteindre.
+    # On casse donc la cage VOLONTAIREMENT : l'invariant est testé au bon niveau, et il
+    # n'est plus à la merci de ce qui se trouve installé sur la machine.
     m_dir = RACINE / "artifacts" / "missions"
     avant = set(m_dir.glob("m-*")) if m_dir.is_dir() else set()
     vrai_engine = PO.PolicyEngine
@@ -671,12 +677,18 @@ def famille_e():
         def evaluer(self, *a, **k): return PO.Decision(allow=True, motifs=("politique_simulee_e7",))
 
     PO.PolicyEngine = _Permissif
+    vrai_verifie = SBX.Sandbox.verifie
+    # La cage est mise hors service DÉLIBÉRÉMENT, avant tout Popen : c'est exactement
+    # l'état qu'un `bootstrap.sh` non lancé produisait, sans dépendre du fait qu'il l'ait
+    # été ou non sur cette machine.
+    SBX.Sandbox.verifie = lambda self: ["harnais E7 : isolateur délibérément hors service"]
     leve = ""
     try:
         P.executer("Analyse la sécurité de ce dépôt", cible_de_test())
     except Exception as exc:
         leve = f"{type(exc).__name__}: {exc}"
     finally:
+        SBX.Sandbox.verifie = vrai_verifie
         PO.PolicyEngine = vrai_engine
     apres = sorted(set(m_dir.glob("m-*")) - avant) if m_dir.is_dir() else []
     consignés: list[dict] = []

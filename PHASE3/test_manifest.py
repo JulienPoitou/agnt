@@ -28,12 +28,25 @@ from registre import Registry          # noqa: E402
 
 PAS = 0
 ECHECS = 0
+NON_EVALUES: list = []
 
 
 def cas(nom, ok, detail=""):
     global PAS, ECHECS
     PAS, ECHECS = (PAS + 1, ECHECS) if ok else (PAS, ECHECS + 1)
     print(f"  {'OK   ' if ok else 'ECHEC'} {nom}" + (f"\n          {detail}" if detail else ""))
+
+
+def non_evalue(nom: str, raison: str) -> None:
+    """Ce qui n'a PAS pu être mesuré, et qui ne doit pas compter comme un succès.
+
+    Ajouté le 31/08/2026 : ce fichier ne savait dire que OK ou ECHEC. Une capacité sans
+    aucun provider exécutable sur la machine ne produit ni plan ni plan_id, et le test
+    plantait alors sur une clé absente — une impossibilité de mesure déguisée en panne,
+    et surtout un crash qui masquait les neuf cas suivants.
+    """
+    NON_EVALUES.append(nom)
+    print(f"  N/E   {nom}\n          {raison}")
 
 
 def refuse(nom, doc, attendu_dans_erreur=""):
@@ -147,13 +160,33 @@ def main() -> int:
     print("\n--- indépendance vis-à-vis des outils ---")
     coeur = ["pipeline.py", "adapters.py", "findings.py", "policy.py",
              "plan.py", "registre.py", "clusterer.py", "rapport.py"]
+    def _hors_commentaires(source: str) -> str:
+        """Le code, sans les commentaires — et sans `#` pris dans une chaîne.
+
+        Ce test cherchait « bandit » dans le TEXTE du fichier et se satisfaisait donc
+        d'un commentaire : `findings.py` citant bandit pour expliquer un choix de
+        normalisation faisait échouer une vérification d'architecture, alors qu'aucune
+        ligne de code du cœur ne dépend de cet outil. Juger un mot dans un commentaire,
+        c'est interdire d'expliquer ce qu'on fait — et laisser passer une vraie
+        dépendance écrite en code.
+        On utilise le tokenizer Python lui-même : `tokenize` sait où est un commentaire,
+        là où une suppression de `#` à la main se trompe sur les chaînes.
+        """
+        import io
+        import tokenize
+        garde = []
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            if tok.type != tokenize.COMMENT:
+                garde.append(tok.string)
+        return "\n".join(garde)
+
     mentions = []
     for f in coeur:
         t = (RACINE / "slice" / f).read_text(encoding="utf-8")
         # `adapters.py` cite bandit dans sa liste d'adaptateurs historiques : c'est
         # justement ce que le manifest doit rendre inutile. On vérifie qu'aucun AUTRE
-        # fichier du cœur ne connaît bandit.
-        if f != "adapters.py" and "bandit" in t.lower():
+        # fichier du cœur ne connaît bandit — DANS SON CODE, commentaires exclus.
+        if f != "adapters.py" and "bandit" in _hors_commentaires(t).lower():
             mentions.append(f)
     cas("7. aucun fichier du cœur ne connaît bandit", not mentions,
         f"fichiers concernés : {mentions}" if mentions
@@ -176,11 +209,22 @@ def main() -> int:
     cas("8c. même result_digest", e1.result_digest == e2.result_digest == e3.result_digest,
         f"{e1.result_digest}")
     e4 = pipeline.executer("Vérifie les dépendances", RACINE / "testrepo")
-    cas("8d. une autre intention → un autre plan_id",
-        e4.plan["plan_id"] != e1.plan["plan_id"],
-        f"{e4.plan['plan_id']} ≠ {e1.plan['plan_id']}")
+    # 8d compare deux plan_id : encore faut-il que la seconde intention PRODUISE un plan.
+    # DEPENDENCY_ANALYSIS n'a ici aucun provider exécutable — trivy et grype sont absents
+    # de la machine, pip-audit et npm-audit sont écartés par les conditions (la cage coupe
+    # le réseau) — la mission s'arrête donc avant le plan et il n'y a rien à comparer.
+    # Lire `e4.plan["plan_id"]` sans le garder transformait cette impossibilité en crash.
+    if not e4.plan.get("plan_id"):
+        non_evalue("8d. une autre intention → un autre plan_id",
+                   f"aucun plan produit (arret={e4.arret!r}) : DEPENDENCY_ANALYSIS n'a "
+                   "aucun provider exécutable sur cette machine — non mesurable, "
+                   "et délibérément pas compté comme un succès")
+    else:
+        cas("8d. une autre intention → un autre plan_id",
+            e4.plan["plan_id"] != e1.plan["plan_id"],
+            f"{e4.plan['plan_id']} ≠ {e1.plan['plan_id']}")
 
-    print(f"\n{'=' * 52}\n  {PAS}/{PAS + ECHECS} · {ECHECS} échec(s)\n{'=' * 52}")
+    print(f"\n{'=' * 52}\n  {PAS}/{PAS + ECHECS} · {ECHECS} échec(s) · {len(NON_EVALUES)} non évalué(s)\n{'=' * 52}")
     if not ECHECS:
         print("\nPROMESSE TENUE :")
         print("  un provider CLI ajouté dans un fichier YAML, sans modifier le cœur,")

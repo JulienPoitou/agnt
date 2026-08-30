@@ -224,6 +224,91 @@ def _choisir_moteur(moteur: str) -> tuple[str, object, str]:
     return "deterministe", None, ""
 
 
+def _valeurs_secretes_par_provider(src_run: Path) -> dict:
+    """Les valeurs que chaque outil a LUI-MÊME désignées comme secrètes.
+
+    Lu dans `raw_<provider>.json` (la sortie déjà parsée) d'après la déclaration du
+    manifest (`champs_secrets`). Deux choses sont ainsi réunies sans que le cœur ait à
+    connaître un seul outil : l'outil sait où est le secret, le manifest le déclare.
+    """
+    try:
+        from registre import Registry
+        reg = Registry()
+    except Exception:                                      # noqa: BLE001 - registre illisible
+        return {}
+    out: dict = {}
+    for f in sorted(src_run.glob("raw_*.json")):
+        pid = f.name[len("raw_"):-len(".json")]
+        try:
+            prov = reg.provider(pid)
+            champs = getattr(getattr(getattr(prov, "manifest", None), "extraction", None),
+                             "champs_secrets", None)
+            if not champs:
+                continue
+            valeurs = ASS.valeurs_secretes(
+                json.loads(f.read_text(encoding="utf-8")), champs)
+        except Exception:                                  # noqa: BLE001 - provider sans manifest
+            continue
+        if valeurs:
+            out[pid] = valeurs
+    return out
+
+
+def _publier_sorties(src_run: Path, dossier: Path) -> dict:
+    """Applique la politique de conservation aux sorties d'outils, et les publie.
+
+    UN SEUL corps, appelé par les DEUX destinations (le bundle ET l'archive de mission).
+    C'est tout l'objet de la fonction : la politique n'était appliquée qu'au bundle, et
+    l'archive de mission partait avec les secrets en clair — mesuré le 31/08/2026 sur
+    `artifacts/missions/…/sortie/raw_trufflehog3.json`, jamais examiné.
+
+    Trois issues, et elles ne se disent pas de la même façon :
+      · sûr                        → copié tel quel ;
+      · masqué ET VÉRIFIÉ propre   → publié sous `*.redacted*` ;
+      · masqué mais encore sale    → NON PUBLIÉ : empreinte et motif, jamais la valeur.
+    Le troisième cas est la raison d'être de la vérification (see `Verdict.assaini`) :
+    un artefact qui fuit ne doit pas porter un nom qui prétend le contraire.
+    """
+    dossier.mkdir(parents=True, exist_ok=True)
+    valeurs = _valeurs_secretes_par_provider(src_run)
+    conservation: dict = {}
+    # `raw_*.json` (ce que le cœur a compris) ET `brut_*` (ce que l'outil a écrit) : les
+    # deux sont des sorties d'outil, donc les deux passent par le même examen. Oublier les
+    # seconds ferait sortir du dépôt une valeur non masquée — c'est précisément le défaut
+    # que test_bundle cherche.
+    for f in sorted(list(src_run.glob("raw_*.json")) + list(src_run.glob("brut_*"))):
+        # `raw_<pid>` et `brut_<pid>` parlent du même outil : les valeurs valables pour
+        # l'un le sont pour l'autre, et c'est le brut — non retraité — qui a le plus de
+        # chances de porter la valeur en clair.
+        pid = next((p for p in valeurs
+                    if f.name.startswith(f"raw_{p}.") or f.name.startswith(f"brut_{p}.")), "")
+        v = ASS.examiner_fichier(f, valeurs=valeurs.get(pid, ()))
+        if v.sur:
+            shutil.copy2(f, dossier / f.name)
+        elif v.assaini:
+            nom = f.name.replace(".json", "") + ".redacted" + (
+                ".json" if f.suffix == ".json" else f.suffix)
+            (dossier / nom).write_text(v.texte_masque, encoding="utf-8")
+        else:
+            nom = f.stem + ".non_publie.json"
+            (dossier / nom).write_text(json.dumps({
+                "_non_publie": ("sortie NON publiée : au moins un motif de secret subsiste "
+                                "après masquage. La valeur n'est pas diffusée ; l'empreinte "
+                                "permet de retrouver la sortie d'origine."),
+                "fichier": f.name, "digest": v.digest,
+                "taille": v.taille, "occurrences": v.occurrences,
+            }, ensure_ascii=False, indent=2), encoding="utf-8")
+        conservation[f.name] = ({
+            "raw_output": v.to_dict(),
+            **({"sanitized_output": {
+                "path": (f.name.replace(".json", ".redacted.json") if v.assaini
+                         else f.stem + ".non_publie.json"),
+                "redactions": v.occurrences,
+            }} if not v.sur else {}),
+        })
+    return conservation
+
+
 def _archiver_mission(e, cible: Path) -> Path | None:
     """Copie les preuves de l'exécution SOUS le dossier de la mission (append-only).
 
@@ -239,9 +324,9 @@ def _archiver_mission(e, cible: Path) -> Path | None:
     sortie.mkdir(parents=True, exist_ok=True)
     src_run = RACINE / "run"
     if src_run.exists():
-        for f in sorted(src_run.iterdir()):
-            if f.is_file():
-                shutil.copy(f, sortie / f.name)
+        # La MÊME politique de conservation que le bundle : une archive de mission qui
+        # échappe à l'assainissement est une fuite rangée dans un autre tiroir.
+        _publier_sorties(src_run, sortie)
     for nom, objet in (("plan", e.plan), ("findings", e.findings),
                        ("clusters", e.clusters), ("rapport", e.rapport),
                        ("intent", e.intent)):
@@ -455,26 +540,7 @@ def main(argv: list[str]) -> int:
     # métadonnées et une version masquée. Un secret en clair dans nos artefacts serait
     # une fuite que NOUS créons — constaté pour de vrai avec Bandit.
     src_run = RACINE / "run"
-    conservation = {}
-    # `raw_*.json` (ce que le cœur a compris) ET `brut_*` (ce que l'outil a écrit) : les
-    # deux sont des sorties d'outil, donc les deux passent par le même examen. Oublier les
-    # seconds ferait sortir du dépôt une valeur non masquée par la fenêtre ajoutée la
-    # semaine dernière — c'est précisément le défaut que test_bundle cherche.
-    for f in sorted(list(src_run.glob("raw_*.json")) + list(src_run.glob("brut_*"))):
-        v = ASS.examiner_fichier(f)
-        if v.sur:
-            shutil.copy2(f, dossier / f.name)
-        else:
-            cible = dossier / (f.name.replace(".json", "") + ".redacted"
-                               + (".json" if f.suffix == ".json" else f.suffix))
-            cible.write_text(v.texte_masque, encoding="utf-8")
-        conservation[f.name] = ({
-            "raw_output": v.to_dict(),
-            **({"sanitized_output": {
-                "path": f.name.replace(".json", ".redacted.json"),
-                "redactions": v.occurrences,
-            }} if not v.sur else {}),
-        })
+    conservation = _publier_sorties(src_run, dossier)
 
     manifeste = {
         "genere_le": datetime.now(timezone.utc).isoformat(timespec="seconds"),

@@ -114,6 +114,14 @@ def construire(registre, plan: dict, decision: dict, raw: list[dict],
             vus.append(pid)
     if avorte and avorte.get("provider") not in vus:
         vus.append(avorte["provider"])
+    # Un outil écarté pour indisponibilité NE FIGURE DANS AUCUN STEP : sans cette ligne il
+    # sortait du ledger en même temps que du plan, et « pourquoi ce scanner n'a rien rendu »
+    # n'avait plus de réponse — l'outil n'était ni exécuté, ni écarté, ni absent. C'est
+    # l'autre moitié de D10 : filtrer la sélection ne sert qu'à moitié si l'écartement ne
+    # se voit pas.
+    for pid in (selection.get("disponibilite") or {}):
+        if pid not in vus:
+            vus.append(pid)
 
     ledger: list[dict] = []
     for pid in sorted(vus):
@@ -129,6 +137,14 @@ def construire(registre, plan: dict, decision: dict, raw: list[dict],
                    (getattr(getattr(prov, "manifest", None), "binaire", "") or pid))
         outil = getattr(getattr(prov, "manifest", None), "tool_id", "") or ""
         chemin_exe = resoudre(binaire) if binaire else None
+        if chemin_exe is None and prov is not None:
+            # Deux origines pour nommer un exécutable (déclaratif : `manifest.binaire` ;
+            # historique : `commande[0]`). Le ledger essaie les deux, comme
+            # `adapters.exe_de` le fait au lancement : une divergence afficherait
+            # « non disponible » sous un outil qui vient de tourner — et l'inverse.
+            autre = getattr(getattr(prov, "manifest", None), "binaire", "") or ""
+            if autre and autre != binaire:
+                binaire, chemin_exe = autre, resoudre(autre)
         dispo = chemin_exe is not None
         n = int((findings_par_provider or {}).get(pid, 0))
         c = couv.get(pid) or {}
@@ -140,7 +156,12 @@ def construire(registre, plan: dict, decision: dict, raw: list[dict],
 
         # ---- précédence : du plus factuel (l'outil existe-t-il ?) au plus riche ----
         if not dispo:
-            statut, raison = "non_disponible", (
+            # Le motif porté par le plan est repris tel quel quand il existe : c'est celui
+            # qui a été écrit au moment de la DÉCISION, avec le nom d'exécutable déclaré.
+            # Le recalculer ici produirait une seconde formulation du même fait — et deux
+            # formulations finissent par diverger (famille F8).
+            statut = "non_disponible"
+            raison = str((selection.get("disponibilite") or {}).get(pid) or "").strip() or (
                 f"exécutable introuvable ({binaire}) : ni au cache épinglé, ni au PATH — "
                 "lancer bootstrap.sh, ou installer l'outil")
         elif motif_avorte:
@@ -243,6 +264,19 @@ def declencheurs_escalade(ledger: list[dict], registre, tentes, plafond: int) ->
     le plan et OPA trancheront ensuite.
     """
     tentes = set(tentes or ())
+    # Import local, comme dans `construire` : ce module ne connaît `adapters` que pour la
+    # disponibilité, et `adapters` regarde déjà vers ici.
+    try:
+        import adapters as _AD
+    except Exception:                                      # noqa: BLE001
+        _AD = None
+
+    def _disponible(p) -> bool:
+        # Sans `adapters` (module injoignable), on ne FILTRE PAS : l'escalade reste
+        # l'escalade historique. Rendre un provider absent silencieusement pour cause
+        # d'import cassé serait une panne déguisée en diagnostic.
+        return True if _AD is None else bool(_AD.exe_de(p))
+
     out: list[dict] = []
     for e in ledger:
         if len(out) >= plafond:
@@ -258,8 +292,16 @@ def declencheurs_escalade(ledger: list[dict], registre, tentes, plafond: int) ->
         # cible ne produit rien, sinon une seconde facture et un faux air de progression.
         tentes.add(e.get("provider"))
         try:
+            # D10 (31/08/2026), second chemin : le suppléant doit EXISTER sur la machine,
+            # pas seulement être déclaré et passif. Sans ce filtre, `checkov` (0 cible
+            # analysée sur un dépôt sans IaC) se voyait suppléé par `kics` — absent. Le
+            # provider était lancé, échouait au exec dans la cage, et le journal portait
+            # une ligne d'exécution pour un binaire qui n'a jamais été installé. La règle
+            # est donc la même ici que dans `intent.choisir_providers` : la disponibilité
+            # se juge AVANT de proposer, jamais après avoir lancé.
             candidats = [p.id for p in registre.capability(cap).providers
-                         if p.id not in tentes and p.risque == "PASSIVE"]
+                         if p.id not in tentes and p.risque == "PASSIVE"
+                         and _disponible(p)]
         except Exception:                                  # noqa: BLE001 - capacité inconnue
             continue
         if not candidats:

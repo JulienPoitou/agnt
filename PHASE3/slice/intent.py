@@ -382,7 +382,7 @@ def inferer(requete: str, registre: Registry, avec_internes: bool = False) -> In
                            f"Capacités disponibles : {', '.join(sorted(eligibles))}.")
 
 
-def choisir_providers(intent: Intent, registre: Registry) -> list[str]:
+def choisir_providers(intent: Intent, registre: Registry, disponible=None) -> list[str]:
     """Sélectionne les providers par capacité. Refuse d'agir sur un Intent non résolu.
 
     Mode par capacité (étape 3, déclaré au registre) :
@@ -390,6 +390,17 @@ def choisir_providers(intent: Intent, registre: Registry) -> list[str]:
       · fan_out           → jusqu'à max_providers, dans l'ordre de priorité.
     Dans les deux cas le motif est tracé par plan.construire. L'applicabilité
     (globs déclarés) est filtrée en amont par plan.filtrer_applicabilite.
+
+    `disponible` (décision D10, 31/08/2026) : prédicat `Provider -> bool`, appliqué AVANT
+    la troncature. Sans lui la troncature était AVEUGLE à la disponibilité réelle : un
+    provider dont le binaire n'est pas sur la machine gardait son rang, prenait un slot de
+    fan-out et évinçait un outil présent — mesuré sur `gitleaks` (rang 100, absent) qui
+    écartait `trufflehog3` (rang 400, installé) sans jamais tourner. Le slot perdu ne se
+    voyait nulle part : c'est un choix de plan qui n'en était pas un.
+
+    `None` (défaut) = tout est réputé disponible : le comportement historique est
+    strictement préservé, et c'est ce que les batteries testent. La décision d'utiliser
+    la machine réelle est prise par l'appelant (pipeline), pas par cette fonction.
     """
     if not intent.executable():
         raise ValueError(
@@ -398,8 +409,14 @@ def choisir_providers(intent: Intent, registre: Registry) -> list[str]:
     for cid in intent.capabilities:
         cap = registre.capability(cid)
         passifs = [p for p in cap.providers if p.risque == "PASSIVE"]
+        if disponible is not None:
+            passifs = [p for p in passifs if disponible(p)]
         if not passifs:
-            raise ValueError(f"{cid} : aucun provider PASSIF, validation humaine requise")
+            # Aucun provider PASSIF exploitable pour cette capacité : la capacité ne
+            # contribue rien, elle n'est pas en erreur. Une capacité dont l'unique outil
+            # est absent n'est pas une demande illégitime — c'est une machine incomplète,
+            # et le rapport doit le dire (« non_disponible »), pas refuser la mission.
+            continue
         # Priorité explicite (décision 2026-08-28) : la plus petite valeur gagne,
         # égalité tranchée par l'ordre de déclaration (tri stable).
         ordonnes = sorted(passifs, key=lambda p: p.priorite)

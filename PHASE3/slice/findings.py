@@ -297,6 +297,41 @@ def _segs(chemin: str) -> list[str]:
     return [s for s in chemin.replace("\\", "/").split("/") if s not in ("", ".")]
 
 
+def ligne_entiere(valeur) -> "int | None":
+    """`location.line` est un `int` ou `None`. Point.
+
+    Trois consommateurs le supposent déjà — le clusterer (`abs(la - lb) <= PROXIMITE_LIGNES`),
+    les rapports, et l'empreinte — alors que la valeur vient d'un outil tiers, c'est-à-dire
+    d'un fichier sur lequel AGNT n'a aucune garantie de type.
+
+    Mesuré le 31/08/2026, au premier RUN réel : `trufflehog3` rend `"line": "5"` (chaîne).
+    Le manifest mappe `ligne: line`, le normaliseur recopiait la valeur telle quelle, et le
+    clusterer levait `TypeError: unsupported operand type(s) for -: 'int' and 'str'` —
+    APRÈS l'exécution des outils, c'est-à-dire en perdant la mission entière au dernier
+    kilomètre. La coercition a lieu ici et nulle part ailleurs : c'est CETTE fonction qui
+    définit le contrat du Finding, pas le clusterer qui en subit la violation.
+
+    Ce qui n'est pas un numéro de ligne devient `None`, jamais `0` : « l'outil a dit
+    `unknown` » et « l'outil a dit la ligne 5 » ne sont pas la même information, et
+    seule la seconde est une ligne.
+    """
+    if valeur is None or isinstance(valeur, bool):
+        return None
+    if isinstance(valeur, int):
+        return valeur
+    if isinstance(valeur, float):
+        return int(valeur) if valeur.is_integer() else None
+    if isinstance(valeur, str):
+        t = valeur.strip()
+        if not t:
+            return None
+        try:
+            return int(t)
+        except ValueError:
+            return None
+    return None
+
+
 def normalise_chemin(fichier: str, racines=()) -> str:
     """Chemin relatif à la cible, indépendant de la machine (décision 2026-08-28,
     complétée le 2026-08-30).
@@ -364,7 +399,11 @@ def depuis_semgrep(brut, racines=()) -> list[Finding]:
         carto = _paquet_concerne(rid)
         paquet = carto["paquet"]
         fichier = normalise_chemin(r.get("path") or "", racines)
-        ligne = (r.get("start") or {}).get("line")
+        # Même contrat que `normaliser` : `line` est un int ou None. Ces adaptateurs
+        # historiques ne passent pas par le manifest, ils n'ont donc personne d'autre pour
+        # tenir le contrat — et le clusterer, lui, lit les deux chemins.
+        ligne_brute = (r.get("start") or {}).get("line")
+        ligne = ligne_entiere(ligne_brute)
         meta = r.get("extra") or {}
         sev = (meta.get("severity") or "").upper()
         out.append(Finding(
@@ -381,7 +420,7 @@ def depuis_semgrep(brut, racines=()) -> list[Finding]:
                                     "confidence": carto["confidence"]},
             },
             identity={"canonical_rule_id": f"semgrep:{rid}",
-                      "fingerprint": _fp("semgrep", rid, fichier, str(ligne))},
+                      "fingerprint": _fp("semgrep", rid, fichier, str(ligne_brute))},
             location={"asset": "repository", "file": fichier, "line": ligne,
                       "package": paquet},
             # Semgrep fournit une sévérité ; on la conserve avec sa provenance.
@@ -456,7 +495,7 @@ def depuis_gitleaks(brut, racines=()) -> list[Finding]:
                       "fingerprint": f.get("Fingerprint") or
                       _fp("gitleaks", rid, fichier, str(f.get("StartLine")))},
             location={"asset": "repository", "file": fichier,
-                      "line": f.get("StartLine")},
+                      "line": ligne_entiere(f.get("StartLine"))},
             # Gitleaks ne fournit AUCUNE sévérité (vérifié : 18 champs, pas de Severity).
             # La sévérité est donc NOTRE responsabilité — décision documentée.
             severity={"value": "HIGH", "origine": "plateforme",
@@ -489,7 +528,13 @@ def depuis_manifest(brut, mani, outil: str, racines=()) -> list:
             outil == "semgrep" or getattr(mani.extraction, "nettoyage_regle", "") == "semgrep"
         ) else regle
         fichier = normalise_chemin(c.get("fichier") or "", racines)
-        ligne = c.get("ligne")
+        # Valeur BRUTE de l'outil, conservée pour l'empreinte : l'identité d'un finding
+        # doit rester stable même quand la valeur n'est pas un numéro exploitable (un
+        # changement d'identité silencieux casserait la corrélation inter-outils et les
+        # digests de bundles épinglés en test). La coercition, elle, ne porte que sur le
+        # champ stocké — voir `ligne_entiere`.
+        ligne_brute = c.get("ligne")
+        ligne = ligne_entiere(ligne_brute)
         # Paquet : le manifest peut DÉCLARER l'alias `paquet` dans extraction.champs
         # (étape 4). Occurrence observée : grype produit des matches au niveau PAQUET
         # (artifact.name) sans fichier, et ses ids GHSA-* n'existent dans aucun
@@ -514,7 +559,7 @@ def depuis_manifest(brut, mani, outil: str, racines=()) -> list:
         # parties) — les digests historiques des bundles de dogfooding sont épinglés en
         # test, et un changement d'identité silencieux casserait la corrélation
         # inter-outils autant que le rejeu.
-        empreinte = (_fp(outil, canon, str(fichier), str(ligne)) if asset == _ASSET_DEFAUT
+        empreinte = (_fp(outil, canon, str(fichier), str(ligne_brute)) if asset == _ASSET_DEFAUT
                      else _fp(outil, canon, asset, valeur_cible))
         location = {"asset": asset, "file": fichier, "line": ligne, "package": paquet}
         if asset != _ASSET_DEFAUT:

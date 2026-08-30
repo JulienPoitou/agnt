@@ -65,10 +65,27 @@ def lancer(*args) -> subprocess.CompletedProcess:
                           capture_output=True, text=True, timeout=900)
 
 
-def dernier_bundle() -> Path:
-    """Le bundle le plus récent, tous niveaux d'index confondus."""
-    d = sorted((p for p in BUNDLES.rglob("rapport.md")), key=lambda p: p.stat().st_mtime)
-    return d[-1].parent if d else BUNDLES
+def dernier_bundle(cible=None) -> Path:
+    """Le bundle le plus récent — et le BON.
+
+    La version précédente prenait le `rapport.md` le plus récent QUEL QU'IL SOIT. Quand
+    la mission sur la cible visée ne produit pas de bundle (arrêt avant exécution, aucun
+    outil exécutable pour cette cible), elle lisait donc silencieusement le rapport d'UNE
+    AUTRE cible : le test jugeait un objet qu'il n'avait pas produit, et son verdict ne
+    voulait rien dire — mesuré le 31/08/2026 sur `cible_independante`.
+    On rattache donc le bundle à sa cible, lue dans son propre manifeste.
+    """
+    dossiers = sorted((p.parent for p in BUNDLES.rglob("rapport.md")),
+                      key=lambda p: p.stat().st_mtime, reverse=True)
+    if cible is not None:
+        for d in dossiers:
+            try:
+                m = json.loads((d / "manifeste.json").read_text(encoding="utf-8"))
+            except Exception:                              # noqa: BLE001
+                continue
+            if str(cible) in str(m.get("cible", "")):
+                return d
+    return dossiers[0] if dossiers else BUNDLES
 
 
 def main() -> int:
@@ -82,7 +99,7 @@ def main() -> int:
     cas("1. une seule commande lance le workflow complet", r.returncode == 0,
         f"exit={r.returncode}")
 
-    b = dernier_bundle()
+    b = dernier_bundle(CIBLE)
     md = (b / "rapport.md").read_text(encoding="utf-8")
 
     # ------------------------------------------- 4. rapport Markdown généré
