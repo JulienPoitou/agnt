@@ -285,6 +285,11 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
         if step.provider not in resultats:
             continue
         prov, brut = resultats[step.provider]
+        # Le RAW est conservé TEL QUEL, sans retraitement — invariant que la ligne « PR #1 »
+        # nommait dans son propre bloc et qui est repris ici au merge (2026-08-31) : le
+        # masquage, lui, ne se joue pas à l'écriture du brut mais à l'export (`analyser.py`,
+        # `raw_*` + `brut_*` examinés avant copie). Un brut retraité ici ne prouverait plus
+        # ce que l'outil a écrit.
         (sortie / f"raw_{prov.id}.json").write_text(
             json.dumps(brut.donnees, ensure_ascii=False, indent=2, default=str),
             encoding="utf-8")

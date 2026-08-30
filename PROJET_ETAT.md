@@ -2663,3 +2663,74 @@ vivant après le dernier octet modifié, pas recopiées d'un run antérieur),
   empreinte épinglée — c'est le contenu assumé de la `note` du manifeste, pas un trou de plus.
 - **`npm ci` reproductible / lockfile versionné** : la fixture `PHASE3/testrepo` porte un
   `package-lock.json` écrit à la main pour le cas d'usage, pas un verrouillage d'approvisionnement.
+
+---
+
+# FUSION · la ligne de la PR #1 rentre dans LOT 1→5 (31/08/2026)
+
+`git push` a été refusé : la branche distante `arena/01a04f8f-agnt` (PR #1 ouverte vers `main`,
+« Chantiers A→D + cartographie adversariale des frontières ») portait **14 commits du 30/08** que
+ma ligne n'avait pas, et ma ligne portait **4 commits** (RÉTABLAGE, LOT 3, LOT 4, LOT 5) que la
+PR n'avait pas, avec `53ab18b` pour seul dénominateur commun. Aucun push forcé, jamais proposé
+autrement que comme option destructrice : leurs 14 commits sont un travail publié, avec un fil de
+revue.
+
+**Choix de résolution : ma ligne partout, après avoir vérifié que la PR ne contenait rien de
+fonctionnellement unique.** Ce n'est pas un `--ours` posé en confiance : le balayage a été fait deux
+fois, avec deux méthodes indépendantes.
+
+1. **Ensembles de lignes.** Pour chacun des 10 fichiers en conflit (46 blocs), les lignes du côté
+   `02eb99a` absentes du mien : 65 au premier coup d'œil. En les filtrant par identifiant réel —
+   un identifiant qu'ils nomment et que **mon fichier ne nomme jamais** — il en reste **7**, examinées
+   une par une :
+   - `pipeline.py` : le commentaire `# Le RAW est conservé tel quel, sans retraitement.` — **seule
+     ligne que cette fusion ajoute à mon code** : la phrase est reprise dans mon bloc, avec
+     l'ajout de où le masquage se joue (`analyser.py`, pas l'écriture du brut). Le comportement
+     était déjà le mien (j'écris `brut.donnees` tel quel).
+   - `analyser.py` : `from sandbox import CACHE_BIN` — un **import mort chez eux** (une seule
+     occurrence dans tout leur fichier), que mon ligne a supprimé en écrivant D7→D10.
+   - `app.js` : la ligne qui affichait `plan_id` + `empreinte` dans un `<pre>` — la même
+     information est rendue chez moi dans les traces de la chaîne de mission (l.303), un cran
+     plus loin dans la page.
+   - `test_adversaire.py` (4 lignes) : la note « AUCUN contrôle au rendu : `rapport.py` recopie
+     le champ en écrivant « valeur jamais stockée » » — c'est **exactement le constat C3b que ma
+     ligne a fermé** (`_secret_lisible` masque au rendu et le dit) ; et `_verifie_shaAu_lancement`,
+     que ma ligne a **retirée en en disant la raison** (F10 : un grep dans le source n'est pas une
+     preuve, remplacé par une mesure de comportement). Garder leur version aurait réintroduit une
+     mesure que le projet a jugée mauvaise.
+2. **Docs et interface, en intégralité.** `README_USAGE.md` : 14 lignes ajoutées par la PR, **0**
+   absentes de l'arbre fusionné. `DECISIONS_PROPOSEES.md` : 5, **0**. `PROJET_ETAT.md` chez eux :
+   1502 lignes non vides, **0** absentes des miennes. Interface : mêmes routes dans les deux
+   `api.py` (`/api/`, `/api/capacites`, `/api/cibles`, `/api/runs`, `/api/runs/`), aucun identifiant
+   de premier niveau propre à leur `app.js`. Les deux fichiers étaient en add/add : résolus en
+   gardant les miens, qui sont plus grands (28 003 o contre 18 594 ; 34 167 contre 22 981) et qui
+   portent déjà leurs ajouts.
+
+**Balayage re-conduit APRÈS résolution**, sur les douze fichiers (les dix en conflit plus
+`README_USAGE.md` et `DECISIONS_PROPOSEES.md`) : **9 lignes** restent propres à la PR et absentes de
+mon fichier. Une par une, aucune n'est fonctionnelle : un mot de leur prose dans ma note adversariale
+restituée autrement (« écrivant », « démontrée », « garantit »), leur import mort `CACHE_BIN`, une
+mention de chemin `PHASE3` dans un docstring d'`adapters.py`, un mot du README (« brutes »), et un
+faux positif du tokeniseur (`"\nempreinte"` lu comme un identifiant). Le compte est écrit ici parce
+qu'un « rien de perdu » sans chiffre ne vaut pas mieux qu'un grep.
+
+Deux points où la comparaison tourne à l'avantage de la fusion plutôt qu'à celui d'un bord : chez eux
+`rapport.py` échappait ce qu'il recopiait (`_sur(..., dans_code_span=True)`, 18 occurrences) sans
+jamais masquer — chez moi le masque passe **avant** (`assainissement`, 24 occurrences de
+`dans_code_span`) ; et leur `analyser.py` n'examinait que `raw_*.json` avant copie dans le bundle,
+tandis que le mien examine `raw_*` **et** `brut_*` — sans quoi la fenêtre ouverte par les plugins
+laissait sortir un artefact non examiné.
+
+**Vérification rejouée sur l'arbre fusionné** : les 37 suites du dossier rendent les mêmes codes
+qu'avant la fusion (20 à 0, 16 à 1, `test_llm_reel` à 2 — aucune suite ne change de camp) ;
+`test_catalogue_outils` 96/96 ; harnais DOM `node _domtest.mjs` 103/103 ;
+`inventaire_plateforme.py --verifier` 0 dérive ; `genere_pool.py --verifier` 309 entrées ;
+`node --check interface/app.js` OK ; `py_compile` muet sur les cinq fichiers `.py` fusionnés.
+Seul écart de contenu entre `8c89916` (ma pointe pré-fusion) et l'arbre résolu : **+5 lignes dans
+`slice/pipeline.py`**, le commentaire repris de la PR.
+
+**Dette signalée, non corrigée dans ce commit** (préexistante, et hors du périmètre de la fusion —
+le dire plutôt que la glisser dans un commit de merge) : `pyflakes` rend 1 import différé mort dans
+`interface/api.py:60` (`Registry`, non utilisé dans `cibles_admises`) et 6 locaux/imports inutilisés
+dans `test_adversaire.py`. Les mêmes warnings sur `8c89916` avant fusion : identiques, donc rien
+d'importé par ici.
