@@ -26,6 +26,11 @@ bash PHASE3/reconstruire_fixtures.sh   # recrée l'historique git des fixtures (
 
 Machine de référence : 2 Go de RAM suffisent (contrainte mesurée et documentée).
 
+## Sécurité (points de garde)
+
+- `docs/coordination/HISTORY_TIMELINE_SECURITY_GATE.md` — gate History/Timeline re-lié (P1).
+- `docs/coordination/MODE_LABORATOIRE.md` — Mode Laboratoire Propriétaire : contrôle d'admission local, double opt-in, egress fermé (P2).
+
 ## Notes
 
 - Les fixtures `testrepo*` contiennent des **faux secrets volontaires** — ne pas
