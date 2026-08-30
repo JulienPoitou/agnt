@@ -46,7 +46,7 @@
 |---|---|---|---|---|
 | CORE | `arena/01a05415-agnt` | `COMPLETED_WITH_LIMITATIONS` | `91f1775`, `5f3f522`, `0f73325`, `084bb73`, `d1c236c`, `8eb4005`, `f1f323d` | **P1 :** lecteur canonique d'historique Mission et API en lecture seule selon le contrat produit. |
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a` | **P2 :** annulation HTTP réellement interruptible ; **P1 intégration :** raccord final au module CORE canonique à traiter lors de l'intégration coordonnée. |
-| WEB | non reçu | en attente de handoff | — | À définir après handoff. |
+| WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
 | SECURITY | `arena/01a05426-agnt` | `PARTIAL` | `d1d562f` — non poussé au handoff | **P1 :** pousser le correctif P0.1 puis fermer SEC-G6a : jeu de règles gitleaks de confiance. |
 | PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f` | En attente contrôlée : validation produit de l'API History/Timeline/Status dès livraison CORE ; aucun quatrième contrat à créer maintenant. |
 
@@ -75,6 +75,12 @@
 - Tests contractuels, intégration simulée et serveurs/processus MCP locaux réellement exercés pour HTTP, Streamable HTTP et stdio.
 - Bootstrap MCP explicite, timeout/classification, annulation stdio, redaction de secrets et policy/egress fail-closed testés.
 - Compatibilité avec le module Transport CORE encore provisoire : une implémentation locale de `transports.py` existe faute du CORE canonique dans le checkout MCP.
+
+### WEB
+
+- Baseline UI/API caractérisée et verte : `_domtest.mjs` 103/103, `test_interface.py` 34/35 avec un non-évalué environnemental.
+- Recadrage respecté : aucune implémentation retenue, aucune route archive/bundle/fichier, aucun changement non commité.
+- Le périmètre Web est désormais de consommer les contrats Product et les endpoints CORE stabilisés, jamais de reconstruire persistance ou historique côté client.
 
 ### SECURITY
 
@@ -130,6 +136,15 @@ Les trois contrats produit sont maintenant terminés :
 - statuts `agnt.execution-status.v1`.
 
 Ne pas créer un quatrième contrat ou une UI concurrente. Dès que CORE livre le lecteur/API History + Timeline, Product & UX validera la conformité réelle des réponses et des états contre ces contrats, puis donnera le feu vert produit à WEB.
+
+### P1 — WEB : carte d'adoption et préparation d'intégration
+
+WEB n'a aucun code à construire sans dupliquer Product & UX ou devancer le lecteur CORE. Travail utile autorisé : comparer de façon ciblée la refonte Product UI (`18c1aad`) aux invariants DOM/API WEB existants, documenter les dépendances et préparer le plan d'adoption sans modifier `index.html`, `app.js`, `style.css` ou `api.py`.
+
+- Product UI est déjà livré ; ne pas le réécrire.
+- L'historique est consommé seulement après livraison de `GET /api/missions` par CORE.
+- Les bundles dogfooding, `localStorage`, fixtures et fichiers d'archives ne sont jamais une source d'historique Web.
+- L'exposition d'artefacts ou de téléchargements attend une décision Security explicite.
 
 ### P1 — SECURITY : jeu de règles gitleaks de confiance
 
@@ -206,7 +221,7 @@ transports.enregistrer("mcp", executeur)
 
 ### Consignes cross-builder actuelles
 
-- **WEB :** ne pas supposer un unique `PHASE3/run`; utiliser les données de mission et tolérer les champs MCP additionnels (`transport`, serveur, outil, protocole, confiance, disponibilité, corrélation).
+- **WEB :** branche réelle `arena/01a0541a-agnt`. Ne pas supposer un unique `PHASE3/run`; consommer uniquement les données de mission/API stabilisées, tolérer les champs MCP additionnels et ne jamais reconstruire un historique depuis filesystem, bundles, fixtures ou localStorage.
 - **SECURITY :** fermer SEC-G6a avant les chantiers secondaires, puis définir/tester les invariants d'un backend externe : egress, endpoint contrôlé par registre, secrets, timeout, policy avant appel, confiance et absence de bypass sandbox implicite.
 - **CORE / MCP :** tout nouvel appel à `pipeline.executer()` ou nouveau type de cible doit préserver l'autorisation explicite ; aucune cible externe ne doit contourner la liste opérateur et la policy. Une cible URL ne doit pas être exécutée tant que le contrat Transport ne reçoit pas explicitement `Cible`.
 - **PRODUCT & UX :** historique, timeline et statuts sont terminés. Ne pas créer de quatrième contrat ou modifier l'UI : attendre le lecteur/API CORE, puis valider la conformité réelle avant de donner le feu vert à WEB.
@@ -225,7 +240,7 @@ transports.enregistrer("mcp", executeur)
 | Interopérabilité MCP seulement locale, pas contre un serveur tiers. | Moyenne | HTTP, Streamable HTTP et stdio sont exercés contre des serveurs/processus contrôlés ; compatibilité tierce reste non démontrée. |
 | Contrat Transport ne reçoit pas encore le descripteur `Cible` pour une exécution distante. | Architecturale P1 | Les URL sont représentables et filtrées, mais non exécutables ; évolution conjointe CORE/MCP/SECURITY requise avant support distant réel. |
 | Annulation HTTP en cours d'appel MCP. | Moyenne | Timeout et fermeture de session existent ; interruption réelle d'un appel bloquant reste à prouver/implémenter dans un lot MCP P2. |
-| PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product & UX travaille désormais sur le contrat d'historique hors de ces fichiers ; attendre le handoff WEB avant tout nouveau chantier UI. |
+| PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product UI est déjà livré ; WEB a été recadré et ne modifie pas ces fichiers. Préparer une adoption ciblée après référence consolidée, jamais une seconde refonte. |
 | Historique/timeline/statuts affichés sans source backend persistée. | Élevée produit | Contrats produit terminés ; CORE doit exposer lecteur/API, `data.timeline` et `data.executions[]` enrichi avant toute activation WEB, sans données de démonstration après une réponse API. |
 | Gitleaks peut charger une configuration hostile du dépôt et masquer des secrets (SEC-G6a). | Haute sécurité | Correctif Security P1 actif : config AGNT explicite, vérifiée et fail-closed ; ne pas déclarer la détection de secrets fiable avant fermeture. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
@@ -263,6 +278,9 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | PRODUCT-003 | Timeline et projection sûre de provenance | P2 | Terminé — `226029fa` |
 | PRODUCT-004 | Sémantique produit des statuts/exécution/disponibilité | P2 | Terminé — `cebdf10f` |
 | PRODUCT-005 | Validation produit des réponses History/Timeline/Status réelles | P1 intégration | En attente — dépend du lecteur/API CORE |
+| WEB-001 | Adoption de la refonte Product UI et états honnêtes | P1 | En attente de référence consolidée ; carte d'adoption active |
+| WEB-002 | Consommation UI de `/api/missions` et détail | P1 | Bloqué — dépend de CORE History/Timeline et validation Security |
+| WEB-003 | Validation navigateur réelle d'un run terminé | P2 environnement | Bloqué — OPA/bwrap/outils absents |
 | TIMELINE-001 | Projection `data.timeline` dans le lecteur canonique CORE | P2 | Ouvert — CORE |
 | TIMELINE-002 | Noms source des événements intention/sélection alignés à CORE | Intégration | Ouvert |
 | TIMELINE-003 | Allowlists transport/protocole MCP approuvées avec Security | Sécurité | Ouvert |
@@ -281,6 +299,6 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 4. CORE implémente `data.timeline` et `data.executions[]` enrichi avec le lecteur d'historique selon les contrats produit ; Product & UX valide alors les réponses réelles, sans toucher à l'UI partagée.
 5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle.
 6. Security approuve les allowlists/redaction de provenance et les statuts hostiles avant exposition WEB.
-7. Adapter WEB aux endpoints stabilisés après feu vert produit, sans reconstruire de logique métier côté UI.
+7. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après feu vert produit/Security.
 
 > Cet ordre est révisable dès réception des handoffs Web, Security et Product.
