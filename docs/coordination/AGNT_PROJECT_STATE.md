@@ -48,7 +48,7 @@
 | MCP | `arena/01a05417-agnt` | `COMPLETED_WITH_LIMITATIONS` | `458d23b`, `be68844`, `229601a`, `b6b650d` | **P2 :** interopérabilité contre une implémentation MCP indépendante ; **P1 intégration :** raccord final au module CORE canonique à traiter lors de l'intégration coordonnée. |
 | WEB | `arena/01a0541a-agnt` | `PARTIAL` — aucun changement retenu | aucun commit | **P1 :** carte d'adoption Product UI et préparation d'intégration ; ne pas modifier les fichiers UI/API avant référence CORE consolidée. |
 | SECURITY | `arena/01a05426-agnt` | `COMPLETED_WITH_LIMITATIONS` | `d1d562f`, `e5838003` | **P1 :** gate adversarial de sécurité pour l'exposition History/Timeline/Status, sans implémenter l'API CORE. |
-| PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f` | En attente contrôlée : validation produit de l'API History/Timeline/Status dès livraison CORE ; aucun quatrième contrat à créer maintenant. |
+| PRODUCT & UX | `arena/01a05425-agnt` | `COMPLETED` | `18c1aad`, `bb2de26`, `226029fa`, `cebdf10f`, `3f96e255` | Gate black-box livré ; attente contrôlée de l'API CORE réelle pour certification History/Timeline/Status. |
 
 ---
 
@@ -102,6 +102,7 @@
 - Endpoints produit décidés : `GET /api/missions` et `GET /api/missions/{mission_id}` ; le polling temporaire `GET /api/runs/{submission_id}` reste distinct.
 - Contrat de timeline `agnt.timeline.v1` : projection read-only du journal sous `data.timeline`, ordre par `seq`, provenance allowlistée/redacted et compatibilité additive avec `data.events`.
 - Contrat de statuts `agnt.execution-status.v1` : dimensions séparées, preuve obligatoire avant `rien_trouve` ou compteur zéro, 18 scénarios de sécurité et mappings CORE/MCP normatifs.
+- Gate black-box Product/API : validation HTTP réelle ou capture contrôlée, détection de faux zéros, fixtures servies, identifiants confondus, artefacts maquillés, données sensibles et dérive de schéma.
 
 ---
 
@@ -136,14 +137,15 @@ L'annulation HTTP est terminée et prouvée localement (`b6b650d`). La prochaine
 - Conserver les statuts structurés (`timed_out`, `cancelled`, `unavailable`, `failed`) et la redaction.
 - Abandonner après une tentative bornée si l'environnement ne permet pas l'installation ; documenter alors le blocage sans contourner la sécurité.
 
-### PRODUCT & UX — attente contrôlée de l'intégration CORE
+### PRODUCT & UX — gate API prêt, attente de certification CORE
 
-Les trois contrats produit sont maintenant terminés :
+Les trois contrats produit et le gate black-box sont terminés :
 - historique `agnt.history.v1` ;
 - timeline `agnt.timeline.v1` ;
-- statuts `agnt.execution-status.v1`.
+- statuts `agnt.execution-status.v1` ;
+- `docs/coordination/api-conformance-gate/product_api_gate.py`.
 
-Ne pas créer un quatrième contrat ou une UI concurrente. Dès que CORE livre le lecteur/API History + Timeline, Product & UX validera la conformité réelle des réponses et des états contre ces contrats, puis donnera le feu vert produit à WEB.
+Ne pas créer de quatrième contrat, de nouvelle UI ou de CI trompeuse sur fixtures. Dès que CORE livre l'API réelle, Product & UX exécute le gate avec `--base-url` et `--require-full-coverage`, valide les captures contrôlées et donne le feu vert produit à WEB.
 
 ### P1 — WEB : carte d'adoption et préparation d'intégration
 
@@ -235,9 +237,9 @@ transports.enregistrer("mcp", executeur)
 - **WEB :** branche réelle `arena/01a0541a-agnt`. Ne pas supposer un unique `PHASE3/run`; consommer uniquement les données de mission/API stabilisées, tolérer les champs MCP additionnels et ne jamais reconstruire un historique depuis filesystem, bundles, fixtures ou localStorage.
 - **SECURITY :** fermer SEC-G6a avant les chantiers secondaires, puis définir/tester les invariants d'un backend externe : egress, endpoint contrôlé par registre, secrets, timeout, policy avant appel, confiance et absence de bypass sandbox implicite.
 - **CORE / MCP :** tout nouvel appel à `pipeline.executer()` ou nouveau type de cible doit préserver l'autorisation explicite ; aucune cible externe ne doit contourner la liste opérateur et la policy. Une cible URL ne doit pas être exécutée tant que le contrat Transport ne reçoit pas explicitement `Cible`.
-- **PRODUCT & UX :** historique, timeline et statuts sont terminés. Ne pas créer de quatrième contrat ou modifier l'UI : attendre le lecteur/API CORE, puis valider la conformité réelle avant de donner le feu vert à WEB.
-- **CORE :** implémenter l'historique, `data.timeline` et l'enrichissement structuré de `data.executions[]` depuis le lecteur canonique de mission, sans base parallèle, puis faire valider les réponses contre les contrats Product.
-- **WEB :** consommer exclusivement `/api/missions` pour l'historique, en utilisant `mission_id` comme référence persistante ; ne jamais reconstruire une liste locale ni mapper absence/refus/erreur vers zéro finding.
+- **PRODUCT & UX :** historique, timeline, statuts et gate sont terminés. Ne pas créer de quatrième contrat, UI ou CI certifiante sur fixtures : attendre le lecteur/API CORE, exécuter le gate réel avec couverture exigée, puis donner le feu vert à WEB.
+- **CORE :** implémenter l'historique, `data.timeline` et l'enrichissement structuré de `data.executions[]` depuis le lecteur canonique de mission, sans base parallèle, puis lancer le gate Product/API contre `--base-url` et publier des captures contrôlées à couverture complète.
+- **WEB :** consommer exclusivement `/api/missions` pour l'historique, en utilisant `mission_id` comme référence persistante ; ne jamais reconstruire une liste locale ni mapper absence/refus/erreur vers zéro finding. Attendre le passage du gate Product/API réel.
 
 ---
 
@@ -252,7 +254,7 @@ transports.enregistrer("mcp", executeur)
 | Contrat Transport ne reçoit pas encore le descripteur `Cible` pour une exécution distante. | Architecturale P1 | Les URL sont représentables et filtrées, mais non exécutables ; évolution conjointe CORE/MCP/SECURITY requise avant support distant réel. |
 | Compatibilité MCP avec une implémentation tierce indépendante. | Moyenne | HTTP, Streamable HTTP et stdio sont prouvés contre serveurs contrôlés internes ; une preuve avec une implémentation indépendante reste à faire. |
 | PRODUCT & UX et WEB peuvent modifier les mêmes fichiers d'interface (`index.html`, `app.js`, `style.css`). | Élevée à l'intégration | Product UI est déjà livré ; WEB a été recadré et ne modifie pas ces fichiers. Préparer une adoption ciblée après référence consolidée, jamais une seconde refonte. |
-| Historique/timeline/statuts affichés sans source backend persistée. | Élevée produit | Contrats produit terminés ; CORE doit exposer lecteur/API, `data.timeline` et `data.executions[]` enrichi avant toute activation WEB, sans données de démonstration après une réponse API. |
+| Historique/timeline/statuts affichés sans source backend persistée. | Élevée produit | Contrats et gate Product terminés ; CORE doit exposer lecteur/API, `data.timeline` et `data.executions[]` enrichi puis passer le gate réel avant toute activation WEB. |
 | Exposition API History/Timeline/Status de données sensibles ou payloads non allowlistés. | Haute sécurité d'intégration | Gate adversarial Security P1 actif avant exposition WEB ; CORE reste propriétaire de la projection/sérialisation. |
 | Le contrat d'autorisation de cible peut être perdu lors des évolutions CORE/MCP. | Haute sécurité | Préserver `cible_autorisee=True` explicite et l'autorité exclusive de la liste opérateur API ; tests de régression Security déjà ajoutés. |
 
@@ -290,7 +292,10 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 | PRODUCT-002 | Comparaison de runs et vues globales Findings/Reports | P2 | Différé |
 | PRODUCT-003 | Timeline et projection sûre de provenance | P2 | Terminé — `226029fa` |
 | PRODUCT-004 | Sémantique produit des statuts/exécution/disponibilité | P2 | Terminé — `cebdf10f` |
-| PRODUCT-005 | Validation produit des réponses History/Timeline/Status réelles | P1 intégration | En attente — dépend du lecteur/API CORE |
+| PRODUCT-005 | Validation produit des réponses History/Timeline/Status réelles | P1 intégration | Gate livré — dépend du lecteur/API CORE et de captures complètes |
+| GATE-001 | Endpoints CORE requis pour validation API réelle | Intégration | Bloqué — CORE en cours |
+| GATE-002 | Captures CORE couvrant toute la matrice sémantique | Qualité | Ouvert — CORE/MCP/SECURITY |
+| GATE-003 | Corpus hostiles complémentaire au gate Product | Sécurité | Ouvert — SECURITY |
 | WEB-001 | Adoption de la refonte Product UI et états honnêtes | P1 | En attente de référence consolidée ; carte d'adoption active |
 | WEB-002 | Consommation UI de `/api/missions` et détail | P1 | Bloqué — dépend de CORE History/Timeline et validation Security |
 | WEB-003 | Validation navigateur réelle d'un run terminé | P2 environnement | Bloqué — OPA/bwrap/outils absents |
@@ -310,7 +315,7 @@ Ces éléments ne sont pas des régressions de code tant qu'aucune preuve contra
 1. Préserver les correctifs Security poussés P0.1 `d1d562f` et SEC-G6a `e5838003`; ne pas déclarer G9 mesuré sans vrai gitleaks.
 2. Implémenter le lecteur/API d'historique CORE selon le contrat produit, en préservant Cible et l'autorisation explicite de cible ; Security prépare en parallèle le gate d'exposition.
 3. Prouver l'interopérabilité MCP avec une implémentation indépendante, de manière bornée et isolée ; ne pas supporter les URL distantes avant le contrat Cible/Transport joint.
-4. CORE implémente `data.timeline` et `data.executions[]` enrichi avec le lecteur d'historique selon les contrats produit ; Product & UX valide alors les réponses réelles, sans toucher à l'UI partagée.
+4. CORE implémente `data.timeline` et `data.executions[]` enrichi avec le lecteur d'historique selon les contrats produit, lance le gate Product/API réel avec couverture complète ; Product & UX valide alors le résultat sans toucher à l'UI partagée.
 5. Réconcilier CORE + MCP autour du module Transport canonique et rejouer les tests sur l'arbre intégré ; aucun merge aveugle.
 6. Security exécute son gate adversarial contre l'API CORE intégrée et approuve allowlists/redaction de provenance/statuts avant exposition WEB.
 7. Finaliser la carte d'adoption WEB sans code concurrent, puis intégrer la refonte Product UI et les endpoints CORE stabilisés après feu vert produit/Security.
