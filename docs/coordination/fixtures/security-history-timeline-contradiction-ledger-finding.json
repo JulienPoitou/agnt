@@ -1,99 +1,94 @@
 {
-  "_marker": "TEST ONLY — NEVER SERVE AS PRODUCT DATA",
-  "scenario": "ledger d'échec et statut rassurant",
-  "now": "2026-08-30T12:00:00Z",
-  "expect": {
-    "verdict": "FAIL",
-    "codes": [
-      "zero-statut-non-terminal",
-      "contradiction-resolue"
-    ]
-  },
-  "response": {
-    "api": "agnt.timeline.v1",
-    "endpoint": "/api/missions/{mission_id}",
-    "data": {
-      "mission_id": "m-20260830-0001",
-      "statut": "rien_trouve",
-      "created_at": "2026-08-30T09:00:00Z",
-      "run_id": "r-20260830-0001",
-      "findings_count": 0,
-      "findings_artifact": "present",
-      "policy": {
-        "moteur": "opa",
-        "decision": "autorisee",
-        "disponible": true
-      },
-      "providers": [
-        {
-          "provider_id": "semgrep",
-          "provider_kind": "scanner",
-          "availability": "disponible"
-        },
-        {
-          "provider_id": "gitleaks",
-          "provider_kind": "scanner",
-          "availability": "disponible",
-          "provenance": {
-            "provider_id": "gitleaks",
-            "provider_kind": "scanner",
-            "transport": "stdio",
-            "protocol": "mcp",
-            "confidence": "moyenne",
-            "source": "mcp"
-          }
-        }
-      ],
-      "executions": [
-        {
-          "provider_id": "semgrep",
-          "statut": "termine",
-          "findings_count": 0
-        },
-        {
-          "provider_id": "gitleaks",
-          "statut": "echoue",
-          "findings_count": 0
-        }
-      ],
-      "timeline": [
-        {
-          "seq": 0,
-          "ts": "2026-08-30T09:00:01Z",
-          "type": "ouverture",
-          "label": "Ouverture de la mission"
-        },
-        {
-          "seq": 1,
-          "ts": "2026-08-30T09:00:02Z",
-          "type": "plan",
-          "label": "Plan établi"
-        },
-        {
-          "seq": 2,
-          "ts": "2026-08-30T09:00:03Z",
-          "type": "contexte",
-          "label": "Contexte collecté"
-        },
-        {
-          "seq": 3,
-          "ts": "2026-08-30T09:00:04Z",
-          "type": "execution",
-          "label": "Exécution des scanners"
-        },
-        {
-          "seq": 4,
-          "ts": "2026-08-30T09:00:05Z",
-          "type": "cloture",
-          "label": "Mission terminée"
-        }
-      ],
-      "contradictions": [
-        {
-          "code": "ledger-echec",
-          "message": "gitleaks a échoué"
-        }
-      ]
+ "_marker": "TEST ONLY — NEVER SERVE AS PRODUCT DATA",
+ "scenario": "contradiction-ledger-finding",
+ "now": "2026-08-30T09:10:00Z",
+ "expect": {
+  "verdict": "FAIL",
+  "codes": [
+   "compteur-contradictoire"
+  ]
+ },
+ "response": {
+  "$fixture": "TEST ONLY — NEVER SERVE AS PRODUCT DATA",
+  "schema_version": "agnt.history.v1",
+  "mission": {
+   "mission_id": "m-20260830T090000Z-a1b2c3d4",
+   "detail_href": "/api/missions/m-20260830T090000Z-a1b2c3d4",
+   "request": {
+    "title": "Audit de sécurité du dépôt acme"
+   },
+   "target": {
+    "type": "repository",
+    "display_name": "acme/service"
+   },
+   "status": "termine",
+   "created_at": "2026-08-30T09:00:00Z",
+   "updated_at": "2026-08-30T09:04:00Z",
+   "artifacts": {
+    "detail": true,
+    "findings": true,
+    "clusters": true,
+    "report": true
+   },
+   "started_at": "2026-08-30T09:00:05Z",
+   "completed_at": "2026-08-30T09:04:00Z",
+   "duration_ms": 47500,
+   "run_id": "run-0001-a1b2",
+   "findings_summary": {
+    "total": 0,
+    "by_severity": {
+     "high": 0,
+     "medium": 0,
+     "low": 0
     }
-  }
+   }
+  },
+  "data": {
+   "executions": [
+    {
+     "schema_version": "agnt.execution-status.v1",
+     "provider_id": "local-git-01",
+     "capability_id": "gitleaks",
+     "display_name": "Gitleaks (journal)",
+     "applicability": {
+      "value": "applicable",
+      "proof": "recorded"
+     },
+     "selection": {
+      "value": "selectionne",
+      "proof": "recorded"
+     },
+     "condition": {
+      "value": "remplie",
+      "proof": "recorded"
+     },
+     "authorization": {
+      "value": "autorise",
+      "proof": "recorded"
+     },
+     "availability": {
+      "value": "disponible",
+      "proof": "recorded"
+     },
+     "execution": {
+      "value": "termine",
+      "invocation": "oui",
+      "output": "exploitable",
+      "proof": "recorded"
+     },
+     "detection": {
+      "value": "findings_presents",
+      "proof": "recorded",
+      "findings_count": 3
+     },
+     "completeness": {
+      "state": "complete",
+      "missing": [],
+      "limitations": []
+     }
+    }
+   ]
+  },
+  "missing_artifacts": []
+ }
 }

@@ -1,72 +1,131 @@
 {
-  "_marker": "TEST ONLY — NEVER SERVE AS PRODUCT DATA",
-  "scenario": "trou dans la séquence",
-  "now": "2026-08-30T12:00:00Z",
-  "expect": {
-    "verdict": "FAIL",
-    "codes": [
-      "seq-trou"
-    ]
-  },
-  "response": {
-    "api": "agnt.timeline.v1",
-    "endpoint": "/api/missions/{mission_id}",
-    "data": {
-      "mission_id": "m-20260830-0001",
-      "statut": "termine",
-      "created_at": "2026-08-30T09:00:00Z",
-      "run_id": "r-20260830-0001",
-      "findings_count": 2,
-      "findings_artifact": "present",
-      "policy": {
-        "moteur": "opa",
-        "decision": "autorisee",
-        "disponible": true
-      },
-      "providers": [
-        {
-          "provider_id": "semgrep",
-          "provider_kind": "scanner",
-          "availability": "disponible"
-        },
-        {
-          "provider_id": "gitleaks",
-          "provider_kind": "scanner",
-          "availability": "disponible",
-          "provenance": {
-            "provider_id": "gitleaks",
-            "provider_kind": "scanner",
-            "transport": "stdio",
-            "protocol": "mcp",
-            "confidence": "moyenne",
-            "source": "mcp"
-          }
-        }
-      ],
-      "executions": [
-        {
-          "provider_id": "semgrep",
-          "statut": "termine",
-          "findings_count": 1
-        },
-        {
-          "provider_id": "gitleaks",
-          "statut": "termine",
-          "findings_count": 1
-        }
-      ],
-      "timeline": [
-        {
-          "seq": 0,
-          "ts": "2026-08-30T09:00:01Z",
-          "type": "ouverture"
-        },
-        {
-          "seq": 2,
-          "ts": "2026-08-30T09:00:02Z",
-          "type": "plan"
-        }
-      ]
+ "_marker": "TEST ONLY — NEVER SERVE AS PRODUCT DATA",
+ "scenario": "seq-trou",
+ "now": "2026-08-30T09:10:00Z",
+ "expect": {
+  "verdict": "FAIL",
+  "codes": [
+   "seq-trou"
+  ]
+ },
+ "response": {
+  "$fixture": "TEST ONLY — NEVER SERVE AS PRODUCT DATA",
+  "schema_version": "agnt.history.v1",
+  "mission": {
+   "mission_id": "m-20260830T090000Z-a1b2c3d4",
+   "detail_href": "/api/missions/m-20260830T090000Z-a1b2c3d4",
+   "request": {
+    "title": "Audit de sécurité du dépôt acme"
+   },
+   "target": {
+    "type": "repository",
+    "display_name": "acme/service"
+   },
+   "status": "termine",
+   "created_at": "2026-08-30T09:00:00Z",
+   "updated_at": "2026-08-30T09:04:00Z",
+   "artifacts": {
+    "detail": true,
+    "findings": true,
+    "clusters": true,
+    "report": true
+   },
+   "started_at": "2026-08-30T09:00:05Z",
+   "completed_at": "2026-08-30T09:04:00Z",
+   "duration_ms": 47500,
+   "run_id": "run-0001-a1b2",
+   "findings_summary": {
+    "total": 1,
+    "by_severity": {
+     "high": 1,
+     "medium": 0,
+     "low": 0
     }
-  }
+   }
+  },
+  "data": {
+   "timeline": {
+    "schema_version": "agnt.timeline.v1",
+    "state": "complete",
+    "ordering": "journal_sequence_ascending",
+    "events": [
+     {
+      "event_id": "m-20260830T090000Z-a1b2c3d4:1",
+      "position": 1,
+      "source": {
+       "kind": "journal",
+       "sequence": 1,
+       "source_kind": "journal"
+      },
+      "time": {
+       "state": "recorded",
+       "timestamp": "2026-08-30T09:00:01Z"
+      },
+      "category": "mission",
+      "kind": "ouverture",
+      "consequence": "recorded",
+      "visibility": "technical",
+      "safe_summary": "Événement 1 consigné",
+      "references": {
+       "mission_id": "m-20260830T090000Z-a1b2c3d4"
+      },
+      "data_state": "complete",
+      "limitations": []
+     },
+     {
+      "event_id": "m-20260830T090000Z-a1b2c3d4:2",
+      "position": 2,
+      "source": {
+       "kind": "journal",
+       "sequence": 2,
+       "source_kind": "journal"
+      },
+      "time": {
+       "state": "recorded",
+       "timestamp": "2026-08-30T09:00:02Z"
+      },
+      "category": "execution",
+      "kind": "execution",
+      "consequence": "recorded",
+      "visibility": "technical",
+      "safe_summary": "Événement 2 consigné",
+      "references": {
+       "mission_id": "m-20260830T090000Z-a1b2c3d4"
+      },
+      "data_state": "complete",
+      "limitations": []
+     },
+     {
+      "event_id": "m-20260830T090000Z-a1b2c3d4:4",
+      "position": 4,
+      "source": {
+       "kind": "journal",
+       "sequence": 4,
+       "source_kind": "journal"
+      },
+      "time": {
+       "state": "recorded",
+       "timestamp": "2026-08-30T09:00:04Z"
+      },
+      "category": "report",
+      "kind": "cloture",
+      "consequence": "recorded",
+      "visibility": "technical",
+      "safe_summary": "Événement 4 consigné",
+      "references": {
+       "mission_id": "m-20260830T090000Z-a1b2c3d4"
+      },
+      "data_state": "complete",
+      "limitations": []
+     }
+    ],
+    "returned_events": 3,
+    "total_events": 3,
+    "truncated": false,
+    "next_cursor": null,
+    "limitations": []
+   }
+  },
+  "missing_artifacts": []
+ }
 }

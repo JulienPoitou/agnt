@@ -1,14 +1,12 @@
 {
-  "_marker": "TEST ONLY — NEVER SERVE AS PRODUCT DATA",
-  "scenario": "projection non-objet",
-  "now": "2026-08-30T12:00:00Z",
-  "expect": {
-    "verdict": "FAIL",
-    "codes": [
-      "forme-invalide"
-    ]
-  },
-  "response": [
-    "pas un objet"
+ "_marker": "TEST ONLY — NEVER SERVE AS PRODUCT DATA",
+ "scenario": "forme-invalide",
+ "now": "2026-08-30T09:10:00Z",
+ "expect": {
+  "verdict": "FAIL",
+  "codes": [
+   "forme-invalide"
   ]
+ },
+ "response": []
 }
