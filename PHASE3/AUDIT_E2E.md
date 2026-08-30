@@ -37,8 +37,11 @@ test. Chaque ligne est donc jugée par une exécution, et marquée :
    alors parler existent déjà : `test_isolateur.py`, `test_empreintes.py`, campagne G7/G8, D1.
 2. **Les montages de l'isolateur étaient hors sol** (littéral `/home/user/PHASE3/…`) : corrigé
    aujourd'hui, sinon la ligne 8 échouait sur *toute* machine, y compris celle de l'auteur du doc.
-3. **La décision F2 (`cible_autorisee`, campagne D4) attend l'arbitrage du propriétaire** : le
-   test reste rouge et documenté, il n'a pas été-adouci.
+3. **La décision F2 (`cible_autorisee`, campagne D4) est tranchée le 2026-08-30** : défaut
+   fail-closed (`None → False`) dans `pipeline.executer`, drapeau CLI `--cible-autorisee`,
+   autorisation de l'interface dérivée de `cibles_admises()` (le corps de la requête est
+   ignoré). D4 est rejoué en test de comportement (`test_adversaire.py`), plus un relevé de
+   texte : la campagne passe de 2 FAIL à 1 (G6a).
 4. L'affichage dans un vrai navigateur (CSS, détails/summary, scroll) n'est jugé par aucun
    automatisation de ce dépôt : le harnais exécute `app.js`, pas le moteur de rendu. Le vérifier
    demande une ouverture réelle de la page — c'est l'étape qui reste à faire à la main, et elle

@@ -219,7 +219,7 @@ def main() -> int:
 
     # ------------------------------------------------- 6. e2e testrepo_sca (fan-out réel)
     import pipeline
-    e = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo_sca")
+    e = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo_sca", cible_autorisee=True)
     steps = sorted({s["provider"] for s in e.plan["steps"]})
     # La fixture ne contient QUE des lockfiles : semgrep/checkov/gitleaks restent
     # éligibles (pas de déclaration d'applicabilité pour ces providers legacy/sans

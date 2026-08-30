@@ -141,9 +141,9 @@ def main() -> int:
 
     # ------------------------------------------------------------ 4. e2e réels
     import pipeline
-    e_go = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo_go")
+    e_go = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo_go", cible_autorisee=True)
     steps_go = sorted({s["provider"] for s in e_go.plan["steps"]})
-    e_py = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo")
+    e_py = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo", cible_autorisee=True)
     steps_py = sorted({s["provider"] for s in e_py.plan["steps"]})
     sel_py = (e_py.plan.get("selection") or {}).get("applicabilite") or {}
     cas("4a. e2e dépôt Go : semgrep_go exécuté",

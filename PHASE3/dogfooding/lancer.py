@@ -42,7 +42,10 @@ def lancer(nom: str) -> dict:
     erreur = None
     e = None
     try:
-        e = pipeline.executer(MISSION, cible)
+        # P0.1 : les cibles de ce script sont sous `cibles/` — des dépôts contrôlés du labo,
+        # choisis par l'opérateur. L'autorisation est donc posée ICI, explicitement ; un
+        # appelant sans cible contrôlée n'a pas le droit de la supposer.
+        e = pipeline.executer(MISSION, cible, cible_autorisee=True)
     except BaseException as ex:  # observer, pas masquer
         erreur = f"{type(ex).__name__}: {ex}"
     duree = round(time.monotonic() - t0, 1)

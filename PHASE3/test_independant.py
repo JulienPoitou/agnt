@@ -90,7 +90,7 @@ def main() -> int:
     REQUETE = "analyse la sécurité de ce dépôt"
     assert "yaml" not in REQUETE.lower() and "cve" not in REQUETE.lower()
 
-    e = pipeline.executer(REQUETE, CIBLE)
+    e = pipeline.executer(REQUETE, CIBLE, cible_autorisee=True)
 
     cas("le scan s'exécute sans indication ciblée", not e.arret and len(e.findings) > 0,
         f"{len(e.findings)} findings, profil {e.profil}, run {e.run_id}")
@@ -157,7 +157,7 @@ def main() -> int:
     cas("aucun secret en clair", not fuites, f"{len(fuites)} fuite(s)")
 
     # ---------------------------------------------------- reproductibilité
-    e2 = pipeline.executer(REQUETE, CIBLE)
+    e2 = pipeline.executer(REQUETE, CIBLE, cible_autorisee=True)
     cas("rejeu déterministe sur la même cible",
         e2.plan["plan_id"] == e.plan["plan_id"]
         and e2.result_digest == e.result_digest

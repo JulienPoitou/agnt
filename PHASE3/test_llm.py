@@ -126,7 +126,7 @@ def main() -> int:
     pipeline.MOTEUR_INTENT = "llm"
     pipeline.FOURNISSEUR_LLM = hostile
     try:
-        e = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE)
+        e = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE, cible_autorisee=True)
     finally:
         pipeline.MOTEUR_INTENT = "deterministe"
         pipeline.FOURNISSEUR_LLM = None
@@ -188,9 +188,9 @@ def main() -> int:
     pipeline.MOTEUR_INTENT = "llm"
     pipeline.FOURNISSEUR_LLM = F.MockLLM()
     try:
-        e1 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE)
+        e1 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE, cible_autorisee=True)
         pipeline.FOURNISSEUR_LLM = F.MockLLM()
-        e2 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE)
+        e2 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE, cible_autorisee=True)
     finally:
         pipeline.MOTEUR_INTENT = "deterministe"
         pipeline.FOURNISSEUR_LLM = None

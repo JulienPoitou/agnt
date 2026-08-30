@@ -346,11 +346,19 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
     _ledger(miss, registre, plan_dict, decision_dict, exec_.raw, exec_.couverture, trouves)
 
 
-def executer(requete: str, cible: Path, cible_autorisee: bool = True,
+def executer(requete: str, cible: Path,
+             cible_autorisee: bool | None = None,
              confiance_cible: str = "controlled",
              avec_internes: bool = False, escalade: bool = True,
              egress: bool | None = None) -> Execution:
-    """`egress` : l'autorisation de sortir (réseau) pour CETTE mission.
+    """`cible_autorisee` : la cible a été explicitement autorisée (P0.1).
+
+    Elle n'est JAMAIS implicite : `None` (argument omis) et `False` sont un refus — la
+    garde `input.cible.autorisee == true` de `policy.rego` ne reçoit `True` que d'un
+    appelant qui le pose. Toute autre valeur lève : pas de coercition (`1`, `"yes"`, …)
+    qui transformerait un oubli d'appelant en autorisation.
+
+    `egress` : l'autorisation de sortir (réseau) pour CETTE mission.
 
     `None` = on s'en tient au profil (donc coupé, aujourd'hui). `True` n'est pas un réglage
     de confort : c'est une DÉLÉGATION, et elle est traitée comme telle — le profil effectif
@@ -359,6 +367,16 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     l'empreinte de contexte par `sandbox.limites_appliquees()`. Un `True` silencieux aurait
     produit des findings dont personne ne peut dire s'ils viennent d'une cage ouverte.
     """
+    if cible_autorisee is None:
+        # Argument omis ou `None` explicite : AUCUNE autorisation n'a été posée.
+        cible_autorisee = False
+        autorisation_declaree = False
+    elif not isinstance(cible_autorisee, bool):
+        raise PipelineError(
+            f"autorisation de cible inconnue : {cible_autorisee!r} · "
+            "attendu : true, false, ou absent (absent = refus)")
+    else:
+        autorisation_declaree = True
     if confiance_cible not in CONFIANCES:
         # Pas de repli : une valeur non reconnue vaudrait «controlled» par accident,
         # et désarmerait silencieusement la garde mémoire de la policy.
@@ -375,7 +393,12 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     # qu'on a cru de cette cible ? » doit se relire dans le dossier de mission même si
     # la policy refuse ensuite — et même si OPA est indisponible.
     MS.consigner(miss, "confiance", confiance_cible=confiance_cible,
-                 cible_autorisee=cible_autorisee, profil=profils.actif().nom)
+                 cible_autorisee=cible_autorisee,
+                 # « déclarée » et « accordée » sont deux faits différents : un refus
+                 # explicite (`false` déclaré) ne doit pas se relire comme un oubli, ni
+                 # l'inverse.
+                 autorisation_declaree=autorisation_declaree,
+                 profil=profils.actif().nom)
 
     # ---- 0b. export réseau : une délégation, pas un défaut de lecture du profil
     import dataclasses as _dc
@@ -684,10 +707,14 @@ def _rapport(it, plan, e: Execution) -> dict:
 
 
 def main() -> int:
-    requete = sys.argv[1] if len(sys.argv) > 1 else "Analyse la sécurité de mon dépôt"
-    cible = Path(sys.argv[2]) if len(sys.argv) > 2 else RACINE / "testrepo"
+    argv = [a for a in sys.argv if a != "--cible-autorisee"]
+    # P0.1 : même l'entrée de dépannage ne connaît pas d'autorisation implicite —
+    # sans le drapeau, la cible est traitée comme non autorisée et la policy refuse.
+    autorisee = len(argv) != len(sys.argv)
+    requete = argv[1] if len(argv) > 1 else "Analyse la sécurité de mon dépôt"
+    cible = Path(argv[2]) if len(argv) > 2 else RACINE / "testrepo"
 
-    e = executer(requete, cible)
+    e = executer(requete, cible, cible_autorisee=autorisee)
     SORTIE.mkdir(parents=True, exist_ok=True)
     (SORTIE / "plan.json").write_text(json.dumps(e.plan, ensure_ascii=False, indent=2),
                                       encoding="utf-8")

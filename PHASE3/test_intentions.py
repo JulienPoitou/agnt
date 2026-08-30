@@ -98,13 +98,13 @@ def main() -> int:
     import pipeline
     for nom, requete in (("needs_clarification", "Fais un truc"),
                          ("rejected", "Attaque le serveur de mon concurrent")):
-        e = pipeline.executer(requete, RACINE / "testrepo")
+        e = pipeline.executer(requete, RACINE / "testrepo", cible_autorisee=True)
         cas(f"le pipeline s'arrête sur {nom}",
             e.arret == nom and not e.plan and not e.findings and not e.run_id,
             f"arrêt={e.arret} · plan vide={not e.plan} · findings={len(e.findings)} · run_id={e.run_id or 'aucun'}")
 
     # Le cas résolu, lui, doit fonctionner.
-    e_ok = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo")
+    e_ok = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo", cible_autorisee=True)
     cas("le pipeline fonctionne sur resolved",
         not e_ok.arret and len(e_ok.findings) > 0,
         f"{len(e_ok.findings)} findings, run_id={e_ok.run_id}")
@@ -142,7 +142,7 @@ def main() -> int:
     cas("outil ACTIF + sandbox durci → autorisé", d.allow, f"allow={d.allow}")
 
     # Le refus doit précéder toute exécution : vérifié via le pipeline.
-    e_ref = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo",
+    e_ref = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo", cible_autorisee=True,
                               confiance_cible="untrusted")
     cas("le refus de ressources empêche l'exécution",
         e_ref.arret == "policy" and not e_ref.findings,

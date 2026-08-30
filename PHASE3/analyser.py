@@ -3,6 +3,7 @@
 
     python3 PHASE3/analyser.py <dépôt> ["requête en langage naturel"] [--moteur auto|deterministe|llm]
                                  [--confiance controlled|untrusted]
+                                 [--cible-autorisee true|false]
                                  [--egress true|false]
 
 Sortie : un bundle d'artefacts dans PHASE3/artifacts/<input_digest>/<plan_id>/<run_id>/
@@ -146,6 +147,11 @@ def sarif(findings: list[dict], run_id: str, plan_id: str) -> dict:
 _DRAPEAUX = {
     "--moteur": (("auto", "deterministe", "llm"), "llm"),
     "--confiance": (pipeline.CONFIANCES, None),
+    # Autorisation de cible (P0.1) : la valeur est EXIGÉE, comme pour `--egress` — il n'existe
+    # pas de forme « `--cible-autorisee` seul vaut autoriser ». Absent du CLI = non autorisé,
+    # et la policy refuse (`cible_non_autorisee`) : l'oubli d'un opérateur est un refus, pas
+    # une exécution.
+    "--cible-autorisee": (("true", "false"), None),
     # Le drapeau n'a pas de forme « `--egress` seul vaut tout autoriser » : une valeur est
     # exigée (`true`/`false`) parce qu'un opérateur doit pouvoir écrire explicitement qu'il
     # ferme ce que le profil avait ouvert. Le nu, lui, est refusé — `None` en second.
@@ -265,6 +271,7 @@ def _archiver_mission(e, cible: Path) -> Path | None:
 
 def lancer(mission: str, cible: Path, moteur: str = "auto",
            fournisseur=None, confiance: str = "controlled",
+           cible_autorisee: bool = False,
            egress: bool | None = None) -> tuple[int, dict]:
     """Exécute une mission de bout en bout. Retourne (code_sortie, résumé).
 
@@ -275,6 +282,10 @@ def lancer(mission: str, cible: Path, moteur: str = "auto",
     `confiance` est transmis tel quel à `pipeline.executer(confiance_cible=...)` : une
     valeur hors `pipeline.CONFIANCES` est refusée par le pipeline (PipelineError), ici
     comme partout — la CLI la intercepte plus tôt, la bibliothèque la lève.
+
+    `cible_autorisee` : défaut `False` — cette fonction ne pose JAMAIS une autorisation
+    qu'on ne lui a pas donnée. L'interface passe `True` seulement pour une cible de sa
+    liste d'admission ; la CLI ne passe `True` qu'avec `--cible-autorisee=true`.
     """
     cible = Path(cible)
     if not cible.exists():
@@ -289,7 +300,8 @@ def lancer(mission: str, cible: Path, moteur: str = "auto",
     try:
         pipeline.MOTEUR_INTENT = moteur
         pipeline.FOURNISSEUR_LLM = fournisseur if moteur == "llm" else None
-        e = pipeline.executer(mission, cible, confiance_cible=confiance, egress=egress)
+        e = pipeline.executer(mission, cible, cible_autorisee=cible_autorisee,
+                              confiance_cible=confiance, egress=egress)
     finally:
         pipeline.MOTEUR_INTENT, pipeline.FOURNISSEUR_LLM = ancien_moteur, ancien_four
 
@@ -298,6 +310,9 @@ def lancer(mission: str, cible: Path, moteur: str = "auto",
         "statut": e.arret or "complet",
         "moteur": (e.intent or {}).get("moteur", ""),
         "confiance_cible": confiance,
+        # P0.1 : l'état de l'autorisation de cible se relit depuis l'appelant, comme la
+        # confiance — « la cible était-elle autorisée ? » n'est pas une question de journal.
+        "cible_autorisee": bool(cible_autorisee),
         # L'état de la garde d'export fait partie du résumé : un run mené cage ouverte doit
         # se reconnaître depuis l'appelant (CLI, interface), pas seulement en ouvrant le journal.
         "egress": dict(e.egress or {}),
@@ -329,6 +344,11 @@ def main(argv: list[str]) -> int:
     # croire qu'une cible a été jugée fiable alors qu'elle n'a simplement pas été posée.
     confiance = options.get("confiance", "controlled")
     confiance_explicite = "confiance" in options
+    # P0.1 : l'autorisation de cible n'a AUCUN défaut permissif. Absent du CLI =
+    # non autorisé ; la policy refusera (`cible_non_autorisee`) avant toute exécution.
+    # Clé AVEC tiret : `_options_depuis_argv` nomme les options d'après le drapeau.
+    cible_autorisee = _booleen(options, "cible-autorisee")
+    autorisation_explicite = "cible-autorisee" in options
     egress = _booleen(options, "egress")
     egress_explicite = "egress" in options
 
@@ -349,6 +369,12 @@ def main(argv: list[str]) -> int:
     print(f"confiance : {confiance}" + ("" if confiance_explicite else
           "  (défaut — aucune évaluation de la cible n'a été faite ; "
           "--confiance=untrusted pour un dépôt non fiable)"))
+    if not cible_autorisee:
+        print("autorisation cible : NON ACCORDÉE" + ("" if autorisation_explicite else
+              "  (--cible-autorisee=true pour autoriser explicitement cette cible)"))
+    else:
+        print("autorisation cible : ACCORDÉE (" + ("--cible-autorisee=true"
+              if autorisation_explicite else "portée par l'appelant") + ")")
     # Ce que la cage laisse sortir est affiché avec ce qu'elle laisse lire : un run dont
     # l'outil a pu joindre PyPI n'a pas la même portée qu'un run hors réseau, et l'opérateur
     # l'apprend en lisant la sortie, pas en relisant le code du profil.
@@ -363,7 +389,8 @@ def main(argv: list[str]) -> int:
     # retombe sur le déterministe. Il est affiché plus bas, dans le résumé.
 
     try:
-        e = pipeline.executer(requete, cible, confiance_cible=confiance, egress=egress)
+        e = pipeline.executer(requete, cible, cible_autorisee=bool(cible_autorisee),
+                              confiance_cible=confiance, egress=egress)
     except Exception as exc:                       # noqa: BLE001
         # Un refus d'exécution est une INFORMATION, pas une panne : « quelle dépendance
         # manque, quels outils étaient prêts » se lit sans décoder un traceback. Une panne

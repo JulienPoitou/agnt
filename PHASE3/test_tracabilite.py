@@ -42,9 +42,9 @@ def cas(nom, ok, detail=""):
 def main() -> int:
     print("=== TRAÇABILITÉ ===\n")
 
-    a1 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE_A)
-    a2 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE_A)
-    b1 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE_B)
+    a1 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE_A, cible_autorisee=True)
+    a2 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE_A, cible_autorisee=True)
+    b1 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE_B, cible_autorisee=True)
 
     # ------------------------------------------------ les cinq identifiants existent
     manque = [k for k in ("plan_id", "input_digest", "execution_context_digest",

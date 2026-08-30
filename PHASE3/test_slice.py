@@ -128,7 +128,7 @@ def main() -> int:
             "une commande forgée est refusée par OPA")
 
     # ------------------------------------------- 5. exécution réelle dans le sandbox
-    e = pipeline.executer(REQUETE, CIBLE)
+    e = pipeline.executer(REQUETE, CIBLE, cible_autorisee=True)
     codes = {r["provider"]: r["code_retour"] for r in e.raw}
     produits = [r["provider"] for r in e.raw
                 if (RACINE / "run" / r["fichier"]).exists()
@@ -190,7 +190,7 @@ def main() -> int:
     # Formulation validée le 2026-08-27 :
     #   même plan + même contexte  → résultats identiques ou différences explicables
     #   même plan + autre contexte → nouveau run_id et divergence traçable
-    e2 = pipeline.executer(REQUETE, CIBLE)
+    e2 = pipeline.executer(REQUETE, CIBLE, cible_autorisee=True)
     meme_plan = e2.plan["plan_id"] == e.plan["plan_id"]
     run_distinct = e2.run_id != e.run_id
     ctx_present = bool(e.contexte.get("contexte_empreinte")) and bool(e2.contexte.get("contexte_empreinte"))

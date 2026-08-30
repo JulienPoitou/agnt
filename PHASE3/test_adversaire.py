@@ -59,6 +59,7 @@ sys.path.insert(0, str(RACINE / "slice"))
 
 import clusterer as CL               # noqa: E402
 import findings as F                 # noqa: E402
+import mission as MS                 # noqa: E402
 import pipeline as P                 # noqa: E402
 import policy as PO                  # noqa: E402
 import rapport_humain as RH          # noqa: E402
@@ -555,18 +556,105 @@ def famille_d():
         {"rego_lu": lignes}, bloque=True,
         non_evalue="même motif : la règle est lue, pas évaluée. Ce qui est évaluable est en D4.")
 
-    sites = []
-    for f in list(RACINE.glob("*.py")) + list((RACINE / "slice").glob("*.py")):
-        if f.name == Path(__file__).name:
-            continue
-        texte = f.read_text(encoding="utf-8", errors="replace")
-        sites += [f"{f.name}:{m.group(0)}"
-                  for m in re.finditer(r"cible_autorisee\s*=\s*(\w+)", texte)]
-    pose_a_faux = [s for s in sites if s.endswith("False")]
-    cas("D4. qui pose `cible_autorisee=False` en dehors des tests ?", "armement de la garde",
-        {"sites_trouvés": sorted(set(sites))[:8]}, bloque=bool(pose_a_faux), gravite="haute",
-        note="la garde existe dans le `.rego` ; si aucun appelant de production ne la pose à "
-             "False, elle n'est armée qu'en test — dette connue, confirmée par ce relevé")
+    # D4 — P0.1 : l'autorisation de cible n'est jamais implicite. L'ancienne version cherchait
+    # un site `cible_autorisee = False` hors tests ; l'invariant défendu est plus direct :
+    # atteindre OPA sans avoir posé l'autorisation doit porter `False`. Le défaut mesuré à la
+    # reproduction (2026-08-30) : `pipeline.executer(sans argument)` transmettait `True` à
+    # OPA et consignait `cible_autorisee: true` dans le journal — la garde
+    # `input.cible.autorisee == true` n'était armée qu'en test. Verdict rendu ici par le
+    # COMPORTEMENT (entrée reçue par le moteur de décision + journal de mission), pas par
+    # un relevé de texte.
+    src_pipeline = (RACINE / "slice" / "pipeline.py").read_text(encoding="utf-8")
+    defaut_permissif = re.search(r"def executer\([^)]*cible_autorisee:\s*bool\s*=\s*True",
+                                 src_pipeline)
+
+    def appels_complets(texte: str) -> list[str]:
+        """Chaque appel `….(executer|lancer)(…)` parenthèses équilibrées — un regex
+        naïf s'arrête au premier `)` (celui de `Path(cible)` ou `_booleen(…)`) et
+        raterait le vraiment coupable si `cible_autorisee` venait après lui."""
+        appels = []
+        for m in re.finditer(r"(?:pipeline|analyser)\.(?:executer|lancer)\(", texte):
+            i, prof = m.end() - 1, 0
+            while i < len(texte):
+                if texte[i] == "(":
+                    prof += 1
+                elif texte[i] == ")":
+                    prof -= 1
+                    if prof == 0:
+                        break
+                i += 1
+            appels.append(texte[m.start():i + 1])
+        return appels
+
+    appels_implicites = []
+    for chemin in (RACINE / "analyser.py", RACINE / "dogfooding" / "lancer.py",
+                   RACINE / "interface" / "api.py"):
+        texte = chemin.read_text(encoding="utf-8", errors="replace")
+        for a in appels_complets(texte):
+            # Les docstrings citent la fonction : « … » ou une liste d'arguments vide
+            # (`pipeline.executer()`). Un appel réel porte toujours des arguments ici.
+            corps = a[a.index("(") + 1:-1].strip()
+            if not corps or "..." in a or "…" in a:
+                continue
+            if "cible_autorisee" not in a:
+                appels_implicites.append(f"{chemin.name}: {a[:90]}")
+
+    vus: list[bool] = []
+
+    class MoteurArmement:                       # observe l'entrée, refuse toujours
+        def __init__(self, *a, **k):
+            pass
+
+        def evaluer(self, plan, registre, cible_autorisee,
+                    confiance_cible="controlled", profil=None):
+            vus.append(bool(cible_autorisee))
+            return PO.Decision(allow=False, motifs=("espion",))
+
+    reel_moteur = PO.PolicyEngine
+    PO.PolicyEngine = MoteurArmement
+    non_bool_leve = False
+    premier = second = None
+    try:
+        premier = P.executer("Analyse le code", cible_de_test())       # rien de déclaré
+        second = P.executer("Analyse le code", cible_de_test(),
+                            cible_autorisee=True)                      # autorisation explicite
+        try:
+            P.executer("Analyse le code", cible_de_test(), cible_autorisee="yes")
+        except P.PipelineError:
+            non_bool_leve = True
+    finally:
+        PO.PolicyEngine = reel_moteur
+
+    def confiance_journal(ex) -> dict:
+        j = MS.MISSIONS / ex.mission / "journal.jsonl"
+        if not j.exists():
+            return {}
+        for l in j.read_text(encoding="utf-8").splitlines():
+            try:
+                d = json.loads(l)
+            except json.JSONDecodeError:
+                continue
+            if d.get("type") == "confiance":
+                return d
+        return {}
+
+    cas("D4. cible non déclarée = refus ; seule une autorisation explicite arme la garde",
+        "armement de la garde",
+        {"defaut_permissif": bool(defaut_permissif),
+         "recu_par_policy": vus,
+         "journal_sans_autorisation": confiance_journal(premier),
+         "journal_autorisee": confiance_journal(second),
+         "non_bool_refuse": non_bool_leve,
+         "appels_implicites": sorted(set(appels_implicites))[:6]},
+        bloque=(defaut_permissif is None and vus == [False, True] and non_bool_leve
+                and not appels_implicites
+                and confiance_journal(premier).get("cible_autorisee") is False
+                and confiance_journal(second).get("cible_autorisee") is True),
+        gravite="critique",
+        note="l'appel sans argument doit porter `cible_autorisee=False` à OPA ET au journal ; "
+             "`True` explicite arme ; une valeur non booléenne est une erreur, jamais une "
+             "coercition en autorisation ; aucun appel de production ne peut omettre "
+             "l'autorisation.")
 
     levee2 = ""
     try:

@@ -45,7 +45,7 @@ def main() -> int:
         print("  fixture absente :", FIXTURE)
         return 1
 
-    e = pipeline.executer("Analyse la sécurité de mon dépôt", FIXTURE)
+    e = pipeline.executer("Analyse la sécurité de mon dépôt", FIXTURE, cible_autorisee=True)
     inter = e.clusters.get("clusters_inter_outils", [])
     tous = e.clusters["clusters"]
     ids = {f["id"]: f for f in e.findings}

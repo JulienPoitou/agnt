@@ -39,6 +39,11 @@ python3 PHASE3/analyser.py /chemin/du/depot "Analyse mon code Terraform" --moteu
   bornée (il faut cgroups v2 ou un runtime OCI) — refus rendu **avant** exécution,
   avec le motif `memoire_non_bornee_cible_non_fiable`. Défaut : `controlled`, et il est
   affiché, jamais silencieux. Une valeur inconnue est une **erreur** (`1`), pas un repli.
+- **L'autorisation de la cible se déclare aussi** : `--cible-autorisee=true` autorise
+  explicitement la cible de cette mission (la politique exige `input.cible.autorisee ==
+  true`). Absent ou `false` = refus `cible_non_autorisee` avant toute exécution — un oubli
+  d'opérateur ne vaut jamais une autorisation. La valeur est **exigée** (pas de forme
+  « `--cible-autorisee` seul »), et l'état est affiché au lancement.
 - Codes de sortie : `0` analyse complète · `2` rien n'a été exécuté (une
   clarification est demandée, la demande est refusée, ou aucun provider ne
   s'applique) · `1` erreur technique.
@@ -58,8 +63,10 @@ python3 PHASE3/interface/api.py --ouvert                     # la liste des cibl
   (variable lue par `api.cibles_admises()`). Une cible hors liste est refusée avec la liste en
   réponse — jamais corrigée, jamais ouverte d'elle-même. À savoir avant d'en ajouter une : la
   politique ne juge **pas le chemin** de la cible, elle juge capacités, confiance et
-  `cible_autorisee` (dont l'usage réel reste le constat D4, non tranché) — la garde d'admission
-  de l'interface est donc ce qui borne l'accès, avec le garde-chemin et l'isolateur. Idem pour une question au-dessus de `TAILLE_MAX_REQUETE` :
+  `cible_autorisee` — depuis le 2026-08-30, l'autorisation n'est jamais implicite : la CLI la
+  pose avec `--cible-autorisee true|false` (absent = refus `cible_non_autorisee`), et
+  l'interface la dérive de sa liste d'admission (le corps de la requête est ignoré). La garde
+  d'admission de l'interface borne donc l'accès, avec le garde-chemin et l'isolateur. Idem pour une question au-dessus de `TAILLE_MAX_REQUETE` :
   c'est un `400` chiffré, pas une troncature.
 - Sur une machine où `bootstrap.sh` n'a pas été lancé, le RUN se termine en **refus nommé**
   (« PolicyError : binaire OPA introuvable : ~/.cache/arena_secops/bin/opa ») et cette cause est

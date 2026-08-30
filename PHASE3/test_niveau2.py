@@ -132,7 +132,7 @@ def main() -> int:
     # ------------------------------------------------ 5. exécution
     print("\n--- exécution ---")
     e = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo",
-                        avec_internes=True)
+                          cible_autorisee=True, avec_internes=True)
     par_outil = {}
     for f in e.findings:
         par_outil[f["source"]["tool"]] = par_outil.get(f["source"]["tool"], 0) + 1

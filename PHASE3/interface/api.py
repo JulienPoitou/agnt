@@ -208,12 +208,17 @@ def _travail() -> None:
             code, resume = analyser.lancer(question, Path(cible), moteur=moteur,
                                            fournisseur=fournisseur,
                                            confiance=options.get("confiance", "controlled"),
+                                           # Valeur dérivée en amont par ce module ; jamais
+                                           # de défaut permissif si l'option manque.
+                                           cible_autorisee=bool(
+                                               options.get("cible_autorisee", False)),
                                            egress=options.get("egress"))
             sortie = resume.get("sortie")
             donnees = _charger(sortie) if sortie else None
             if donnees is not None:      # le résumé du moteur complète l'archive, sans la contredire
-                for k in ("mission", "statut", "moteur", "confiance_cible", "egress",
-                          "findings", "clusters_inter_outils", "question", "motif", "rapport"):
+                for k in ("mission", "statut", "moteur", "confiance_cible", "cible_autorisee",
+                          "egress", "findings", "clusters_inter_outils", "question", "motif",
+                          "rapport"):
                     if resume.get(k) is not None:
                         donnees["run"][k] = resume[k]
             _marquer(rid, statut=("termine" if code == 0 else "refuse"),
@@ -442,7 +447,14 @@ class Gestionnaire(BaseHTTPRequestHandler):
             # rattraper une mission antérieure portant la même question (voir sa docstring).
             ETATS[rid] = {"statut": "en_file", "question": question, "cible": cible,
                           "pose_le": time.time()}
-        options = {"moteur": moteur, "confiance": confiance, "modele": corps.get("modele")}
+        options = {"moteur": moteur, "confiance": confiance, "modele": corps.get("modele"),
+                   # P0.1 — l'autorisation de cible ne se lit JAMAIS dans le corps de la
+                   # requête : un client ne peut ni l'accorder ni la retirer. L'unique
+                   # autorité est la liste d'admission de l'opérateur (`cibles_admises`),
+                   # vérifiée juste au-dessus — on transmet donc l'appartenance, pas un
+                   # champ du client. Un champ `cible_autorisee` envoyé par un navigateur
+                   # est ignoré par construction : il n'est lu nulle part.
+                   "cible_autorisee": bool(cible in admises)}
         if egress is not None:
             options["egress"] = egress
         FILE.put((rid, question, cible, options))

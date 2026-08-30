@@ -133,7 +133,9 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
   **F1** capacité `interne: true` sélectionnable par le modèle → plan + argv construits
   (`valider()` compare au catalogue complet, pas à `publiques()` ; `policy.rego` non plus) ;
   **F2** `cible_autorisee=False` n'est posé par AUCUN appelant, ni production ni test — la garde
-  du `.rego` n'a jamais eu de fausse entrée à évaluer ; **F3** garde-fous pré-LLM contournés par
+  du `.rego` n'a jamais eu de fausse entrée à évaluer (**corrigé le 2026-08-30** : défaut
+  `None → False` dans `pipeline.executer`, drapeau CLI `--cible-autorisee`, l'interface dérive
+  l'autorisation de sa liste d'admission — jamais du corps de la requête ; D4 PASS) ; **F3** garde-fous pré-LLM contournés par
   homoglyphes/espaces/conjugaisons ; **F4** le contenu du dépôt scanné écrit dans le rapport
   (lien cliquable, section `## ` forgée via un `message` ou un NOM de fichier) ; **F5** aucune
   borne de taille sur la requête sortante ; **F6** le rendu affirme « valeur jamais stockée » sur
@@ -163,10 +165,16 @@ par bootstrap.sh) ; gitleaks peut être hors PATH (`find / -name gitleaks`).
   (un outil que le contrat ne propose pas s'exécute), PAS exécution d'une commande
   forgée — l'argv vient du manifeste et `commande_suspecte` tient. Grave surtout parce
   que le pool annonce des outils ACTIFS à l'étape 7.
-- `cible_autorisee` (pipeline.py:82) vaut `True` par défaut et n'est posé à `False`
+- ~~`cible_autorisee` (pipeline.py:82) vaut `True` par défaut et n'est posé à `False`
   par aucun appelant : la CLI n'a pas de notion d'autorisation de cible. La garde
-  `input.cible.autorisee == true` de `policy.rego` n'est donc armée qu'en test. À
-  traiter avec l'approbation ACTIF de l'étape 7 (même nature de décision), pas à chaud.
+  `input.cible.autorisee == true` de `policy.rego` n'est donc armée qu'en test.~~
+  **Fermé le 2026-08-30 (P0.1)** : `pipeline.executer(..., cible_autorisee: bool | None = None)`
+  — `None`/`False` = refus (`cible_non_autorisee`), seule une valeur `True` explicite arme la
+  garde, toute autre valeur lève `PipelineError`. La CLI pose `--cible-autorisee true|false`
+  (exige une valeur), l'interface dérive l'autorisation de `cibles_admises()` (le corps de la
+  requête est ignoré), `dogfooding/lancer.py` la pose pour ses cibles de labo. Régression :
+  D4 (`test_adversaire.py`) et G12c/G16-G20 (`test_utilisation.py`), câblage API
+  (`test_interface.py`).
 - **Interface web (2026-08-30, étape 9)** : `PHASE3/interface/api.py` est une surcouche —
   `POST /api/runs` → `analyser.lancer()` → relecture de l'archive de mission. Le cœur n'est pas
   touché. Le premier RUN réel se termine en `refusé par la politique` (`opa` absent ici), avec la

@@ -64,13 +64,16 @@ def _faux_executer(capture: dict, arret: str = "policy",
     """
     import pipeline
 
-    def faux(requete, cible, cible_autorisee=True, confiance_cible="controlled",
-             avec_internes=False):
+    # Signature alignée sur le contrat réel (2026-08-30, P0.1) : `cible_autorisee` n'a
+    # aucun défaut permissif — le faux pose `None` comme le vrai et laisse le pipeline
+    # le réduire, pour qu'un oubli d'appelant ne se lise pas comme une autorisation.
+    def faux(requete, cible, cible_autorisee=None, confiance_cible="controlled",
+             avec_internes=False, egress=None):
         capture.clear()
         capture.update(requete=requete, cible=str(cible),
                        cible_autorisee=cible_autorisee,
                        confiance_cible=confiance_cible,
-                       avec_internes=avec_internes)
+                       avec_internes=avec_internes, egress=egress)
         return pipeline.Execution(
             plan={}, decision={"allow": False, "motifs": list(motifs)},
             intent={"moteur": "deterministe"}, arret=arret, mission="")
@@ -225,6 +228,42 @@ def bloc_confiance():
         (doc.get("cible") or {}).get("confiance") == "untrusted"
         and doc.get("profil_sandbox", {}).get("memoire_bornee") is False,
         f"cible={doc.get('cible')} memoire_bornee={doc.get('profil_sandbox', {}).get('memoire_bornee')}")
+    # Cette même entrée doit porter l'autorisation de cible — la CLI appelée sans
+    # `--cible-autorisee` ne doit JAMAIS faire lire `true` par la règle OPA (P0.1).
+    cas("G12c. entrée soumise à OPA : CLI sans autorisation → cible.autorisee=False",
+        (doc.get("cible") or {}).get("autorisee") is False,
+        f"cible={doc.get('cible')}")
+
+    # ------------------------- G16-G19 P0.1 — l'autorisation n'est jamais un défaut
+    capture_auth: dict = {}
+    pipeline.executer = _faux_executer(capture_auth)
+    try:
+        code, _ = analyser.lancer("Analyse la sécurité de mon dépôt", cible,
+                                  moteur="deterministe")
+        cas("G16. analyser.lancer sans autorisation : cible_autorisee=False transmis",
+            capture_auth.get("cible_autorisee") is False and code == 2,
+            f"capture={capture_auth.get('cible_autorisee')} code={code}")
+        code = analyser.main(["analyser.py", str(cible), "Analyse les dépendances",
+                              "--cible-autorisee=true"])
+        cas("G17. CLI --cible-autorisee=true : True atteint le pipeline (rien d'implicite)",
+            capture_auth.get("cible_autorisee") is True and code == 2,
+            f"capture={capture_auth.get('cible_autorisee')} code={code}")
+        code = analyser.main(["analyser.py", str(cible), "Analyse les dépendances"])
+        cas("G18. CLI sans drapeau : False atteint le pipeline (défaut = refus)",
+            capture_auth.get("cible_autorisee") is False and code == 2,
+            f"capture={capture_auth.get('cible_autorisee')} code={code}")
+    finally:
+        pipeline.executer = reel
+    o, reste = analyser._options_depuis_argv(["depot", "--cible-autorisee", "true"])
+    cas("G19. --cible-autorisee true (forme espacée) : valeur lue, positionnels intacts",
+        o.get("cible-autorisee") == "true" and reste == ["depot"], f"{o} {reste}")
+    try:
+        analyser._options_depuis_argv(["depot", "--cible-autorisee"])
+        cas("G20. --cible-autorisee sans valeur : ERREUR (pas de forme « nu = autoriser »)",
+            False, "aucune exception levée")
+    except ValueError:
+        cas("G20. --cible-autorisee sans valeur : ERREUR (pas de forme « nu = autoriser »)",
+            True, "")
 
     # ------------------------- G15 contrat de noms profils.py ↔ policy.rego (sans binaire)
     # Le jour où un seul des deux côtés change un nom, la garde cesse de lire ce qu'elle
@@ -253,9 +292,11 @@ def bloc_confiance():
 
     # Requête volontairement étroite (« secrets » → un provider) : le refus se joue à la
     # policy, donc une requête bon marché suffit — et G14, qui n'est PAS refusé, reste
-    # rapide sur la machine source.
+    # rapide sur la machine source. Autorisation posée explicitement : G13 mesure la garde
+    # MÉMOIRE, pas la garde d'autorisation (G12c mesure celle-ci).
     code, r = analyser.lancer("Cherche des secrets exposés", cible,
-                              moteur="deterministe", confiance="untrusted")
+                              moteur="deterministe", confiance="untrusted",
+                              cible_autorisee=True)
     cas("G13. cible untrusted + mémoire non bornée → REFUS réel (policy)",
         code == 2 and "memoire_non_bornee_cible_non_fiable" in (r.get("motif") or "")
         and not r.get("rapport"),
@@ -267,7 +308,8 @@ def bloc_confiance():
     r: dict = {}
     try:
         code, r = analyser.lancer("Cherche des secrets exposés", cible,
-                                  moteur="deterministe", confiance="controlled")
+                                  moteur="deterministe", confiance="controlled",
+                                  cible_autorisee=True)
         ok = not ("memoire_non_bornee_cible_non_fiable" in (r.get("motif") or "")
                   and r.get("statut") == "policy")
     except Exception as e:                       # noqa: BLE001 — exécution non disponible

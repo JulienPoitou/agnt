@@ -160,6 +160,48 @@ def main() -> int:
         verifie("run inconnu → 404 qui redit l'identifiant",
                 c == 404 and isinstance(objet, dict) and "pas-un-run" in json.dumps(objet), f"code={c}")
 
+        # ----------------------------- P0.1 — l'autorisation vient de la liste, jamais du client
+        # Le corps de la requête ne peut NI accorder NI retirer l'autorisation de cible :
+        # elle est dérivée de `cibles_admises()` (la liste de l'opérateur). Pour le prouver,
+        # on envoie `"cible_autorisee": false` (et on tente `true` sur une cible hors liste)
+        # et on lit ce que reçoit réellement `analyser.lancer`.
+        import analyser
+        recu_autorisation: list = []
+        vrai_lancer = analyser.lancer
+
+        def espion_autorisation(mission, cible, **kw):
+            recu_autorisation.append(kw.get("cible_autorisee"))
+            return 2, {"statut": "refuse", "motif": "espion-autorisation"}
+
+        analyser.lancer = espion_autorisation
+        try:
+            if liste:
+                cible_admise = liste[0]["chemin"]
+                c, lance = http(base, "/api/runs",
+                                {"cible": cible_admise, "question": "Analyse ce dépôt",
+                                 "cible_autorisee": False})
+                verifie("POST /api/runs : un champ cible_autorisee du client est IGNORÉ (202)",
+                        c in (200, 202) and isinstance(lance, dict) and lance.get("id"),
+                        f"code={c} corps={json.dumps(lance, ensure_ascii=False)[:100]}")
+                identifiant = (lance or {}).get("id", "")
+                etat: dict = {}
+                for _ in range(60):
+                    time.sleep(0.4)
+                    _, etat = http(base, f"/api/runs/{identifiant}")
+                    if isinstance(etat, dict) and etat.get("statut") in ("termine", "refuse",
+                                                                         "erreur"):
+                        break
+                verifie("l'autorisation transmise au moteur vient de la liste admise (True)",
+                        etat.get("statut") in ("termine", "refuse", "erreur")
+                        and recu_autorisation == [True],
+                        f"statut={etat.get('statut')} recu={recu_autorisation}")
+            c, refus = http(base, "/api/runs", {"cible": "/etc", "question": "scan",
+                                                "cible_autorisee": True})
+            verifie("aucun champ du client ne peut autoriser une cible hors liste (400)",
+                    c == 400, f"code={c}")
+        finally:
+            analyser.lancer = vrai_lancer
+
         # ---------------------------------------------------------------- un RUN, jusqu'au bout
         if liste:
             c, lance = http(base, "/api/runs", {"cible": liste[0]["chemin"],

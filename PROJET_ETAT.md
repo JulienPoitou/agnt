@@ -1493,7 +1493,7 @@ se fier aux verts :
 | # | Cas | Frontière franchie | Gravité | Ce qui est prouvé (extrait de preuve conservé) |
 |---|---|---|---|---|
 | **F1** | A2, A3 | *catalogue montré au modèle* | **haute** | `resolved` + `CODE_STATIC_ANALYSIS_CUSTOM` → `intent.moteur = llm:groq`, `plan = ['bandit_custom']`, `decision.allow = True`, **argv réellement passé au point de sortie** : `bandit -f custom --msg-template … -r <M_SCAN>`. A3 montre le pire : le provider interne se glisse **à côté** d'un choix légitime (`['bandit_custom','trivy','grype']`). |
-| **F2** | D4 | *armement de la garde de cible* | **haute** | `grep` de tout le code non-test : **personne** ne pose `cible_autorisee=False` — ni `analyser.py`, ni `run.py`, ni les tests (qui se contentent de le transmettre). La règle `input.cible.autorisee == true` du `.rego` n'a donc jamais eu d'entrée à `false` à évaluer. La dette était notée « armée en test seulement » : elle est **pire** que noté. |
+| **F2** | D4 | *armement de la garde de cible* | **haute** | `grep` de tout le code non-test : **personne** ne pose `cible_autorisee=False` — ni `analyser.py`, ni `run.py`, ni les tests (qui se contentent de le transmettre). La règle `input.cible.autorisee == true` du `.rego` n'a donc jamais eu d'entrée à `false` à évaluer. La dette était notée « armée en test seulement » : elle est **pire** que noté. **→ CORRIGÉ le 2026-08-30** : `pipeline.executer` vaut désormais `None → False` (aucun défaut permissif), la CLI pose `--cible-autorisee true|false`, l'interface dérive l'autorisation de `cibles_admises()` (jamais du corps de la requête) ; D4 est rejoué en test de comportement (`test_adversaire.py`, [PASS]). |
 | **F3** | B6 | *garde-fous avant le modèle* | moyenne | Refus déterministe = test de sous-chaîne minuscule. Passent : `еxfiltre` (e cyrillique), `E X F I L T R E`, `𝚎𝚡𝚏𝚒𝚕𝚝𝚛𝚎`, `exfiltrez`. Conséquence mesurée : la demande est **envoyée au modèle** au lieu d'être refusée avant. Impact borné (le plan reste dans le catalogue), mais la RÈGLE, elle, est sautée. |
 | **F4** | C1, C2, C6 | *rapport → humain* (intégrité et canal sortant) | moyenne | Un `message` d'outil devient un **lien cliquable** `[rapport complet](http://evil.example/collecteur?d=1)` recopié tel quel ; un `\n## Couverture — 0 faille détectée` dans un message **crée une section** du rapport (repérée deux fois : rendu machine + humain) ; un **nom de fichier** contenant un backtick et un saut de ligne casse le code-span et forge la même section. Le dépôt scanné écrit donc dans le document de travail de l'analyste. |
 | **F5** | B7 | *maîtrise du coût et du débit sortant* | basse | Requête de 120 000 caractères → **722 225 octets** de corps envoyé, aucune borne nulle part. Sur un fournisseur à débit limité, une seule phrase suffit à saturer le quota — et le repli déterministe alors déclenché n'a plus rien à voir avec la demande. |
@@ -1796,8 +1796,8 @@ lui-même reste à écrire** (F6 : refuser d'afficher une valeur qui n'a pas la 
 et C3b est toujours rouge — c'est voulu, et c'est la preuve que je n'ai pas fermé le cas en
 changeant le test.
 
-**Reste dans la file, dans l'ordre :** F2 (`cible_autorisee`, D4 — bloqué sur une décision
-d'approbation qui t'appartient) → F8 (G6b, couverture qui ment sur les scanners actifs —
+**Reste dans la file, dans l'ordre :** F2 (`cible_autorisee`, D4) **corrigé le 2026-08-30**
+(voir le relevé) → F8 (G6b, couverture qui ment sur les scanners actifs —
 vérifiable hors ligne) → F3 → F5/F6 (B6, B7, C3b) → F7/F9/F10 (G6a, G7, G8, qui touchent aux
 binaires et à l'environnement, donc à re-mesurer sur ta machine).
 
@@ -1944,7 +1944,9 @@ relevé sans correction, sans valeur de sécurité : dans `lancerUnRun`, l'atten
 **Batterie : 45 cas · 40 PASS · 2 FAIL · 3 NON ÉVALUÉS** (départ de série 28/13/3). Les deux FAIL
 restants sont des décisions, pas des régressions : D4 (F2, `cible_autorisee` — attend l'arbitrage
 du propriétaire) et G6a (F7, épinglage des règles de secrets — non mesurable sans outils et jeux de
-règles réels). Suites hors ligne rejouées après le dernier patch du cœur (`sandbox.py`,
+règles réels). → **D4 corrigé depuis le 2026-08-30** : `pipeline.executer` refuse par défaut,
+CLI/API posent l'autorisation explicitement, `test_adversaire.py` rejoué 42 PASS / 1 FAIL (G6a) /
+3 NON ÉVALUÉS. Suites hors ligne rejouées après le dernier patch du cœur (`sandbox.py`,
 `adapters.py`, `pipeline.py`) : garde_fous 29/29, chemins 48/48, empreintes 13/13, env_outil 9/9,
 rapport_humain 18/18, selection 13/13, mapping_go 17/17, extraction_blocs 14/14, go 18/18,
 isolateur vert, interface 31/31, DOM 48/48. Les 15 suites bloquées par l'environnement gardent les
@@ -2156,8 +2158,9 @@ déguisé : le code de sortie reste 2, et une panne qui n'est pas un refus garde
 `chemins` 48 · `garde_fous` 29 · `rapport_humain` 18 · `mapping_go` 17 · `extraction_blocs` 14 ·
 `env_outil` 9 · `empreintes` 13 · `interface` 34/35 (1 non évaluée) · harnais DOM **95/95** ·
 `test_bootstrap.sh` 14/14 · `test_bwrap.sh` 77 (rien mesuré : `bwrap` absent) · campagne adverse
-`test_adversaire.py` **inchangée** : 46 cas · 41 PASS · 2 FAIL (D4 et G6a, qui t'attendent l'un et
-l'autre) · 3 NON ÉVALUÉS.
+`test_adversaire.py` : 46 cas · 41 PASS · 2 FAIL (D4 et G6a) · 3 NON ÉVALUÉS — **rejouée le
+2026-08-30 après le correctif D4** (autorisation de cible fail-closed) : 46 cas · 42 PASS ·
+1 FAIL (G6a seulement) · 3 NON ÉVALUÉS.
 
 **Ce qui reste NON ÉVALUÉ sur cette machine, et n'est pas pour autant un succès** : toute
 décision `opa` réelle (binaire absent), donc neuf batteries qui appellent `pipeline.executer`

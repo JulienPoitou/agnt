@@ -177,7 +177,7 @@ def main() -> int:
 
     # 4d. intégration pipeline (réelle, sur testrepo_go — ~2 min)
     import pipeline
-    e = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo_go")
+    e = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo_go", cible_autorisee=True)
     types = [l["type"] for l in MS.journal(MS.relire(e.mission))]
     ctx_l = [l for l in MS.journal(MS.relire(e.mission)) if l["type"] == "contexte"]
     digest_attendu = RUN.digest_cible(RACINE / "testrepo_go")[0]

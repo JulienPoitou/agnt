@@ -99,7 +99,7 @@ def main() -> int:
     # ------------------------------------------------ 3. plan et policy
     print("\n--- plan et policy ---")
     e = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo",
-                        avec_internes=True)
+                          cible_autorisee=True, avec_internes=True)
     caps = [s["capability"] for s in e.plan["steps"]]
     provs = [s["provider"] for s in e.plan["steps"]]
     cas("3. bandit apparaît dans le plan", "bandit" in provs,
@@ -162,11 +162,11 @@ def main() -> int:
     # ------------------------------------------------ 8. canonicalisation du plan
     print("\n--- canonicalisation ---")
     e1 = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo",
-                        avec_internes=True)
+                           cible_autorisee=True, avec_internes=True)
     e2 = pipeline.executer("analyse la sécurité de mon depot", RACINE / "testrepo",
-                           avec_internes=True)
+                           cible_autorisee=True, avec_internes=True)
     e3 = pipeline.executer("  ANALYSE   la sécurité, de mon dépôt! ", RACINE / "testrepo",
-                           avec_internes=True)
+                           cible_autorisee=True, avec_internes=True)
     cas("8. trois formulations d'une même intention → même plan_id",
         e1.plan["plan_id"] == e2.plan["plan_id"] == e3.plan["plan_id"],
         f"{e1.plan['plan_id']} == {e2.plan['plan_id']} == {e3.plan['plan_id']}")
@@ -175,7 +175,8 @@ def main() -> int:
         "la requête brute garde sa propre identité")
     cas("8c. même result_digest", e1.result_digest == e2.result_digest == e3.result_digest,
         f"{e1.result_digest}")
-    e4 = pipeline.executer("Vérifie les dépendances", RACINE / "testrepo")
+    e4 = pipeline.executer("Vérifie les dépendances", RACINE / "testrepo",
+                           cible_autorisee=True)
     cas("8d. une autre intention → un autre plan_id",
         e4.plan["plan_id"] != e1.plan["plan_id"],
         f"{e4.plan['plan_id']} ≠ {e1.plan['plan_id']}")
