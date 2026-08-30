@@ -245,6 +245,22 @@ def _mission_id_du_run(etat: dict) -> str | None:
                             float(etat.get("pose_le") or 0.0))
 
 
+def _proprietaires_actifs() -> dict:
+    """mission_id → statut de file prouvé (`en_file`/`en_cours`) pour les runs
+    actuellement dans la file/ETATS. C'est la SEULE preuve de propriété en
+    mémoire : sans elle, une mission sans événement terminal est `inconnu`."""
+    actifs: dict = {}
+    with VERROU:
+        etats = [dict(e) for e in ETATS.values()]
+    for etat in etats:
+        if etat.get("statut") not in ("en_file", "en_cours"):
+            continue
+        mid = _mission_id_du_run(etat)
+        if mid:
+            actifs[mid] = etat["statut"]
+    return actifs
+
+
 def _marquer(rid: str, **champs) -> None:
     with VERROU:
         ETATS.setdefault(rid, {}).update(champs)
@@ -446,7 +462,7 @@ class Gestionnaire(BaseHTTPRequestHandler):
         if chemin == "/api/missions":
             return self._missions(partie)
         if chemin.startswith("/api/missions/"):
-            return self._mission_detail(chemin)
+            return self._mission_detail(partie)
         if chemin.startswith("/api/runs/"):
             rid = chemin.rsplit("/", 1)[-1]
             with VERROU:
@@ -478,27 +494,47 @@ class Gestionnaire(BaseHTTPRequestHandler):
         projection vivent dans `slice/mission_history.py`."""
         import mission_history as MH
         qs = parse_qs(partie.query)
-        inconnus = [k for k in qs if k not in ("limit", "curseur", *MH.FILTRES_V1)]
+        inconnus = [k for k in qs if k not in ("limit", "cursor", *MH.FILTRES_V1)]
         if inconnus:
-            return self._json({"erreur": "filtre inconnu : " + ", ".join(sorted(inconnus)),
-                               "admis": ["limit", "curseur", *MH.FILTRES_V1]}, 400)
+            return self._erreur("INVALID_FILTER",
+                                "filtre inconnu : " + ", ".join(sorted(inconnus))
+                                + " — admis : limit, cursor, " + ", ".join(MH.FILTRES_V1),
+                                400)
         try:
             reponse = MH.lister(limit=(qs.get("limit") or [None])[0],
-                                curseur=(qs.get("curseur") or [None])[0],
+                                cursor=(qs.get("cursor") or [None])[0],
                                 status=(qs.get("status") or [None])[0],
-                                target_type=(qs.get("target_type") or [None])[0])
+                                target_type=(qs.get("target_type") or [None])[0],
+                                proprietaire=_proprietaires_actifs().get)
         except MH.RequeteInvalide as e:
-            return self._json({"erreur": str(e)}, 400)
+            return self._erreur("INVALID_ARGUMENT", str(e), 400)
         return self._json(reponse)
 
-    def _mission_detail(self, chemin):
+    def _mission_detail(self, partie):
         """GET /api/missions/{mission_id} — le détail projeté, ou 404 SANS chemin."""
         import mission_history as MH
-        mid = chemin[len("/api/missions/"):]
+        mid = partie.path[len("/api/missions/"):]
+        qs = parse_qs(partie.query)
+        inconnus = [k for k in qs if k not in ("timeline_limit", "timeline_cursor")]
+        if inconnus:
+            return self._erreur("INVALID_FILTER",
+                                "paramètre inconnu : " + ", ".join(sorted(inconnus))
+                                + " — admis : timeline_limit, timeline_cursor", 400)
         try:
-            return self._json(MH.projeter(mid))
+            reponse = MH.projeter(mid,
+                                  timeline_limit=(qs.get("timeline_limit") or [None])[0],
+                                  timeline_cursor=(qs.get("timeline_cursor") or [None])[0],
+                                  proprietaire=_proprietaires_actifs().get)
         except MH.MissionIntrouvable:
-            return self._json({"erreur": f"mission inconnue : {mid[:64]}"}, 404)
+            return self._erreur("MISSION_NOT_FOUND", "Mission introuvable", 404)
+        except MH.RequeteInvalide as e:
+            return self._erreur("INVALID_ARGUMENT", str(e), 400)
+        return self._json(reponse)
+
+    def _erreur(self, code, message, statut_http):
+        """Enveloppe d'erreur du contrat History §10. Message redacté, jamais de
+        chemin, jamais de trace."""
+        return self._json({"error": {"code": code, "message": message}}, statut_http)
 
     # ---- écriture
     def do_POST(self):  # noqa: N802
