@@ -1,12 +1,12 @@
 # AGNT — PROJECT STATE (mémoire de coordination)
 
-> **Mainteneur :** orchestrateur AGNT (session `arena/01a0575d-agnt`).
+> **Mainteneur :** orchestrateur AGNT (session `arena/01a05783-agnt`, reprise 31/08).
 > **But :** décisions, contrats, état des builders, dépendances, conflits, ordre d'intégration — utiles entre les handoffs. Synthèse vivante, pas un journal. Les commits et handoffs restent les preuves détaillées.
 > **Historique :** reprend et met à jour `AGNT_PROJECT_STATE.md` (30/08, branche `arena/01a0543a-agnt@aafe5af`). Ce fichier est désormais l'unique source de vérité de coordination ; `AGNT_PROJECT_STATE.md` est un pointeur.
 
-**Dernière mise à jour :** 2026-08-31 (incident bootstrap builder — résolu)
-**Base d'intégration connue :** `main` = `563ab9d` + correctif eol (PR #3) ; contenu code = `4433af6`
-**Ligne la plus avancée :** PR #2 (`a1520d2`, OUVERTE) — voir Topologie.
+**Dernière mise à jour :** 2026-08-31 — reprise `arena/01a05783-agnt` : PR #2 fusionnée dans `main` ET vérifiée, handoffs CORE/MCP reçus et classés, perte WEB déclarée.
+**Base d'intégration connue :** `main` = `b85bc91` (PR #2 MERGED, 11:01:17Z) = `4433af6` + LOT 1 E2E + LOT 3 plugins (+1113/−162, 30 fichiers) + docs.
+**Ligne la plus avancée :** `main` (`b85bc91`) — voir Topologie.
 
 ---
 
@@ -32,25 +32,43 @@
 
 ---
 
-## TOPOLOGIE GIT (établie le 31/08 — CONFIRMÉ par git ls-remote)
+## TOPOLOGIE GIT (révisée 31/08 après-midi — CONFIRMÉ par git ls-remote + fetch complet)
 
 ```
-(fusion PR#1, 30/08) 4433af6 ──┬─ main 563ab9d (31/08) = 4433af6 + docs/coordination/prompts  ← base actuelle, EN RETARD côté code
-                               ├─ PR #2 OUVERTE : a1520d2 (01a052a5-agnt, 30/08)  ← LIGNE LA PLUS AVANCÉE (LOT 1 E2E + LOT 3 plugins, +1113/−162, 30 fichiers)
+(fusion PR#1, 30/08) 4433af6 ──┬─ main b85bc91 (31/08 11:01:17Z) = 4433af6 + PR#2 MERGED (LOT 1 E2E + LOT 3 plugins)
+                               │            parents : 28ad47d (PR#4 docs) + a1520d2 — fusion SANS arrangement
+                               ├─ PR #2 : a1520d2 (01a052a5-agnt)  → MERGED dans main (merge commit b85bc91)
                                ├─ CORE    arena/01a05415-agnt  (11 commits, tip eebefbc)
+                               │         └─ reprise arena/01a0575c-agnt → tip 3aeb8bc (handoff v1 enregistré, pushé)
                                ├─ MCP     arena/01a05417-agnt  ( 5 commits, tip 6e04ff8)
-                               ├─ WEB     arena/01a0541a-agnt  ( 2 commits, tip 93f8ead)
+                               │         └─ reprise arena/01a05760-agnt → tip 451de79 (handoff v1 + réparation garde, pushé)
+                               ├─ WEB     arena/01a0541a-agnt  ( 2 commits docs, tip 3268641) — voir « PERTE WEB » ci-dessous
                                ├─ PRODUCT arena/01a05425-agnt  ( 5 commits, tip 3f96e25)
-                               ├─ SECURITY arena/01a05426-agnt ( 5 commits, tip 08a8150)
-                               ├─ DEVOPS  arena/01a0543a-agnt  (24 commits docs, tip aafe5af — contient l'ancienne mémoire)
-                               └─ arena/builder-{core,mcp,web,security,product,devops} : 6 branches VIDES à 4433af6 (nouvelles sessions, aucun travail)
+                               ├─ SECURITY arena/01a05426-agnt ( 5 commits, tip 08a8150) — PAS de handoff v1
+                               ├─ DEVOPS  arena/01a0543a-agnt  (24 commits docs, tip aafe5af)
+                               └─ arena/builder-{core,mcp,web,security,product,devops} : 6 branches à 4433af6 (sessions à venir)
 ```
 
-Faits critiques :
-1. **L'historique de `main` est squashé** (1 commit). Les SHA cités dans `PROJET_ETAT.md` (`f400fe6`, `8c89916`, `53ab18b`…) ne sont pas résolubles localement — s'y référer par le récit, pas par SHA.
-2. **PR #2 n'est pas dans main** et son `PROJET_ETAT.md` est plus récent que celui de main (+43 lignes). La fusion 31/08 décrite dans `PROJET_ETAT.md` (PR #1 absorbée par la ligne LOT 1→5) est le contenu de PR #2.
-3. PR #2 recoupe les branches builders sur les fichiers du cœur : ∩ CORE 5, ∩ MCP 7, ∩ SECURITY 11, ∩ PRODUCT 1 (`analyser.py`, `slice/pipeline.py`, `slice/adapters.py`, `slice/plan.py`, `app.js`…). → Conflit d'intégration garanti si l'ordre est mal choisi.
-4. Les travaux builders de la ronde précédente sont tous basés sur `4433af6` (pré-LOT). Aucun n'est intégré à main.
+Faits critiques (tous revérifiés 31/08 après-midi, `arena/01a05783-agnt`) :
+1. **PR #2 est FUSIONNÉE dans main** (`b85bc91`, merge 11:01:17Z). Le diff de la fusion = exactement le diff de PR #2 (30 fichiers, +1113/−162) — GitHub n'a rien « arrangé ». C'était l'action 1 des « Intégrations prévues » : elle est FAITE. Preuve minimale exécutée après coup sur l'arbre fusionné (voir « VÉRIFICATION main »).
+2. L'historique de `main` reste squashé ; les SHA cités dans `PROJET_ETAT.md` (`f400fe6`, `8c89916`, `53ab18b`…) ne sont pas résolubles localement — s'y référer par le récit, pas par SHA.
+3. **Aucun travail builder n'est dans main** : `PHASE3/slice` de main ne contient ni `cible.py`, ni `transports.py`, ni `mission_history.py`, ni les modules MCP. Toutes les lignes builders sont basées sur `4433af6` (pré-LOT) et doivent se re-aligner sur `b85bc91`.
+4. **Recouvrements mesurés par merge-tree (dry-run sur main)** : CORE → 3 conflits (`analyser.py`, `slice/pipeline.py`, `slice/plan.py`) ; MCP → 1 conflit (`slice/statuts.py`) ; SECURITY → 3 conflits (`test_manifest.py`, `test_niveau2.py`, `test_utilisation.py`) ; PRODUCT → 1 conflit (`interface/app.js`). Après l'atterrissage de CORE, MCP et SECURITY devront re-aligner une seconde fois (`pipeline.py`, `transports.py`, `interface/api.py`).
+
+## VÉRIFICATION main (31/08 après-midi — CONFIRMÉ par exécution, session `arena/01a05783-agnt`)
+
+Environnement : Python 3.11.2 + venv `/tmp/agnt-venv` (pyyaml 6.0.3), `PYTHONPATH=PHASE3/slice`. binaires absents (OPA, bwrap, radon, bandit, semgrep, gitleaks) — mêmes limites que dans toute la mémoire.
+
+| Vérification | Résultat |
+|---|---|
+| `python -m compileall -q PHASE3` | **PASS** (rc 0, tout l'arbre fusionné compile) |
+| `test_chemins.py` | **PASS** 48/48 · 3 non évalués |
+| `test_selection.py` | **PASS** 13/13 |
+| `test_adversaire.py` | **46 cas · 40 PASS · 2 FAIL · 4 NON ÉVALUÉS** — voir note E7 |
+| `test_plugins / catalogue_outils / vague_parallele / conditions_outils / intentions` | **BLOCKED environnement** (radon, bandit, semgrep, OPA absents) — identiques aux blocages documentés, aucune non-régression mesurable par ces suites |
+
+**Note E7 (pas une régression, un changement de comportement assumé de PR #2) :** sur `4433af6` la campagne donne 41 PASS / 2 FAIL / 3 NON ÉVALUÉS (contrôle rejoué en worktree détaché — CONFIRMÉ). Sur main, **E7** (« isolateur inutilisable : arrêt consigné ») passe de PASS à NON ÉVALUÉ : PR #2 introduit la dimension *disponibilité* jugée AVANT l'exécution — la mission avorte sur `motif: disponibilite` (semgrep absent) avant que le chemin « isolateur inutilisable » puisse être exercé. Le cas se déclare honnêtement NON ÉVALUÉ (« ne peut pas le simuler ») au lieu de voler un PASS. Classification : **choix volontaire de PR #2 qui rend E7 non exercable dans un environnement sans outils installés** — le cas redeviendrait jugeable après `bootstrap.sh` + isolateur cassé. À garder en tête aux gates, pas à corriger maintenant.
+Les 2 FAIL (D4 `cible_autorisee`, G6a règles gitleaks) sont **identiques à la base** et appartiennent à SECURITY (`d1d562f`, `e5838003`) — non absorbés par main.
 
 ---
 
@@ -58,10 +76,10 @@ Faits critiques :
 
 | Builder | Branche de travail réelle | Nouvelle session | Statut | Dernier commit connu | Débloque |
 |---|---|---|---|---|---|
-| CORE | `arena/01a05415-agnt` | `arena/builder-core` | `READY_FOR_INTEGRATION` — P1 History/Timeline/Status **livré candidat** (`eebefbc`, DÉCLARÉ, handoff non reçu) | `eebefbc` | PRODUCT (gate réel), WEB (API) |
-| MCP | `arena/01a05417-agnt` | `arena/builder-mcp` | `READY_FOR_INTEGRATION` — interop stdio SDK `mcp==2.1.1` terminée bornée (`6e04ff8`) | `6e04ff8` | — (raccord Transport à l'intégration) |
-| WEB | `arena/01a0541a-agnt` | `arena/builder-web` | `BLOCKED` (volontaire) — carte d'adoption livrée (`93f8ead`) ; tout code UI attend la double gate Product+Security | `93f8ead` | — |
-| SECURITY | `arena/01a05426-agnt` | `arena/builder-security` | `READY_FOR_INTEGRATION` + SEC-LAB-001 **en cours** — `08a8150` « P2 mode laboratoire propriétaire » (125 fichiers, +12623 — périmètre À VÉRIFIER, postérieur à l'ancienne mémoire) | `08a8150` | STRAT-001 (labo Strix) |
+| CORE | `arena/01a05415-agnt` + reprise `arena/01a0575c-agnt` | `arena/builder-core` | `READY_FOR_INTEGRATION` — **CONFIRMÉ par exécution** (handoff v1 reçu : `3aeb8bc` → `docs/coordination/handoffs/CORE-eebefbc-2026-08-31.md`) ; 22 fichiers, +3465/−91 | `3aeb8bc` | PRODUCT (gate réel), WEB (API) |
+| MCP | `arena/01a05417-agnt` + reprise `arena/01a05760-agnt` | `arena/builder-mcp` | `READY_FOR_INTEGRATION` — **CONFIRMÉ par exécution** (handoff v1 reçu : `451de79` → `PHASE3/STATUT_MCP.md`) ; batterie 104/104 + garde adversariale réparée (`59252df`) | `451de79` | — (raccord Transport à l'intégration, MCP-004) |
+| WEB | `arena/01a0541a-agnt` | `arena/builder-web` | **PERTE DÉCLARÉE** — carte d'adoption récupérable (`3268641`, docs) ; **20 prototypes UI : PERDUS / NOT RECOVERABLE** (0 commit, 0 push vérifié GitHub ; rien dans le sandbox de reprise) | `3268641` | — |
+| SECURITY | `arena/01a05426-agnt` | `arena/builder-security` | `READY_FOR_INTEGRATION` (DÉCLARÉ) mais **PAS de handoff v1** — intégration gelée tant que le protocole n'est pas rempli | `08a8150` | STRAT-001 (labo Strix) |
 | PRODUCT | `arena/01a05425-agnt` | `arena/builder-product` | `READY_FOR_INTEGRATION` — 3 contrats versionnés + gate black-box livrés (`3f96e25`) ; certification en attente de l'API CORE réelle | `3f96e25` | WEB (feu vert) |
 | DEVOPS | reconnaissance sur `arena/01a0543a-agnt` (docs) | `arena/builder-devops` | implémentation `NOT_STARTED` — 40 suites réconciliées (DÉCLARÉ) ; toute implémentation (bootstrap/doctor/CI/pins) exige l'accord explicite du propriétaire | `aafe5af` | CORE-003, MCP-001, DEVOPS-002 |
 
@@ -117,8 +135,8 @@ CORE : Provider / Transport / Cible / artefacts par mission / lecteur History
   ├── SECURITY : autorisation cible, egress/policy/secrets, gates    [gate à rejouer sur API réelle]
   └── PRODUCT  : contrats de forme History/Timeline/Status + gate    [gate à exécuter vs CORE]
 
-Ordre : PR#2 → main  →  CORE History aligné  →  gates Product+Security sur API réelle
-                          →  feu vert WEB  →  raccord MCP Transport  →  lots WEB  →  (pilote Strix)
+Ordre : PR#2 → main ✅ (FAIT, b85bc91)  →  re-align CORE sur main  →  gates Product+Security sur API réelle
+                          →  feu vert WEB  →  raccord MCP Transport (canonique CORE)  →  lots WEB  →  (pilote Strix)
 ```
 
 ---
@@ -127,9 +145,9 @@ Ordre : PR#2 → main  →  CORE History aligné  →  gates Product+Security su
 
 | ID | Sujet | Priorité | Statut |
 |---|---|---:|---|
-| — | **Premier RUN réel E2E navigateur→rapport** | P0 | **PR #2 OUVERTE** — déclarée vérifiée par exécution (6 findings, 1 cluster, egress refusé, RAPPORT.md) ; à merger après re-vérification minimale |
-| CORE-001 | Cible typée | P1 | Terminé (`8eb4005`, `f1f323d`) |
-| CORE-004/006 | History API + `data.timeline` + `data.executions[]` | P1 | **Livré candidat** `eebefbc` (DÉCLARÉ, +3247/−77, 21 fichiers) — alignement à confirmer, puis gates |
+| — | **Premier RUN réel E2E navigateur→rapport** | P0 | **DANS main** (`b85bc91`) — fusion vérifiée 31/08 (compileall + suites légères + campagne adversariale : voir « VÉRIFICATION main ») |
+| CORE-001 | Cible typée | P1 | Terminé (`8eb4005`, `f1f323d`) — sur la ligne CORE, pas dans main |
+| CORE-004/006 | History API + `data.timeline` + `data.executions[]` | P1 | **CONFIRMÉ par exécution** (`3aeb8bc`, handoff v1) : 3 suites demandées PASS (33/33, 12/12, 7/7) + `test_cibles` 33/33, `test_multi_mission` 11/11, `test_isolation_mission` 8/8, `test_interface` 34/35·1 NE ; `test_slice`/`test_bundle` BLOCKED OPA (non-régression prouvée vs base) — reste : re-alignment sur main + gates |
 | MCP-004 | Raccord MCP au Transport CORE canonique | P1 intégration | Ouvert — intégration coordonnée |
 | MCP-005 | Interop SDK indépendant | P2 | Terminé borné stdio `6e04ff8` ; HTTP/SSE/streaming non prouvés — ne pas réélargir sans besoin |
 | GATE-001/002/003 | Gates sur API réelle + captures + corpus hostiles | P1 intégration | Gates livrés (`3f96e25`, `dae445a`) — attente arbre CORE intégré |
@@ -146,18 +164,21 @@ Ordre : PR#2 → main  →  CORE History aligné  →  gates Product+Security su
 
 ## CONFLITS
 
-1. **[P0 — NOUVEAU] PR #2 ↔ branches builders sur le cœur.** PR #2 modifie `pipeline.py`, `adapters.py`, `analyser.py`, `plan.py`, `provider_manifest.py`, plugins… recouvrant CORE (5 fich.), MCP (7), SECURITY (11), PRODUCT (1). **Résolution recommandée :** merger PR #2 dans main **en premier** (ligne la plus avancée, E2E, orientée produit), puis faire re-baser/re-aligner chaque builder sur le nouveau main. Tout autre ordre multiplie les conflits sur les mêmes fichiers.
-2. **[P1] MCP réimplémente `transports.py`** avec un dispatch différent (`obtenir` vs `enregistrer/fournit/connus/deleguer`). Résolution décidée : module CORE canonique gagne ; garder `mcp_bootstrap.initialiser_mcp` + tests E2E ; rejouer la batterie MCP sur l'arbre intégré. Pas de merge builder↔builder.
-3. **[P1] WEB/PRODUCT sur l'interface partagée** (`index.html`, `app.js`, `style.css`). Résolu par la carte d'adoption WEB (7 lots, portes Q1–Q10, 6 conflits documentés dont id de soumission ≠ `mission_id` sur refus). Pas de seconde refonte UI.
-4. **[RÉSOLU 31/08] Nommage de la mémoire** : `AGNT_PROJECT_STATE.md` (ancien, référencé par le guide `prompts/question`) vs `PROJECT_STATE.md` (charte orchestrateur). Une seule source de vérité : `PROJECT_STATE.md` ; l'ancien nom devient un pointeur.
-5. **[OUVERT — décision propriétaire] Vision multi-modes (ATTACK…) vs contrainte « agent passif ».** Recommandation : « attack » = usage en mode laboratoire propriétaire borné (SEC-LAB-001), pas un scanner d'attaque. Ne pas relâcher la contrainte sans décision explicite du propriétaire.
+1. **[RÉSOLU 31/08] PR #2 ↔ branches builders sur le cœur.** PR #2 a été fusionnée dans main **en premier** (`b85bc91`), conformément à la résolution décidée. Reste le re-alignment builder par builder sur le nouveau main — conflits mesurés par merge-tree (voir Faits critiques §4), traités un par un, jamais en bloc.
+2. **[P1 — API différente] MCP réimplémente `transports.py`** avec un dispatch différent (`obtenir` vs `enregistrer/fournit/connus/deleguer`). Résolution décidée : module CORE canonique gagne ; garder `mcp_bootstrap.initialiser_mcp` + tests E2E ; rejouer la batterie MCP sur l'arbre intégré. Pas de merge builder↔builder.
+3. **[P1 — NOUVEAU, mesuré] `cible_type="repository"` en dur (ligne MCP).** `pipeline.py` de la ligne MCP passe `cible_type="repository"` à `moteur.evaluer()` (l. 531, l. 662) alors que le type réel est dérivé par provider dans `_vague` (`repository` **ou** `filesystem`). Une règle OPA distinguant les deux recevrait un fait faux. La réparation `59252df` n'a aligné que les doubles de test ; le code de production garde le littéral. **Résolution décidée :** lors du re-alignment MCP sur l'arbre CORE intégré, dériver le type depuis la `Cible`/`_vague` réels (pas de littéral) — fait partie du raccord MCP-004/CORE-005. Ne pas corriger isolément maintenant (contrat CORE). C'est l'exemple concret de la vigilance « ne pas devenir repository-specific » : le registre déclare déjà des providers `filesystem`.
+4. **[P1] WEB/PRODUCT sur l'interface partagée** (`index.html`, `app.js`, `style.css`). Résolu par la carte d'adoption WEB (7 lots, portes Q1–Q10, 6 conflits documentés dont id de soumission ≠ `mission_id` sur refus). Le conflit PRODUCT→main mesuré (`interface/app.js`) est le reflet attendu de ce dossier. Pas de seconde refonte UI.
+5. **[RÉSOLU 31/08] Nommage de la mémoire** : `AGNT_PROJECT_STATE.md` (ancien, référencé par le guide `prompts/question`) vs `PROJECT_STATE.md` (charte orchestrateur). Une seule source de vérité : `PROJECT_STATE.md` ; l'ancien nom devient un pointeur.
+6. **[OUVERT — décision propriétaire] Vision multi-modes (ATTACK…) vs contrainte « agent passif ».** Recommandation : « attack » = usage en mode laboratoire propriétaire borné (SEC-LAB-001), pas un scanner d'attaque. Ne pas relâcher la contrainte sans décision explicite du propriétaire.
 
 ---
 
 ## BLOQUANTS
 
-- **[RÉSOLU 31/08] Bootstrap sessions builder** : voir « INCIDENT BOOTSTRAP » en tête. Les sessions bloquées devraient repartir seules (le bootstrap relit main corrigé à chaque appel) — sinon, reset de la session côté Arena (propriétaire). Aucune action builder requise.
-- **Environnement (NON-BUGS documentés)** : binaire OPA absent (policy réelle non évaluée) ; `bwrap` présent mais user namespaces refusés (`apparmor_restrict_unprivileged_userns=1`) ; binaires/caches de scan absents (~/.cache) ; gitleaks réel absent (SEC-G9 non mesurable) ; pas de réseau pour LLM réel (`test_llm_reel` exit 2) ; `bandit/checkov/detect-secrets/radon` absents. Baseline DevOps réconciliée : ~20 PASS / 16 FAIL environnementaux / 1 NON ÉVALUÉ.
+- **[RÉSOLU 31/08] Bootstrap sessions builder** : voir « INCIDENT BOOTSTRAP » en tête.
+- **[NOUVEAU — perte] Prototypes WEB (override propriétaire « 20 prototypes »)** : **PERDUS / NOT RECOVERABLE**. Aucune branche, aucun commit, aucune PR, aucun fichier dans le sandbox de reprise (`/home/user` ne contient que le clone `agnt/`). Ne pas reconstruire l'interface maintenant : le blocage gate reste en vigueur et la carte d'adoption (`3268641`) suffit pour préparer la suite. Reprise UI à décider avec le propriétaire après le feu vert WEB.
+- **[NOUVEAU] Handoff SECURITY manquant** : la ligne SECURITY (`08a8150`, 125 fichiers) n'a aucun bloc `AGNT HANDOFF v1` — vérifié sur toute la branche. Intégration gelée jusqu'à production du handoff (voir protocole ci-dessous).
+- **Environnement (NON-BUGS documentés)** : binaire OPA absent (policy réelle non évaluée) ; `bwrap` absent dans ce sandbox (userns n/a) ; binaires/caches de scan absents ; gitleaks réel absent (SEC-G9 non mesurable) ; pas de réseau pour LLM réel ; `bandit/checkov/detect-secrets/radon/semgrep` absents. Baseline DevOps réconciliée : ~20 PASS / 16 FAIL environnementaux / 1 NON ÉVALUÉ. Re-vérifié 31/08 : `test_plugins`, `catalogue_outils`, `vague_parallele`, `conditions_outils`, `intentions` restent bloqués sur ces absences, à l'identique de la base.
 - **DEVOPS-002** : toute implémentation (venvs, doctor, CI, pins, armement gitleaks) attend l'accord explicite du propriétaire.
 - **WEB** : code UI bloqué jusqu'au passage des gates Product + Security sur une API CORE réellement intégrée.
 - **Support cible distante** (`url`) : bloqué par CORE-005 (contrat Transport recevant `Cible`).
@@ -168,9 +189,10 @@ Ordre : PR#2 → main  →  CORE History aligné  →  gates Product+Security su
 
 | Risque | Gravité | Réponse |
 |---|---:|---|
-| Base d'intégration divergente (main en retard sur PR #2, builders sur 4433af6) | **Haute** | Merge PR #2 d'abord, puis re-alignment builders ; voir Conflit 1 |
-| Diff SECURITY `08a8150` anormalement large (125 fichiers, +12623) — périmètre à vérifier avant intégration | Haute | Demander handoff SECURITY ; vérifier qu'il ne touche pas le cœur hors de son domaine |
-| Alignement CORE History non certifié contre les fichiers Product réels (absents du checkout CORE) | Haute | Gates Product+Security sur arbre intégré avant tout feu vert WEB |
+| Base d'intégration divergente (builders sur 4433af6, main en avance) | **Haute** | ✅ PR #2 mergée ; re-alignment builders un par un, CORE d'abord (3 conflits mesurés), puis MCP/SECURITY/PRODUCT |
+| Diff SECURITY `08a8150` anormalement large (125 fichiers, +12623) — périmètre à vérifier avant intégration | Haute | Handoff SECURITY exigé (protocole) ; vérifier qu'il ne touche pas le cœur hors de son domaine |
+| Alignement CORE History non certifié contre les fichiers Product réels | Haute | Gates Product+Security sur arbre intégré avant tout feu vert WEB |
+| `cible_type="repository"` en dur → fait OPA faux pour cibles `filesystem` | Haute sécurité | Correction à l'intégration MCP-004/CORE-005 (dériver le type réel) ; garde adversariale déjà réparée (`59252df`) |
 | Historique main squashé — SHAs anciens introuvables | Moyenne | S'appuyer sur `PROJET_ETAT.md` (récit) + SHAs listés ici |
 | Perte de l'autorisation explicite de cible lors des évolutions CORE/MCP | Haute sécurité | Tests de régression Security préservés ; invariants ci-dessus |
 | Un « bypass » générique deviendrait une backdoor | Haute sécurité | Mode laboratoire borné uniquement (SEC-LAB-001), local, audité, double opt-in |
@@ -178,16 +200,15 @@ Ordre : PR#2 → main  →  CORE History aligné  →  gates Product+Security su
 
 ---
 
-## INTÉGRATIONS PRÉVUES (ordre révisé 31/08)
+## INTÉGRATIONS PRÉVUES (ordre révisé 31/08 après-midi)
 
-1. **PR #2 → main** (orchestrateur). Pré-requis : re-vérification minimale sur worktree (`py_compile` fichiers touchés + suites légères disponibles), puis merge de la PR ouverte. Résultat : main redevient la ligne la plus avancée.
-2. **Re-alignment builders** : chaque builder repart de son tip précédent re-aligné sur le nouveau main (conflits attendus sur `pipeline/adapters/analyser` — traités builder par builder, pas en bloc).
-3. **Handoff + intégration CORE History** (`eebefbc`) : confirmer l'alignement `agnt.history.v1`/`timeline`/`execution-status`, préserver Cible + autorisation de cible + correctifs Security P0.1/G6a (`d1d562f`, `e5838003`).
-4. **Double gate sur API réelle** : Product (`product_api_gate.py --base-url --require-full-coverage`) ET Security (`dae445a`) contre la même API intégrée, captures complètes. → feu vert WEB.
-5. **Raccord CORE+MCP Transport** (MCP-004) : module canonique, suppression de la duplication, batterie MCP rejouée.
-6. **Lots WEB** selon la carte `93f8ead`, après double feu vert.
-7. **SEC-LAB-001** finalisé + audit ; puis (plus tard, décision propriétaire) pilote Strix strictement local.
-8. **DEVOPS-002** dès accord propriétaire.
+1. ~~**PR #2 → main**~~ ✅ **FAIT** (`b85bc91`) + preuve minimale exécutée après coup (compileall, suites légères, campagne adversariale — voir « VÉRIFICATION main »).
+2. **Re-align CORE sur main** (`3aeb8bc` ↔ `b85bc91`) : 3 conflits mesurés (`analyser.py`, `slice/pipeline.py`, `slice/plan.py`) ; auto-merge propre sur `adapters.py`, `provider_manifest.py` et le reste. Règles : Cible + autorisation de cible + invariants préservés ; pas d'absorption des correctifs SECURITY (domaine tiers). Puis rejouer les suites CORE (History API 33/33, transports 12/12, observabilité 7/7, cibles 33/33, multi_mission 11/11, isolation 8/8, interface 34/35) sur l'arbre intégré.
+3. **Gates sur API intégrée réelle** : Product (`product_api_gate.py --base-url --require-full-coverage`, `3f96e25`) ET Security (`dae445a` + campagne adversariale) contre la même API, captures complètes. → feu vert WEB.
+4. **Raccord CORE+MCP Transport** (MCP-004) : re-align MCP sur l'arbre CORE intégré (1 conflit mesuré vs main actuel : `statuts.py` ; après CORE, attendre des re-confits sur `pipeline.py`/`transports.py`) ; supprimer `transports.py` MCP provisoire au profit du canonique ; corriger `cible_type="repository"` en dur (dériver le type réel) ; rejouer les 104 cas MCP.
+5. **Lots WEB** selon la carte `3268641`, après double feu vert (prototypes perdus — reconstruction décidée avec le propriétaire, pas en l'état des 20 prototypes).
+6. **SEC-LAB-001** : handoff v1 exigé d'abord (protocole), puis revue du périmètre 125 fichiers et audit ; ensuite seulement STRAT-001 (Strix) sur décision propriétaire.
+7. **DEVOPS-002** dès accord propriétaire.
 
 ---
 
@@ -195,14 +216,33 @@ Ordre : PR#2 → main  →  CORE History aligné  →  gates Product+Security su
 
 | # | Qui | Action |
 |---|---|---|
-| 0 | ~~ORCHESTRATEUR~~ | ~~Corriger l'incident bootstrap~~ **FAIT 31/08** (renormalisation eol, PR #3 → main). |
-| 1 | ORCHESTRATEUR | Vérifier PR #2 sur worktree (preuve minimale) puis merger dans `main` ; mettre à jour ce fichier (base d'intégration). |
-| 2 | CORE | Session `arena/01a0575c-agnt`. 1) retenter une commande (incident bootstrap résolu sur main) ; 2) lire la mémoire (`git show origin/main:docs/coordination/PROJECT_STATE.md`) ; 3) `git merge --ff-only eebefbc` (récupération des 11 commits, ff garanti) ; 4) CONFIRMER par exécution (`test_mission_history_api.py`, `test_transports.py`, `test_observabilite.py`, classés PASS/FAIL/BLOCKED/NON ÉVALUÉ) ; 5) handoff v1 + push ; 6) **STOP — aucun nouveau code** avant merge PR#2 + re-alignment (∩ PR#2 = 5 fichiers cœur). |
-| 3 | SECURITY | Produire le handoff `08a8150` (justifier le périmètre 125 fichiers ; confirmer invariants labo : double opt-in, egress fermé, aucun bypass). |
-| 4 | PRODUCT | Préparer l'exécution du gate `--base-url` contre l'arbre CORE intégré (après action 3 de la section précédente). |
-| 5 | WEB | **Override propriétaire 31/08** : mission parallèle « 20 prototypes UI » (Next.js sous `web/`) donnée directement par le propriétaire — suspend le blocage gate pour une EXPLORATION UX isolée. Containment : `web/prototypes/` étiquetés MOCK uniquement, aucun toucher à `PHASE3/interface` ni aux API, jamais de merge des prototypes en l'état, mode ATTACK = libellé inerte tant que SEC-LAB-001 n'est pas livré. **Au 31/08 après-midi : 0 commit, 0 push (vérifié API GitHub)** — travail non commité dans sa session ; à faire committer sur sa branche session. Anomalie signalée dans sa transcription : prototype 06 écrit hors dépôt (`/home/user/aggregates/`). |
-| 6 | MCP | Session `arena/01a05760-agnt`. Même séquence de reprise que CORE avec `git merge --ff-only 6e04ff8` (5 commits), rejouer la batterie MCP (serveurs locaux HTTP/Streamable/stdio + interop SDK `mcp==2.1.1`), handoff v1, puis STOP. **Le brief « P0 Provider abstraction » reçu par MCP est SUSPENDU** : il contredit la séparation Provider/Transport livrée par CORE et la décision MCP-004 (raccord au Transport canonique à l'intégration coordonnée). Aucun redesign registry/provider/adapter sans décision orchestrateur réconciliée avec le propriétaire. |
-| 7 | DEVOPS | Rien sans accord propriétaire. |
+| 0 | ~~ORCHESTRATEUR~~ | ~~Incident bootstrap~~ **FAIT** (PR #3). ~~Merger PR #2 dans main + vérifier~~ **FAIT** (`b85bc91` + « VÉRIFICATION main »). ~~Mettre à jour la mémoire~~ **FAIT** (ce commit). |
+| 1 | CORE (reprise `arena/builder-core`) | Repartir du tip `3aeb8bc` ; re-aligner sur `main b85bc91` (3 conflits attendus : `analyser.py`, `pipeline.py`, `plan.py` — règles d'intégration §2) ; rejouer les 7 suites CORE sur l'arbre intégré ; handoff v1 ; **STOP**. Ne pas toucher aux domaines MCP/SECURITY (transports, labo, gates). |
+| 2 | PRODUCT | Dès l'arbre CORE intégré disponible : exécuter le gate `--base-url` complet avec captures ; rapporter PASS/FAIL par contrat `agnt.history.v1`/`timeline.v1`/`execution-status.v1`. |
+| 3 | SECURITY | **Produire le handoff v1 de `08a8150`** (protocole ci-dessous : périmètre 125 fichiers justifié, invariants labo, tests labo, non-bypass, périmètre non touché). Puis préparer le rejeu du gate History (`dae445a`) sur l'API intégrée. |
+| 4 | MCP (reprise `arena/builder-mcp`) | **STOP jusqu'à l'atterrissage CORE.** Le brief « P0 Provider abstraction » reste SUSPENDU (contredit Provider/Transport CORE + MCP-004). Ensuite : re-align sur l'arbre CORE intégré, supprimer `transports.py` provisoire, corriger `cible_type` dur (dériver le type réel), rejouer les 104 cas. |
+| 5 | WEB | Rien à construire maintenant : prototypes perdus (décision propriétaire requise pour la suite) et blocage gates en vigueur. La carte `3268641` reste le plan de reprise UI. |
+| 6 | DEVOPS | Rien sans accord propriétaire. |
+
+---
+
+## PROTOCOLE HANDOFF v1 — exigences minimales et conformité (révisé 31/08)
+
+Un builder n'est **jamais** considéré terminé sur le seul mot `DONE`. Minimum exigé (déjà dans les Règles) :
+
+```text
+agent · domaine · branche (nom + SHA immuable du tip) · statut ·
+commits (liste SHA+sujet) · livrables (fichiers) ·
+tests classés PASS / FAIL / BLOCKED / NON ÉVALUÉ (avec sorties et codes réels) ·
+blocages · périmètre non touché · confiance par zone
+```
+
+Conventions de lieu et de conformité :
+
+1. **Emplacement canonique :** `docs/coordination/handoffs/<AGENT>-<SHA>-<AAAA-MM-JJ>.md` (CORE l'a suivi : `CORE-eebefbc-2026-08-31.md`). MCP a embarqué son bloc dans `PHASE3/STATUT_MCP.md` — accepté à titre exceptionnel, enregistré ici ; les prochains handoffs vont au lieu canonique.
+2. **Pas d'intégration sans handoff v1** (ou dérogation explicite pour les lignes docs-only, ex. WEB carte). Conséquence immédiate : la ligne SECURITY est gelée tant que le handoff `08a8150` n'existe pas.
+3. **Un `DONE` sans preuve reproductible est un DÉCLARÉ**, pas un CONFIRMÉ — le classement CONFIRMÉ/DÉCLARÉ/HYPOTHÈSE s'applique aussi aux rapports de fin.
+4. **Non-conformité connue au 31/08 :** SECURITY (aucun bloc v1 sur la branche). CORE et MCP sont conformes. WEB/PRODUCT/DEVOPS : lignes docs, tolérées.
 
 ---
 
@@ -210,4 +250,5 @@ Ordre : PR#2 → main  →  CORE History aligné  →  gates Product+Security su
 
 - `AGNT_PROJECT_STATE.md@aafe5af` (mémoire précédente, 30/08) — absorbée par ce fichier.
 - `PROJET_ETAT.md`, `CONTEXTE_PROJET.md` (contraintes non négociables), `PHASE3/CONTRAT_PUBLIC.md`.
-- GitHub : PR #1 (MERGED), PR #2 (OPEN) ; `git ls-remote` au 31/08.
+- Handoffs : `docs/coordination/handoffs/CORE-eebefbc-2026-08-31.md` (`3aeb8bc`), `PHASE3/STATUT_MCP.md` (`451de79`).
+- GitHub au 31/08 après-midi : PR #1, #2, #3, #4 toutes MERGED ; aucune PR ouverte ; `git ls-remote` + fetch complet des 20 refs ; dry-runs `git merge-tree --write-tree` par ligne builder.
