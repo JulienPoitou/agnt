@@ -33,8 +33,11 @@ Usage : python3 PHASE3/test_transports.py
 from __future__ import annotations
 
 import sys
+import tempfile
 from dataclasses import replace
 from pathlib import Path
+
+import yaml
 
 RACINE = Path(__file__).resolve().parent
 sys.path.insert(0, str(RACINE / "slice"))
@@ -171,6 +174,25 @@ def main() -> int:
         except Exception as e:                                   # noqa: BLE001
             cas("5b. un transport non enregistré est refusé dès la construction",
                 "non fourni" in str(e).lower(), f"refusé : {str(e)[:110]}")
+        # Régression registre : même enregistré, un transport non local sans manifest
+        # cohérent ne doit jamais devenir un provider local implicite.
+        with tempfile.TemporaryDirectory() as td:
+            chemin = Path(td) / "capabilities.yaml"
+            chemin.write_text(yaml.safe_dump({"capabilities": [{
+                "id": "TEST", "description": "transport", "domaines": ["test"],
+                "entree": ["cible"], "sortie": "findings",
+                "providers": [{"id": "sans_manifest", "transport": "remote_test",
+                                "kind": "tool", "commande": ["bandit"],
+                                "risque": "PASSIVE"}],
+            }]}), encoding="utf-8")
+            try:
+                Registry(chemin)
+                cas("5b1. transport non local sans manifest est refusé",
+                    False, "provider construit sans contrat de transport")
+            except Exception as e:                               # noqa: BLE001
+                cas("5b1. transport non local sans manifest est refusé",
+                    "sans manifest" in str(e).lower() and "transport" in str(e).lower(),
+                    f"refusé : {str(e)[:130]}")
         try:
             TR.deleguer("remote_inexistant", prov_mcp, None)
             cas("5b2. deleguer sur un transport inconnu lève, sans repli sous-processus",

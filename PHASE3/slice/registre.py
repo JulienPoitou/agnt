@@ -267,13 +267,24 @@ class Registry:
             for p in c["providers"]:
                 if "id" not in p:
                     raise RegistryError(f"capacité {c['id']}: provider sans id")
-                transport = str(p.get("transport", transports.TRANSPORT_SANDBOX_CLI))
+                transport = str(p.get("transport", transports.TRANSPORT_SANDBOX_CLI)).strip()
+                # Valider la déclaration AVANT toute branche de construction. Sinon une
+                # clé `transport: http` peut être perdue quand le manifest est absent et
+                # le Provider retombe en sandbox_cli : le pire cas, car policy et dispatch
+                # voient alors un faux transport local.
+                if not transports.fournit(transport):
+                    raise RegistryError(
+                        f"{p.get('id', '?')}: transport {transport!r} non fourni — "
+                        f"transports connus : {list(transports.connus())}. Enregistrez-le "
+                        f"avec transports.enregistrer({transport!r}, exécuteur) avant de "
+                        "déclarer un provider qui l'exige.")
                 if transport == transports.TRANSPORT_SANDBOX_CLI and "commande" not in p:
                     raise RegistryError(
                         f"capacité {c['id']}: provider local sans commande")
-                if transport != transports.TRANSPORT_SANDBOX_CLI and "mcp" not in p:
+                if transport != transports.TRANSPORT_SANDBOX_CLI and "mcp" not in p and "manifest" not in p:
                     raise RegistryError(
-                        f"{p.get('id', '?')}: provider externe sans contrat de transport")
+                        f"{p.get('id', '?')}: transport {transport!r} déclaré sans manifest "
+                        "cohérent — aucun repli vers sandbox_cli n'est autorisé")
                 inconnues = [k for k in p if k not in CLEFS_PROVIDER]
                 if inconnues:
                     raise RegistryError(
@@ -292,6 +303,17 @@ class Registry:
                         raise RegistryError(str(e)) from None
                 else:
                     mani = PM.valider(p["manifest"], c["id"]) if "manifest" in p else None
+                # Le transport effectif doit être exactement celui demandé au niveau
+                # provider. Un manifest absent ou implicite ne peut donc plus transformer
+                # un provider externe en sandbox_cli, et un manifest d'une autre voie est
+                # refusé avant création du Provider.
+                if transport != transports.TRANSPORT_SANDBOX_CLI:
+                    manifest_transport = getattr(mani, "transport", None) if mani is not None else None
+                    if manifest_transport != transport:
+                        raise RegistryError(
+                            f"{p['id']}: transport déclaré {transport!r} incohérent avec "
+                            f"le manifest ({manifest_transport!r}) — un manifest porteur "
+                            "du même transport est requis; aucun repli vers sandbox_cli")
                 cond_brut = p.get("conditions")
                 if cond_brut is not None and mani is not None:
                     # Deux déclarations pour la même chose = deux vérités possibles. Le
