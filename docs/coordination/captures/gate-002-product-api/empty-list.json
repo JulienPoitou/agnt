@@ -1,0 +1,8 @@
+{
+  "items": [],
+  "page": {
+    "limit": 25,
+    "next_cursor": null
+  },
+  "schema_version": "agnt.history.v1"
+}

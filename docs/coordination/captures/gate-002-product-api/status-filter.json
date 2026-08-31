@@ -1,0 +1,192 @@
+{
+  "items": [
+    {
+      "artifacts": {
+        "clusters": true,
+        "detail": true,
+        "findings": true,
+        "report": true
+      },
+      "clusters_count": 0,
+      "completed_at": "2026-08-30T12:00:08Z",
+      "created_at": "2026-08-30T12:00:05Z",
+      "detail_href": "/api/missions/m-20260830T120005Z-00000001",
+      "duration_ms": 2000,
+      "findings_summary": {
+        "by_severity": {},
+        "total": 0
+      },
+      "mission_id": "m-20260830T120005Z-00000001",
+      "request": {
+        "title": "Analyse la sécurité de ce dépôt"
+      },
+      "run_id": "run0000000000001",
+      "started_at": "2026-08-30T12:00:06Z",
+      "status": "termine",
+      "target": {
+        "display_name": "testrepo",
+        "type": "repository"
+      },
+      "updated_at": "2026-08-30T12:00:08Z"
+    },
+    {
+      "artifacts": {
+        "clusters": true,
+        "detail": true,
+        "findings": true,
+        "report": false
+      },
+      "clusters_count": 1,
+      "completed_at": "2026-08-30T12:00:06Z",
+      "created_at": "2026-08-30T12:00:04Z",
+      "detail_href": "/api/missions/m-20260830T120004Z-00000002",
+      "duration_ms": 1000,
+      "findings_summary": {
+        "by_severity": {
+          "HIGH": 1,
+          "MEDIUM": 1
+        },
+        "total": 2
+      },
+      "mission_id": "m-20260830T120004Z-00000002",
+      "request": {
+        "title": "Analyse la sécurité de ce dépôt"
+      },
+      "run_id": "run0000000000002",
+      "started_at": "2026-08-30T12:00:05Z",
+      "status": "termine",
+      "target": {
+        "display_name": "testrepo",
+        "type": "repository"
+      },
+      "updated_at": "2026-08-30T12:00:06Z"
+    },
+    {
+      "artifacts": {
+        "clusters": false,
+        "detail": true,
+        "findings": true,
+        "report": false
+      },
+      "completed_at": "2026-08-30T12:00:02Z",
+      "created_at": "2026-08-30T12:00:02Z",
+      "detail_href": "/api/missions/m-20260830T120002Z-00000004",
+      "findings_summary": {
+        "by_severity": {},
+        "total": 0
+      },
+      "mission_id": "m-20260830T120002Z-00000004",
+      "request": {
+        "title": "Analyse la sécurité de ce dépôt"
+      },
+      "status": "termine",
+      "target": {
+        "display_name": "testrepo",
+        "type": "repository"
+      },
+      "updated_at": "2026-08-30T12:00:02Z"
+    },
+    {
+      "artifacts": {
+        "clusters": false,
+        "detail": true,
+        "findings": false,
+        "report": false
+      },
+      "completed_at": "2026-08-30T12:00:03Z",
+      "created_at": "2026-08-30T12:00:00Z",
+      "detail_href": "/api/missions/m-20260830T120000Z-00000006",
+      "duration_ms": 2000,
+      "mission_id": "m-20260830T120000Z-00000006",
+      "request": {
+        "title": "Analyse la sécurité de ce dépôt"
+      },
+      "run_id": "run0000000000006",
+      "started_at": "2026-08-30T12:00:01Z",
+      "status": "termine",
+      "target": {
+        "display_name": "testrepo",
+        "type": "repository"
+      },
+      "updated_at": "2026-08-30T12:00:03Z"
+    },
+    {
+      "artifacts": {
+        "clusters": false,
+        "detail": true,
+        "findings": false,
+        "report": false
+      },
+      "completed_at": "2026-08-30T11:59:59Z",
+      "created_at": "2026-08-30T11:59:59Z",
+      "detail_href": "/api/missions/m-20260830T115959Z-00000007",
+      "mission_id": "m-20260830T115959Z-00000007",
+      "request": {
+        "title": "Analyse la sécurité de ce dépôt"
+      },
+      "status": "termine",
+      "target": {
+        "display_name": "testrepo",
+        "type": "repository"
+      },
+      "updated_at": "2026-08-30T11:59:59Z"
+    },
+    {
+      "artifacts": {
+        "clusters": false,
+        "detail": true,
+        "findings": false,
+        "report": false
+      },
+      "completed_at": "2026-08-30T11:59:57Z",
+      "created_at": "2026-08-30T11:59:57Z",
+      "detail_href": "/api/missions/m-20260830T115957Z-00000009",
+      "duration_ms": 0,
+      "mission_id": "m-20260830T115957Z-00000009",
+      "request": {
+        "title": "Analyse la sécurité de ce dépôt"
+      },
+      "run_id": "run0000000000009",
+      "started_at": "2026-08-30T11:59:57Z",
+      "status": "termine",
+      "target": {
+        "display_name": "testrepo",
+        "type": "repository"
+      },
+      "updated_at": "2026-08-30T11:59:57Z"
+    },
+    {
+      "artifacts": {
+        "clusters": true,
+        "detail": true,
+        "findings": true,
+        "report": false
+      },
+      "clusters_count": 0,
+      "completed_at": "2026-08-30T11:59:55Z",
+      "created_at": "2026-08-30T11:59:55Z",
+      "detail_href": "/api/missions/m-20260830T115955Z-0000000b",
+      "findings_summary": {
+        "by_severity": {
+          "HIGH": 1
+        },
+        "total": 1
+      },
+      "mission_id": "m-20260830T115955Z-0000000b",
+      "request": {
+        "title": "Analyse la sécurité de ce dépôt"
+      },
+      "status": "termine",
+      "target": {
+        "display_name": "testrepo",
+        "type": "repository"
+      },
+      "updated_at": "2026-08-30T11:59:55Z"
+    }
+  ],
+  "page": {
+    "limit": 25,
+    "next_cursor": null
+  },
+  "schema_version": "agnt.history.v1"
+}
