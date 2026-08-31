@@ -43,6 +43,7 @@ sys.path.insert(0, str(RACINE / "interface"))
 
 import api                                                    # noqa: E402
 import pipeline as P                                          # noqa: E402
+import adapters as AD                                         # noqa: E402 — seam « disponibilité » (alignement PR #2)
 
 BUNDLE = RACINE / "dogfooding" / "rapports" / "mocha"
 MISSIONS = RACINE / "artifacts" / "missions"
@@ -91,6 +92,14 @@ def main() -> int:
     base = f"http://127.0.0.1:{serveur.server_address[1]}"
     fil = threading.Thread(target=serveur.serve_forever, daemon=True)
     fil.start()
+    # Alignement d'intégration (étape 1bis « disponibilité », PR #2) : sans outils
+    # installés, la disponibilité refuse chaque RUN AVANT la policy, et le chemin
+    # d'erreur que cette batterie mesure (PolicyError → motif + objet erreur préservés
+    # jusqu'à la face) ne serait plus exercé. Le serveur tourne DANS ce processus : la
+    # neutralisation est donc visible par le pipeline de l'API. AUCUNE attente n'est
+    # modifiée — la scène redevient celle d'une machine après bootstrap.sh.
+    _exe_de = AD.exe_de
+    AD.exe_de = lambda p: "/bin/true"
     try:
         # ---------------------------------------------------------------- les fichiers statiques
         code, page = http(base, "/")
@@ -280,6 +289,7 @@ def main() -> int:
         verifie("la page porte le bandeau qui sépare la maquette du chemin réel",
                 code == 200 and "MAQUETTE" in str(ruban), "index.html sans marqueur MAQUETTE")
     finally:
+        AD.exe_de = _exe_de
         serveur.shutdown()
         serveur.server_close()
 

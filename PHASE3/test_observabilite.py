@@ -39,6 +39,7 @@ sys.path.insert(0, str(RACINE / "slice"))
 
 import mission as MS                 # noqa: E402
 import pipeline                      # noqa: E402
+import adapters as AD                # noqa: E402 — seam « disponibilité » (alignement PR #2)
 
 CIBLE = RACINE / "testrepo"
 
@@ -88,12 +89,21 @@ def main() -> int:
 
         # ------------------------------------------------ 2. sélection dans le plan
         print("\n--- 2. l'événement plan porte la sélection et son motif ---")
+        # Alignement d'intégration (étape 1bis « disponibilité », PR #2) : sur une machine
+        # sans outils installés, la disponibilité écarte TOUS les providers avant le plan,
+        # et ce que ce cas mesure (l'événement `plan` et sa sélection) ne serait jamais
+        # écrit. La disponibilité est neutralisée ici comme le serait une machine après
+        # bootstrap.sh — AUCUNE attente n'est modifiée, seule l'entrée de la scène change.
+        _exe_de = AD.exe_de
+        AD.exe_de = lambda p: "/bin/true"
         try:
             pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE)
         except Exception:
             # OPA absent ici : le plan est consigné AVANT la policy, donc l'événement
             # existe quand même — c'est exactement le point mesuré.
             pass
+        finally:
+            AD.exe_de = _exe_de
         # Retrouver la mission de ce dernier run : c'est la plus récente de la liste.
         der = sorted(MS.MISSIONS.iterdir(), key=lambda p: p.stat().st_mtime_ns)[-1]
         _mission = MS.Mission(der.name, der)

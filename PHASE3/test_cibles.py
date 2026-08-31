@@ -41,6 +41,7 @@ import mission as MS                    # noqa: E402
 import pipeline                         # noqa: E402
 import plan as P                        # noqa: E402
 import provider_manifest as PM          # noqa: E402
+import adapters as AD                   # noqa: E402 — seam « disponibilité » (alignement PR #2)
 from registre import Registry           # noqa: E402
 
 CIBLE = RACINE / "testrepo"
@@ -181,8 +182,18 @@ def main() -> int:
 
         # --------------------------------------------------- 7. URL : ni Path, ni montage, ni CLI
         print("\n--- 7. une cible non locale n'est jamais exécutée localement ---")
-        e_url = pipeline.executer("Analyse la sécurité de mon dépôt",
-                                  "https://example.com/repo.git")
+        # Alignement d'intégration (étape 1bis « disponibilité », PR #2) : sans outils
+        # installés, la disponibilité arrête la mission AVANT le filtre d'applicabilité,
+        # et ce que ce cas mesure (une URL s'arrête À l'applicabilité) ne serait jamais
+        # atteint. La disponibilité est neutralisée ici comme le serait une machine après
+        # bootstrap.sh — AUCUNE attente n'est modifiée, seule l'entrée de la scène change.
+        _exe_de = AD.exe_de
+        AD.exe_de = lambda p: "/bin/true"
+        try:
+            e_url = pipeline.executer("Analyse la sécurité de mon dépôt",
+                                      "https://example.com/repo.git")
+        finally:
+            AD.exe_de = _exe_de
         cas("7. une URL s'arrête à l'applicabilité, sans plan ni exécution",
             e_url.arret == "applicabilite" and e_url.plan == {}
             and e_url.decision.get("allow") is False and e_url.sortie == "",
