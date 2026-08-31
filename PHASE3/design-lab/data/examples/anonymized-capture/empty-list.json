@@ -1,9 +1,0 @@
-{
-  "$fixture": "ANONYMIZED CONTRACT FIXTURE — NEVER SERVE AS PRODUCT DATA",
-  "schema_version": "agnt.history.v1",
-  "items": [],
-  "page": {
-    "limit": 25,
-    "next_cursor": null
-  }
-}

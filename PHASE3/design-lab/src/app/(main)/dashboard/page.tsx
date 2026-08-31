@@ -1,3 +1,13 @@
-import { getHistory, getDetail } from "@/lib/api";
+import { CAPTURES } from "@/lib/api";
+
 import { MissionWorkspace } from "./_components/mission-workspace";
-export default async function Page(){ return <MissionWorkspace history={await getHistory()} detail={await getDetail()} />; }
+import { resolveView } from "./_components/capture-notes";
+
+export default async function Page({
+  searchParams,
+}: Readonly<{ searchParams: Promise<Record<string, string | string[] | undefined>> }>) {
+  const raw = await searchParams;
+  const key = typeof raw.v === "string" ? raw.v : undefined;
+  const active = resolveView(key, CAPTURES);
+  return <MissionWorkspace captures={CAPTURES} active={active} />;
+}

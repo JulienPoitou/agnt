@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "status inconnu : '__agnt_invalid_status__' — admis : ['en_file', 'en_cours', 'termine', 'refuse', 'erreur', 'inconnu']"
+  }
+}

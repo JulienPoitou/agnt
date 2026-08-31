@@ -1,0 +1,108 @@
+{
+  "capture": "AGNT GATE-002 — réponses réelles de l'API CORE sur missions contrôlées",
+  "submission_id": "45120ad1567e",
+  "responses": [
+    {
+      "role": "list",
+      "path": "/api/missions?limit=25",
+      "status": 200,
+      "body_file": "list.json"
+    },
+    {
+      "role": "pagination_probe",
+      "path": "/api/missions?limit=1",
+      "status": 200,
+      "body_file": "pagination-probe.json"
+    },
+    {
+      "role": "status_filter",
+      "path": "/api/missions?limit=25&status=termine",
+      "status": 200,
+      "body_file": "status-filter.json"
+    },
+    {
+      "role": "target_filter",
+      "path": "/api/missions?limit=25&target_type=repository",
+      "status": 200,
+      "body_file": "target-filter.json"
+    },
+    {
+      "role": "empty_list",
+      "path": "/api/missions?limit=25&status=en_file",
+      "status": 200,
+      "body_file": "empty-list.json"
+    },
+    {
+      "role": "invalid_filter",
+      "path": "/api/missions?status=__agnt_invalid_status__",
+      "status": 400,
+      "body_file": "invalid-filter.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T120005Z-00000001",
+      "status": 200,
+      "body_file": "detail-01-m-20260830T120005Z-00000001.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T120004Z-00000002",
+      "status": 200,
+      "body_file": "detail-02-m-20260830T120004Z-00000002.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T120003Z-00000003",
+      "status": 200,
+      "body_file": "detail-03-m-20260830T120003Z-00000003.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T120002Z-00000004",
+      "status": 200,
+      "body_file": "detail-04-m-20260830T120002Z-00000004.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T120001Z-00000005",
+      "status": 200,
+      "body_file": "detail-05-m-20260830T120001Z-00000005.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T120000Z-00000006",
+      "status": 200,
+      "body_file": "detail-06-m-20260830T120000Z-00000006.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T115959Z-00000007",
+      "status": 200,
+      "body_file": "detail-07-m-20260830T115959Z-00000007.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T115958Z-00000008",
+      "status": 200,
+      "body_file": "detail-08-m-20260830T115958Z-00000008.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T115957Z-00000009",
+      "status": 200,
+      "body_file": "detail-09-m-20260830T115957Z-00000009.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T115956Z-0000000a",
+      "status": 200,
+      "body_file": "detail-10-m-20260830T115956Z-0000000a.json"
+    },
+    {
+      "role": "detail",
+      "path": "/api/missions/m-20260830T115955Z-0000000b",
+      "status": 200,
+      "body_file": "detail-11-m-20260830T115955Z-0000000b.json"
+    }
+  ]
+}
