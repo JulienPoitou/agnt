@@ -26,6 +26,49 @@ une exécution silencieuse dans le mauvais transport.
 Volontairement un petit module (pas d'import du slice) : il est importable par
 `provider_manifest` (validation au chargement) et par `adapters` (délégation à
 l'exécution) sans créer de cycle.
+
+CONTRAT POUR LES AGENTS QUI BRANCHENT UN TRANSPORT (MCP-004)
+------------------------------------------------------------
+API canonique — quatre fonctions, UNE exception (`TransportError`) :
+
+    enregistrer(nom: str, executeur) -> None     # pose l'exécuteur
+    fournit(nom: str) -> bool                    # « est-ce exécutable ? »
+    connus() -> tuple[str, ...]                  # diagnostic / messages de refus
+    deleguer(nom: str, prov, sbx)                # exécute ET rend le résultat
+
+Sémantique, point par point :
+
+· **Appel de l'exécuteur** : `deleguer` appelle `executeur(prov, sbx)` — DEUX arguments
+  positionnels, et rien d'autre. Des paramètres mot-clés supplémentaires à valeur par
+  défaut (`*, target=None, arguments=None, transport_factory=None`) sont donc compatibles
+  tels quels. Retour attendu : le même objet brut que `adapters.executer` produit.
+· **Fail-closed, sans repli** : un nom non enregistré lève `TransportError`. Il n'y a
+  AUCUN chemin qui rabatte sur un sous-processus local — un provider qui demande MCP
+  exécuté en CLI local est exactement le mélange de concepts que ce module interdit.
+· **Une seule exception** : le cœur ne distingue pas `UnknownTransport` /
+  `DuplicateTransport`. Un raccord qui veut lever ses propres types doit les faire
+  hériter de `TransportError`, sinon `adapters` ne les attrape pas.
+· **Ré-enregistrement autorisé** : `enregistrer` ÉCRASE. Un bootstrap idempotent appelle
+  donc `enregistrer("mcp", …)` sans condition ; pour tester une présence existante,
+  c'est `fournit("mcp")` (pas `obtenir`, qui n'existe pas ici).
+· **`sandbox_cli` est réservé** : `enregistrer("sandbox_cli", …)` est refusé. Il est
+  exécuté nativement par `adapters.executer` et ne passe jamais par `deleguer`.
+· **`connus()` inclut `sandbox_cli`** (c'est la liste des transports exécutables, utilisée
+  dans les messages de refus) ; `fournit("sandbox_cli")` est donc `True`.
+· **Aucun retrait** : un transport retiré à chaud casserait des manifests déjà chargés.
+  La validation des manifests se fait au chargement contre `connus()`/`fournit()`.
+
+Correspondance avec le registre provisoire de la branche MCP :
+
+    MCP provisoire            CORE canonique
+    enregistrer(nom, exec)    enregistrer(nom, exec)   — écrase au lieu de lever
+    obtenir(nom)              (absent)                 — dispatch via deleguer(nom, …)
+    enregistre(nom)           fournit(nom)
+    noms()                    connus()                 — inclut `sandbox_cli`
+    UnknownTransport          TransportError
+    DuplicateTransport        (aucun équivalent : écrasement)
+    TransportRegistryError    TransportError
+
 """
 from __future__ import annotations
 

@@ -1,0 +1,136 @@
+{
+  "data": {
+    "events": [
+      {
+        "kind": "mission_created",
+        "safe_message": "Mission créée",
+        "sequence": 1,
+        "timestamp": "2026-08-30T11:59:56Z"
+      },
+      {
+        "kind": "unknown_event_recorded",
+        "safe_message": "Un événement non reconnu a été consigné",
+        "sequence": 2,
+        "timestamp": "2026-08-30T11:59:56Z"
+      },
+      {
+        "kind": "mission_stopped",
+        "safe_message": "Mission arrêtée : conditions d'exécution non remplies",
+        "sequence": 3,
+        "timestamp": "2026-08-30T11:59:56Z"
+      }
+    ],
+    "execution_status_schema": "agnt.execution-status.v1",
+    "executions": [],
+    "request": {
+      "canonical": "analyse la sécurité de ce dépôt",
+      "original": "Analyse la sécurité de ce dépôt"
+    },
+    "timeline": {
+      "events": [
+        {
+          "category": "mission",
+          "consequence": "recorded",
+          "data_state": "complete",
+          "event_id": "m-20260830T115956Z-0000000a:1",
+          "kind": "mission_created",
+          "limitations": [],
+          "position": 1,
+          "references": {
+            "mission_id": "m-20260830T115956Z-0000000a"
+          },
+          "safe_summary": "Mission créée",
+          "source": {
+            "kind": "journal",
+            "sequence": 1
+          },
+          "time": {
+            "state": "recorded",
+            "timestamp": "2026-08-30T11:59:56Z"
+          },
+          "visibility": "summary"
+        },
+        {
+          "category": "unknown",
+          "consequence": "recorded",
+          "data_state": "unavailable",
+          "event_id": "m-20260830T115956Z-0000000a:2",
+          "kind": "unknown_event_recorded",
+          "limitations": [
+            "projection_version_unsupported"
+          ],
+          "position": 2,
+          "references": {
+            "mission_id": "m-20260830T115956Z-0000000a"
+          },
+          "safe_summary": "Un événement non reconnu a été consigné",
+          "source": {
+            "kind": "journal",
+            "sequence": 2,
+            "source_kind": "evenement_version_suivante"
+          },
+          "time": {
+            "state": "recorded",
+            "timestamp": "2026-08-30T11:59:56Z"
+          },
+          "visibility": "technical"
+        },
+        {
+          "category": "mission",
+          "consequence": "refused",
+          "data_state": "complete",
+          "event_id": "m-20260830T115956Z-0000000a:3",
+          "kind": "mission_stopped",
+          "limitations": [],
+          "position": 3,
+          "references": {
+            "mission_id": "m-20260830T115956Z-0000000a"
+          },
+          "safe_summary": "Mission arrêtée : conditions d'exécution non remplies",
+          "source": {
+            "kind": "journal",
+            "sequence": 3
+          },
+          "time": {
+            "state": "recorded",
+            "timestamp": "2026-08-30T11:59:56Z"
+          },
+          "visibility": "summary"
+        }
+      ],
+      "limitations": [
+        "projection_version_unsupported"
+      ],
+      "next_cursor": null,
+      "ordering": "journal_sequence_ascending",
+      "returned_events": 3,
+      "schema_version": "agnt.timeline.v1",
+      "state": "partial",
+      "total_events": 3,
+      "truncated": false
+    }
+  },
+  "missing_artifacts": [],
+  "mission": {
+    "artifacts": {
+      "clusters": false,
+      "detail": true,
+      "findings": false,
+      "report": false
+    },
+    "completed_at": "2026-08-30T11:59:56Z",
+    "created_at": "2026-08-30T11:59:56Z",
+    "detail_href": "/api/missions/m-20260830T115956Z-0000000a",
+    "mission_id": "m-20260830T115956Z-0000000a",
+    "request": {
+      "title": "Analyse la sécurité de ce dépôt"
+    },
+    "status": "refuse",
+    "target": {
+      "display_name": "testrepo",
+      "type": "repository"
+    },
+    "updated_at": "2026-08-30T11:59:56Z"
+  },
+  "schema_version": "agnt.history.v1"
+}

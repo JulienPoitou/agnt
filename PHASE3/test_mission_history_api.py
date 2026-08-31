@@ -496,6 +496,99 @@ def main() -> int:
             rep["mission"]["status"] == "inconnu" and rep["mission"]["incomplete"] is True,
             f"status={rep['mission']['status']}")
 
+        # ------------------------------------------------------------ 18-20. contrats v1
+        # I — événement `disponibilite` (écrit par pipeline.py depuis PR #2) : c'est un
+        #     fait CONNU, il ne doit plus être projeté en `unknown_event_recorded`.
+        _ecrire(MS.MISSIONS, "m-20260830T115954Z-00000012", "2026-08-30T11:59:54" + Z,
+                _cible("repository", "/home/user/agnt/PHASE3/testrepo"),
+                [_ev(1, "2026-08-30T11:59:54" + Z, "ouverture", requete="x",
+                     cible="/home/user/agnt/PHASE3/testrepo"),
+                 _ev(2, "2026-08-30T11:59:54" + Z, "disponibilite",
+                     ecartes={"semgrep": "exécutable introuvable"}),
+                 _ev(3, "2026-08-30T11:59:54" + Z, "arret", motif="disponibilite")])
+        # J — mission CLOSE alors qu'un provider tournait encore : interrompu, pas « en cours ».
+        _ecrire(MS.MISSIONS, "m-20260830T115953Z-00000013", "2026-08-30T11:59:53" + Z,
+                _cible("repository", "/home/user/agnt/PHASE3/testrepo"),
+                [_ev(1, "2026-08-30T11:59:53" + Z, "ouverture", requete="x",
+                     cible="/home/user/agnt/PHASE3/testrepo"),
+                 _ev(2, "2026-08-30T11:59:53" + Z, "plan", plan_id="plan000000000012",
+                     providers=["semgrep"]),
+                 _ev(3, "2026-08-30T11:59:54" + Z, "statuts", resume={"selectionne": 1},
+                     outils=[{"provider": "semgrep", "capability": "static-analysis",
+                              "outil": "semgrep", "binaire": "semgrep", "disponible": True,
+                              "statut": "selectionne", "raison": "exécution en cours",
+                              "findings": 0, "code_retour": None, "timeout": False,
+                              "cibles_analysees": 0, "rien_trouve": False, "en_cours": True}]),
+                 _ev(4, "2026-08-30T11:59:55" + Z, "cloture", findings=0, clusters=0,
+                     result_digest="eeee")])
+        # K — provenance CONSIGNÉE (faits MCP) + champs hostiles : allowlist seulement.
+        _ecrire(MS.MISSIONS, "m-20260830T115952Z-00000014", "2026-08-30T11:59:52" + Z,
+                _cible("repository", "/home/user/agnt/PHASE3/testrepo"),
+                [_ev(1, "2026-08-30T11:59:52" + Z, "ouverture", requete="x",
+                     cible="/home/user/agnt/PHASE3/testrepo"),
+                 _ev(2, "2026-08-30T11:59:52" + Z, "plan", plan_id="plan000000000013",
+                     providers=["mcp_dep"]),
+                 _ev(3, "2026-08-30T11:59:53" + Z, "statuts", resume={"execute": 1},
+                     outils=[{"provider": "mcp_dep", "capability": "dependency-analysis",
+                              "outil": "mcp_dep", "binaire": "mcp_dep", "disponible": True,
+                              "statut": "execute", "raison": "ok", "findings": 1,
+                              "code_retour": 0, "timeout": False, "cibles_analysees": 4,
+                              "rien_trouve": False, "en_cours": False,
+                              "provenance": {
+                                  "provider_id": "mcp_dep", "provider_kind": "mcp",
+                                  "transport": "stdio", "server_id": "security-tools",
+                                  "tool_id": "scan_repository",
+                                  "protocol": {"name": "mcp", "version": "2025-11-25"},
+                                  "confidence": {"level": "medium",
+                                                 "basis": "provider_declared"},
+                                  "availability": "available",
+                                  # hostiles / hors contrat : doivent être jetés
+                                  "endpoint": "https://10.0.0.7:9000/mcp",
+                                  "token": "Bearer abc.def.ghi",
+                                  "argv": ["--secret", "x"],
+                                  "provider_kind_horsliste": "trusted",
+                                  "server_id_brut": "/home/user/.mcp/sock"}}]),
+                 _ev(4, "2026-08-30T11:59:54" + Z, "cloture", findings=1, clusters=1,
+                     result_digest="ffff")])
+
+        code, rep = http(base, "/api/missions/m-20260830T115954Z-00000012")
+        evs = rep["data"]["timeline"]["events"]
+        dispo = [e for e in evs if e.get("source", {}).get("source_kind") == "disponibilite"
+                 or "disponibilité" in e.get("safe_summary", "").lower()]
+        cas("18. l'événement `disponibilite` est un fait connu, pas `unknown_event_recorded`",
+            code == 200 and bool(dispo)
+            and all(e["kind"] == "providers_filtered" and e["category"] == "plan"
+                    for e in dispo)
+            and not any(e.get("kind") == "unknown_event_recorded" for e in evs),
+            json.dumps([{k: e.get(k) for k in ("kind", "category", "safe_summary")}
+                        for e in dispo], ensure_ascii=False))
+
+        code, rep = http(base, "/api/missions/m-20260830T115953Z-00000013")
+        sg = next(e for e in rep["data"]["executions"] if e["provider_id"] == "semgrep")
+        cas("19. mission close + provider encore en cours → cancelled (jamais en_cours, jamais zéro)",
+            sg["execution"]["value"] == "cancelled"
+            and sg["execution"]["invocation"] == "oui"
+            and sg["execution"]["output"] == "non_exploitable"
+            and sg["detection"]["value"] == "non_evalue"
+            and "findings_count" not in sg["detection"],
+            json.dumps(sg["execution"], ensure_ascii=False))
+
+        code, rep = http(base, "/api/missions/m-20260830T115952Z-00000014")
+        mc = next(e for e in rep["data"]["executions"] if e["provider_id"] == "mcp_dep")
+        prov = mc.get("provenance") or {}
+        brut = json.dumps(rep, ensure_ascii=False)
+        cas("20. provenance consignée projetée en allowlist, champs hostiles jetés",
+            prov.get("provider_kind") == "mcp" and prov.get("transport") == "stdio"
+            and prov.get("server_id") == "security-tools"
+            and prov.get("protocol") == {"name": "mcp", "version": "2025-11-25"}
+            and prov.get("confidence") == {"level": "medium", "basis": "provider_declared"}
+            and set(prov) <= {"provider_id", "provider_kind", "transport", "server_id",
+                              "tool_id", "protocol", "confidence", "availability",
+                              "request_id", "correlation_id"}
+            and "10.0.0.7" not in brut and "abc.def.ghi" not in brut
+            and "/home/user/.mcp" not in brut and "provider_kind_horsliste" not in prov,
+            json.dumps(prov, ensure_ascii=False))
+
     finally:
         serveur.shutdown()
         serveur.server_close()

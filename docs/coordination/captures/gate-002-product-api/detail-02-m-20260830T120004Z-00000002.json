@@ -1,0 +1,306 @@
+{
+  "data": {
+    "clusters": {
+      "clusters": [
+        {
+          "cluster_id": "c1",
+          "members": []
+        }
+      ],
+      "non_regroupe": [],
+      "stats": {}
+    },
+    "events": [
+      {
+        "kind": "mission_created",
+        "safe_message": "Mission créée",
+        "sequence": 1,
+        "timestamp": "2026-08-30T12:00:04Z"
+      },
+      {
+        "kind": "plan_created",
+        "safe_message": "Plan de mission créé",
+        "sequence": 2,
+        "timestamp": "2026-08-30T12:00:04Z"
+      },
+      {
+        "kind": "execution_context_created",
+        "safe_message": "Contexte d'exécution créé",
+        "sequence": 3,
+        "timestamp": "2026-08-30T12:00:05Z"
+      },
+      {
+        "kind": "provider_completed",
+        "safe_message": "Analyse terminée",
+        "sequence": 4,
+        "timestamp": "2026-08-30T12:00:06Z"
+      },
+      {
+        "kind": "mission_completed",
+        "safe_message": "Mission terminée",
+        "sequence": 5,
+        "timestamp": "2026-08-30T12:00:06Z"
+      }
+    ],
+    "execution_status_schema": "agnt.execution-status.v1",
+    "executions": [
+      {
+        "applicability": {
+          "proof": "derived",
+          "value": "applicable"
+        },
+        "authorization": {
+          "proof": "derived",
+          "value": "autorise"
+        },
+        "availability": {
+          "proof": "derived",
+          "value": "disponible"
+        },
+        "completeness": {
+          "limitations": [],
+          "missing": [],
+          "state": "complete"
+        },
+        "condition": {
+          "proof": "unknown",
+          "value": "inconnu"
+        },
+        "detection": {
+          "findings_count": 2,
+          "proof": "recorded",
+          "value": "findings_presents"
+        },
+        "display_name": "trivy",
+        "execution": {
+          "invocation": "oui",
+          "output": "exploitable",
+          "proof": "recorded",
+          "value": "termine"
+        },
+        "provider_id": "trivy",
+        "schema_version": "agnt.execution-status.v1",
+        "selection": {
+          "proof": "recorded",
+          "value": "selectionne"
+        }
+      }
+    ],
+    "findings": [
+      {
+        "evidence": {
+          "description": "desc 1",
+          "title": "titre 1"
+        },
+        "identity": {
+          "canonical_rule_id": "rule-1",
+          "fingerprint": "fp-1"
+        },
+        "location": {
+          "asset": "repository",
+          "file": "src/a.py",
+          "line": 1
+        },
+        "severity": {
+          "origine": "trivy",
+          "value": "HIGH"
+        },
+        "source": {
+          "tool": "trivy"
+        }
+      },
+      {
+        "evidence": {
+          "description": "desc 2",
+          "title": "titre 2"
+        },
+        "identity": {
+          "canonical_rule_id": "rule-2",
+          "fingerprint": "fp-2"
+        },
+        "location": {
+          "asset": "repository",
+          "file": "src/b.py",
+          "line": 2
+        },
+        "severity": {
+          "origine": "trivy",
+          "value": "MEDIUM"
+        },
+        "source": {
+          "tool": "trivy"
+        }
+      }
+    ],
+    "request": {
+      "canonical": "analyse la sécurité de ce dépôt",
+      "original": "Analyse la sécurité de ce dépôt"
+    },
+    "timeline": {
+      "events": [
+        {
+          "category": "mission",
+          "consequence": "recorded",
+          "data_state": "complete",
+          "event_id": "m-20260830T120004Z-00000002:1",
+          "kind": "mission_created",
+          "limitations": [],
+          "position": 1,
+          "references": {
+            "mission_id": "m-20260830T120004Z-00000002"
+          },
+          "safe_summary": "Mission créée",
+          "source": {
+            "kind": "journal",
+            "sequence": 1
+          },
+          "time": {
+            "state": "recorded",
+            "timestamp": "2026-08-30T12:00:04Z"
+          },
+          "visibility": "summary"
+        },
+        {
+          "category": "plan",
+          "consequence": "completed",
+          "data_state": "complete",
+          "event_id": "m-20260830T120004Z-00000002:2",
+          "kind": "plan_created",
+          "limitations": [],
+          "position": 2,
+          "references": {
+            "mission_id": "m-20260830T120004Z-00000002",
+            "plan_id": "plan000000000002"
+          },
+          "safe_summary": "Plan de mission créé",
+          "source": {
+            "kind": "journal",
+            "sequence": 2
+          },
+          "time": {
+            "state": "recorded",
+            "timestamp": "2026-08-30T12:00:04Z"
+          },
+          "visibility": "summary"
+        },
+        {
+          "category": "execution",
+          "consequence": "started",
+          "data_state": "complete",
+          "event_id": "m-20260830T120004Z-00000002:3",
+          "kind": "execution_context_created",
+          "limitations": [],
+          "position": 3,
+          "references": {
+            "mission_id": "m-20260830T120004Z-00000002",
+            "run_id": "run0000000000002"
+          },
+          "safe_summary": "Contexte d'exécution créé",
+          "source": {
+            "kind": "journal",
+            "sequence": 3
+          },
+          "time": {
+            "state": "recorded",
+            "timestamp": "2026-08-30T12:00:05Z"
+          },
+          "visibility": "technical"
+        },
+        {
+          "category": "execution",
+          "consequence": "completed",
+          "data_state": "complete",
+          "event_id": "m-20260830T120004Z-00000002:4",
+          "kind": "provider_completed",
+          "limitations": [],
+          "position": 4,
+          "references": {
+            "mission_id": "m-20260830T120004Z-00000002",
+            "provider_id": "trivy",
+            "run_id": "run0000000000002"
+          },
+          "safe_summary": "Analyse terminée",
+          "source": {
+            "kind": "journal",
+            "sequence": 4
+          },
+          "time": {
+            "state": "recorded",
+            "timestamp": "2026-08-30T12:00:06Z"
+          },
+          "visibility": "mission"
+        },
+        {
+          "category": "mission",
+          "consequence": "succeeded",
+          "data_state": "complete",
+          "event_id": "m-20260830T120004Z-00000002:5",
+          "kind": "mission_completed",
+          "limitations": [],
+          "position": 5,
+          "references": {
+            "mission_id": "m-20260830T120004Z-00000002",
+            "run_id": "run0000000000002"
+          },
+          "safe_summary": "Mission terminée",
+          "source": {
+            "kind": "journal",
+            "sequence": 5
+          },
+          "time": {
+            "state": "recorded",
+            "timestamp": "2026-08-30T12:00:06Z"
+          },
+          "visibility": "summary"
+        }
+      ],
+      "limitations": [],
+      "next_cursor": null,
+      "ordering": "journal_sequence_ascending",
+      "returned_events": 5,
+      "schema_version": "agnt.timeline.v1",
+      "state": "complete",
+      "total_events": 5,
+      "truncated": false
+    }
+  },
+  "missing_artifacts": [
+    "plan",
+    "run",
+    "report",
+    "coverage"
+  ],
+  "mission": {
+    "artifacts": {
+      "clusters": true,
+      "detail": true,
+      "findings": true,
+      "report": false
+    },
+    "clusters_count": 1,
+    "completed_at": "2026-08-30T12:00:06Z",
+    "created_at": "2026-08-30T12:00:04Z",
+    "detail_href": "/api/missions/m-20260830T120004Z-00000002",
+    "duration_ms": 1000,
+    "findings_summary": {
+      "by_severity": {
+        "HIGH": 1,
+        "MEDIUM": 1
+      },
+      "total": 2
+    },
+    "mission_id": "m-20260830T120004Z-00000002",
+    "request": {
+      "title": "Analyse la sécurité de ce dépôt"
+    },
+    "run_id": "run0000000000002",
+    "started_at": "2026-08-30T12:00:05Z",
+    "status": "termine",
+    "target": {
+      "display_name": "testrepo",
+      "type": "repository"
+    },
+    "updated_at": "2026-08-30T12:00:06Z"
+  },
+  "schema_version": "agnt.history.v1"
+}
