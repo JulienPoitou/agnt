@@ -1,1 +1,47 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AGNT Design Lab</title><link rel="stylesheet" href="style.css"></head><body><div id="app"></div><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AGNT — mission</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="maquette" id="ruban">MAQUETTE — le moteur n'est pas branché (api.py non démarré)</div>
+
+<header class="barre">
+  <div class="marque">AGNT<span class="point">.</span></div>
+  <form class="lancer" id="form" onsubmit="return false">
+    <label><span>cible</span><select id="cible" disabled><option>—</option></select></label>
+    <label class="q"><span>que veux-tu analyser&nbsp;?</span>
+      <textarea id="question" rows="1" disabled>Analyse ce dépôt et trouve les problèmes de sécurité importants.</textarea>
+    </label>
+    <label><span>modèle</span><input id="modele" disabled placeholder="modèle du fournisseur"></label>
+    <label><span>confiance dans la cible</span>
+      <select id="confiance" disabled><option>controlled</option><option>untrusted</option></select>
+    </label>
+    <label class="cage"><span>cage r&eacute;seau</span>
+      <input id="egress" type="checkbox" disabled
+             title="Coup&eacute;e par d&eacute;faut : le profil d'ex&eacute;cution lance chaque outil sous `--unshare-net`. "
+                    "Cocher cette case &Eacute;LARGIT la cage pour cette mission seule : les outils dont la fiche "
+                    "d&eacute;clare `reseau: true` pourront joindre leur source. D&eacute;coch&eacute;e, rien n'est envoy&eacute; "
+                    "&mdash; l'absence vaut &laquo; le profil fait foi &raquo;, et c'est un fait diff&eacute;rent d'un refus.">
+      <em id="egress-note">sortie r&eacute;seau autoris&eacute;e pour cette mission (le profil reste ferm&eacute;)</em>
+    </label>
+    <label><span>moteur d'intention</span>
+      <select id="moteur" disabled><option>auto</option><option>llm</option><option>deterministe</option></select>
+    </label>
+    <button id="run" disabled title="démarrer api.py pour activer">RUN</button>
+  </form>
+  <div class="etat" id="etat">—</div>
+  <!-- Ledger VIVANT : ce que le journal de mission a d&eacute;j&agrave; &eacute;crit, relu en cours
+       d'ex&eacute;cution. Rempli par app.js &agrave; partir de `/api/runs/<id>.vivante`, donc vide
+       et masqu&eacute; tant qu'aucune mission n'a consign&eacute; d'&eacute;tat. -->
+  <div class="etat vivante cache" id="vivante"></div>
+</header>
+
+<main id="poste" class="grille"></main>
+<footer class="pied" id="pied"></footer>
+<script src="app.js"></script>
+</body>
+</html>
