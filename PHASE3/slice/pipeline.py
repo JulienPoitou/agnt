@@ -420,8 +420,6 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
     """Exécute une mission de bout en bout.
 
     `egress` : l'autorisation de sortir (réseau) pour CETTE mission.
-
-    `egress` : l'autorisation de sortir (réseau) pour CETTE mission.
     `None` = on s'en tient au profil (donc coupé, aujourd'hui). `True` n'est pas un réglage
     de confort : c'est une DÉLÉGATION, et elle est traitée comme telle — le profil effectif
     de la mission est reconstruit avec (`dataclasses.replace`), transmis à OPA pour que la
