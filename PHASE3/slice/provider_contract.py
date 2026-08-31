@@ -95,7 +95,7 @@ class ProviderIdentity:
     """
 
     provider_id: str
-    transport: str = "local"
+    transport: str = transports.TRANSPORT_SANDBOX_CLI
     provider_version: str = ""
     server_id: str = ""
     server_version: str = ""

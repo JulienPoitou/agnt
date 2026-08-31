@@ -29,6 +29,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import transports
 import yaml
 
 MAPPING_PATH = Path(__file__).parent / "mapping_regles.yaml"
@@ -185,7 +186,7 @@ def vue_unifiee(f, *, versions: dict | None = None) -> dict:
         "categorie": src.get("categorie") or None,
         "capacite": src.get("capability") or None,
         "provider": src.get("provider") or None,
-        "transport": src.get("transport") or "local",
+        "transport": src.get("transport") or transports.TRANSPORT_SANDBOX_CLI,
         "serveur": {"id": src.get("server_id"),
                     "version": src.get("server_version")},
         "outil_provider": {"name": src.get("tool") or outil,
@@ -604,7 +605,7 @@ def depuis_manifest(brut, mani, outil: str, racines=()) -> list:
                 # La provenance externe est structurée ici pour le rapport et l'UI :
                 # un consommateur n'a pas à deviner qu'un tool vient d'un serveur MCP
                 # en lisant un nom de binaire.
-                "transport": getattr(mani, "transport", "local"),
+                "transport": getattr(mani, "transport", transports.TRANSPORT_SANDBOX_CLI),
                 "server_id": getattr(mani, "server_id", "") or None,
                 "server_version": getattr(mani, "server_version", "") or None,
                 "tool": nom_outil,

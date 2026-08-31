@@ -351,7 +351,7 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
             # locaux (statut succeeded par compatibilité).
             "statut": getattr(brut, "statut", "succeeded"),
             "erreur": getattr(brut, "erreur", ""),
-            "transport": getattr(brut, "transport", "local"),
+            "transport": getattr(brut, "transport", transports.TRANSPORT_SANDBOX_CLI),
             "correlation_id": getattr(brut, "correlation_id", ""),
             "request_id": getattr(brut, "request_id", ""),
             "identite_provider": getattr(brut, "identite_provider", {}) or {},
@@ -390,7 +390,7 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
         MS.consigner(miss, "execution", provider=prov.id, vague=vague,
                      code_retour=brut.code_retour, timeout=brut.timeout,
                      statut=getattr(brut, "statut", "succeeded"),
-                     transport=getattr(brut, "transport", "local"),
+                     transport=getattr(brut, "transport", transports.TRANSPORT_SANDBOX_CLI),
                      correlation_id=getattr(brut, "correlation_id", ""),
                      request_id=getattr(brut, "request_id", ""),
                      erreur=getattr(brut, "erreur", ""),

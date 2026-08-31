@@ -110,7 +110,9 @@ class ResultatBrut:
     # identifiants sans faire passer leur transport pour une commande locale.
     statut: str = "succeeded"
     erreur: str = ""
-    transport: str = "local"
+    # Nom CANONIQUE : un rapport qui écrirait « local » pour un provider sandbox_cli
+    # réintroduirait exactement le couplage provider=binaire que transports.py sépare.
+    transport: str = transports.TRANSPORT_SANDBOX_CLI
     correlation_id: str = ""
     request_id: str = ""
     identite_provider: dict = field(default_factory=dict)
