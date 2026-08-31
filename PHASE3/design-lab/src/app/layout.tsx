@@ -12,6 +12,7 @@ import { ThemeBootScript } from "@/scripts/theme-boot";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
 
 import "./globals.css";
+import "./preview/preview.css";
 
 export const metadata: Metadata = {
   title: APP_CONFIG.meta.title,
