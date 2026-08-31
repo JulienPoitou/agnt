@@ -82,4 +82,8 @@ Top 5 : Trusted Evidence, Case File, Investigation Workbench, Trace Explorer, Sc
 
 Recommandation de recherche : **Trusted Evidence** comme identité, **Case File** comme architecture, avec des interactions de Workbench et une lecture d'exécution de type Trace Explorer.
 
-Cette combinaison correspond aux objets réellement disponibles : Mission, Target, Capability, Provider, Execution, Finding, Evidence, Correlation, Report, Policy et Ledger. Les agents autonomes, scores magiques, cartes d'attaque et workflows de remédiation automatique restent des hypothèses futures et ne doivent pas être présentés comme existants.
+Cette combinaison correspond aux objets réellement disponibles : Mission, Target, Capability, Provider, Execution, Finding, Evidence, Correlation, Report, Policy et Ledger.
+
+## Statut de livraison
+
+Recherche fournie séparément du code produit ; ce dossier est un espace d'exploration et ne doit pas être promu directement en interface de production. Les agents autonomes, scores magiques, cartes d'attaque et workflows de remédiation automatique restent des hypothèses futures et ne doivent pas être présentés comme existants.
