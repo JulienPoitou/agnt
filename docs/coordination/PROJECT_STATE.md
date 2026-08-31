@@ -4,9 +4,9 @@
 > **But :** décisions, contrats, état des builders, dépendances, conflits, ordre d'intégration — utiles entre les handoffs. Synthèse vivante, pas un journal. Les commits et handoffs restent les preuves détaillées.
 > **Historique :** reprend et met à jour `AGNT_PROJECT_STATE.md` (30/08, branche `arena/01a0543a-agnt@aafe5af`). Ce fichier est désormais l'unique source de vérité de coordination ; `AGNT_PROJECT_STATE.md` est un pointeur.
 
-**Dernière mise à jour :** 2026-08-31 — reprise `arena/01a05783-agnt` : PR #2 fusionnée dans `main` ET vérifiée, **ligne CORE re-alignée sur main et batterie rejouée verte** (voir handoff `INTEGRATION-CORE-2026-08-31.md`), perte WEB déclarée.
-**Base d'intégration connue :** `main` = `b85bc91` (PR #2 MERGED, 11:01:17Z) ; **candidat d'intégration :** `arena/01a05783-agnt` = main + ligne CORE (`3aeb8bc`).
-**Ligne la plus avancée :** `arena/01a05783-agnt` (CORE intégré, en revue) — voir Topologie.
+**Dernière mise à jour :** 2026-08-31 — reprise `arena/01a05783-agnt` : PR #2 fusionnée dans `main` ET vérifiée, **ligne CORE intégrée dans main (PR #6, `2010f38`)**, double gate feu vert, perte WEB déclarée.
+**Base d'intégration connue :** `main` = `2010f38` = `b85bc91` (PR #2) + ligne CORE (`3aeb8bc`) + résolutions d'intégration + harnais alignés.
+**Ligne la plus avancée :** `main` (`2010f38`) — voir Topologie.
 
 ---
 
@@ -35,9 +35,9 @@
 ## TOPOLOGIE GIT (révisée 31/08 après-midi — CONFIRMÉ par git ls-remote + fetch complet)
 
 ```
-(fusion PR#1, 30/08) 4433af6 ──┬─ main b85bc91 (31/08 11:01:17Z) = 4433af6 + PR#2 MERGED (LOT 1 E2E + LOT 3 plugins)
-                               │            parents : 28ad47d (PR#4 docs) + a1520d2 — fusion SANS arrangement
-                               ├─ PR #2 : a1520d2 (01a052a5-agnt)  → MERGED dans main (merge commit b85bc91)
+(fusion PR#1, 30/08) 4433af6 ──┬─ main 2010f38 (31/08 soir) = 4433af6 + PR#2 (LOT 1 E2E + LOT 3 plugins)
+                               │            + ligne CORE intégrée (PR #6, arbre identique à l'arbre testé)
+                               ├─ PR #2 : a1520d2 (01a052a5-agnt)  → MERGED dans main (b85bc91)
                                ├─ CORE    arena/01a05415-agnt  (11 commits, tip eebefbc)
                                │         └─ reprise arena/01a0575c-agnt → tip 3aeb8bc (handoff v1 enregistré, pushé)
                                ├─ MCP     arena/01a05417-agnt  ( 5 commits, tip 6e04ff8)
@@ -76,7 +76,7 @@ Les 2 FAIL (D4 `cible_autorisee`, G6a règles gitleaks) sont **identiques à la 
 
 | Builder | Branche de travail réelle | Nouvelle session | Statut | Dernier commit connu | Débloque |
 |---|---|---|---|---|---|
-| CORE | `arena/01a05415-agnt` + reprise `arena/01a0575c-agnt` | `arena/builder-core` | **INTÉGRÉ (orchestrateur) sur `arena/01a05783-agnt`** — batterie rejouée verte sur l'arbre intégré ; défaut préexistant d'ombrage de `cible` corrigé ; handoff : `docs/coordination/handoffs/INTEGRATION-CORE-2026-08-31.md` | `3aeb8bc` | PRODUCT (gate réel), WEB (API) |
+| CORE | `arena/01a05415-agnt` + reprise `arena/01a0575c-agnt` | `arena/builder-core` | **INTÉGRÉ DANS main** (PR #6 → `2010f38`, 31/08) — batterie verte, double gate feu vert, défaut d'ombrage `cible` corrigé ; handoff : `docs/coordination/handoffs/INTEGRATION-CORE-2026-08-31.md` | `3aeb8bc` | MCP-004 (raccord transport), WEB (API réelle) |
 | MCP | `arena/01a05417-agnt` + reprise `arena/01a05760-agnt` | `arena/builder-mcp` | `READY_FOR_INTEGRATION` — **CONFIRMÉ par exécution** (handoff v1 reçu : `451de79` → `PHASE3/STATUT_MCP.md`) ; batterie 104/104 + garde adversariale réparée (`59252df`) | `451de79` | — (raccord Transport à l'intégration, MCP-004) |
 | WEB | `arena/01a0541a-agnt` | `arena/builder-web` | **PERTE DÉCLARÉE** — carte d'adoption récupérable (`3268641`, docs) ; **20 prototypes UI : PERDUS / NOT RECOVERABLE** (0 commit, 0 push vérifié GitHub ; rien dans le sandbox de reprise) | `3268641` | — |
 | SECURITY | `arena/01a05426-agnt` | `arena/builder-security` | `READY_FOR_INTEGRATION` (DÉCLARÉ) mais **PAS de handoff v1** — intégration gelée tant que le protocole n'est pas rempli | `08a8150` | STRAT-001 (labo Strix) |
@@ -205,7 +205,7 @@ Ordre : PR#2 → main ✅ (FAIT, b85bc91)  →  re-align CORE sur main  →  gat
 1. ~~**PR #2 → main**~~ ✅ **FAIT** (`b85bc91`) + preuve minimale exécutée après coup.
 2. ~~**Re-align CORE sur main**~~ ✅ **FAIT** (orchestrateur, session `arena/01a05783-agnt`) : 3 conflits résolus (union des dimensions disponibilité + descripteur de cible ; invariant « état par mission » + politique de conservation unique) ; défaut d'ombrage `cible` de la ligne CORE corrigé ; batterie verte (voir handoff `INTEGRATION-CORE-2026-08-31.md`). PR vers main à ouvrir après les gates.
 3. **Gates sur API intégrée réelle** ✅ **EXÉCUTÉS (31/08, serveur sur l'arbre intégré)** : Product `3470 PASS · 0 FAIL · 1 SKIP` (SKIP = états sémantiques non produisibles sans outils ; preuve submission_id ≠ mission_id incluse) ; Security `26/26 PASS` (liste + détails, y compris mission refusée ; harnais du gate 46/46). → **feu vert gates sur l'arbre intégré** (rejeu à refaire sur main après merge, sans changer les verdicts attendus).
-4. **PR CORE → main**, puis **raccord CORE+MCP Transport** (MCP-004) : re-align MCP sur l'arbre CORE intégré (attendre des re-confits sur `pipeline.py`/`transports.py` après CORE) ; supprimer `transports.py` MCP provisoire au profit du canonique ; corriger `cible_type="repository"` en dur (dériver le type réel) ; rejouer les 104 cas MCP.
+4. ~~**PR CORE → main**~~ ✅ **FAIT** (PR #6 → `2010f38` ; arbre de main identique à l'arbre testé, compile + History API 33/33 + transports 12/12 + cibles 33/33 rejoués sur main). Suit : **raccord CORE+MCP Transport** (MCP-004) : re-align MCP sur le nouveau main (attendre des re-confits sur `pipeline.py`/`transports.py`) ; supprimer `transports.py` MCP provisoire au profit du canonique ; corriger `cible_type="repository"` en dur (dériver le type réel) ; rejouer les 104 cas MCP.
 5. **Lots WEB** selon la carte `3268641`, après double feu vert (prototypes perdus — reconstruction décidée avec le propriétaire, pas en l'état des 20 prototypes).
 6. **SEC-LAB-001** : handoff v1 exigé d'abord (protocole), puis revue du périmètre 125 fichiers et audit ; ensuite seulement STRAT-001 (Strix) sur décision propriétaire.
 7. **DEVOPS-002** dès accord propriétaire.
@@ -216,8 +216,8 @@ Ordre : PR#2 → main ✅ (FAIT, b85bc91)  →  re-align CORE sur main  →  gat
 
 | # | Qui | Action |
 |---|---|---|
-| 0 | ~~ORCHESTRATEUR~~ | ~~Incident bootstrap~~ **FAIT** (PR #3). ~~Merger PR #2 + vérifier~~ **FAIT**. ~~Mémoire à jour~~ **FAIT** (PR #5, merged). ~~Re-align CORE + batterie~~ **FAIT** (ce lot, handoff `INTEGRATION-CORE-2026-08-31.md`). Reste : gates, PR CORE→main, puis MCP. |
-| 1 | ORCHESTRATEUR | ~~Gates Product+Security sur l'API intégrée~~ **FAIT** (3470 PASS / 0 FAIL et 26/26). Reste : PR de la ligne CORE vers main, rejeu gates sur main, puis MCP-004. |
+| 0 | ~~ORCHESTRATEUR~~ | ~~Incident bootstrap~~ **FAIT** (PR #3). ~~Merger PR #2 + vérifier~~ **FAIT**. ~~Mémoire~~ **FAIT** (PR #5). ~~Re-align CORE + batterie~~ **FAIT**. ~~Gates~~ **FAIT** (3470 PASS / 0 FAIL ; 26/26). ~~PR CORE → main~~ **FAIT** (PR #6 → `2010f38`). Reste : MCP-004, rejeu gates sur main, puis WEB. |
+| 1 | MCP (reprise `arena/builder-mcp`) | Re-alignment sur `main 2010f38` : supprimer `transports.py` provisoire (canonique CORE gagne), brancher `mcp_bootstrap` sur le registre réel, corriger `cible_type` dur, rejouer les 104 cas + campagne adversariale, handoff v1. **Le brief « P0 Provider abstraction » reste SUSPENDU.** |
 | 2 | PRODUCT | Vérifier les verdicts du gate sur l'arbre intégré ; certifier ou lister les écarts par contrat `agnt.history.v1`/`timeline.v1`/`execution-status.v1`. |
 | 3 | SECURITY | **Produire le handoff v1 de `08a8150`** (protocole ci-dessous : périmètre 125 fichiers justifié, invariants labo, tests labo, non-bypass, périmètre non touché). Puis préparer le rejeu du gate History (`dae445a`) sur l'API intégrée. |
 | 4 | MCP (reprise `arena/builder-mcp`) | **STOP jusqu'à l'atterrissage CORE.** Le brief « P0 Provider abstraction » reste SUSPENDU (contredit Provider/Transport CORE + MCP-004). Ensuite : re-align sur l'arbre CORE intégré, supprimer `transports.py` provisoire, corriger `cible_type` dur (dériver le type réel), rejouer les 104 cas. |
