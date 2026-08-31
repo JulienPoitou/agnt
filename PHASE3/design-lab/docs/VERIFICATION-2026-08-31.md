@@ -1,6 +1,6 @@
 # Vérification navigateur — matrice réelle gate-002 (design-lab)
 
-**Date :** 2026-08-31 · **Branche :** `arena/01a05837-agnt` · **Base :** `main @ 5f5e09d6`
+**Date :** 2026-08-31 · **Branche :** `arena/01a05837-agnt` · **Base :** `main @ 5f5e09d6`, rebasé sur `main @ 16eeb4f` (le déplacement de main pendant la session touchait bootstrap/DevOps, sans recouvrement)
 
 ## Périmètre
 
@@ -10,9 +10,9 @@ réel, commit par commit, avec les captures d'écran faites en navigateur.
 
 | Étape | Commit | Contenu |
 |---|---|---|
-| 1. Nettoyage | `5095503` (+ fix `69ef696`) | suppression des copies « front » du gate Python (`data/product_api_gate.py`, `data/test_product_api_gate.py`), du doublon `data/examples/` et de la copie fixture `public/data/examples/` ; PROVENANCE.md réécrit (source = `main @ 5f5e09d6`, dossier `docs/coordination/captures/gate-002-product-api/`) |
-| 2. Matrice | `5f0b2be` | 18 fichiers copiés **octet pour octet** (17 corps de réponses + manifeste) dans `public/data/gate-002-product-api/`, vérifiés par `diff -r` ; `src/lib/api.ts` typé en Zod sur les champs RÉELS des captures (aucun champ inventé, aucun absent rendu en zéro) ; `tsc --noEmit` : 0 erreur |
-| 3. États non-heureux | `9214ba7` | chaque état branché sur SA capture, URL `?v=<body_file|mission_id>` |
+| 1. Nettoyage | `b16ed0d` (+ fix `12a8455`) | suppression des copies « front » du gate Python (`data/product_api_gate.py`, `data/test_product_api_gate.py`), du doublon `data/examples/` et de la copie fixture `public/data/examples/` ; PROVENANCE.md réécrit (source = `main @ 5f5e09d6`, dossier `docs/coordination/captures/gate-002-product-api/`) |
+| 2. Matrice | `c608cf2` | 18 fichiers copiés **octet pour octet** (17 corps de réponses + manifeste) dans `public/data/gate-002-product-api/`, vérifiés par `diff -r` ; `src/lib/api.ts` typé en Zod sur les champs RÉELS des captures (aucun champ inventé, aucun absent rendu en zéro) ; `tsc --noEmit` : 0 erreur |
+| 3. États non-heureux | `3cfb777` | chaque état branché sur SA capture, URL `?v=<body_file|mission_id>` |
 | 4. Vérification | ce commit | 18 états réellement visités en Chromium headless, captures d'écran ci-dessous |
 
 ## Faits vérifiés sur la source
