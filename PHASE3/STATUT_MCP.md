@@ -154,10 +154,22 @@ l'incompatibilité de protocole ne sont pas fabriquées contre le SDK : ce sont 
 **NOT EXERCISED** dans cette preuve indépendante. La seule cible exécutée est un
 `Target("repository", ...)` synthétique ; aucune cible URL n'est exécutée ou convertie en `Path`.
 
-## Bootstrap CORE
+## Bootstrap CORE — raccordé au module canonique (MCP-004, 31/08)
 
-Le checkout actuel n'expose pas encore le bootstrap CORE canonique. Le patch ajoute uniquement
-le point d'extension générique `transports.enregistrer` et un bootstrap MCP explicite :
+Le module CORE canonique `slice/transports.py` est désormais présent sur cette branche
+(intégré dans `main` = `e7262f9`). L'implémentation MCP dupliquée a été **supprimée** :
+il ne reste qu'un seul registre de transports, celui du cœur.
+
+| API locale supprimée | API canonique du cœur |
+|---|---|
+| `obtenir(nom)` → exécuteur | `deleguer(nom, prov, sbx, **contexte)` |
+| `enregistre(nom)` | `fournit(nom)` |
+| `noms()` | `connus()` |
+| `UnknownTransport` / `DuplicateTransport` / `TransportRegistryError` | `TransportError` |
+| tuple `provider_contract.TRANSPORTS` codé en dur | `transports.fournit()` / `connus()` |
+
+Le bootstrap MCP reste le seul point d'enregistrement explicite, et il n'utilise que le
+couple canonique `enregistrer` / `fournit` :
 
 ```python
 import transports
@@ -165,35 +177,62 @@ from mcp_bootstrap import initialiser_mcp
 initialiser_mcp(transports)  # une fois, avant le premier Registry()
 ```
 
-`mcp_bootstrap.initialiser_mcp()` n'est appelé ni par une requête Web ni par le backend. Il
-refuse les doublons et ne fournit aucun fallback vers `sandbox_cli` ou un exécutable local.
-Lors de l'arrivée du CORE canonique, `transports.py` doit être remplacé/aligné par son registre,
-et le point d'appel conservé dans le bootstrap applicatif (`analyser.main`, `interface.api.main`,
-`pipeline.main`).
+`initialiser_mcp()` n'est appelé ni par une requête Web ni par le backend. Trois issues,
+toutes fail-closed : registre non conforme → erreur ; `mcp` déjà fourni par un tiers →
+erreur, jamais d'écrasement ; déjà enregistré par nous → retour idempotent. Aucun fallback
+vers `sandbox_cli` ni vers un exécutable local.
 
-## CORE COMPATIBILITY MAP
+### Seule extension apportée au module CORE
 
-| Contrat CORE attendu | État dans ce checkout | Preuve / action d'intégration |
+`transports.deleguer(nom, prov, sbx, /, **contexte)` transmet le contexte **par appel** que
+le cœur sait produire et qu'un transport ne peut pas deviner : cible typée, arguments
+validés, fabrique de transport (tests), événement d'annulation. Le module ne l'inspecte pas
+et ne le transforme pas — il ne connaît pas le vocabulaire des transports.
+
+Rétrocompatible et borné par quatre cas dédiés (`test_mcp_contract` 0quinquies…0octies) :
+un exécuteur `(prov, sbx)` fonctionne toujours sans contexte ; un contexte non accepté lève
+`TypeError` (jamais de perte silencieuse d'une annulation) ; un transport inconnu lève
+`TransportError` sans repli local.
+
+### Trois couplages « provider = binaire local » supprimés
+
+1. **Disponibilité** (`pipeline.executer`) : elle était décidée pour tous les providers sur
+   `adapters.exe_de()`, donc sur la présence d'un exécutable. Un provider externe n'en a pas
+   par contrat : il était écarté avant toute exécution et son absence devenait une absence
+   **inexpliquée**. Désormais `sandbox_cli` → exécutable résolvable ; externe → transport
+   enregistré, la disponibilité réelle du serveur restant portée par le résultat.
+2. **Type de cible en policy** : `cible_type="repository"` était passé en dur à
+   `moteur.evaluer()`. Le paramètre a **disparu** : OPA lit le descripteur structuré porté
+   par le plan (`cible_descr` = `Cible.to_dict()`), donc le type réel. Le cas `15bis` de
+   `test_mcp` le prouve (fichier → `filesystem`).
+3. **Nom du transport** : cinq défauts/replis écrivaient le littéral `"local"` dans le
+   chemin résultat → provenance → rapport. Ils prennent tous `TRANSPORT_SANDBOX_CLI`.
+
+## CORE COMPATIBILITY MAP (après MCP-004)
+
+| Contrat CORE | État | Preuve |
 |---|---|---|
-| `Provider` enregistré par capability, avec transport nommé | **COMPATIBLE + VÉRIFIÉ LOCAL** | `Provider.transport`, binding MCP et `test_mcp_contract.py` |
-| extension générique `transports.enregistrer(nom, executor)` | **COMPATIBLE PROVISOIRE** | API reproduite par `slice/transports.py`; le module n'est pas le CORE canonique |
-| résolution/dispatch par le registre générique | **COMPATIBLE PROVISOIRE** | `adapters.executer` appelle `transports.obtenir`; remplacer par la méthode CORE équivalente si son nom diffère |
-| enregistrement explicite avant `Registry()` | **VÉRIFIÉ** | `mcp_bootstrap.initialiser_mcp`, entrées CLI/API/pipeline et test fail-closed |
-| cible structurée CORE, distincte de `Sandbox` | **PARTIELLEMENT COMPATIBLE** | `provider_contract.Target` local ; URLs/hôtes ne sont pas coercés depuis `Path` |
-| résultat commun, normalisation, ledger et rapport | **VÉRIFIÉ DANS LE PIPELINE EXISTANT** | passes HTTP contrôlée et stdio indépendant dans `test_mcp_e2e.py` / `test_mcp_interop.py` |
-| découverte distante comme information seulement | **VÉRIFIÉ** | `tools/list` du SDK indépendant annonce `rogue_tool`, sans modifier `argument_schema` ni `approved_tool` |
-| absence de fallback local | **VÉRIFIÉ** | transport non enregistré = erreur ; aucun appel CLI/`sandbox_cli` dans le chemin MCP |
-
-**Action requise lors du merge CORE :** comparer les signatures et exceptions du registre canonique,
-brancher `mcp_bootstrap` sur son instance/API réelle, supprimer le raccord local si le CORE expose
-ces primitives, puis relancer les tests MCP ciblés. Aucun commit de ce checkout ne peut prétendre
-avoir compilé contre le CORE absent.
+| `Provider` par capability, transport nommé canoniquement | **VÉRIFIÉ** | `Provider.transport`, `test_mcp_contract` 1-2 |
+| `transports.enregistrer` / `fournit` / `connus` / `deleguer` | **VÉRIFIÉ sur le module CORE réel** | plus aucune API dupliquée ; `test_mcp_contract` 0bis…0octies |
+| dispatch par le registre canonique | **VÉRIFIÉ** | `adapters.executer` → `transports.deleguer` ; aucune table locale |
+| validation du transport au chargement du registre | **VÉRIFIÉ fail-closed** | `registre.Provider.__post_init__` → `transports.fournit` |
+| enregistrement explicite avant `Registry()` | **VÉRIFIÉ** | `mcp_bootstrap`, entrées CLI/API/pipeline, cas 0 |
+| `Cible` CORE distincte de `Sandbox` | **VÉRIFIÉ** | `cible.normaliser` → `plan.cible_descr` → entrée OPA ; `Target` MCP jamais converti en `Path` |
+| résultat commun, normalisation, ledger, rapport | **VÉRIFIÉ** | passes HTTP contrôlée et stdio SDK indépendant |
+| découverte distante informative seulement | **VÉRIFIÉ** | `tools/list` annonce `rogue_tool`, binding et schéma non élargis |
+| aucun fallback local | **VÉRIFIÉ** | transport inconnu → `TransportError` ; disponibilité externe ≠ binaire |
 
 ## Blocages explicites
 
 - OPA n'est pas installé dans l'environnement (`/home/user/.cache/arena_secops/bin/opa` absent) :
-  `test_manifest.py` et `test_fanout.py` restent bloqués, et la policy MCP est **IMPLEMENTED +
-  NOT EXERCISED** côté moteur OPA.
+  la policy MCP reste **IMPLEMENTED + NOT EXERCISED** côté moteur OPA réel. Les garde-fous
+  testés ici le sont sur un double de la frontière policy (`test_mcp_policy_gate`, 3/3).
+- **PRÉ-EXISTANTS SUR `main` (`e7262f9`), non introduits par MCP** — vérifié par exécution
+  dans un worktree détaché sur `e7262f9`, résultats identiques de part et d'autre :
+  `test_manifest` et `test_fanout` (`KeyError: 'steps'`), `test_correlation`
+  (`KeyError: 'clusters'`), `test_tracabilite` (`KeyError: 'plan_id'`), `test_utilisation`
+  (double de `pipeline.executer` périmé), `test_qualite_plateforme` 32/34,
+  `test_adversaire` 46 cas · 40 PASS · 2 FAIL · 4 NON ÉVALUÉS. Ces suites relèvent de CORE.
 - Une interopérabilité indépendante est désormais démontrée uniquement avec le SDK Python
   officiel `mcp==2.1.1` en stdio. Aucun support général d'un serveur tiers, d'un proxy, de HTTP,
   de Streamable HTTP, de SSE ou d'une variante de framing non testée n'est revendiqué.
@@ -210,71 +249,76 @@ avoir compilé contre le CORE absent.
 === AGNT HANDOFF v1 ===
 agent      : MCP
 domaine    : providers externes / transport MCP / normalisation / provenance
-branche    : arena/01a05760-agnt  (session) — PR cible : arena/builder-mcp
-base       : 4433af6 (fast-forward) -> 6e04ff8 (5 commits MCP repris) -> 59252df
-statut     : READY_FOR_INTEGRATION — batterie rejouée, 104/104 cas
-commits    : 458d23b external provider contract
-             be68844 integrate backend with pipeline and reporting
-             229601a explicit CORE transport bootstrap + controlled tests
-             b6b650d annulation HTTP réellement interruptible
-             6e04ff8 interoperability with independent server (SDK mcp 2.1.1)
-             59252df repair adversarial guard broken by cible_type + record replay
+branche    : arena/01a05760-agnt  (session) — PR ouverte vers main
+base       : e7262f9 (main : CORE intégré, PR#2 incluse) — rebase, 12 commits
+statut     : MCP-004 TERMINÉ — raccordé au Transport canonique, batterie rejouée
 
-livrables  : slice/provider_contract.py, slice/mcp_provider.py, slice/mcp_transport.py,
-             slice/mcp_bootstrap.py, slice/transports.py (PROVISOIRE — voir MCP-004),
-             STATUT_MCP.md, 7 suites test_mcp*.py
+commits (sur e7262f9)
+  3fe55dd  introduce external provider contract
+  5fc130f  integrate backend with pipeline and reporting
+  4dac4c0  wire explicit CORE transport bootstrap and controlled tests
+  0e46217  annulation HTTP réellement interruptible
+  2622ad3  interoperability with independent server (SDK mcp 2.1.1)
+  20256bc  repair adversarial guard broken by cible_type
+  05e095a  record AGNT handoff after full battery replay
+  035dd88  decide external provider availability by transport, not local binary
+  d797e92  name the sandbox transport canonically in plan steps
+  23a0795  align test doubles and battery with canonical CORE contracts
+  99363e9  name every transport by its canonical registry name
+  d5212a9  bound the deleguer context extension with contract tests
+
+MCP-004 — ce qui a été fait
+  - transports.py dupliqué SUPPRIMÉ : un seul registre, celui du cœur
+    (enregistrer / fournit / connus / deleguer / TransportError).
+  - dispatch par transports.deleguer ; table locale TRANSPORT_ADAPTATEURS supprimée.
+  - mcp_bootstrap n'utilise que enregistrer + fournit ; homonyme d'un tiers jamais écrasé.
+  - tuple TRANSPORTS codé en dur supprimé : validation par transports.fournit().
+  - cible_type="repository" SUPPRIMÉ : OPA lit plan.cible_descr (Cible.to_dict()).
+  - disponibilité externe = transport enregistré, plus la présence d'un binaire local.
+  - tous les littéraux de transport "local" remplacés par TRANSPORT_SANDBOX_CLI.
+  - seule extension au contrat CORE : deleguer(..., **contexte), rétrocompatible,
+    bornée par 4 cas de test.
 
 tests
-  PASS (104 cas)
-    test_mcp.py            23/23  INTEGRATION SIMULATED (transport en mémoire)
-    test_mcp_contract.py   16/16  contrat + binding registre + refus schéma malformé
-    test_mcp_e2e.py        17/17  INTEGRATION SIMULATED (ThreadingHTTPServer MCP loopback)
-    test_mcp_policy_gate.py  3/3  refus policy / policy indisponible / egress fermé
-    test_mcp_stdio.py        8/8  processus Python réel, sans shell
-    test_mcp_http_cancel.py 17/17 annulation par fermeture TCP réelle
-    test_mcp_interop.py    20/20  REAL — SDK officiel mcp==2.1.1, transport stdio
-  PASS (régression)
-    test_adversaire.py     46 cas · 41 PASS · 2 FAIL · 3 NON ÉVALUÉS
-                           = relevé identique à la base 4433af6 (worktree détaché)
-  FAIL (pré-existants, hors domaine MCP — non absorbés)
-    D4  armement de cible_autorisee      -> SECURITY
-    G6a règles de détection des secrets  -> SECURITY (e5838003)
-  BLOCKED (environnement, identiques sur 4433af6 et 6e04ff8)
-    binaire OPA absent : test_slice, test_correlation, test_tracabilite,
-    test_manifest, test_fanout, test_utilisation
-    -> policy MCP = IMPLEMENTED + NOT EXERCISED côté moteur OPA réel
+  PASS — batterie MCP 110 cas
+    test_mcp_contract.py    21/21  contrat, binding, bootstrap, contrat deleguer
+    test_mcp.py             24/24  INTEGRATION SIMULATED (transport en mémoire)
+    test_mcp_e2e.py         17/17  INTEGRATION SIMULATED (serveur MCP HTTP loopback réel)
+    test_mcp_policy_gate.py   3/3  refus policy / policy indisponible / egress fermé
+    test_mcp_stdio.py         8/8  processus Python réel, sans shell
+    test_mcp_http_cancel.py  17/17 annulation par fermeture TCP réelle
+    test_mcp_interop.py     20/20  REAL — SDK officiel mcp==2.1.1, transport stdio
+  PASS — régression non-MCP (identique à la base e7262f9)
+    test_selection 13/13 · test_statuts_outils 31/31 · test_modele_finding 37/37
+    test_empreintes 13/13 · test_garde_fous 29/29 · test_isolation_mission 8/8
+    test_qualite_plateforme 32/34 (= base) · test_adversaire 40 PASS/2 FAIL/4 NE (= base)
+  BLOCKED (environnement, identiques sur e7262f9 et ici — domaine CORE)
+    binaire OPA absent → policy réelle non évaluée
+    test_manifest, test_fanout (KeyError 'steps'), test_correlation (KeyError
+    'clusters'), test_tracabilite (KeyError 'plan_id'), test_utilisation (double
+    périmé) — PRÉ-EXISTANTS SUR MAIN, vérifiés en worktree détaché sur e7262f9
   NON ÉVALUÉ
     HTTP / Streamable HTTP / SSE / streaming / resources / prompts / auth /
     annulation protocolaire contre le SDK indépendant (borné à stdio)
     réponses JSON-RPC malformées et incompatibilité de protocole contre le SDK
 
-blocages
-  - MCP-004 raccord au Transport CORE canonique : SUSPENDU par la coordination,
-    à traiter en intégration coordonnée CORE+MCP. slice/transports.py reste une
-    API PROVISOIRE (obtenir) à remplacer par le registre canonique
-    (enregistrer/fournit/connus/deleguer). Aucun merge builder↔builder.
-  - CORE-005 Cible distante (url) : aucun transport ne reçoit encore une Cible
-    distante ; évolution conjointe CORE/MCP/SECURITY requise.
-
-note transmise à CORE / SECURITY (non absorbée, non corrigée ici)
-  pipeline.py passe cible_type="repository" EN DUR à moteur.evaluer() (l. 531,
-  l. 662) alors que le type réel est dérivé par provider dans _vague
-  (prov.target_types -> repository OU filesystem, l. 266-270). detect_secrets
-  déclare target_types: ['repository','filesystem'] : l'entrée OPA peut donc
-  annoncer cible.type="repository" pour une exécution filesystem. Une règle OPA
-  distinguant les deux recevrait un fait faux. Contrat CORE -> à traiter avec
-  CORE-005 / MCP-004.
+modifications de tests (justification écrite, aucune attente adoucie)
+  - doubles de PolicyEngine sans cible_type (le paramètre a disparu de la policy) ;
+  - double de Plan complété de steps=() (_rapport lit plan.steps) ;
+  - plus de pipeline.SORTIE (CORE : artefacts par mission dans <mission>/run) ;
+  - transports.fournit() au lieu de l'aide locale enregistre() ;
+  - cas 15 porte un vrai descripteur de cible + cas 15bis prouve que le type suit le
+    descripteur (fichier -> filesystem) au lieu d'un littéral.
 
 périmètre non touché
-  Aucun redesign du contrat provider (consigne de suspension respectée).
-  Aucun fichier CORE hors PHASE3/slice/{pipeline,adapters,policy}.py déjà livrés
-  par les 5 commits repris. Ce lot n'ajoute que 2 signatures de doubles de test
-  + documentation. Aucune UI, aucun manifest, aucune règle OPA, aucun sandbox.
+  Aucun redesign de registry/provider/adapter (brief « P0 Provider abstraction »
+  toujours SUSPENDU). Aucune règle OPA, aucune UI, aucun manifest versionné, aucun
+  credential. Sandbox et policy inchangés dans leur logique : seul le NOM du
+  transport et l'ORIGINE de la disponibilité ont été corrigés.
 
 confiance
-  HAUTE sur les 104 cas MCP et sur la réparation de la garde adversariale
-  (contrôle de référence exécuté sur 4433af6 en worktree détaché).
-  MOYENNE sur test_utilisation.py : alignement préventif NON EXERCÉ (OPA absent).
-  NULLE sur toute évaluation OPA réelle dans cet environnement.
+  HAUTE sur les 110 cas MCP et sur la régression (baseline e7262f9 exécutée en
+  worktree détaché, comparaison ligne à ligne).
+  NULLE sur toute évaluation OPA réelle : le binaire est absent de l'image.
 === END AGNT HANDOFF ===
 ```
