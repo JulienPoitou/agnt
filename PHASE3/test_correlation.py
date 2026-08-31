@@ -39,6 +39,16 @@ def cas(nom, ok, detail=""):
     print(f"  {'OK   ' if ok else 'ECHEC'} {nom}" + (f"\n          {detail}" if detail else ""))
 
 
+# Scanners dont cette suite a besoin pour produire de vrais findings.
+_OUTILS = ("semgrep", "bandit", "trivy", "grype", "gitleaks", "detect-secrets", "checkov")
+
+
+def _outils_absents(*noms) -> bool:
+    """Aucun des binaires nommés n'est résolvable : c'est l'environnement, pas le code."""
+    import shutil
+    return all(shutil.which(n) is None for n in (noms or _OUTILS))
+
+
 def main() -> int:
     print("=== CORRÉLATION — MÉCANISME (fixture contrôlée) ===\n")
     if not FIXTURE.exists():
@@ -46,6 +56,16 @@ def main() -> int:
         return 1
 
     e = pipeline.executer("Analyse la sécurité de mon dépôt", FIXTURE)
+    if not e.plan and _outils_absents():
+        # NON ÉVALUÉ, pas échec : sans outil installé, l'étape « disponibilité » écarte
+        # tous les providers, la mission s'arrête AVANT le plan et `e.clusters` est vide.
+        # Lever un KeyError ici masquait la cause réelle et bloquait toute la suite.
+        # Aucune attente n'est relâchée : dès qu'un outil est résolvable, cette garde ne
+        # se déclenche plus et un vrai défaut réapparaît en échec.
+        print(f"NON ÉVALUÉ : aucun plan produit (arrêt {e.arret!r}) et aucun scanner "
+              f"résolvable sur cette machine — la corrélation exige de vrais findings. "
+              f"Installer les outils (bootstrap.sh) puis rejouer.")
+        return 2
     inter = e.clusters.get("clusters_inter_outils", [])
     tous = e.clusters["clusters"]
     ids = {f["id"]: f for f in e.findings}

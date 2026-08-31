@@ -49,6 +49,63 @@ def non_evalue(nom: str, raison: str) -> None:
     print(f"  N/E   {nom}\n          {raison}")
 
 
+# Scanners dont les sections 3 à 6 et 8 ont besoin (plan réel, policy, findings).
+_OUTILS = ("semgrep", "bandit", "trivy", "grype", "gitleaks", "detect-secrets", "checkov")
+
+
+def _outils_absents(*noms) -> bool:
+    """Aucun des binaires nommés n'est résolvable : c'est l'environnement, pas le code."""
+    import shutil
+    return all(shutil.which(n) is None for n in (noms or _OUTILS))
+
+
+def bloc_independance_outils() -> None:
+    """Section 7 — aucune modification du cœur pour ajouter un outil.
+
+    Déplacée en fonction le 31/08/2026 (post MCP-004) : cette vérification ne dépend
+    d'AUCUN outil installé — elle lit le code du cœur. Or le crash `KeyError: 'steps'`
+    des sections 3-6 (mission arrêtée avant le plan, faute d'outil) l'empêchait de
+    tourner : une vérification d'architecture mesurable était perdue pour une raison
+    purement environnementale. Appelée avant la garde « non évalué », elle s'exécute
+    donc dans tous les cas. Aucune attente n'est modifiée.
+    """
+    print("\n--- indépendance vis-à-vis des outils ---")
+    coeur = ["pipeline.py", "adapters.py", "findings.py", "policy.py",
+             "plan.py", "registre.py", "clusterer.py", "rapport.py"]
+
+    def _hors_commentaires(source: str) -> str:
+        """Le code, sans les commentaires — et sans `#` pris dans une chaîne.
+
+        Ce test cherchait « bandit » dans le TEXTE du fichier et se satisfaisait donc
+        d'un commentaire : `findings.py` citant bandit pour expliquer un choix de
+        normalisation faisait échouer une vérification d'architecture, alors qu'aucune
+        ligne de code du cœur ne dépend de cet outil. Juger un mot dans un commentaire,
+        c'est interdire d'expliquer ce qu'on fait — et laisser passer une vraie
+        dépendance écrite en code.
+        On utilise le tokenizer Python lui-même : `tokenize` sait où est un commentaire,
+        là où une suppression de `#` à la main se trompe sur les chaînes.
+        """
+        import io
+        import tokenize
+        garde = []
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            if tok.type != tokenize.COMMENT:
+                garde.append(tok.string)
+        return "\n".join(garde)
+
+    mentions = []
+    for f in coeur:
+        t = (RACINE / "slice" / f).read_text(encoding="utf-8")
+        # `adapters.py` cite bandit dans sa liste d'adaptateurs historiques : c'est
+        # justement ce que le manifest doit rendre inutile. On vérifie qu'aucun AUTRE
+        # fichier du cœur ne connaît bandit — DANS SON CODE, commentaires exclus.
+        if f != "adapters.py" and "bandit" in _hors_commentaires(t).lower():
+            mentions.append(f)
+    cas("7. aucun fichier du cœur ne connaît bandit", not mentions,
+        f"fichiers concernés : {mentions}" if mentions
+        else "pipeline, findings, policy, plan, registre, clusterer, rapport : aucun")
+
+
 def refuse(nom, doc, attendu_dans_erreur=""):
     """Vérifie qu'un manifest est REFUSÉ, et pour la bonne raison."""
     try:
@@ -113,6 +170,41 @@ def main() -> int:
     print("\n--- plan et policy ---")
     e = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo",
                         avec_internes=True)
+    # Section 7 d'abord : elle ne dépend d'aucun outil installé (voir sa docstring).
+    bloc_independance_outils()
+    if not e.plan and _outils_absents():
+        # NON ÉVALUÉ, pas échec : les sections 1-2 (validation des manifests) ont tourné
+        # ci-dessus, et la section 7 (indépendance du cœur) tourne juste avant cette
+        # garde. Ce qui suit exige une mission réelle : plan + policy + findings de
+        # bandit. Sans outil installé, l'étape « disponibilité » écarte tous les
+        # providers, la mission s'arrête AVANT le plan, `e.plan` est vide et
+        # `e.plan["steps"]` levait un KeyError qui masquait la cause réelle.
+        # Aucune attente n'est relâchée : un cas non évalué n'est jamais un succès, et la
+        # garde ne se déclenche que si AUCUN scanner n'est résolvable — sinon un vrai
+        # défaut réapparaît en échec.
+        raison = (f"aucun plan produit (arrêt {e.arret!r}) et aucun scanner résolvable "
+                  "sur cette machine — plan, policy et findings exigent les outils réels "
+                  "(bootstrap.sh) et `opa`")
+        for nom in ("3. bandit apparaît dans le plan",
+                    "3b. sa capacité apparaît dans le plan",
+                    "3c. la policy a autorisé le plan",
+                    "3d. le risque déclaré remonte au plan",
+                    "4. bandit a produit des findings",
+                    "4b. ils portent l'identité source et canonique",
+                    "4c. ils sont marqués comme issus du déclaratif",
+                    "4d. les règles déclarées sont toutes présentes",
+                    "5. bandit apparaît dans la couverture",
+                    "5b. sa limite déclarative est dite",
+                    "6. aucun secret n'a survécu",
+                    "8a. même intention → même plan_id (3 exécutions)",
+                    "8b. request_id distinct à chaque exécution",
+                    "8c. même result_digest",
+                    "8d. une autre intention → un autre plan_id"):
+            non_evalue(nom, raison)
+        print(f"\n{'=' * 52}\n  {PAS}/{PAS + ECHECS} · {ECHECS} échec(s) · "
+              f"{len(NON_EVALUES)} non évalué(s)\n{'=' * 52}")
+        print("NON ÉVALUÉ : dépendance d'environnement absente (outils + opa).")
+        return 2
     caps = [s["capability"] for s in e.plan["steps"]]
     provs = [s["provider"] for s in e.plan["steps"]]
     cas("3. bandit apparaît dans le plan", "bandit" in provs,
@@ -157,40 +249,7 @@ def main() -> int:
         "les messages de bandit sont masqués à l'extraction")
 
     # ------------------------------------------------ 7. aucune modification du cœur
-    print("\n--- indépendance vis-à-vis des outils ---")
-    coeur = ["pipeline.py", "adapters.py", "findings.py", "policy.py",
-             "plan.py", "registre.py", "clusterer.py", "rapport.py"]
-    def _hors_commentaires(source: str) -> str:
-        """Le code, sans les commentaires — et sans `#` pris dans une chaîne.
-
-        Ce test cherchait « bandit » dans le TEXTE du fichier et se satisfaisait donc
-        d'un commentaire : `findings.py` citant bandit pour expliquer un choix de
-        normalisation faisait échouer une vérification d'architecture, alors qu'aucune
-        ligne de code du cœur ne dépend de cet outil. Juger un mot dans un commentaire,
-        c'est interdire d'expliquer ce qu'on fait — et laisser passer une vraie
-        dépendance écrite en code.
-        On utilise le tokenizer Python lui-même : `tokenize` sait où est un commentaire,
-        là où une suppression de `#` à la main se trompe sur les chaînes.
-        """
-        import io
-        import tokenize
-        garde = []
-        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
-            if tok.type != tokenize.COMMENT:
-                garde.append(tok.string)
-        return "\n".join(garde)
-
-    mentions = []
-    for f in coeur:
-        t = (RACINE / "slice" / f).read_text(encoding="utf-8")
-        # `adapters.py` cite bandit dans sa liste d'adaptateurs historiques : c'est
-        # justement ce que le manifest doit rendre inutile. On vérifie qu'aucun AUTRE
-        # fichier du cœur ne connaît bandit — DANS SON CODE, commentaires exclus.
-        if f != "adapters.py" and "bandit" in _hors_commentaires(t).lower():
-            mentions.append(f)
-    cas("7. aucun fichier du cœur ne connaît bandit", not mentions,
-        f"fichiers concernés : {mentions}" if mentions
-        else "pipeline, findings, policy, plan, registre, clusterer, rapport : aucun")
+    # (exécutée AVANT la garde « non évalué » : voir `bloc_independance_outils`)
 
     # ------------------------------------------------ 8. canonicalisation du plan
     print("\n--- canonicalisation ---")

@@ -39,12 +39,33 @@ def cas(nom, ok, detail=""):
     print(f"  {'OK   ' if ok else 'ECHEC'} {nom}" + (f"\n          {detail}" if detail else ""))
 
 
+# Scanners dont cette suite a besoin pour qu'une mission aille jusqu'au plan puis au run.
+_OUTILS = ("semgrep", "bandit", "trivy", "grype", "gitleaks", "detect-secrets", "checkov")
+
+
+def _outils_absents(*noms) -> bool:
+    """Aucun des binaires nommés n'est résolvable : c'est l'environnement, pas le code."""
+    import shutil
+    return all(shutil.which(n) is None for n in (noms or _OUTILS))
+
+
 def main() -> int:
     print("=== TRAÇABILITÉ ===\n")
 
     a1 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE_A)
     a2 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE_A)
     b1 = pipeline.executer("Analyse la sécurité de mon dépôt", CIBLE_B)
+
+    if not a1.plan and _outils_absents():
+        # NON ÉVALUÉ, pas échec : sans outil installé, la disponibilité écarte tous les
+        # providers, la mission s'arrête AVANT le plan — il n'y a alors ni plan_id ni
+        # run_id à tracer. Le KeyError que cela produisait masquait la cause réelle.
+        # Aucune attente n'est relâchée : la garde ne se déclenche que si AUCUN scanner
+        # n'est résolvable ; sinon un vrai défaut réapparaît en échec.
+        print(f"NON ÉVALUÉ : aucun plan produit (arrêt {a1.arret!r}) et aucun scanner "
+              f"résolvable sur cette machine — la traçabilité des cinq identifiants exige "
+              f"une mission réelle. Installer les outils (bootstrap.sh) puis rejouer.")
+        return 2
 
     # ------------------------------------------------ les cinq identifiants existent
     manque = [k for k in ("plan_id", "input_digest", "execution_context_digest",

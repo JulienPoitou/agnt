@@ -90,13 +90,19 @@ def main() -> int:
     print("\n--- 3. un agent enregistre un transport, puis le manifest charge ---")
     marque = {"appele": 0}
 
-    def _executeur_mcp(prov, sbx):
+    def _executeur_distant(prov, sbx, **contexte):
         marque["appele"] += 1
         marque["prov"] = prov.id
         marque["transport"] = getattr(prov, "transport", None)
+        marque["contexte"] = dict(contexte)
         return "RESULTAT-MCP"
 
-    TR.enregistrer("mcp", _executeur_mcp)
+    def _executeur_deux_args(prov, sbx):
+        """Le contrat historique à deux paramètres : il ne reçoit AUCUN contexte."""
+        marque["deux_args"] = (prov.id, sbx)
+        return "RESULTAT-2ARGS"
+
+    TR.enregistrer("mcp", _executeur_distant)
     try:
         cas("3. le transport mcp est désormais connu", TR.fournit("mcp"),
             f"connus : {list(TR.connus())}")
@@ -118,27 +124,65 @@ def main() -> int:
 
         # ------------------------------------------------------ 5. délégation à l'exécution
         print("\n--- 5. l'exécution délègue au transport, sans rabattre ---")
-        prov_mcp = Provider(id="outil_mcp", capability="TEST", kind="tool", mode="CLI",
-                            risque="PASSIVE", commande=["mcp-run"], manifest=None,
-                            transport="mcp")
+        # Alignement 2026-08-31 (post MCP-004, PR #9) : `Provider.__post_init__` exige
+        # désormais un VRAI contrat MCP pour `transport == "mcp"` (manifest + server_id +
+        # tool) — à juste titre, un provider MCP sans contrat serait une exécution externe
+        # non bornée. Ce cas mesure le mécanisme GÉNÉRIQUE de délégation, pas MCP (la
+        # batterie MCP le couvre de bout en bout) : le double porte donc un nom de
+        # transport neutre. Aucune attente n'est relâchée — la délégation réelle et
+        # l'absence de repli sont toutes les deux toujours mesurées ci-dessous.
+        TR.enregistrer("remote_test", _executeur_distant)
+        TR.enregistrer("remote_deux_args", _executeur_deux_args)
+        prov_mcp = Provider(id="outil_distant", capability="TEST", kind="tool", mode="CLI",
+                            risque="PASSIVE", commande=["remote-run"], manifest=None,
+                            transport="remote_test")
         r = adapters.executer(prov_mcp, sbx=None)
+        ctx = marque.get("contexte") or {}
         cas("5. le transport enregistré a exécuté le provider",
-            r == "RESULTAT-MCP" and marque.get("prov") == "outil_mcp"
-            and marque.get("transport") == "mcp",
-            f"retour={r!r} · marque={marque}")
-        # Le point critique : sans enregistrement, pas de repli silencieux sur sandbox_cli.
-        prov_orphelin = replace(prov_mcp, transport="remote_inexistant")
+            r == "RESULTAT-MCP" and marque.get("prov") == "outil_distant"
+            and marque.get("transport") == "remote_test",
+            f"retour={r!r} · marque={ {k: marque[k] for k in ('prov', 'transport')} }")
+        # Le cœur transmet un CONTEXTE par appel (MCP-004) : cible, arguments validés,
+        # fabrique de transport, événement d'annulation. Ce n'est pas du confort — un
+        # transport qui perdrait l'annulation ou la cible serait un défaut silencieux.
+        # Mesuré ici parce que c'est le contrat que tout transport tiers doit accepter.
+        cas("5a. le contexte par appel atteint l'exécuteur (target/arguments/"
+            "transport_factory/cancel_event)",
+            set(ctx) == {"target", "arguments", "transport_factory", "cancel_event"},
+            f"clés={sorted(ctx)}")
+        # Rétrocompatibilité DOCUMENTÉE : appelé sans contexte, un exécuteur à deux
+        # paramètres fonctionne. (Par `adapters.executer`, le contexte est toujours
+        # passé : voir la note de contrat dans `slice/transports.py`.)
+        prov_2 = replace(prov_mcp, id="outil_2args", transport="remote_deux_args")
+        r2 = TR.deleguer("remote_deux_args", prov_2, None)
+        cas("5c. sans contexte, un exécuteur à deux paramètres fonctionne toujours",
+            r2 == "RESULTAT-2ARGS" and marque.get("deux_args") == ("outil_2args", None),
+            f"retour={r2!r} · marque={marque.get('deux_args')}")
+        # Le point critique : pas de repli silencieux sur sandbox_cli. Depuis MCP-004
+        # l'invariant est tenu à DEUX couches, et les deux sont mesurées :
+        #   · à la CONSTRUCTION — un provider dont le transport n'est pas enregistré est
+        #     refusé par le registre (il ne peut même pas exister) ;
+        #   · au DISPATCH — `deleguer` sur un nom inconnu lève, sans jamais rabattre sur
+        #     le sous-processus local.
         try:
-            adapters.executer(prov_orphelin, sbx=None)
-            cas("5b. transport non enregistré → pas de repli sur le sous-processus",
+            replace(prov_mcp, transport="remote_inexistant")
+            cas("5b. un transport non enregistré est refusé dès la construction",
+                False, "provider construit alors qu'il doit être refusé")
+        except Exception as e:                                   # noqa: BLE001
+            cas("5b. un transport non enregistré est refusé dès la construction",
+                "non fourni" in str(e).lower(), f"refusé : {str(e)[:110]}")
+        try:
+            TR.deleguer("remote_inexistant", prov_mcp, None)
+            cas("5b2. deleguer sur un transport inconnu lève, sans repli sous-processus",
                 False, "exécuté alors qu'il doit être refusé")
         except TR.TransportError as e:
-            cas("5b. transport non enregistré → pas de repli sur le sous-processus",
+            cas("5b2. deleguer sur un transport inconnu lève, sans repli sous-processus",
                 "non fourni" in str(e).lower(), f"refusé : {str(e)[:110]}")
     finally:
-        # Le test laisse le registre des transports propre : `mcp` ne doit pas devenir un
-        # transport de la plateforme parce qu'une batterie l'a enregistré.
-        TR._EXECUTEURS.pop("mcp", None)
+        # Le test laisse le registre des transports propre : aucun de ces transports ne
+        # doit devenir un transport de la plateforme parce qu'une batterie l'a enregistré.
+        for _nom in ("mcp", "remote_test", "remote_deux_args"):
+            TR._EXECUTEURS.pop(_nom, None)
 
     # ------------------------------------------------------------ 6. enregistrement gardé
     print("\n--- 6. enregistrer() refuse les entrées invalides ---")
