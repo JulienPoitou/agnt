@@ -65,7 +65,9 @@ def _faux_executer(capture: dict, arret: str = "policy",
     import pipeline
 
     def faux(requete, cible, cible_autorisee=True, confiance_cible="controlled",
-             avec_internes=False, escalade=True, egress=None):
+             avec_internes=False, escalade=True, egress=None,
+             moteur_intent=None, fournisseur_llm=None, *, registre=None,
+             policy_engine=None, transport_factories=None):
         capture.clear()
         capture.update(requete=requete, cible=str(cible),
                        cible_autorisee=cible_autorisee,
@@ -76,7 +78,17 @@ def _faux_executer(capture: dict, arret: str = "policy",
                        # ce n'est pas un réglage de confort mais une DÉLÉGATION, et ce
                        # fichier existe précisément pour vérifier que ce genre d'argument
                        # arrive jusqu'au pipeline.
-                       egress=egress)
+                       egress=egress,
+                       # Alignement 2026-08-31 (post MCP-004) : `pipeline.executer` expose
+                       # désormais l'intention locale à l'appel (`moteur_intent`,
+                       # `fournisseur_llm`) et trois points d'injection (`registre`,
+                       # `policy_engine`, `transport_factories`). Le double les CAPTURE :
+                       # aucune attente n'est relâchée, le double suit le contrat réel —
+                       # c'est exactement ce que la garde ci-dessous exige.
+                       moteur_intent=moteur_intent,
+                       fournisseur_llm=fournisseur_llm,
+                       registre=registre, policy_engine=policy_engine,
+                       transport_factories=transport_factories)
         return pipeline.Execution(
             plan={}, decision={"allow": False, "motifs": list(motifs)},
             intent={"moteur": "deterministe"}, arret=arret, mission="")
