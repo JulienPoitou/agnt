@@ -4,9 +4,19 @@
 > **But :** décisions, contrats, état des builders, dépendances, conflits, ordre d'intégration — utiles entre les handoffs. Synthèse vivante, pas un journal. Les commits et handoffs restent les preuves détaillées.
 > **Historique :** reprend et met à jour `AGNT_PROJECT_STATE.md` (30/08, branche `arena/01a0543a-agnt@aafe5af`). Ce fichier est désormais l'unique source de vérité de coordination ; `AGNT_PROJECT_STATE.md` est un pointeur.
 
-**Dernière mise à jour :** 2026-08-31 (bootstrap orchestrateur)
-**Base d'intégration connue :** `main` = `563ab9d` (contenu = `4433af6` + 9 fichiers `docs/coordination/`)
+**Dernière mise à jour :** 2026-08-31 (incident bootstrap builder — résolu)
+**Base d'intégration connue :** `main` = `563ab9d` + correctif eol (PR #3) ; contenu code = `4433af6`
 **Ligne la plus avancée :** PR #2 (`a1520d2`, OUVERTE) — voir Topologie.
+
+---
+
+## INCIDENT BOOTSTRAP 31/08 — RÉSOLU (à connaître avant tout diagnostic sandbox)
+
+**Symptôme :** sessions builder (p.ex. `arena/01a0575c-agnt`, CORE) — TOUT appel d'outil échoue avant exécution (`duration_ms: 0`) : `git clone failed … error: Your local changes … would be overwritten by checkout: docs/coordination/prompts/Builder-Core.md`.
+**Cause racine (CONFIRMÉE par reproduction sur clone vierge) :** le `.gitattributes` du 30/08 a posé la politique `eol=lf` **sans renormaliser les blobs** ; les 2 prompts commis en CRLF produisaient un diff fantôme dès l'extraction, et le `checkout <SHA>` du bootstrap refusait. Aucun lien avec le code AGNT ni avec la session elle-même.
+**Correctif (landé via PR #3) :** blobs des 2 prompts renormalisés en LF (contenu identique hors CR, vérifié `--ignore-cr-at-eol` vide) ; `.gitattributes` d'origine (41 lignes) restauré à l'identique ; worktree propre après clone. Vérifié : clone vierge → status vide → `checkout 4433af6` SUCCESS.
+**Leçon :** une politique d'attributs sans migration des blobs existants = dette immédiate. Toute évolution `.gitattributes` ⇒ `git add --renormalize .` + vérification du statut post-clone.
+**Note :** un builder a déclaré `builder-web` inexistante — faux (préfixe `arena/` omis) ; les 6 branches `arena/builder-*` existent à `4433af6`.
 
 ---
 
@@ -146,6 +156,7 @@ Ordre : PR#2 → main  →  CORE History aligné  →  gates Product+Security su
 
 ## BLOQUANTS
 
+- **[RÉSOLU 31/08] Bootstrap sessions builder** : voir « INCIDENT BOOTSTRAP » en tête. Les sessions bloquées devraient repartir seules (le bootstrap relit main corrigé à chaque appel) — sinon, reset de la session côté Arena (propriétaire). Aucune action builder requise.
 - **Environnement (NON-BUGS documentés)** : binaire OPA absent (policy réelle non évaluée) ; `bwrap` présent mais user namespaces refusés (`apparmor_restrict_unprivileged_userns=1`) ; binaires/caches de scan absents (~/.cache) ; gitleaks réel absent (SEC-G9 non mesurable) ; pas de réseau pour LLM réel (`test_llm_reel` exit 2) ; `bandit/checkov/detect-secrets/radon` absents. Baseline DevOps réconciliée : ~20 PASS / 16 FAIL environnementaux / 1 NON ÉVALUÉ.
 - **DEVOPS-002** : toute implémentation (venvs, doctor, CI, pins, armement gitleaks) attend l'accord explicite du propriétaire.
 - **WEB** : code UI bloqué jusqu'au passage des gates Product + Security sur une API CORE réellement intégrée.
@@ -184,8 +195,9 @@ Ordre : PR#2 → main  →  CORE History aligné  →  gates Product+Security su
 
 | # | Qui | Action |
 |---|---|---|
+| 0 | ~~ORCHESTRATEUR~~ | ~~Corriger l'incident bootstrap~~ **FAIT 31/08** (renormalisation eol, PR #3 → main). |
 | 1 | ORCHESTRATEUR | Vérifier PR #2 sur worktree (preuve minimale) puis merger dans `main` ; mettre à jour ce fichier (base d'intégration). |
-| 2 | CORE | Produire le handoff `eebefbc` (périmètre exact des 21 fichiers, tests, limites) + re-aligner sur le main post-PR#2. |
+| 2 | CORE | Retenter une commande (self-heal attendu) ; lire la mémoire (`git fetch origin main && git show origin/main:docs/coordination/PROJECT_STATE.md` — le checkout 4433af6 ne la contient pas) ; produire le handoff `eebefbc` ; **aucun nouveau code sur la base 4433af6** avant re-alignment post-PR#2. |
 | 3 | SECURITY | Produire le handoff `08a8150` (justifier le périmètre 125 fichiers ; confirmer invariants labo : double opt-in, egress fermé, aucun bypass). |
 | 4 | PRODUCT | Préparer l'exécution du gate `--base-url` contre l'arbre CORE intégré (après action 3 de la section précédente). |
 | 5 | WEB | Rester en attente (gates). Aucun code UI avant feu vert double. |
