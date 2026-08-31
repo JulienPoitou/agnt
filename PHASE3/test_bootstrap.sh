@@ -114,7 +114,10 @@ echo; echo "=== POSITION du contrôle dans bootstrap.sh"
 # suivante : la ligne 117 de ce fichier a fait planter bash pour moins que ça, et un test de
 # pré-vol qui meurt sur sa propre syntaxe ne prévient personne.
 pos_verif=$(grep -n '  verifier_binaire "\$b"' "$B/bootstrap.sh" | tail -1 | cut -d: -f1)
-dernier_installe=$(grep -n 'tar -xzf /tmp/kics.tgz' "$B/bootstrap.sh" | tail -1 | cut -d: -f1)
+# Borne « dernier binaire extrait » : l'archive kics. Le chemin littéral /tmp/kics.tgz a été
+# remplacé par des mktemp (régime d'armement, 2026-08-31) — le motif suit l'EXTRACTION,
+# pas un nom de fichier temporaire qui n'a aucune raison d'être stable.
+dernier_installe=$(grep -n 'tar -xzf .* -C "\$BIN" kics' "$B/bootstrap.sh" | tail -1 | cut -d: -f1)
 nb_appels=$(grep -c '  verifier_binaire "\$b"' "$B/bootstrap.sh")
 curl_sans_f=$(grep -c 'curl -sL -o' "$B/bootstrap.sh")
 ordre=0

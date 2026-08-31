@@ -34,6 +34,10 @@ binaires:
   opa:
     version: "0.70.0"
     sha256: 00d114b94fdb1606a48cccdfc73c9ccdc62c38721150131ae578d5ff3df5c084
+    # Audit du canal de distribution (même convention que grype/kics) : empreinte du
+    # tarball npm `source` ci-dessus, mesurée au téléchargement le 2026-08-31. L'empreinte
+    # du BINAIRE fait foi pour l'exécution ; celle de l'archive détecte un changement de canal.
+    tarball_sha256: f2bb77a025ba9a16e80c107852f5c8ab424730eb1d2db3a8f94a9f531a0b886b
     source: https://registry.npmjs.org/agent-control-specification-opa-linux-x64/-/agent-control-specification-opa-linux-x64-0.3.1-beta.0.tgz
     licence: Apache-2.0
     taille_approx: 44M
