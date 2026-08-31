@@ -180,7 +180,7 @@ demandé ; aucun contenu n'a été fabriqué).
 
 - **Plan : `plan_id = 81ec7fc4f2ee1faf`** (identique — plan déterministe).
 - **Décision OPA réelle (brut de `opa eval` 0.70.0) : `{"allow":true,"motifs":[]}`**.
-- Contexte : `run_id=cea151baf3b5a8b1`, `contexte_empreinte=dc4194f48bef3939` (diffère de 6.1 : la base Triy "existe" désormais — l'empreinte de contexte reflète l'environnement, pas le code ; `input_digest` et `input_commit` **identiques**).
+- Contexte : `run_id=cea151baf3b5a8b1`, `contexte_empreinte=dc4194f48bef3939` (diffère de 6.1 : la base Trivy « existe » désormais — l'empreinte de contexte reflète l'environnement, pas le code ; `input_digest` et `input_commit` **identiques**).
 - **Jusqu'où ça va — SEUIL BWRAP :** `arret: execution_bandit` →
   `FileNotFoundError: [Errno 2] No such file or directory: 'bwrap'`
   (`subprocess.Popen` à `sandbox.py:377`, après `verifie()` passée). Le run a donc
