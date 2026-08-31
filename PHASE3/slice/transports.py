@@ -76,13 +76,23 @@ def connus() -> tuple[str, ...]:
     return tuple(sorted([TRANSPORT_SANDBOX_CLI, *_EXECUTEURS]))
 
 
-def deleguer(nom: str, prov, sbx):
+def deleguer(nom: str, prov, sbx, /, **contexte):
     """Exécute un provider via un transport TIERS enregistré.
 
     `sandbox_cli` ne passe jamais par ici : il est exécuté nativement par
     `adapters.executer`. Un nom inconnu lève `TransportError` (jamais un repli sur le
     sous-processus — un provider qui demande MCP exécuté en sous-processus local serait
     exactement le mélange de concepts que ce module existe pour empêcher).
+
+    `**contexte` (MCP-004) : le contexte PAR APPEL que le cœur sait produire mais que le
+    transport ne peut pas deviner — cible typée, arguments validés, événement
+    d'annulation. Il est transmis tel quel, sans inspection ni transformation : ce module
+    ne connaît pas le vocabulaire des transports, il ne fait que le porter.
+
+    Rétrocompatible : un exécuteur à deux paramètres `(prov, sbx)` continue de
+    fonctionner tant qu'aucun contexte n'est passé. Si un contexte EST passé à un
+    exécuteur qui ne l'accepte pas, le `TypeError` remonte : un transport qui perdrait
+    silencieusement l'annulation ou la cible serait bien plus grave qu'un échec net.
     """
     fn = _EXECUTEURS.get(nom)
     if fn is None:
@@ -90,4 +100,6 @@ def deleguer(nom: str, prov, sbx):
             f"transport {nom!r} non fourni — transports connus : {list(connus())}. "
             f"Enregistrez-le avec transports.enregistrer({nom!r}, exécuteur) avant de "
             f"déclarer un provider qui l'exige.")
-    return fn(prov, sbx)
+    if not contexte:
+        return fn(prov, sbx)
+    return fn(prov, sbx, **contexte)

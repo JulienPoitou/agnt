@@ -51,6 +51,14 @@ import rapport_humain as RH  # noqa: E402
 import pipeline          # noqa: E402
 import rapport as R      # noqa: E402
 import statuts as ST     # noqa: E402
+import mcp_bootstrap as MCP_BOOT  # noqa: E402
+import transports as CORE_TRANSPORTS  # noqa: E402
+
+
+def initialiser_extensions() -> None:
+    """Bootstrap unique des transports externes avant tout chargement de registre."""
+    MCP_BOOT.initialiser_mcp(CORE_TRANSPORTS)
+
 
 # Index en trois niveaux :
 #   artifacts/<input_digest>/<plan_id>/<run_id>/
@@ -86,6 +94,11 @@ def sarif(findings: list[dict], run_id: str, plan_id: str) -> dict:
             "properties": {
                 "finding_id": f["id"],
                 "outil_source": f["source"]["tool"],
+                "provider": f["source"].get("provider"),
+                "transport": f["source"].get("transport", "local"),
+                "serveur": f["source"].get("server_id"),
+                "outil_provider": f["source"].get("tool"),
+                "protocole": f["source"].get("protocol_version"),
                 "regle_source": f["source"].get("original_rule_id"),
                 "paquet": loc.get("package"),
             },
@@ -411,6 +424,11 @@ def main(argv: list[str]) -> int:
         print(f"ERREUR : {e}")
         return 1
 
+    # Point de bootstrap applicatif : une seule fois par processus CLI, avant le
+    # premier Registry(). `lancer()` (API bibliothèque) est appelé par interface.main
+    # qui réalise le même bootstrap, pas par chaque mission.
+    initialiser_extensions()
+
     moteur = options.get("moteur", "auto")
     # Défaut historique conservé — mais il est AFFICHÉ plus bas : muet, ce serait faire
     # croire qu'une cible a été jugée fiable alors qu'elle n'a simplement pas été posée.
@@ -571,6 +589,7 @@ def main(argv: list[str]) -> int:
             "result_digest": e.result_digest,
         },
         "intent": e.intent,
+        "providers": e.rapport.get("providers"),
         "couverture": e.rapport.get("couverture"),
         "statuts": list(getattr(e, "statuts", []) or []),
         "statuts_resume": ST.resumer(getattr(e, "statuts", []) or []),

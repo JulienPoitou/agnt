@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import adapters
 import cible as CIB
+import transports
 import clusterer
 import garde_chemin as GC
 import mission as MS
@@ -36,6 +37,7 @@ import policy as PO
 from registre import Registry
 import statuts as STAT
 import conditions as COND
+from provider_contract import Target
 from sandbox import CACHE_BIN, CACHE_DB, CACHE_REGLES, Sandbox
 
 RACINE = Path(__file__).resolve().parent.parent     # PHASE3/
@@ -211,6 +213,10 @@ class _ContexteVague:
     tous_findings: list
     domaines: dict
     binaires: dict
+    # Factories injectées par test ou par un futur runtime de mission. Elles sont
+    # indexées par provider et non globales : une mission ne partage pas une session
+    # MCP, des credentials ou un cache mutable avec une autre.
+    transport_factories: dict = field(default_factory=dict)
 
 
 def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
@@ -270,7 +276,27 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
             return                      # vague déjà condamnée : on ne lance pas un autre outil
         _vivant(prov.id)
         try:
-            brut = adapters.executer(prov, sbx)
+            # Une cible typée est construite une fois par l'orchestrateur, puis remise
+            # au backend. Le transport ne reçoit jamais un chemin pour décider lui-même
+            # de ce qu'est la cible ; il ne reçoit que cette donnée validée.
+            types_cible = tuple(prov.target_types or ())
+            if "repository" in types_cible:
+                kind = "repository"
+            elif "filesystem" in types_cible:
+                kind = "filesystem"
+            else:
+                # Cette façade reçoit aujourd'hui une Path locale. Ne pas la
+                # convertir en faux URL/hôte/image : ces cibles attendent le
+                # descripteur canonique CORE et ne sont pas téléchargées ou montées
+                # implicitement dans Sandbox.
+                raise PipelineError(
+                    f"{prov.id}: cible {types_cible} non supportée par la façade Path "
+                    "— descripteur Cible CORE requis")
+            cible_typed = Target(kind, str(cible))
+            brut = adapters.executer(
+                prov, sbx, target=cible_typed,
+                transport_factory=V.transport_factories.get(prov.id),
+                cancel_event=avorter)
         except Exception as exc:
             # Un échec d'ADAPTATION (isolateur inutilisable : montages absents, bwrap
             # manquant) n'est pas une ligne de couverture : `verifie()` refuse avant tout
@@ -320,6 +346,17 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
             "code_retour": brut.code_retour,
             "timeout": brut.timeout,
             "vague": vague,
+            # Contrat provider : les consommateurs structurés n'ont pas à parser une
+            # erreur MCP dans stderr. Ces champs restent valides pour les providers
+            # locaux (statut succeeded par compatibilité).
+            "statut": getattr(brut, "statut", "succeeded"),
+            "erreur": getattr(brut, "erreur", ""),
+            "transport": getattr(brut, "transport", transports.TRANSPORT_SANDBOX_CLI),
+            "correlation_id": getattr(brut, "correlation_id", ""),
+            "request_id": getattr(brut, "request_id", ""),
+            "identite_provider": getattr(brut, "identite_provider", {}) or {},
+            **({"disponibilite": brut.disponibilite}
+               if getattr(brut, "disponibilite", None) else {}),
         })
         exec_.couverture.append(brut.couverture.to_dict())
 
@@ -339,13 +376,25 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
         for f_ in norm:
             f_.source["categorie"] = domaines_du_provider.get(prov.id)
             f_.source["horodatage"] = horodatage
-            f_.source["version_outil"] = ((ctx.outils or {}).get(
-                binaire_de_provider.get(prov.id, "")) or None)
+            # Un binaire local obtient sa version du contexte capturé ; un provider
+            # externe n'a pas de binaire local et porte la version déclarée/rapportée
+            # par son binding. L'absence reste None : elle n'est jamais devinée.
+            f_.source["version_outil"] = (
+                (getattr(brut, "identite_provider", {}) or {}).get("tool_version")
+                or (ctx.outils or {}).get(binaire_de_provider.get(prov.id, ""))
+                or getattr(prov, "tool_version", "")
+                or None)
             f_.source["vague"] = vague
         tous_findings.extend(norm)
         trouves[prov.id] = len(norm)
         MS.consigner(miss, "execution", provider=prov.id, vague=vague,
                      code_retour=brut.code_retour, timeout=brut.timeout,
+                     statut=getattr(brut, "statut", "succeeded"),
+                     transport=getattr(brut, "transport", transports.TRANSPORT_SANDBOX_CLI),
+                     correlation_id=getattr(brut, "correlation_id", ""),
+                     request_id=getattr(brut, "request_id", ""),
+                     erreur=getattr(brut, "erreur", ""),
+                     disponibilite=getattr(brut, "disponibilite", {}) or {},
                      findings=len(norm))
 
     if erreurs:
@@ -366,8 +415,11 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
              avec_internes: bool = False, escalade: bool = True,
              egress: bool | None = None,
              moteur_intent: str | None = None,
-             fournisseur_llm: object | None = None) -> Execution:
+             fournisseur_llm: object | None = None, *, registre=None,
+             policy_engine=None, transport_factories: dict | None = None) -> Execution:
     """Exécute une mission de bout en bout.
+
+    `egress` : l'autorisation de sortir (réseau) pour CETTE mission.
 
     `egress` : l'autorisation de sortir (réseau) pour CETTE mission.
     `None` = on s'en tient au profil (donc coupé, aujourd'hui). `True` n'est pas un réglage
@@ -387,6 +439,10 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
     ou une `cible.Cible` déjà construite. Elle est normalisée UNE FOIS à l'entrée
     (`cible.normaliser`) ; une cible non locale est représentée, jamais convertie en
     chemin ni exécutée en sous-processus local.
+
+    ``registre``, ``policy_engine`` et ``transport_factories`` sont des points d'injection
+    de test/runtime compatibles avec le CORE ; en production ils restent absents et le
+    pipeline construit les objets canoniques. Ils ne constituent pas une deuxième autorité.
     """
     if confiance_cible not in CONFIANCES:
         # Pas de repli : une valeur non reconnue vaudrait «controlled» par accident,
@@ -398,7 +454,7 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
     # mission, pas un état que l'appelant aurait dû poser sur le module.
     moteur_intent = MOTEUR_INTENT if moteur_intent is None else moteur_intent
     fournisseur_llm = FOURNISSEUR_LLM if fournisseur_llm is None else fournisseur_llm
-    registre = Registry()
+    registre = Registry() if registre is None else registre
 
     # ---------------------------------------------------------------- 0. cible
     # Normalisation UNIQUE de frontière (2026-08-30) : un Path historique, une chaîne
@@ -510,13 +566,36 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
     # passent le filtre. Un refus de politique n'efface donc pas « qui était disponible »
     # du journal — c'est ce que vérifie `test_qualite_plateforme` cas 16quater.
     import adapters as AD
-    dispo = {p.id: AD.exe_de(p) for p in registre.providers()}
-    exclus_dispo = {
-        p.id: (f"exécutable introuvable ({AD.binaire_de(p)}) : ni au cache épinglé, ni au "
-               "PATH — l'outil n'est pas sur cette machine (lancer bootstrap.sh). "
-               "Aucune analyse n'a été faite par cet outil, ce n'est pas « rien trouvé ».")
-        for p in registre.providers() if dispo.get(p.id) is None
-    }
+
+    # MCP-004 : la disponibilité ne se décide PAS de la même façon selon le transport.
+    # Un provider `sandbox_cli` est disponible si son exécutable est résolvable sur cette
+    # machine. Un provider EXTERNE n'a pas d'exécutable par contrat : chercher un binaire
+    # ici l'écarterait systématiquement, et l'absence d'un provider externe deviendrait
+    # une absence INEXPLIQUÉE dans la mission. Sa disponibilité de configuration est son
+    # transport enregistré ; la disponibilité RÉELLE du serveur et de l'outil distants est
+    # portée ensuite par le résultat du transport (`unavailable`, `timed_out`…), jamais
+    # devinée avant l'appel.
+    def _disponibilite(prov):
+        transport = getattr(prov, "transport", None) or transports.TRANSPORT_SANDBOX_CLI
+        if transport != transports.TRANSPORT_SANDBOX_CLI:
+            return f"transport {transport!r} enregistré" if transports.fournit(transport) else None
+        return AD.exe_de(prov)
+
+    dispo = {p.id: _disponibilite(p) for p in registre.providers()}
+
+    def _motif_indispo(prov):
+        transport = getattr(prov, "transport", None) or transports.TRANSPORT_SANDBOX_CLI
+        if transport != transports.TRANSPORT_SANDBOX_CLI:
+            return (f"transport {transport!r} non enregistré : le provider externe n'est "
+                    "pas exécutable tant que son transport n'a pas été enregistré. "
+                    "Aucune analyse n'a été faite par cet outil, ce n'est pas "
+                    "« rien trouvé ».")
+        return (f"exécutable introuvable ({AD.binaire_de(prov)}) : ni au cache épinglé, ni "
+                "au PATH — l'outil n'est pas sur cette machine (lancer bootstrap.sh). "
+                "Aucune analyse n'a été faite par cet outil, ce n'est pas « rien trouvé ».")
+
+    exclus_dispo = {p.id: _motif_indispo(p)
+                    for p in registre.providers() if dispo.get(p.id) is None}
     provs = intent.choisir_providers(
         it, registre, disponible=lambda p: dispo.get(p.id) is not None)
     if exclus_dispo:
@@ -607,7 +686,11 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
     # 2026-08-30 sur un RUN réel de l'interface, cible admise et OPA absent : l'écran disait
     # la cause, le journal de mission s'arrêtait à « plan ».
     try:
-        moteur = PO.PolicyEngine(opa=CACHE_BIN / "opa")
+        moteur = (policy_engine if policy_engine is not None
+                  else PO.PolicyEngine(opa=CACHE_BIN / "opa"))
+        # MCP-004 : plus de type de cible codé en dur. OPA lit le descripteur STRUCTURÉ
+        # porté par le plan (`cible_descr` = Cible.to_dict()), donc le type réel de la
+        # cible — pas un littéral "repository" qui mentirait sur une cible filesystem.
         decision = moteur.evaluer(plan, registre, cible_autorisee,
                                   confiance_cible=confiance_cible,
                                   profil=profil_eff.to_dict())
@@ -727,7 +810,8 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
                                       else Path(_p.commande[0]).name)
     V = _ContexteVague(miss=miss, registre=registre, exec_=exec_, sbx=sbx, cible=chemin_cible,
                        sortie=sortie, ctx=ctx, trouves=trouves, tous_findings=tous_findings,
-                       domaines=domaines_du_provider, binaires=binaire_de_provider)
+                       domaines=domaines_du_provider, binaires=binaire_de_provider,
+                       transport_factories=dict(transport_factories or {}))
     _vague(plan.steps, V, plan.to_dict(), {"allow": True, "motifs": list(decision.motifs)},
            plan.cree_le, 1)
 
@@ -818,6 +902,20 @@ def _rapport(it, plan, e: Execution) -> dict:
         "motifs_intent": it.motifs,
         "plan_id": plan.plan_id,
         "plan_empreinte": plan.empreinte(),
+        # Vue structurée consommable par l'UI : elle n'a pas à parser une commande
+        # locale pour déterminer qu'un provider est MCP, ni à reconstruire les
+        # versions serveur/outils depuis le journal.
+        "providers": [{
+            "id": s.provider,
+            "capability": s.capability,
+            "transport": s.transport,
+            "provider_version": s.provider_version,
+            "server": {"id": s.server_id, "version": s.server_version},
+            "tool": {"name": s.tool, "version": s.tool_version},
+            "protocol_version": s.protocol_version,
+            "trust": s.trust,
+            "target_types": list(s.target_types),
+        } for s in plan.steps],
         "autorisation": e.decision,
         # La garde d'export dans le rapport, pas seulement dans le journal : c'est la première
         # question de quiconque relit des findings obtenus avec réseau (« l'outil a-t-il appelé
@@ -835,6 +933,11 @@ def _rapport(it, plan, e: Execution) -> dict:
 
 
 def main() -> int:
+    # Ce point d'entrée direct doit avoir le même bootstrap que la CLI principale.
+    # L'enregistrement est explicite et précède le Registry utilisé par executer().
+    from mcp_bootstrap import initialiser_mcp
+    import transports as CORE_TRANSPORTS
+    initialiser_mcp(CORE_TRANSPORTS)
     requete = sys.argv[1] if len(sys.argv) > 1 else "Analyse la sécurité de mon dépôt"
     cible = Path(sys.argv[2]) if len(sys.argv) > 2 else RACINE / "testrepo"
 

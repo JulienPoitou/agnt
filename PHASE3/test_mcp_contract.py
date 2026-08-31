@@ -1,0 +1,285 @@
+#!/usr/bin/env python3
+"""Contrat provider externe — registre, plan et policy, sans serveur réel.
+
+Ce test est une preuve ``INTEGRATION SIMULATED`` du contrat de données : aucun
+serveur MCP n'est lancé. Il vérifie que le premier couplage bloquant (un provider
+obligatoirement assimilé à une commande locale) est supprimé sans donner à la
+réponse ``tools/list`` une autorisation implicite.
+"""
+from __future__ import annotations
+
+import atexit
+import sys
+import tempfile
+from pathlib import Path
+
+RACINE = Path(__file__).parent
+sys.path.insert(0, str(RACINE / "slice"))
+
+import conditions as COND  # noqa: E402
+import mcp_bootstrap as MB  # noqa: E402
+import plan as PL  # noqa: E402
+import transports  # noqa: E402
+import policy as PO  # noqa: E402
+from provider_contract import ProviderIdentity, Target  # noqa: E402
+from registre import Registry, RegistryError  # noqa: E402
+
+
+YAML = """
+version: 1
+capabilities:
+  - id: CODE_REVIEW
+    description: Revue statique du code
+    domaines: [code]
+    entree: [cible]
+    sortie: finding/code-issue
+    providers:
+      - id: review_mcp
+        transport: mcp
+        kind: api
+        mode: MCP
+        risque: PASSIVE
+        priorite: 20
+        mcp:
+          server:
+            id: review-server
+            version: 2.4.0
+            transport: http
+            endpoint: https://mcp.example.test/v1
+            auth_env: REVIEW_MCP_TOKEN
+          tool:
+            name: review_code
+            version: '7'
+            inputSchema:
+              type: object
+              properties:
+                arbitrary: {type: string}
+          protocol_version: '2025-06-18'
+          trust: untrusted_remote
+          target_types: [repository]
+          target_argument: repository
+          argument_schema:
+            type: object
+            properties:
+              repository: {type: string, maxLength: 200}
+            required: [repository]
+            additionalProperties: false
+          result:
+            format: json
+            extraction:
+              modele: plat
+              items_from: results
+              champs:
+                regle: rule
+                fichier: file
+                ligne: line
+                message: message
+          limite: serveur distant non fiable
+"""
+
+
+_CONFIGS: list[Path] = []
+
+
+def _nettoyer_configs() -> None:
+    for chemin in _CONFIGS:
+        chemin.unlink(missing_ok=True)
+
+
+atexit.register(_nettoyer_configs)
+
+
+def charge(texte: str = YAML) -> Registry:
+    f = tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False)
+    try:
+        f.write(texte)
+        f.close()
+        reg = Registry(f.name)
+        _CONFIGS.append(Path(f.name))
+        return reg
+    except Exception:
+        f.close()
+        Path(f.name).unlink(missing_ok=True)
+        raise
+
+
+def main() -> int:
+    cas: list[tuple[str, bool, str]] = []
+
+    def ok(nom: str, condition: bool, detail: str = "") -> None:
+        cas.append((nom, bool(condition), detail))
+        print(("OK    " if condition else "ECHEC ") + nom + (f" — {detail}" if detail else ""))
+
+    # Fail-closed : un provider MCP ne se charge pas avant l'enregistrement CORE.
+    # Le registre canonique du cœur ne retire jamais une entrée (un transport retiré à
+    # chaud casserait des manifests déjà chargés) : le test retire donc lui-même l'entrée
+    # pour rejouer l'état « pas encore bootstrappé », sans affaiblir le code de prod.
+    transports._EXECUTEURS.pop("mcp", None)
+    MB.reinitialiser_pour_test()
+    try:
+        charge()
+        non_enregistre = False
+    except RegistryError:
+        non_enregistre = True
+    ok("0. transport MCP non enregistré = chargement refusé", non_enregistre)
+
+    # Bootstrap explicite du transport CORE avant le chargement du registre.
+    MB.initialiser_mcp(transports)
+    MB.initialiser_mcp(transports)  # vérification idempotente : aucun écrasement
+    ok("0bis. bootstrap MCP n'ajoute qu'un executor CORE",
+       transports.connus() == ("mcp", transports.TRANSPORT_SANDBOX_CLI),
+       str(transports.connus()))
+
+    # Le bootstrap ne dépend que du couple canonique enregistrer/fournit : un registre
+    # qui les expose suffit, sans aucune API supplémentaire à deviner.
+    class CoreCanonicalStub:
+        def __init__(self):
+            self.entries = {}
+
+        def enregistrer(self, nom, executeur):
+            if nom in self.entries:
+                raise RuntimeError("duplicate")
+            self.entries[nom] = executeur
+
+        def fournit(self, nom):
+            return nom in self.entries
+
+    core_stub = CoreCanonicalStub()
+    MB.reinitialiser_pour_test()
+    MB.initialiser_mcp(core_stub)
+    MB.initialiser_mcp(core_stub)
+    ok("0ter. bootstrap compatible avec le couple canonique enregistrer/fournit",
+       tuple(core_stub.entries) == ("mcp",))
+
+    # Un transport homonyme déjà posé par un tiers n'est JAMAIS écrasé.
+    MB.reinitialiser_pour_test()
+    try:
+        MB.initialiser_mcp(core_stub)
+        ecrasement_refuse = False
+    except MB.MCPBootstrapError:
+        ecrasement_refuse = True
+    ok("0quater. transport mcp d'un tiers jamais écrasé", ecrasement_refuse)
+    MB.reinitialiser_pour_test()
+
+    # ---------------------------------------------------------------- contrat deleguer
+    # MCP-004 n'ajoute qu'UNE chose au module canonique du cœur : `deleguer` transmet un
+    # contexte par appel. Ces trois cas bornent cette extension — c'est la seule
+    # modification d'une interface fondamentale, elle doit être prouvée rétrocompatible.
+    recus = {}
+
+    def deux_args(prov, sbx):
+        recus["deux_args"] = (prov, sbx)
+        return "ok-deux-args"
+
+    def avec_contexte(prov, sbx, **ctx):
+        recus["ctx"] = ctx
+        return "ok-ctx"
+
+    transports.enregistrer("agnt_test_deux_args", deux_args)
+    transports.enregistrer("agnt_test_ctx", avec_contexte)
+
+    ok("0quinquies. un exécuteur à deux paramètres fonctionne toujours sans contexte",
+       transports.deleguer("agnt_test_deux_args", "P", "S") == "ok-deux-args"
+       and recus["deux_args"] == ("P", "S"))
+
+    ok("0hexies. le contexte par appel atteint l'exécuteur qui l'accepte",
+       transports.deleguer("agnt_test_ctx", "P", "S", cancel_event="stop",
+                           target="cible") == "ok-ctx"
+       and recus["ctx"] == {"cancel_event": "stop", "target": "cible"})
+
+    try:
+        transports.deleguer("agnt_test_deux_args", "P", "S", cancel_event="stop")
+        perte_silencieuse = False
+    except TypeError:
+        # Un transport qui PERDRAIT l'annulation ou la cible en silence serait bien plus
+        # grave qu'un échec net : l'erreur doit remonter, jamais être avalée.
+        perte_silencieuse = True
+    ok("0septies. un contexte non accepté échoue nettement, jamais en silence",
+       perte_silencieuse)
+
+    try:
+        transports.deleguer("agnt_transport_inconnu", "P", "S")
+        inconnu_refuse = False
+    except transports.TransportError:
+        inconnu_refuse = True
+    ok("0octies. un transport inconnu ne retombe jamais sur le sous-processus local",
+       inconnu_refuse)
+
+    reg = charge()
+    prov = reg.provider("review_mcp")
+    ok("1. provider MCP chargé sans commande locale", prov.transport == "mcp" and prov.commande == [])
+    ok("2. identité serveur/outil/version/protocole stable",
+       prov.identity == ProviderIdentity(
+           provider_id="review_mcp", transport="mcp", server_id="review-server",
+           server_version="2.4.0", tool="review_code", tool_version="7",
+           protocol_version="2025-06-18", trust="untrusted_remote"),
+       str(prov.identity.to_dict()))
+    ok("3. conditions réseau imposées par HTTP",
+       COND.declarees(prov)["reseau"] is True,
+       str(COND.declarees(prov)))
+    ok("4. schéma distant inputSchema n'élargit pas le schéma approuvé",
+       list(prov.manifest.argument_schema["properties"]) == ["repository"])
+
+    target = Target("repository", "repo://fixture")
+    args = prov.manifest.arguments_for(target)
+    ok("5. le moteur construit l'argument cible", args == {"repository": "repo://fixture"})
+    try:
+        prov.manifest.arguments_for(target, {"arbitrary": "commande"})
+        validation = False
+    except Exception as exc:  # le type précis est couvert par le backend du lot suivant
+        validation = "non autorisées" in str(exc) or "non autorisée" in str(exc)
+    ok("6. argument hors schéma refusé avant transport", validation)
+    try:
+        prov.manifest.arguments_for(target, {"repository": "autre-cible"})
+        reserve = False
+    except Exception as exc:
+        reserve = "réservé" in str(exc)
+    ok("7. l'appelant ne peut pas écraser la cible du moteur", reserve)
+
+    plan = PL.construire(
+        "Analyse le code", "/tmp/repo", ["review_mcp"], reg, "deterministe")
+    step = plan.steps[0]
+    ok("8. le plan porte le contrat, pas une commande inventée",
+       step.transport == "mcp" and step.server_id == "review-server"
+       and step.tool == "review_code" and step.commande == [])
+    entree = PO.PolicyEngine.entree(plan, reg, True)
+    detail = next(x for x in entree["registre"]["providers_detail"] if x["id"] == "review_mcp")
+    ok("9. la policy reçoit le binding MCP structuré",
+       detail["transport"] == "mcp" and detail["identity"]["server_id"] == "review-server"
+       and detail["identity"]["tool"] == "review_code")
+
+    try:
+        charge(YAML.replace("name: review_code", "name: review code"))
+        malformed = False
+    except RegistryError:
+        malformed = True
+    ok("10. une déclaration MCP malformée est refusée au chargement", malformed)
+    try:
+        charge(YAML.replace("          limite:", "          allow_shell:") )
+        cle_inconnue = False
+    except RegistryError:
+        cle_inconnue = True
+    ok("11. une clé MCP inconnue ne peut pas désarmer silencieusement une garde", cle_inconnue)
+    faux_token = "ghp_" + "T" * 36
+    try:
+        charge(YAML.replace("https://mcp.example.test/v1",
+                           f"https://user:{faux_token}@mcp.example.test/v1"))
+        endpoint_credential = False
+    except RegistryError as exc:
+        endpoint_credential = faux_token not in str(exc)
+    ok("12. endpoint contenant un faux credential refusé sans fuite", endpoint_credential)
+    url_reg = charge(YAML.replace("target_types: [repository]", "target_types: [url]"))
+    url_prov = url_reg.provider("review_mcp")
+    url_args = url_prov.manifest.arguments_for(
+        Target("url", "https://example.invalid/resource"))
+    ok("13. une URL reste une Target structurée, jamais un faux Path",
+       url_args == {"repository": "https://example.invalid/resource"})
+
+    echecs = [nom for nom, condition, _ in cas if not condition]
+    _nettoyer_configs()
+    print(f"\n{len(cas) - len(echecs)}/{len(cas)} cas passent")
+    return 1 if echecs else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

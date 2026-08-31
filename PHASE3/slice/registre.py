@@ -24,6 +24,11 @@ import yaml
 import conditions as COND
 import provider_manifest as PM
 import transports
+from provider_contract import (
+    ProviderIdentity,
+    TARGET_KINDS,
+    TRUST_LEVELS,
+)
 
 REGISTRY_PATH = Path(__file__).parent / "capabilities.yaml"
 
@@ -46,9 +51,14 @@ ETATS_COUVERTURE = (
 # indentation ratée posait `conditions:` à la racine du document, le chargeur l'ignorait,
 # et la garde réseau/base disparaissait sans le moindre message. Une faute de frappe sur
 # une clé de SÉCURITÉ ne doit pas être un silence.
-CLEFS_PROVIDER = ("id", "kind", "mode", "risque", "cout", "priorite", "commande",
-                  "args_obligatoires", "sorties", "preconditions", "manifest",
-                  "conditions")
+CLEFS_PROVIDER = (
+    "id", "kind", "mode", "risque", "cout", "priorite", "commande",
+    "args_obligatoires", "sorties", "preconditions", "manifest", "conditions",
+    # Contrat commun provider/transport (les champs ci-dessous sont des métadonnées
+    # d'identité et de capacité, pas des instructions envoyées par l'IA).
+    "transport", "provider_version", "server_id", "server_version", "tool",
+    "tool_version", "protocol_version", "trust", "target_types", "mcp",
+)
 
 
 class RegistryError(Exception):
@@ -85,24 +95,77 @@ class Provider:
     # QU'IL veut. Déclaratif au manifest ; `sandbox_cli` (sous-processus dans la cage) pour
     # les adaptateurs historiques. Validé au chargement : un transport non fourni refuse le
     # registre, il n'est jamais rabattu en silence sur le sous-processus.
-    transport: str = "sandbox_cli"
+    transport: str = transports.TRANSPORT_SANDBOX_CLI
+    # Identité MCP (MCP-004) : ces champs décrivent QUI exécute et dans quelle version,
+    # pour la provenance et le rapport. Ils ne disent rien de l'autorisation : celle-ci
+    # vient du binding registre (capability ↔ serveur ↔ outil), jamais de la découverte.
+    provider_version: str = ""
+    server_id: str = ""
+    server_version: str = ""
+    tool: str = ""
+    tool_version: str = ""
+    protocol_version: str = ""
+    trust: str = "trusted_local"
+    target_types: tuple[str, ...] = ("repository",)
 
     def __post_init__(self) -> None:
         if self.risque not in RISQUES:
             raise RegistryError(f"{self.id}: risque {self.risque!r} inconnu")
-        # `tool` est un alias de `cli` : le manifest parle d'outil, le registre de forme
-        # d'exécution. Les deux doivent dire la même chose.
-        if self.kind not in ("cli", "tool", "api", "async_job", "stream", "recursive"):
-            raise RegistryError(f"{self.id}: kind {self.kind!r} non supporté en Phase 3")
-        if self.kind not in ("cli", "tool"):
-            # Une seule forme d'exécution est implémentée en Phase 3. Prétendre le
-            # contraire serait mentir : voir VALIDATION_GENERALISATION.md Q6.
+        # MCP-004 : la validation du transport n'est plus une liste codée en dur dans ce
+        # module mais le registre CANONIQUE du cœur (`transports.fournit`). Un transport
+        # non enregistré refuse le registre — jamais de repli silencieux sur un CLI local.
+        if not transports.fournit(self.transport):
             raise RegistryError(
-                f"{self.id}: le kind {self.kind!r} n'est pas implémenté en Phase 3 "
-                "(seul 'cli' l'est)"
-            )
-        if not self.commande:
+                f"{self.id}: transport {self.transport!r} non fourni — "
+                f"transports connus : {list(transports.connus())}. Enregistrez-le avec "
+                f"transports.enregistrer({self.transport!r}, exécuteur) avant de déclarer "
+                f"un provider qui l'exige.")
+        if self.trust not in TRUST_LEVELS:
+            raise RegistryError(
+                f"{self.id}: trust {self.trust!r} inconnu — admis : {list(TRUST_LEVELS)}")
+        invalides = [x for x in self.target_types if x not in TARGET_KINDS]
+        if invalides:
+            raise RegistryError(f"{self.id}: types de cible inconnus : {invalides}")
+
+        # `tool` est un alias de `cli` : le manifest parle d'outil, le registre de forme
+        # d'exécution. Les providers externes ne possèdent volontairement pas de commande
+        # locale : leur adresse et leur transport sont portés par leur contrat propre.
+        if self.kind not in ("cli", "tool", "api", "async_job", "stream", "recursive"):
+            raise RegistryError(f"{self.id}: kind {self.kind!r} non supporté")
+        if self.transport == transports.TRANSPORT_SANDBOX_CLI and self.kind not in ("cli", "tool"):
+            raise RegistryError(
+                f"{self.id}: le kind {self.kind!r} n'est pas implémenté pour un provider local "
+                "(seul 'cli' l'est)")
+        if self.transport == transports.TRANSPORT_SANDBOX_CLI and not self.commande:
             raise RegistryError(f"{self.id}: commande vide")
+        if self.transport == "mcp":
+            if self.kind not in ("api", "stream", "tool"):
+                raise RegistryError(
+                    f"{self.id}: kind {self.kind!r} incohérent avec transport MCP")
+            if self.manifest is None:
+                raise RegistryError(f"{self.id}: contrat MCP absent")
+            if not self.server_id or not self.tool:
+                raise RegistryError(
+                    f"{self.id}: un provider MCP doit déclarer server_id et tool")
+
+    @property
+    def identity(self) -> ProviderIdentity:
+        """Identité canonique exposée aux plans, backends et rapports."""
+        return ProviderIdentity(
+            provider_id=self.id,
+            transport=self.transport,
+            provider_version=self.provider_version,
+            server_id=self.server_id,
+            server_version=self.server_version,
+            tool=self.tool,
+            tool_version=self.tool_version,
+            protocol_version=self.protocol_version,
+            trust=self.trust,
+        )
+
+    @property
+    def external(self) -> bool:
+        return self.transport != transports.TRANSPORT_SANDBOX_CLI
 
 
 @dataclass(frozen=True)
@@ -202,21 +265,38 @@ class Registry:
                 raise RegistryError(f"capacité {c.get('id', '?')}: champs manquants {manquants}")
             provs = []
             for p in c["providers"]:
-                if "id" not in p or "commande" not in p:
-                    raise RegistryError(f"capacité {c['id']}: provider sans id ou sans commande")
+                if "id" not in p:
+                    raise RegistryError(f"capacité {c['id']}: provider sans id")
+                transport = str(p.get("transport", transports.TRANSPORT_SANDBOX_CLI))
+                if transport == transports.TRANSPORT_SANDBOX_CLI and "commande" not in p:
+                    raise RegistryError(
+                        f"capacité {c['id']}: provider local sans commande")
+                if transport != transports.TRANSPORT_SANDBOX_CLI and "mcp" not in p:
+                    raise RegistryError(
+                        f"{p.get('id', '?')}: provider externe sans contrat de transport")
                 inconnues = [k for k in p if k not in CLEFS_PROVIDER]
                 if inconnues:
                     raise RegistryError(
                         f"{p.get('id', '?')}: clé(s) de provider inconnue(s) {inconnues} — "
                         f"admises : {list(CLEFS_PROVIDER)}. Une clé ignorée équivaut à une "
                         "garde retirée : le registre refuse plutôt que de charger à moitié.")
-                # Un provider peut être déclaré par MANIFEST : il est validé ICI, au
-                # chargement — donc avant toute exécution, et indépendamment d'OPA.
-                mani = PM.valider(p["manifest"], c["id"]) if "manifest" in p else None
+                # Un provider peut être déclaré par un contrat de transport : il est
+                # validé ICI, au chargement — donc avant toute exécution et indépendamment
+                # d'OPA. Un provider MCP n'est pas forcé dans le schéma CLI historique.
+                if transport == "mcp":
+                    import mcp_provider as MCP
+                    try:
+                        mani = MCP.valider(p["mcp"], c["id"], p["id"],
+                                           p.get("risque", "PASSIVE"))
+                    except MCP.MCPProviderError as e:
+                        raise RegistryError(str(e)) from None
+                else:
+                    mani = PM.valider(p["manifest"], c["id"]) if "manifest" in p else None
                 cond_brut = p.get("conditions")
                 if cond_brut is not None and mani is not None:
                     # Deux déclarations pour la même chose = deux vérités possibles. Le
-                    # manifest est l'autorité d'exécution : on refuse plutôt que de choisir.
+                    # contrat de transport est l'autorité d'exécution : on refuse plutôt
+                    # que de choisir.
                     raise RegistryError(
                         f"{p['id']} : `conditions` déclaré AUSSI dans le manifest — "
                         "déclarez-le une seule fois (dans le manifest pour un provider "
@@ -232,15 +312,21 @@ class Registry:
                     raise RegistryError(
                         f"provider {p['id']} : 'priorite' doit être un entier "
                         f"(reçu : {p.get('priorite')!r})")
+                # Les métadonnées d'identité proviennent du contrat MCP quand il
+                # existe, sinon des champs provider (compatibilité des providers locaux).
+                valeur = lambda cle, defaut="": getattr(mani, cle, p.get(cle, defaut)) \
+                    if mani is not None else p.get(cle, defaut)
+                cibles = tuple(getattr(mani, "cibles", ()) or p.get(
+                    "target_types", ("repository",)))
                 prov = Provider(
                     id=p["id"],
                     capability=c["id"],
                     manifest=mani,
                     conditions=cond,
-                    kind=p.get("kind", "cli"),
-                    mode=p.get("mode", "CLI"),
+                    kind=p.get("kind", "api" if transport == "mcp" else "cli"),
+                    mode=p.get("mode", "MCP" if transport == "mcp" else "CLI"),
                     risque=p.get("risque", "PASSIVE"),
-                    commande=list(p["commande"]),
+                    commande=list(p.get("commande", [])),
                     args_obligatoires=list(p.get("args_obligatoires", [])),
                     sorties=list(p.get("sorties", [])),
                     preconditions=dict(p.get("preconditions", {})),
@@ -248,9 +334,19 @@ class Registry:
                     priorite=prio,
                     # Le transport vient du manifest (validé à son chargement) ; les
                     # adaptateurs historiques, eux, sont des sous-processus sandboxés par
-                    # construction. Le registre n'invente jamais un transport.
+                    # construction. Le registre n'invente jamais un transport. Le contrat
+                    # MCP expose lui aussi `.transport` (« mcp ») : la même règle vaut
+                    # pour les providers externes, sans branche particulière ici.
                     transport=(mani.transport if mani is not None
                                 else transports.TRANSPORT_SANDBOX_CLI),
+                    provider_version=str(valeur("provider_version", "")),
+                    server_id=str(valeur("server_id", "")),
+                    server_version=str(valeur("server_version", "")),
+                    tool=str(valeur("tool", "")),
+                    tool_version=str(valeur("tool_version", "")),
+                    protocol_version=str(valeur("protocol_version", "")),
+                    trust=str(valeur("trust", "trusted_local")),
+                    target_types=cibles,
                 )
                 if prov.id in self._prov:
                     raise RegistryError(f"provider en double : {prov.id}")

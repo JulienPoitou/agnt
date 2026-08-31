@@ -35,10 +35,12 @@ allow if {
 		step.provider in input.registre.providers
 		step.capability in input.registre.capability_ids
 		couples[[step.capability, step.provider]]
+		target_compatible(step)
 	}
 	input.plan.registre_empreinte == input.registre.empreinte
 	input.cible.autorisee == true
 	not commande_suspecte
+	not provider_binding_suspect
 }
 
 # ------------------------------------------------------------------ motifs de refus
@@ -77,6 +79,52 @@ motifs contains "cible_non_autorisee" if {
 
 motifs contains "commande_suspecte" if {
 	commande_suspecte
+}
+
+# Un provider MCP n'est pas autorisé par la seule présence d'un identifiant dans le
+# plan. Le binding (capability, serveur, outil, transport et confiance) doit être
+# identique à celui du registre. La réponse de `tools/list` n'entre jamais dans cette
+# décision : elle est une observation, pas une autorité.
+binding_correspondant(step) if {
+	some p in input.registre.providers_detail
+	p.id == step.provider
+	p.capability == step.capability
+	p.transport == "mcp"
+	p.identity.server_id == step.server_id
+	p.identity.tool == step.tool
+	p.identity.protocol_version == step.protocol_version
+	p.identity.trust == step.trust
+}
+
+provider_binding_suspect if {
+	some step in input.plan.steps
+	step.transport == "mcp"
+	not binding_correspondant(step)
+}
+
+motifs contains "binding_provider_externe_invalide" if {
+	provider_binding_suspect
+}
+
+# La cible est une donnée typée de l'orchestrateur, pas un chemin réinterprété par
+# le serveur. Les providers locaux restent couverts par la garde de chemin historique.
+target_compatible(step) if {
+	step.transport != "mcp"
+}
+
+target_compatible(step) if {
+	step.transport == "mcp"
+	input.cible.type in step.target_types
+}
+
+target_incompatible if {
+	some step in input.plan.steps
+	step.transport == "mcp"
+	not target_compatible(step)
+}
+
+motifs contains "cible_incompatible_provider_externe" if {
+	target_incompatible
 }
 
 # ------------------------------------------------------------------ garde de ressources

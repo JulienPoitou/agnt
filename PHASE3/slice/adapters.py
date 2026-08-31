@@ -26,6 +26,8 @@ import extraction as EX
 import conditions as COND
 import provider_manifest as PM
 import transports
+from provider_contract import Target
+import mcp_provider as MCP
 from sandbox import CACHE_BIN, CACHE_DB, CACHE_REGLES, RACINE_MONTEURS, Sandbox
 
 # Ces deux constantes sont LE préfixe de montage, pas un chemin d'hôte : un littéral séparé
@@ -103,6 +105,18 @@ class ResultatBrut:
     # outil pourrait légitimement avoir une clé de ce nom). C'est ce texte qui permet de
     # conserver le brut d'un outil qui écrit sur stdout plutôt que dans un fichier (`json`).
     texte_brut: str = ""
+    # Résultat du contrat provider. Les providers historiques gardent la valeur par
+    # défaut pour compatibilité ; les backends externes renseignent le statut et les
+    # identifiants sans faire passer leur transport pour une commande locale.
+    statut: str = "succeeded"
+    erreur: str = ""
+    # Nom CANONIQUE : un rapport qui écrirait « local » pour un provider sandbox_cli
+    # réintroduirait exactement le couplage provider=binaire que transports.py sépare.
+    transport: str = transports.TRANSPORT_SANDBOX_CLI
+    correlation_id: str = ""
+    request_id: str = ""
+    identite_provider: dict = field(default_factory=dict)
+    disponibilite: dict = field(default_factory=dict)
 
 
 def resoudre_exe(binaire: str) -> str | None:
@@ -591,14 +605,84 @@ def conserver_brut(sbx: Sandbox, dossier: Path, brut: "ResultatBrut", provider: 
         return None
 
 
+
+def mcp(prov, sbx: Sandbox, *, target: Target | None = None,
+        arguments: dict | None = None, transport_factory=None,
+        cancel_event=None) -> ResultatBrut:
+    """Adapte le contrat MCP au résultat brut commun du pipeline.
+
+    Il n'y a pas de pipeline MCP ici : le backend valide la cible et les arguments,
+    puis le pipeline existant normalise, corrèle, journalise et rapporte la sortie.
+    Les erreurs distantes deviennent des statuts explicites et ne ressemblent jamais
+    à un scan vide réussi.
+    """
+    mani = getattr(prov, "manifest", None)
+    if not isinstance(mani, MCP.MCPManifest):
+        raise TypeError(f"{prov.id}: contrat MCP attendu")
+    if target is None:
+        target = Target("repository", str(sbx.racine_scan or sbx.M_SCAN))
+    demande, note = COND.timeout_effectif(prov, sbx.timeout)
+    resultat = MCP.backend_for(prov, transport_factory=transport_factory).execute(
+        target=target, arguments=arguments, timeout=demande, cancel_event=cancel_event)
+    codes = {
+        "succeeded": 0,
+        "timed_out": 124,
+        "cancelled": 125,
+        "unavailable": 503,
+        "invalid": 502,
+        "failed": 1,
+    }
+    code = codes.get(resultat.status, 1)
+    couv = Couverture(provider=prov.id)
+    if resultat.status == "succeeded":
+        couv.cibles.append(Cible(target.value, "scanned_successfully"))
+    else:
+        couv.cibles.append(Cible(
+            target.value, "not_scanned",
+            resultat.error or f"appel MCP non concluant ({resultat.status})"))
+        couv.limites_connues.append(
+            f"provider MCP {prov.id} : statut {resultat.status}, aucune conclusion de sécurité")
+    couv.scanners_actives = [f"mcp:{mani.server_id}/{mani.tool}"]
+    couv.limites_connues.append(
+        "sortie MCP non fiable : normalisation AGNT appliquée avant reporting")
+    if note:
+        couv.limites_connues.append("note de plafond : " + note)
+    raw = resultat.raw if resultat.raw is not None else {"error": resultat.error}
+    try:
+        texte = json.dumps(raw, ensure_ascii=False, default=str)
+    except (TypeError, ValueError):
+        texte = json.dumps({"error": "réponse MCP non sérialisable"})
+    return ResultatBrut(
+        provider=prov.id,
+        capability=prov.capability,
+        code_retour=code,
+        timeout=resultat.status == "timed_out",
+        fichier=f"mcp_{prov.id}.json",
+        donnees=resultat.output if resultat.status == "succeeded" else None,
+        couverture=couv,
+        stderr=resultat.error,
+        argv=[],
+        texte_brut=texte,
+        statut=resultat.status,
+        erreur=resultat.error,
+        transport="mcp",
+        correlation_id=resultat.correlation_id,
+        request_id=resultat.request_id,
+        identite_provider=resultat.identity.to_dict(),
+        disponibilite=(resultat.availability.to_dict()
+                       if resultat.availability is not None else {}),
+    )
+
+
 ADAPTATEURS = {
     "semgrep": semgrep,
     "trivy": trivy,
     "gitleaks": gitleaks,
 }
 
-
-def executer(prov, sbx: Sandbox) -> ResultatBrut:
+def executer(prov, sbx: Sandbox, *, target: Target | None = None,
+             arguments: dict | None = None, transport_factory=None,
+             cancel_event=None) -> ResultatBrut:
     """Point d'entrée unique — dispatché par TRANSPORT, puis par forme de provider.
 
     La frontière (2026-08-30) : un provider déclare SON transport au manifest ; le cœur
@@ -615,12 +699,20 @@ def executer(prov, sbx: Sandbox) -> ResultatBrut:
     """
     transport = getattr(prov, "transport", None) or transports.TRANSPORT_SANDBOX_CLI
     if transport != transports.TRANSPORT_SANDBOX_CLI:
-        return transports.deleguer(transport, prov, sbx)
+        # MCP-004 : plus aucune table de transport dans ce module. Le dispatch passe par
+        # le registre CANONIQUE du cœur ; le contexte par appel (cible, arguments validés,
+        # fabrique de transport pour les tests, événement d'annulation) est transmis tel
+        # quel à l'exécuteur enregistré. Un transport non enregistré lève TransportError :
+        # jamais de repli silencieux sur le sous-processus local.
+        return transports.deleguer(
+            transport, prov, sbx,
+            target=target, arguments=arguments,
+            transport_factory=transport_factory, cancel_event=cancel_event)
     if getattr(prov, "manifest", None) is not None:
         return generique_cli(prov, sbx)
     fn = ADAPTATEURS.get(prov.id)
     if fn is None:
         raise KeyError(
-            f"aucun adaptateur pour {prov.id!r} et aucun manifest déclaré. "
+            f"aucun adaptateur pour {prov.id!r}, transport {transport!r}, et aucun manifest. "
             f"Adaptateurs existants : {sorted(ADAPTATEURS)}.")
     return fn(prov, sbx)
