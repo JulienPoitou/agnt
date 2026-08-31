@@ -1,0 +1,96 @@
+{
+  "gate": "console-v0",
+  "version": 1,
+  "date": "2026-08-31T18:02:15.074Z",
+  "branche": "arena/01a058ea-agnt",
+  "sha": "606aa70",
+  "node": "v22.22.3",
+  "python": "3.11.2",
+  "pyyaml": "6.0.3",
+  "duree_ms": 5898,
+  "environnement": {
+    "browser": "aucun",
+    "missions_avant": 192,
+    "pyyaml": "6.0.3",
+    "strict": false,
+    "sonde_statut": "refuse"
+  },
+  "maillons": [
+    {
+      "maillon": 7,
+      "nom": "historique câblé dans la page réelle",
+      "statut": "BLOCKED",
+      "preuve": "aucune référence à /api/missions dans app.js et aucun élément d'historique dans index.html (mesure par lecture directe des fichiers servis). L'API sert l'historique (maillon 6) ; la page ne l'affiche pas → WEB-001/002, voir docs/coordination/WEB_DOGFOOD_V0.md",
+      "commande": "grep -n '/api/missions' PHASE3/interface/app.js PHASE3/interface/index.html"
+    },
+    {
+      "maillon": 10,
+      "nom": "rendu réel navigateur (layout)",
+      "statut": "NON ÉVALUÉ",
+      "preuve": "aucun binaire navigateur dans PATH ; les téléchargements de binaires sont bloqués dans ce sandbox (ECONNRESET/TLS 35 mesurés sur storage.googleapis.com, download-cdn.playwright.dev et miroir npmmirror). Le rendu est jugé via DOM minimal (maillon 9), pas au pixel — pas de vert inventé",
+      "commande": "which chromium google-chrome firefox ; AGNT_BROWSER_BIN=<chemin> node PHASE3/interface/_gate_console_v0.mjs"
+    },
+    {
+      "maillon": 8,
+      "nom": "cas non heureux : machine sans outils → refus nommé, pas de faux zéro",
+      "statut": "PASS",
+      "preuve": "POST /api/runs cible=/etc → HTTP 400 ; cible hors de la liste admise ; 3 alternative(s) nommées ; GET /api/runs/pas-un-run → HTTP 404 ; corps {\"erreur\":\"run inconnu : pas-un-run\"} ; statut=refuse ; motif=\"aucun outil exécutable dans ces conditions : aucun outil disponible sur cette machine\" ; findings non fabriqués",
+      "commande": "curl -s -XPOST http://127.0.0.1:33209/api/runs -d '{\"cible\":\"/etc\",\"question\":\"scan\"}' ; curl -s http://127.0.0.1:33209/api/runs/pas-un-run ; GET http://127.0.0.1:33209/api/runs/3077d1ea5516"
+    },
+    {
+      "maillon": 3,
+      "nom": "soumission d'une mission (page)",
+      "statut": "PASS",
+      "preuve": "POST /api/runs → HTTP 202, id=3077d1ea5516, statut initial en_file ; clic RUN réel → run 27c68a1b9d85 · refuse (poste de 900 car.)",
+      "commande": "curl -s -XPOST http://127.0.0.1:33209/api/runs -d '{\"cible\":\"…/testrepo\",\"question\":\"…\"}' ; node PHASE3/interface/_smoke_parcours.mjs"
+    },
+    {
+      "maillon": 4,
+      "nom": "évolution du statut (page)",
+      "statut": "PASS",
+      "preuve": "GET /api/runs/3077d1ea5516 → statut refuse en 890 ms (état terminal atteint, pas de boucle infinie) ; polling réel → 1503 ms ; pas de spinner infini",
+      "commande": "curl -s http://127.0.0.1:33209/api/runs/<id> ; node PHASE3/interface/_smoke_parcours.mjs"
+    },
+    {
+      "maillon": 5,
+      "nom": "résultat/refus lisible (page)",
+      "statut": "PASS",
+      "preuve": "statut=refuse ; motif=\"aucun outil exécutable dans ces conditions : aucun outil disponible sur cette machine\" ; pas de « 0 finding » inventé ; motif affiché : \"motif consigné par le moteur : aucun outil exécutable dans ces conditions : aucun outil disponible sur cette machine02Ce qui a tourné0 provider(s) — à lire avant les constatsStatut\"",
+      "commande": "GET http://127.0.0.1:33209/api/runs/3077d1ea5516 ; node PHASE3/interface/_smoke_parcours.mjs"
+    },
+    {
+      "maillon": 6,
+      "nom": "historique visible côté API (liste + détail + timeline)",
+      "statut": "PASS",
+      "preuve": "GET /api/missions → HTTP 200, 100 mission(s) ; mission m-20260831T180216Z-e3a66f84 ; GET /api/missions/m-20260831T180216Z-e3a66f84 → HTTP 200, schema=agnt.history.v1, timeline 7 événement(s) (complete)",
+      "commande": "curl -s 'http://127.0.0.1:33209/api/missions?limit=100' ; curl -s http://127.0.0.1:33209/api/missions/<mission_id>"
+    },
+    {
+      "maillon": 1,
+      "nom": "chargement de la console",
+      "statut": "PASS",
+      "preuve": "GET / réel + app.js évalué ; bandeau MAQUETTE retiré ; état final « run 27c68a1b9d85 · refuse » (smoke vert)",
+      "commande": "node PHASE3/interface/_smoke_parcours.mjs"
+    },
+    {
+      "maillon": 2,
+      "nom": "cibles remontées",
+      "statut": "PASS",
+      "preuve": "3 cible(s)",
+      "commande": "node PHASE3/interface/_smoke_parcours.mjs"
+    },
+    {
+      "maillon": 9,
+      "nom": "rendu app.js sur artefacts réels (DOM, refus, erreur, hostile)",
+      "statut": "PASS",
+      "preuve": "103/103 vérifications, sortie du harnais : verte",
+      "commande": "node PHASE3/interface/_domtest.mjs"
+    }
+  ],
+  "synthèse": {
+    "PASS": 8,
+    "BLOCKED": 1,
+    "NON ÉVALUÉ": 1,
+    "FAIL": 0
+  }
+}

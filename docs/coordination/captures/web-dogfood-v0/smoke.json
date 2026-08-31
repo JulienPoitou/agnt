@@ -1,14 +1,14 @@
 {
-  "début": "2026-08-31T17:49:57.773Z",
+  "début": "2026-08-31T18:02:17.355Z",
   "commande": "/usr/local/bin/node /home/user/agnt/PHASE3/interface/_smoke_parcours.mjs",
   "question": "Analyse la sécurité de ce dépôt — smoke QA-DOGFOOD V0",
   "node": "v22.22.3",
-  "port": 35335,
-  "etat_final": "run 20d09665a6c7 · refuse",
-  "poste_excerpt": "01Mission20d09665a6c7statut · refusé par la politique (fail-closed)confiance · controlledmoteur d'intention · deterministe0constats0clusters inter-outils?durée (s)motif consigné par le moteur : aucun outil exécutable dans ces conditions : aucun outil disponible sur cette machine02Ce qui a tourné0 provider(s) — à lire avant les constatsStatut par outil : non consigné pour cette mission (registre postérieur à l'archive). « a tourné » ne se lit donc que dans la table de couverture ci-dessous.Escalade : non consignée pour cette mission.providera analysén'a pas pulimites déclarées par l'adaptateur03La chaîne de décisionce que le modèle a demandé, ce que le registre a retenu, ce que la politique a autorisé—0 capacité(s) retenue(s)0 step(s)REFUS· \n· undefined : argv issu du seul registre : la phrase et la sortie du modèle n'y ajoutent ni drapeau ni chemin (mesuré A7). Les jetons {BIN} {REGLES} ",
+  "port": 38195,
+  "etat_final": "run 27c68a1b9d85 · refuse",
+  "poste_excerpt": "01Mission27c68a1b9d85statut · refusé par la politique (fail-closed)confiance · controlledmoteur d'intention · deterministe0constats0clusters inter-outils?durée (s)motif consigné par le moteur : aucun outil exécutable dans ces conditions : aucun outil disponible sur cette machine02Ce qui a tourné0 provider(s) — à lire avant les constatsStatut par outil : non consigné pour cette mission (registre postérieur à l'archive). « a tourné » ne se lit donc que dans la table de couverture ci-dessous.Escalade : non consignée pour cette mission.providera analysén'a pas pulimites déclarées par l'adaptateur03La chaîne de décisionce que le modèle a demandé, ce que le registre a retenu, ce que la politique a autorisé—0 capacité(s) retenue(s)0 step(s)REFUS· \n· undefined : argv issu du seul registre : la phrase et la sortie du modèle n'y ajoutent ni drapeau ni chemin (mesuré A7). Les jetons {BIN} {REGLES} ",
   "poste_longueur": 1220,
   "vivante": "",
-  "pied": "archive de mission · /home/user/agnt/PHASE3/artifacts/missions/m-20260831T175000Z-3fcc40c9/sortieaucune valeur n'est ajoutée, arrondie ou comblée par cette page : tout vient des artefacts écrits par le moteur.",
+  "pied": "archive de mission · /home/user/agnt/PHASE3/artifacts/missions/m-20260831T180219Z-cdf37ce8/sortieaucune valeur n'est ajoutée, arrondie ou comblée par cette page : tout vient des artefacts écrits par le moteur.",
   "duree_ms": 1503,
   "resultat": "refuse",
   "motif": "motif consigné par le moteur : aucun outil exécutable dans ces conditions : aucun outil disponible sur cette machine02Ce qui a tourné0 provider(s) — à lire avant les constatsStatut par ",
@@ -16,12 +16,12 @@
     "status": 200,
     "total": 100,
     "mission": {
-      "mission_id": "m-20260831T175000Z-3fcc40c9",
+      "mission_id": "m-20260831T180219Z-cdf37ce8",
       "status": "refuse",
-      "detail_href": "/api/missions/m-20260831T175000Z-3fcc40c9"
+      "detail_href": "/api/missions/m-20260831T180219Z-cdf37ce8"
     }
   },
-  "mission_id": "m-20260831T175000Z-3fcc40c9",
+  "mission_id": "m-20260831T180219Z-cdf37ce8",
   "detail": {
     "status": 200,
     "mission_status": "refuse",
@@ -30,13 +30,13 @@
     "timeline_state": "complete",
     "missing": 0
   },
-  "logs_api": "interface AGNT · http://127.0.0.1:35335 · un run à la fois · 3 cible(s) admise(s)\n[interface] GET /api/capacites HTTP/1.1\n[interface] GET /api/capacites HTTP/1.1\n[interface] GET /api/cibles HTTP/1.1\n[interface] POST /api/runs HTTP/1.1\n[interface] GET /api/runs/20d09665a6c7 HTTP/1.1\n[interface] GET /api/missions?limit=100 HTTP/1.1\n[interface] GET /api/missions/m-20260831T175000Z-3fcc40c9 HTTP/1.1\n",
+  "logs_api": "interface AGNT · http://127.0.0.1:38195 · un run à la fois · 3 cible(s) admise(s)\n[interface] GET /api/capacites HTTP/1.1\n[interface] GET /api/capacites HTTP/1.1\n[interface] GET /api/cibles HTTP/1.1\n[interface] POST /api/runs HTTP/1.1\n[interface] GET /api/runs/27c68a1b9d85 HTTP/1.1\n[interface] GET /api/missions?limit=100 HTTP/1.1\n[interface] GET /api/missions/m-20260831T180219Z-cdf37ce8 HTTP/1.1\n",
   "resultats": [
     [
       "CHECK",
       true,
       "la page se branche sur l'API réelle (bandeau MAQUETTE retiré)",
-      "752 ms"
+      "601 ms"
     ],
     [
       "CHECK",
@@ -72,7 +72,7 @@
       "INFO",
       true,
       "texte final de l'écran (début)",
-      "\"01Mission20d09665a6c7statut · refusé par la politique (fail-closed)confiance · controlledmoteur d'intention · deterministe0constats0clusters inter-outils?durée (s)motif consigné par le moteur : aucun outil exécutable dans ces conditions : aucun outil disponibl\""
+      "\"01Mission27c68a1b9d85statut · refusé par la politique (fail-closed)confiance · controlledmoteur d'intention · deterministe0constats0clusters inter-outils?durée (s)motif consigné par le moteur : aucun outil exécutable dans ces conditions : aucun outil disponibl\""
     ],
     [
       "CHECK",
