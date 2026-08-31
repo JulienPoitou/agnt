@@ -28,6 +28,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import cible as CIB
+import transports
 from registre import Registry
 
 VERSION_PLAN = "1.1"
@@ -141,7 +142,9 @@ class Step:
     # Métadonnées du contrat provider. Elles décrivent la chaîne d'exécution sans
     # transformer un provider externe en commande locale. Les valeurs viennent du
     # registre, jamais de l'intention produite par l'IA.
-    transport: str = "local"
+    # Nom CANONIQUE du transport fourni par le cœur (jamais un littéral "local" recopié :
+    # un nom divergent ici ferait mentir le rapport et la policy).
+    transport: str = transports.TRANSPORT_SANDBOX_CLI
     provider_version: str = ""
     server_id: str = ""
     server_version: str = ""
