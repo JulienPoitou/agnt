@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import adapters
 import cible as CIB
+import transports
 import clusterer
 import garde_chemin as GC
 import mission as MS
@@ -565,13 +566,36 @@ def executer(requete: str, cible, cible_autorisee: bool = True,
     # passent le filtre. Un refus de politique n'efface donc pas « qui était disponible »
     # du journal — c'est ce que vérifie `test_qualite_plateforme` cas 16quater.
     import adapters as AD
-    dispo = {p.id: AD.exe_de(p) for p in registre.providers()}
-    exclus_dispo = {
-        p.id: (f"exécutable introuvable ({AD.binaire_de(p)}) : ni au cache épinglé, ni au "
-               "PATH — l'outil n'est pas sur cette machine (lancer bootstrap.sh). "
-               "Aucune analyse n'a été faite par cet outil, ce n'est pas « rien trouvé ».")
-        for p in registre.providers() if dispo.get(p.id) is None
-    }
+
+    # MCP-004 : la disponibilité ne se décide PAS de la même façon selon le transport.
+    # Un provider `sandbox_cli` est disponible si son exécutable est résolvable sur cette
+    # machine. Un provider EXTERNE n'a pas d'exécutable par contrat : chercher un binaire
+    # ici l'écarterait systématiquement, et l'absence d'un provider externe deviendrait
+    # une absence INEXPLIQUÉE dans la mission. Sa disponibilité de configuration est son
+    # transport enregistré ; la disponibilité RÉELLE du serveur et de l'outil distants est
+    # portée ensuite par le résultat du transport (`unavailable`, `timed_out`…), jamais
+    # devinée avant l'appel.
+    def _disponibilite(prov):
+        transport = getattr(prov, "transport", None) or transports.TRANSPORT_SANDBOX_CLI
+        if transport != transports.TRANSPORT_SANDBOX_CLI:
+            return f"transport {transport!r} enregistré" if transports.fournit(transport) else None
+        return AD.exe_de(prov)
+
+    dispo = {p.id: _disponibilite(p) for p in registre.providers()}
+
+    def _motif_indispo(prov):
+        transport = getattr(prov, "transport", None) or transports.TRANSPORT_SANDBOX_CLI
+        if transport != transports.TRANSPORT_SANDBOX_CLI:
+            return (f"transport {transport!r} non enregistré : le provider externe n'est "
+                    "pas exécutable tant que son transport n'a pas été enregistré. "
+                    "Aucune analyse n'a été faite par cet outil, ce n'est pas "
+                    "« rien trouvé ».")
+        return (f"exécutable introuvable ({AD.binaire_de(prov)}) : ni au cache épinglé, ni "
+                "au PATH — l'outil n'est pas sur cette machine (lancer bootstrap.sh). "
+                "Aucune analyse n'a été faite par cet outil, ce n'est pas « rien trouvé ».")
+
+    exclus_dispo = {p.id: _motif_indispo(p)
+                    for p in registre.providers() if dispo.get(p.id) is None}
     provs = intent.choisir_providers(
         it, registre, disponible=lambda p: dispo.get(p.id) is not None)
     if exclus_dispo:
