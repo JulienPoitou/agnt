@@ -776,6 +776,11 @@ def _resume_arret(motif: str) -> str:
         "policy_injoignable": "validation de sécurité indisponible",
         "conditions": "conditions d'exécution non remplies",
         "applicabilite": "aucun provider applicable",
+        # `disponibilite` est consigné par le pipeline quand AUCUN outil du plan
+        # n'est installé (arrêt avant exécution). Sans ce libellé, l'écran lisait
+        # « arrêt consigné » — vrai mais inutile : le lecteur ne savait pas qu'il
+        # lui manquait des outils, et pouvait croire à un scan sans résultat.
+        "disponibilite": "aucun outil disponible",
         "intent_needs_clarification": "demande à clarifier",
         "intent_rejected": "demande refusée",
         "garde_chemin": "chemin refusé",
