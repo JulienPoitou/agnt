@@ -4,9 +4,28 @@
 > **But :** décisions, contrats, état des builders, dépendances, conflits, ordre d'intégration — utiles entre les handoffs. Synthèse vivante, pas un journal. Les commits et handoffs restent les preuves détaillées.
 > **Historique :** reprend et met à jour `AGNT_PROJECT_STATE.md` (30/08, branche `arena/01a0543a-agnt@aafe5af`). Ce fichier est désormais l'unique source de vérité de coordination ; `AGNT_PROJECT_STATE.md` est un pointeur.
 
-**Dernière mise à jour :** 2026-08-31 — reprise `arena/01a05783-agnt` : PR #2 fusionnée dans `main` ET vérifiée, **ligne CORE intégrée dans main (PR #6, `2010f38`)**, double gate feu vert, perte WEB déclarée.
-**Base d'intégration connue :** `main` = `2010f38` = `b85bc91` (PR #2) + ligne CORE (`3aeb8bc`) + résolutions d'intégration + harnais alignés.
-**Ligne la plus avancée :** `main` (`2010f38`) — voir Topologie.
+**Dernière mise à jour :** 2026-08-31 — rattrapage orchestration après les PR #8 → #14 : MCP-004 intégré, consolidation CORE post-MCP-004 intégrée, design-lab/front intégré, DevOps `bootstrap --armement` + `doctor.py` intégrés, docs du premier run réel et du trilogue transports intégrées.
+**Base d'intégration connue :** `main` = `89bd3b1` (merge PR #14) = `dfc412d` + rattrapage docs `RUN_PREMIER_RUN` / `TRILOGUE_TRANSPORTS` + correction `POST /api/runs` (chemin, pas nom).
+**Ligne la plus avancée :** `main` (`89bd3b1`) — voir Topologie.
+
+## ADDENDUM 31/08 — état opérationnel APRÈS PR #8 → #14
+
+> Ce bloc **remplace l'état opérationnel** des sections `BUILDERS`, `INTÉGRATIONS PRÉVUES` et `PROCHAINES ACTIONS` plus bas, qui restent utiles comme historique de décision mais plus comme reflet exact de `main`.
+
+- **CORE** → `DONE / INTEGRATED` : PR #6 (`2010f38`), PR #8 (`0fc6c4e`), PR #10 (`7051698`) dans `main` ; handoffs présents (`docs/coordination/handoffs/INTEGRATION-CORE-2026-08-31.md`, `CORE-gate002-2026-08-31.md`, `CORE-post-mcp004-2026-08-31.md`).
+- **MCP** → `DONE / INTEGRATED` : PR #9 (`6bd4b4a`) dans `main` ; handoff v1 présent dans `PHASE3/STATUT_MCP.md`.
+- **WEB / DESIGN-LAB** → `DONE / INTEGRATED` pour le scope livré : PR #11 (`5f5e09d`) + PR #13 (`dfc412d`) dans `main`. **La perte des 20 prototypes historiques reste vraie**, mais n'est plus le reflet de l'interface actuellement livrée dans `main`.
+- **PRODUCT** → `DONE / CONSUMED` pour les contrats/gates utilisés par CORE et le design-lab ; pas de relance builder nécessaire tant qu'aucun nouvel écart contractuel n'apparaît.
+- **DEVOPS** → `DONE / INTEGRATED` pour le scope demandé : PR #12 (`16eeb4f`) dans `main`, livrables présents (`PHASE3/bootstrap.sh`, `PHASE3/doctor.py`).
+- **SECURITY** → `BLOCKED / NOT INTEGRATED` : branche distante `arena/01a05426-agnt` toujours publiée à `08a8150e7814763f32eef3139d5d8717a7daeba7`, mais **pas de handoff v1** ; intégration gelée tant que le protocole n'est pas rempli.
+- **COORDINATION** → `DONE` pour le rattrapage docs : PR #14 (`89bd3b1`) dans `main`, livrables présents `docs/coordination/RUN_PREMIER_RUN.md` et `docs/coordination/TRILOGUE_TRANSPORTS.md`.
+
+### Priorités actives remises à jour
+
+1. **SECURITY-HANDOFF** — obtenir le handoff v1 manquant de `08a8150…`, vérifier le périmètre 125 fichiers, puis seulement décider intégration / correctifs ciblés.
+2. **TRANSPORT-FAIL-CLOSED** — corriger le repli silencieux `transport: <non local> → sandbox_cli` documenté et re-mesuré dans `docs/coordination/TRILOGUE_TRANSPORTS.md` ; c'est désormais le principal écart de cohérence architecture↔implémentation dans `main`.
+3. **RUN E2E sur machine réellement armée** — utiliser les livrables DevOps déjà mergés (`bootstrap.sh --armement`, `doctor.py`) pour rejouer le run sur une machine avec `bwrap` + scanners présents ; dans ce sandbox, l'arrêt au seuil `bwrap` reste une limite d'environnement documentée, pas un défaut produit nouveau.
+4. **WEB uniquement après impact réel** — ne pas relancer un chantier front tant que SECURITY-HANDOFF et/ou TRANSPORT-FAIL-CLOSED n'imposent pas un changement visible côté API/UI.
 
 ---
 
