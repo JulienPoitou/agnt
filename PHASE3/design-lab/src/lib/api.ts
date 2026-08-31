@@ -1,0 +1,13 @@
+import { z } from "zod";
+
+export const Status = z.enum(["en_file", "en_cours", "termine", "refuse", "erreur", "inconnu"]);
+export type MissionStatus = z.infer<typeof Status>;
+const Mission = z.object({ mission_id:z.string(), detail_href:z.string(), request:z.object({title:z.string()}), target:z.object({type:z.string(),display_name:z.string()}), status:Status, created_at:z.string(), updated_at:z.string(), started_at:z.string().optional(), completed_at:z.string().optional(), duration_ms:z.number().optional(), run_id:z.string().optional(), findings_summary:z.object({total:z.number(),by_severity:z.record(z.string(),z.number())}).optional(), clusters_count:z.number().optional(), artifacts:z.record(z.string(),z.boolean()).optional(), incomplete:z.boolean().optional(), incomplete_reason:z.string().optional() });
+export const HistoryList = z.object({schema_version:z.literal("agnt.history.v1"),items:z.array(Mission),page:z.object({limit:z.number(),next_cursor:z.string().nullable()})});
+export const Evidence = z.object({title:z.string().optional(),description:z.string().optional()});
+export const Finding = z.object({id:z.string(),severity:z.object({value:z.string(),origin:z.string()}),location:z.object({file:z.string(),line:z.number().optional()}),evidence:Evidence,source:z.object({tool:z.string(),provenance:z.record(z.string(),z.unknown()).optional()})});
+export const Execution = z.object({schema_version:z.literal("agnt.execution-status.v1"),provider_id:z.string(),applicability:z.record(z.string(),z.unknown()).optional(),selection:z.record(z.string(),z.unknown()).optional(),condition:z.record(z.string(),z.unknown()).optional(),authorization:z.record(z.string(),z.unknown()).optional(),availability:z.record(z.string(),z.unknown()).optional(),execution:z.record(z.string(),z.unknown()).optional()});
+export const MissionDetail = z.object({schema_version:z.literal("agnt.history.v1"),mission:Mission,data:z.object({request:z.record(z.string(),z.string()).optional(),intent:z.record(z.string(),z.unknown()).optional(),findings:z.array(Finding),clusters:z.record(z.string(),z.unknown()).optional(),report:z.object({available:z.boolean(),format:z.string().optional(),content:z.string().optional()}).optional(),coverage:z.record(z.string(),z.unknown()).optional(),executions:z.array(Execution).optional(),timeline:z.array(z.record(z.string(),z.unknown())).optional()})});
+export type Mission = z.infer<typeof Mission>; export type Detail = z.infer<typeof MissionDetail>;
+export async function getHistory(){return HistoryList.parse((await import("../../data/examples/anonymized-capture/list.json")).default)}
+export async function getDetail(){return MissionDetail.parse((await import("../../data/examples/anonymized-capture/detail.json")).default)}
