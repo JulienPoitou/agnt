@@ -716,4 +716,14 @@ async function principal() {
   if (exemple.ok) rendu(exemple.objet);
   etatLigne("moteur non branché · maquette", "");
 }
+// Navigation globale : progressive enhancement, sans dépendre d'un routeur.
+const menu = document.getElementById("command-menu");
+const opener = document.querySelector(".command");
+if (menu && opener) {
+  opener.addEventListener("click", () => { menu.showModal(); document.getElementById("command-search")?.focus(); });
+  document.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); menu.showModal(); document.getElementById("command-search")?.focus(); }
+  });
+  menu.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => menu.close()));
+}
 principal();

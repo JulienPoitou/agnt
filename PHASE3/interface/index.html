@@ -8,7 +8,19 @@
 </head>
 <body>
 <div class="maquette" id="ruban">MAQUETTE — le moteur n'est pas branché (api.py non démarré)</div>
-
+<div class="app-shell">
+<aside class="rail" aria-label="Navigation principale">
+  <div class="rail-brand">A<span>G</span>NT</div>
+  <nav>
+    <a class="nav-item active" href="#poste"><span class="nav-icon">◈</span><span>Overview</span></a>
+    <a class="nav-item" href="#mission"><span class="nav-icon">◎</span><span>Missions</span><b>1</b></a>
+    <a class="nav-item" href="#findings"><span class="nav-icon">△</span><span>Findings</span></a>
+    <a class="nav-item" href="#agents"><span class="nav-icon">⌁</span><span>Agents</span></a>
+    <a class="nav-item" href="#providers"><span class="nav-icon">◫</span><span>Providers</span></a>
+  </nav>
+  <div class="rail-bottom"><a class="nav-item" href="#settings"><span class="nav-icon">⚙</span><span>Settings</span></a><div class="operator"><i></i><span>local operator</span></div></div>
+</aside>
+<div class="workspace">
 <header class="barre">
   <div class="marque">AGNT<span class="point">.</span></div>
   <form class="lancer" id="form" onsubmit="return false">
@@ -39,9 +51,17 @@
        et masqu&eacute; tant qu'aucune mission n'a consign&eacute; d'&eacute;tat. -->
   <div class="etat vivante cache" id="vivante"></div>
 </header>
-
+<div class="workspace-head"><div><div class="eyebrow">SECURITY WORKSPACE / LOCAL</div><h1>Mission control</h1><p>Run controlled analysis and review evidence from one place.</p></div><button class="command" type="button" aria-label="Open command menu">⌘ K <span>Search anything</span></button></div>
+<dialog id="command-menu" class="command-menu" aria-labelledby="command-title">
+  <form method="dialog"><button class="dialog-close" aria-label="Fermer">×</button></form>
+  <div class="eyebrow">QUICK NAVIGATION</div><h2 id="command-title">Search workspace</h2>
+  <input id="command-search" type="search" placeholder="Find a mission, finding or provider…" autocomplete="off">
+  <div class="command-hints"><span>⌘ K</span> to open <span>Esc</span> to close</div>
+  <div class="command-links"><a href="#poste">Mission overview</a><a href="#poste">Findings</a><a href="#poste">Execution providers</a></div>
+</dialog>
 <main id="poste" class="grille"></main>
 <footer class="pied" id="pied"></footer>
+</div></div>
 <script src="app.js"></script>
 </body>
 </html>
