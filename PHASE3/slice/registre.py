@@ -268,6 +268,20 @@ class Registry:
                 if "id" not in p:
                     raise RegistryError(f"capacité {c['id']}: provider sans id")
                 transport = str(p.get("transport", transports.TRANSPORT_SANDBOX_CLI))
+                # Le transport DÉCLARÉ est validé ICI, avant toute construction — donc
+                # avant la perte d'information. Historiquement, cette clé n'était lue
+                # que pour brancher, puis abandonnée à la construction du Provider :
+                # un `transport: http` déclaré atterrissait en `sandbox_cli` sans rien
+                # dire, OPA recevait un fait faux et l'adaptateur exécutait EN LOCAL un
+                # provider que l'opérateur avait déclaré distant. C'est le repli
+                # silencieux que cette garde supprime (fail-closed nommé, pas un repli).
+                # L'erreur nomme le transport attendu, pas un symptôme lointain.
+                if not transports.fournit(transport):
+                    raise RegistryError(
+                        f"{p.get('id', '?')}: transport {transport!r} non fourni — "
+                        f"transports connus : {list(transports.connus())}. Enregistrez-le "
+                        f"avec transports.enregistrer({transport!r}, exécuteur) avant de "
+                        f"déclarer un provider qui l'exige.")
                 if transport == transports.TRANSPORT_SANDBOX_CLI and "commande" not in p:
                     raise RegistryError(
                         f"capacité {c['id']}: provider local sans commande")
@@ -318,6 +332,27 @@ class Registry:
                     if mani is not None else p.get(cle, defaut)
                 cibles = tuple(getattr(mani, "cibles", ()) or p.get(
                     "target_types", ("repository",)))
+                # Second point de décision, au même endroit que la perte d'information
+                # d'origine : le transport RÉSOLU (celui du manifest, ou `sandbox_cli`
+                # pour un adaptateur historique) doit être celui qui a été DÉCLARÉ.
+                # Sinon la déclaration et l'exécution divergent — et c'est l'exécution
+                # qu'OPA et l'adaptateur lisent. On refuse, on ne choisit pas.
+                transport_resolu = (mani.transport if mani is not None
+                                    else transports.TRANSPORT_SANDBOX_CLI)
+                if transport != transport_resolu:
+                    if transport != transports.TRANSPORT_SANDBOX_CLI:
+                        raise RegistryError(
+                            f"{p['id']}: transport {transport!r} déclaré, mais ce provider "
+                            f"se construirait en {transport_resolu!r} — un transport non "
+                            f"local exige un manifest qui porte lui-même "
+                            f"`transport: {transport}`. Sans lui, le provider serait "
+                            f"exécuté en sous-processus local et la policy jugerait un "
+                            f"fait faux. Aucun repli silencieux : refus au chargement.")
+                    raise RegistryError(
+                        f"{p['id']}: le manifest porte le transport "
+                        f"{transport_resolu!r} alors que le provider déclare "
+                        f"{transport!r} — déclarez `transport: {transport_resolu}` au "
+                        f"niveau du provider, ou retirez-le du manifest.")
                 prov = Provider(
                     id=p["id"],
                     capability=c["id"],
@@ -337,8 +372,9 @@ class Registry:
                     # construction. Le registre n'invente jamais un transport. Le contrat
                     # MCP expose lui aussi `.transport` (« mcp ») : la même règle vaut
                     # pour les providers externes, sans branche particulière ici.
-                    transport=(mani.transport if mani is not None
-                                else transports.TRANSPORT_SANDBOX_CLI),
+                    # `transport_resolu` est désormais PROUVÉ égal à la clé déclarée
+                    # (garde ci-dessus) : ce qui est exécuté est ce qui a été écrit.
+                    transport=transport_resolu,
                     provider_version=str(valeur("provider_version", "")),
                     server_id=str(valeur("server_id", "")),
                     server_version=str(valeur("server_version", "")),
