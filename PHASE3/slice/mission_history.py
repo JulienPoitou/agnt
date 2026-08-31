@@ -101,6 +101,21 @@ _CONTROLE = re.compile(r"[\x00-\x1f\x7f]")
 
 _QUERY_SENSIBLE = {"token", "key", "api_key", "password", "secret", "auth"}
 
+# --- provenance (contrat Timeline §9) -----------------------------------------
+# Les SEULS champs projetables, et la grammaire qui borne chacun. Tout le reste du
+# fait consigné est jeté : la projection ne relaie jamais un champ ajouté par un
+# serveur externe. `provider_kind` n'est JAMAIS deviné — une provenance absente ne
+# vaut pas « local / de confiance » (décision d'architecture : MCP détient les faits,
+# CORE projette).
+PROVENANCE_IDS = ("provider_id", "server_id", "tool_id", "request_id", "correlation_id")
+PROVENANCE_KINDS = ("local", "mcp", "external")
+PROVENANCE_DISPONIBILITES = ("available", "degraded", "unavailable", "unknown")
+CONFIANCE_NIVEAUX = ("low", "medium", "high", "unknown")
+CONFIANCE_BASES = ("provider_declared", "agnt_assessed", "corroborated", "unknown")
+_TRANSPORT = re.compile(r"^[a-z0-9_.-]{1,40}$")
+_PROTO_NOM = re.compile(r"^[a-z0-9_.-]{1,40}$")
+_PROTO_VERSION = re.compile(r"^[A-Za-z0-9_.-]{1,40}$")
+
 
 # --------------------------------------------------------------------------- erreurs
 class MissionIntrouvable(Exception):
@@ -322,6 +337,46 @@ def _id_sur(valeur) -> str | None:
     """Un identifiant borné par la grammaire sûre, ou None (jamais exposé brut)."""
     s = str(valeur or "")
     return s if _SAFE_ID.match(s) else None
+
+
+def _provenance(fait) -> dict | None:
+    """Un fait de provenance CONSIGNÉ → l'objet du contrat, ou `None`.
+
+    Additif, allowlisté, borné : un champ hors liste est jeté, une valeur hors
+    grammaire est jetée, et `provider_kind` n'est jamais deviné. Sans fait consigné
+    il n'y a AUCUNE provenance — pas de « local » par défaut, qui serait une
+    affirmation de confiance non prouvée.
+    """
+    if not isinstance(fait, dict):
+        return None
+    out: dict = {}
+    for cle in PROVENANCE_IDS:
+        val = _id_sur(fait.get(cle))
+        if val:
+            out[cle] = val
+    kind = fait.get("provider_kind")
+    if kind in PROVENANCE_KINDS:
+        out["provider_kind"] = kind
+    transport = fait.get("transport")
+    if isinstance(transport, str) and _TRANSPORT.fullmatch(transport):
+        out["transport"] = transport
+    protocole = fait.get("protocol")
+    if isinstance(protocole, dict):
+        nom = protocole.get("name")
+        if isinstance(nom, str) and _PROTO_NOM.fullmatch(nom):
+            projete: dict = {"name": nom}
+            version = protocole.get("version")
+            if isinstance(version, str) and _PROTO_VERSION.fullmatch(version):
+                projete["version"] = version
+            out["protocol"] = projete
+    confiance = fait.get("confidence")
+    if (isinstance(confiance, dict) and confiance.get("level") in CONFIANCE_NIVEAUX
+            and confiance.get("basis") in CONFIANCE_BASES):
+        out["confidence"] = {"level": confiance["level"], "basis": confiance["basis"]}
+    disponibilite = fait.get("availability")
+    if disponibilite in PROVENANCE_DISPONIBILITES:
+        out["availability"] = disponibilite
+    return out or None
 
 
 def _uri_sure(uri: str) -> str:
@@ -668,6 +723,12 @@ _REGISTRE = {
     "egress": ("network_scope_recorded", "security", "recorded", "technical"),
     "intention": ("intent_resolved", "intent", "completed", "summary"),
     "applicabilite": ("providers_filtered", "plan", "skipped", "mission"),
+    # `disponibilite` (PR #2, écrit par pipeline.py) écarte les providers dont
+    # l'exécutable/base est absent : c'est le MÊME genre de décision que
+    # `applicabilite` (des providers écartés avant le plan), donc le même kind du
+    # contrat. Sans cette entrée, un événement connu était projeté en
+    # `unknown_event_recorded` — le lecteur affirmait « inconnu » pour un fait consigné.
+    "disponibilite": ("providers_filtered", "plan", "skipped", "mission"),
     "conditions": ("provider_conditions_evaluated", "policy", "skipped", "mission"),
     "plan": ("plan_created", "plan", "completed", "summary"),
     "contexte": ("execution_context_created", "execution", "started", "technical"),
@@ -687,6 +748,7 @@ _RESUMES = {
     "intention_resolue": "Intention résolue",
     "intention_refusee": "Intention refusée",
     "applicabilite": "Providers filtrés par applicabilité",
+    "disponibilite": "Providers filtrés par disponibilité",
     "conditions": "Conditions d'exécution évaluées",
     "plan": "Plan de mission créé",
     "contexte": "Contexte d'exécution créé",
@@ -732,7 +794,9 @@ def _projeter_evenement(ev: dict, mid: str, ctx: dict) -> dict:
     refs = {"mission_id": mid}
     limitations: list[str] = []
     data_state = "complete"
-    provenance = None
+    # Provenance : projetée UNIQUEMENT si un fait est consigné (transport/protocole
+    # détenus par le producteur, MCP-004). Allowlist + grammaire, jamais devinée.
+    provenance = _provenance(ev.get("provenance"))
 
     if type_ in _REGISTRE:
         kind, category, consequence, visibility = _REGISTRE[type_]
@@ -757,6 +821,9 @@ def _projeter_evenement(ev: dict, mid: str, ctx: dict) -> dict:
     elif type_ == "applicabilite":
         n = len(ev.get("ecartes") or {})
         resume = _RESUMES["applicabilite"] + (f" ({n} écarté(s))" if n else "")
+    elif type_ == "disponibilite":
+        n = len(ev.get("ecartes") or {})
+        resume = _RESUMES["disponibilite"] + (f" ({n} écarté(s))" if n else "")
     elif type_ == "conditions":
         n = len(ev.get("ecartes") or {})
         resume = _RESUMES["conditions"] + (f" ({n} bloqué(s))" if n else "")
@@ -918,7 +985,8 @@ def _fournisseurs_du_plan(plan) -> list[str]:
 
 
 def _execution_depuis_ledger(e: dict, plan_sel: dict, decision_allow, arret_motif: str,
-                             in_plan: bool, n: int, cibles: int) -> dict:
+                             in_plan: bool, n: int, cibles: int,
+                             terminal: bool = False) -> dict:
     """Un enregistrement `execution-status.v1` depuis une entrée du ledger."""
     pid = _id_sur(e.get("provider")) or str(e.get("provider") or "provider")
     cap = _id_sur(e.get("capability"))
@@ -999,7 +1067,15 @@ def _execution_depuis_ledger(e: dict, plan_sel: dict, decision_allow, arret_moti
                      "reason_code": "policy_unavailable" if injoignable else "policy_denied"}
         detection = _dim("non_evalue", "recorded")
     elif statut == "selectionne":
-        if en_cours:
+        if en_cours and terminal:
+            # La mission est CLOSE (cloture ou arret terminal) et le ledger dit encore
+            # « en cours » : l'exécution a été INTERROMPUE, elle ne tourne plus. Annoncer
+            # `en_cours` sur une mission close serait un mensonge observable — et
+            # `cancelled` est la valeur du contrat pour ça. Aucun finding n'en est déduit.
+            execution = {"value": "cancelled", "invocation": "oui",
+                         "output": "non_exploitable", "proof": "recorded",
+                         "reason_code": "mission_closed_while_running"}
+        elif en_cours:
             execution = {"value": "en_cours", "invocation": "oui",
                          "output": "inconnu", "proof": "recorded"}
         else:
@@ -1060,6 +1136,9 @@ def _execution_depuis_ledger(e: dict, plan_sel: dict, decision_allow, arret_moti
     if cap:
         record["capability_id"] = cap
     record["display_name"] = _nettoyer(str(outil), borne=160) or pid
+    provenance = _provenance(e.get("provenance"))
+    if provenance is not None:
+        record["provenance"] = provenance
     return record
 
 
@@ -1143,6 +1222,9 @@ def _execution_legacy(pid: str, in_plan: bool, exclus_applicabilite: bool,
         "completeness": completeness,
         "display_name": pid,
     }
+    provenance = _provenance((execution_ev or {}).get("provenance"))
+    if provenance is not None:
+        record["provenance"] = provenance
     return record
 
 
@@ -1151,6 +1233,9 @@ def _executions(chemin: Path, evenements: list[dict], plan, rapport) -> list[dic
     decision = (rapport or {}).get("autorisation") if isinstance(rapport, dict) else None
     decision_allow = decision.get("allow") if isinstance(decision, dict) else None
     arret_motif = _motif_terminal(evenements) or ""
+    # La mission est-elle CLOSE ? Un provider encore « en cours » dans le ledger d'une
+    # mission close a été interrompu, il ne tourne plus (→ `cancelled`).
+    terminal = _evenement_terminal(evenements) is not None
 
     plan_sel = (plan or {}).get("selection") if isinstance(plan, dict) else None
     plan_sel = plan_sel if isinstance(plan_sel, dict) else {}
@@ -1166,7 +1251,7 @@ def _executions(chemin: Path, evenements: list[dict], plan, rapport) -> list[dic
             records.append(_execution_depuis_ledger(
                 e, plan_sel, decision_allow, arret_motif,
                 pid in in_plan, int(e.get("findings") or 0),
-                int(e.get("cibles_analysees") or 0)))
+                int(e.get("cibles_analysees") or 0), terminal=terminal))
         return records
 
     # Fallback anciennes missions : journal seul (ouverture/plan/execution/…).
