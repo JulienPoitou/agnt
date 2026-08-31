@@ -32,11 +32,11 @@ Toutes alignées sur `89bd3b1` (= `origin/main`, PR #14 fusionnée) au 2026-08-3
 | Rôle | Agent | Branche produit | Mission (résumé) | État |
 |---|---|---|---|---|
 | Coordination | ORCHESTRATOR | `orchestrator` | coordination, décisions, intégration | actif — session `arena/01a05944-agnt` (base `89bd3b1`) |
-| Cœur | CORE-HAPPY-PATH | `core-console-v0` | cœur d'exécution, happy path honnête | **LIVRÉ** sur une branche Arena dérivée de `core-console-v0` — **pas de relance immédiate** |
-| Lancement | DEVOPS-LAUNCH | `devops-launch-v0` | lancement local simple (une commande) | branch-check en attente |
-| API | API-BFF | `api-bff-v0` | BFF console : lancer / suivre / résultat-refus / historique | branch-check en attente |
-| Front | WEB-CONSOLE | `web-console-v0` | console navigateur utilisable branchée sur le BFF | branch-check en attente |
-| Qualité | QA-DOGFOOD | `qa-gate-v0` | gate dogfood : scénario bout-en-bout rejouable | branch-check en attente |
+| Cœur | CORE-HAPPY-PATH | `core-console-v0` | cœur d'exécution, happy path honnête | **LIVRÉ** — `arena/01a05923-agnt` @ `dd0ebe6` (handoff enregistré) — **pas de relance** |
+| Lancement | DEVOPS-LAUNCH | `devops-launch-v0` | lancement local simple (une commande) | **BRANCH CHECK OK** 31/08 (session `arena/01a0593c-agnt`, base `89bd3b1`) — mission longue envoyée |
+| API | API-BFF | `api-bff-v0` | BFF console : lancer / suivre / résultat-refus / historique | check **INVALIDÉ** 31/08 (rapporté sur la même branche que la session DEVOPS → collision potentielle) — relancer une session neuve depuis `api-bff-v0` |
+| Front | WEB-CONSOLE | `web-console-v0` | console navigateur utilisable branchée sur le BFF | **BLOCKED** 31/08 (session non dédiée) — relancer une session neuve depuis `web-console-v0` |
+| Qualité | QA-DOGFOOD | `qa-gate-v0` | gate dogfood : scénario bout-en-bout rejouable | **BLOCKED** 31/08 (base non prouvée) — relancer une session neuve depuis `qa-gate-v0` |
 
 ## 3. État actuel du projet (2026-08-31)
 
@@ -62,6 +62,8 @@ git merge-base --is-ancestor FETCH_HEAD HEAD && echo "BASE OK" || echo "BASE KO"
 ```
 
 **Ne jamais conclure « branche inexistante » sans `git ls-remote`.**
+
+**Faux négatifs réels (31/08)** : CORE, API-BFF, WEB-CONSOLE et QA-DOGFOOD ont tous cru leur branche produit « inexistante » via `git log origin/<branche>`. Les 5 branches produit existent pourtant toutes à `89bd3b1` (vérifié `git ls-remote` par l'orchestrateur). → Toujours utiliser le mini-check §5, jamais `git log origin/<branche>`.
 
 ## 5. Mini branch-check (AVANT toute mission — le builder ne modifie rien)
 
@@ -97,6 +99,7 @@ Décision orchestrateur selon la réponse :
 | `BRANCH CHECK OK` | envoyer la mission longue adaptée |
 | `BLOCKED` (mauvaise branche / mauvaise base) | demander de relancer la session Arena sur la bonne branche produit — rien d'autre |
 | fichiers déjà modifiés pendant le check | classer `NEED-FIX` |
+| check rapporté depuis une session déjà utilisée par un autre agent (même branche `arena/...` qu'une autre mission, origines contradictoires) | check **INVALIDÉ** — relancer une session neuve par agent (règle §1) |
 
 ## 6. Ordre de lancement des missions
 
