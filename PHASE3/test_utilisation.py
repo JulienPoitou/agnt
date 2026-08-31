@@ -225,9 +225,14 @@ def bloc_confiance():
             pass
 
         def evaluer(self, plan, registre, cible_autorisee,
-                    confiance_cible="controlled", profil=None):
+                    confiance_cible="controlled", profil=None, cible_type="repository"):
+            # Parité de signature avec PO.PolicyEngine.evaluer (cible_type ajouté par la
+            # ligne MCP, be68844) et transmission à entree() : l'espion doit lire le
+            # document réellement soumis à OPA, pas une reconstruction partielle.
+            # NON EXERCÉ dans cet environnement : le binaire OPA est absent, ce chemin
+            # n'est donc pas atteint (échec identique sur la base 4433af6).
             capture_entree["doc"] = PO.PolicyEngine.entree(
-                plan, registre, cible_autorisee, confiance_cible, profil)
+                plan, registre, cible_autorisee, confiance_cible, profil, cible_type)
             # Refus volontaire : on veut lire le document soumis, pas lancer les outils.
             return PO.Decision(allow=False, motifs=("espion_entree_opa",))
 

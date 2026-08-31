@@ -1,6 +1,57 @@
 # Intégration MCP — statut de validation
 
 Date de la vérification : **2026-08-30 UTC**.
+Rejeu complet : **2026-08-31 UTC** sur `6e04ff8` (voir « Rejeu du 31/08 » ci-dessous).
+
+## Rejeu du 31/08 (session `arena/01a05760-agnt`)
+
+Batterie rejouée intégralement sur l'arbre `6e04ff8` après fast-forward depuis `4433af6`,
+avec un venv reconstruit (`/tmp/agnt-venv` + `pyyaml`) et le SDK interop réinstallé
+(`mcp==2.1.1`, hors dépôt). **104/104 cas passent**, comptes identiques au 30/08 :
+
+```text
+test_mcp.py            23/23   INTEGRATION SIMULATED (transport en mémoire)
+test_mcp_contract.py   16/16
+test_mcp_e2e.py        17/17   INTEGRATION SIMULATED (ThreadingHTTPServer MCP loopback)
+test_mcp_policy_gate.py 3/3
+test_mcp_stdio.py       8/8    processus Python réel, sans shell
+test_mcp_http_cancel.py 17/17  annulation par fermeture TCP réelle
+test_mcp_interop.py    20/20   REAL — SDK officiel Model Context Protocol 2.1.1, stdio
+```
+
+### Régression trouvée par le rejeu — corrigée
+
+`be68844` a ajouté `cible_type=` à l'appel `moteur.evaluer(...)` dans `pipeline.py`
+(l. 531 et l. 662) sans mettre à jour les doubles de `PolicyEngine` côté tests. Conséquence
+mesurée : `test_adversaire.py` s'arrêtait sur
+`TypeError: EngineJouee.evaluer() got an unexpected keyword argument 'cible_type'`
+au lieu de mesurer les gardes — la campagne adversariale était silencieusement désarmée.
+
+Contrôle de référence exécuté dans un worktree détaché sur `4433af6` : la campagne y va
+jusqu'au bout (`46 cas · 41 PASS · 2 FAIL · 3 NON ÉVALUÉS`). Après alignement de la signature
+des doubles sur `PO.PolicyEngine.evaluer`, la ligne MCP redonne exactement
+`46 cas · 41 PASS · 2 FAIL · 3 NON ÉVALUÉS`. Les 2 FAIL restants (`D4` armement de
+`cible_autorisee`, `G6a` règles de détection de secrets) sont **antérieurs à la ligne MCP**
+et appartiennent à SECURITY (`e5838003`) — ils ne sont pas absorbés ici.
+
+Aucune attente de test n'a été modifiée ou adoucie : seule la signature des doubles a été
+alignée. `test_utilisation.py` a reçu le même alignement **à titre préventif** — ce chemin est
+**NON EXERCÉ** dans cet environnement (binaire OPA absent), l'échec y est identique sur
+`4433af6` et sur `6e04ff8`.
+
+### Note technique transmise à CORE / SECURITY (non absorbée)
+
+`pipeline.py` passe `cible_type="repository"` en **dur** à `moteur.evaluer(...)` (l. 531, l. 662),
+alors que le type de cible réellement retenu est dérivé plus bas, par provider, dans `_vague`
+(`prov.target_types` → `repository` **ou** `filesystem`, l. 266-270). Le registre déclare bien
+des providers `filesystem` (`detect_secrets` : `target_types: ['repository','filesystem']`),
+donc l'entrée OPA peut annoncer `cible.type = "repository"` pour une exécution `filesystem`.
+
+Impact : une règle OPA qui distinguerait `repository` de `filesystem` recevrait un fait faux.
+Non corrigé ici volontairement : le type de cible est un contrat **CORE→MCP/SECURITY/PRODUCT**
+(`Cible(type, reference, chemin_local=None)`) et son évolution relève de CORE-005 / MCP-004,
+explicitement suspendus. À traiter dans l'intégration coordonnée, pas dans un chantier MCP isolé.
+
 
 ## Verdict par fonctionnalité
 
