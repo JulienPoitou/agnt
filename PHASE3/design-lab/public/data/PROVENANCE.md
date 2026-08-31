@@ -36,7 +36,7 @@ diff -r docs/coordination/captures/gate-002-product-api \
 
 ## Serment du front
 
-Le front n2019affiche que ce qui est présent dans ces fichiers. Une absence n'est jamais un zéro :
+Le front n'affiche que ce qui est présent dans ces fichiers. Une absence n'est jamais un zéro :
 un champ absent s'affiche « inconnu / non consigné ». `refusé`, `échoué`, `non exécuté`,
 `indisponible`, `annulé`, `expiré`, `non applicable` restent des états distincts, conformes aux
 invariants documentés dans le README des captures.
