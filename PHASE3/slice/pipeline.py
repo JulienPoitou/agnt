@@ -415,7 +415,58 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         return Execution(plan={}, decision={"allow": False, "motifs": [f"intent_{it.statut}"]},
                          intent=it.to_dict(), arret=it.statut, mission=miss.id)
 
-    provs = intent.choisir_providers(it, registre)
+    # --------------------------------------------- 1bis. disponibilité (D10, 31/08/2026)
+    # Un slot de fan-out occupé par un outil ABSENT est pire qu'un slot vide : il est
+    # invisible (aucune couverture ne le mentionne), il évinçait un outil présent, et il
+    # se lisait comme un choix de plan. Mesuré : `gitleaks`, rang 100, absent depuis la
+    # réinitialisation du sandbox, gardait sa place et sortait `trufflehog3` (rang 400,
+    # installé) du plan — sans jamais tourner.
+    #
+    # La décision est prise ICI et pas dans `intent.choisir_providers` : c'est le pipeline
+    # qui sait ce qu'est une machine, le sélectionneur ne connaît que le registre. Le
+    # prédicat passe par `adapters.exe_de`, c'est-à-dire LA MÊME fonction qui résout
+    # l'exécutable au moment de lancer et qui alimente le ledger — trois réponses
+    # différentes à « l'outil est-il là ? » est exactement la famille de défauts F8.
+    #
+    # ── ORDRE RETENU, arbitré le 31/08/2026 ──────────────────────────────────────────
+    #     registre → disponibilité → applicabilité → conditions → POLICY → exécution
+    #
+    # L'alternative était de laisser la policy voir les outils absents, et de ne
+    # constater leur absence qu'à l'exécution. Trois raisons de ne pas le faire :
+    #
+    #   1. FAUSSE ATTRIBUTION (la pire). Un outil absent passé en policy se voit
+    #      AUTORISÉ ou REFUSÉ — et le ledger le range alors sous « non_autorise » alors
+    #      que la cause réelle est « le binaire n'est pas sur cette machine ». Deux
+    #      endroits qui racontent des vérités différentes : c'est F8, et sur un écran de
+    #      sécurité c'est une réparation entreprise sur la mauvaise cause.
+    #   2. LA POLICY AUTORISE UN PLAN FAISABLE, pas une liste de vœux. Lui soumettre
+    #      « gitleaks » quand gitleaks n'existe pas, c'est lui demander de se prononcer
+    #      sur quelque chose qui n'arrivera jamais — et rendre la décision inexploitable
+    #      à la relecture.
+    #   3. FERMETURE PAR DÉFAUT. Plan vide → rien n'est exécuté. C'est strictement plus
+    #      sûr qu'autoriser puis échouer au lancement.
+    #
+    # Contre-partie assumée : le plan dépend de la machine (comme il dépendait déjà de
+    # la base de vulnérabilités via `conditions`). La portabilité du `plan_id` entre deux
+    # machines n'est donc pas une propriété de ce système, et ne l'a jamais été.
+    #
+    # Et l'invariant qui n'est PAS affecté : la disponibilité est consignée pour TOUS les
+    # providers du registre (`exclus_dispo` ci-dessous), jamais seulement pour ceux qui
+    # passent le filtre. Un refus de politique n'efface donc pas « qui était disponible »
+    # du journal — c'est ce que vérifie `test_qualite_plateforme` cas 16quater.
+    import adapters as AD
+    dispo = {p.id: AD.exe_de(p) for p in registre.providers()}
+    exclus_dispo = {
+        p.id: (f"exécutable introuvable ({AD.binaire_de(p)}) : ni au cache épinglé, ni au "
+               "PATH — l'outil n'est pas sur cette machine (lancer bootstrap.sh). "
+               "Aucune analyse n'a été faite par cet outil, ce n'est pas « rien trouvé ».")
+        for p in registre.providers() if dispo.get(p.id) is None
+    }
+    provs = intent.choisir_providers(
+        it, registre, disponible=lambda p: dispo.get(p.id) is not None)
+    if exclus_dispo:
+        MS.consigner(miss, "disponibilite",
+                     ecartes={k: v for k, v in exclus_dispo.items()})
 
     # --------------------------------------------- 1b. applicabilité (étape 3)
     # Filtrage DÉTERMINISTE et déclaratif, AVANT le plan : un provider dont les
@@ -436,11 +487,28 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         MS.consigner(miss, "conditions", ecartes=dict(exclus_cond))
     if not provs and not exclus:
         # Rien d'exécutable, et ce n'est PAS une conclusion de sécurité.
-        refus = {"allow": False, "motifs": ["aucun outil exécutable dans ces conditions "
-                                           "(réseau coupé ou base absente)"]}
-        MS.consigner(miss, "arret", motif="conditions", ecartes=dict(exclus_cond))
+        # Les trois causes sont nommées, parce qu'elles ne se réparent pas du même geste :
+        # une base absente se lève avec bootstrap.sh, une cage fermée avec `--egress`, un
+        # binaire manquant avec une installation. Les fondre dans « aucune exécution
+        # possible » ferait réparer la mauvaise chose.
+        causes = []
+        if exclus_cond:
+            causes.append("conditions d'exécution non remplies (réseau coupé ou base absente)")
+        if exclus_dispo:
+            causes.append("aucun outil disponible sur cette machine")
+        # Le libellé de tête est conservé MOT POUR MOT : c'est un contrat de texte, pas
+        # une coquetterie — un opérateur (et une batterie de tests) cherchent cette
+        # phrase pour distinguer « la mission s'est arrêtée proprement, motif nommé »
+        # d'une exception nue. Les causes, elles, s'ajoutent derrière.
+        refus = {"allow": False,
+                 "motifs": ["aucun outil exécutable dans ces conditions : "
+                            + " ; ".join(causes or ["cause non nommée"])]}
+        MS.consigner(miss, "arret", motif="conditions" if exclus_cond else "disponibilite",
+                     ecartes={**{k: v for k, v in exclus_cond.items()},
+                              **{k: v for k, v in exclus_dispo.items()}})
         st = _ledger(miss, registre,
-                     {"steps": [], "selection": {"conditions": dict(exclus_cond)}}, refus,
+                     {"steps": [], "selection": {"conditions": dict(exclus_cond),
+                                                 "disponibilite": dict(exclus_dispo)}}, refus,
                      [], [], {})
         return Execution(plan={}, decision=refus, intent=it.to_dict(),
                          arret="conditions", mission=miss.id, statuts=st)
@@ -452,7 +520,8 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         # Le ledger passe AVANT le retour : « aucun outil applicable » se lit mieux avec
         # la liste des outils écartés et leur motif qu'avec un arret sec.
         st = _ledger(miss, registre, {"steps": [], "selection": {
-                          "applicabilite": dict(exclus), "conditions": dict(exclus_cond)}},
+                          "applicabilite": dict(exclus), "conditions": dict(exclus_cond),
+                          "disponibilite": dict(exclus_dispo)}},
                      refus, [], [], {})
         return Execution(plan={}, decision=refus,
                          intent=it.to_dict(), arret="applicabilite", mission=miss.id,
@@ -460,7 +529,8 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
 
     # ---------------------------------------------------------------- 2. plan typé
     plan = P.construire(requete, str(cible), provs, registre, it.moteur,
-                        exclus_applicabilite=exclus, exclus_conditions=exclus_cond)
+                        exclus_applicabilite=exclus, exclus_conditions=exclus_cond,
+                        exclus_disponibilite=exclus_dispo)
     MS.consigner(miss, "plan", plan_id=plan.plan_id,
                  providers=[s.provider for s in plan.steps])
 

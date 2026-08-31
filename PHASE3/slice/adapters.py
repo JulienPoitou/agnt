@@ -131,14 +131,53 @@ def resoudre_exe(binaire: str) -> str | None:
     return str(dans_bin) if dans_bin.exists() else None
 
 
+def binaire_de(prov) -> str:
+    """Le nom d'exécutable DÉCLARÉ par un provider — ce qu'on affiche, pas ce qu'on lance.
+
+    Deux origines, et c'est la source historique des divergences : un provider
+    DÉCLARATIF nomme son binaire dans son manifest, un provider à adaptateur historique
+    le porte dans sa `commande`. Écrire le mauvais des deux dans un message d'erreur
+    envoie l'opérateur chercher un fichier qui n'a jamais été déclaré.
+    """
+    mani = getattr(prov, "manifest", None)
+    if mani is not None and getattr(mani, "binaire", ""):
+        return str(mani.binaire)
+    if getattr(prov, "commande", None):
+        return str(prov.commande[0])
+    return str(getattr(prov, "id", "") or "")
+
+
+def exe_de(prov) -> str | None:
+    """Chemin réel de l'exécutable d'un provider, ou None. UNE SEULE règle.
+
+    `resoudre_exe` savait déjà répondre pour une chaîne ; ce qui manquait, c'était une
+    seule réponse à « quel nom cherche-t-on, pour CE provider ? ». Avant cette fonction,
+    trois endroits décidaient séparément : `_exe` lisait `commande[0]`, `generique_cli`
+    lisait `manifest.binaire` (avec son propre `if exists`), et `statuts` faisait un `or`
+    entre les deux. Conséquence possible, et c'est la famille de F8 : un outil exécuté
+    par l'un et déclaré absent par l'autre.
+
+    Décision D10 (31/08/2026) : cette fonction est aussi ce qui permet à la sélection de
+    ne plus réserver un slot de fan-out à un outil qui n'existe pas sur la machine.
+    """
+    mani = getattr(prov, "manifest", None)
+    if mani is not None and getattr(mani, "binaire", ""):
+        trouve = resoudre_exe(str(mani.binaire))
+        if trouve:
+            return trouve
+    if getattr(prov, "commande", None):
+        return resoudre_exe(str(prov.commande[0]))
+    return None
+
+
 def _exe(prov) -> str:
     """Résout l'exécutable du provider, et refuse s'il n'existe pas.
 
     Un outil absent doit échouer ICI, pas produire un scan vide plus loin — c'est
     exactement le mode d'échec silencieux que la décision D1 vise à empêcher.
     """
-    brut = prov.commande[0]
-    trouve = resoudre_exe(brut)
+    brut = binaire_de(prov)
+    trouve = exe_de(prov)
     if not trouve:
         raise FileNotFoundError(
             f"outil introuvable : {brut} (ni {str(brut).replace('{BIN}', str(BIN_DIR))}, ni au PATH)")
@@ -381,8 +420,19 @@ def generique_cli(prov, sbx: Sandbox) -> ResultatBrut:
     nom_sortie = f"{m.id}.{extension_de(m.sortie_format)}"
     sortie_int = f"{sbx.M_OUT}/{nom_sortie}"
 
+    # `_exe` et rien d'autre : c'est la MÊME règle que le ledger de `statuts` et que le
+    # filtre de sélection (`intent`), et c'est la seule qui REFUSE.
+    #
+    # 31/08/2026 — ce point valait `exe_de(prov) or m.binaire`. Le repli sur le nom nu
+    # est ce qui permettait à un outil ABSENT d'être tout de même lancé : `argv[0]`
+    # devenait « kics », la cage tentait le exec, récupérait un code 1 et aucune sortie,
+    # et le pipeline consignait `execution kics code_retour=1 findings=0` — un outil qui
+    # n'existe pas, enregistré comme un scan qui n'a rien trouvé. La couverture disait
+    # « not_scanned » en aval, mais l'artefact `raw_kics.json` (null) et la ligne de
+    # journal, eux, racontaient une exécution. Un outil absent doit échouer ICI (D1),
+    # pas produire un vide plus loin.
     _chemins = {
-        "BIN": str(CACHE_BIN / m.binaire) if (CACHE_BIN / m.binaire).exists() else m.binaire,
+        "BIN": _exe(prov),
         "TARGET": sbx.M_SCAN,
         "OUT": sortie_int,
         "OUT_DIR": sbx.M_OUT,

@@ -53,15 +53,33 @@ def main() -> int:
         str({k: (t.version, bool(t.licence)) for k, t in regs.items()}))
     binaire_tools = [t for t in regs.values() if t.installation == "binaire"]
     pip_tools = [t for t in regs.values() if t.installation == "pip"]
-    cas("1c. tools binaires = sha256 ; tools pip = hash distribution (honnête)",
-        all(t.sha256 for t in binaire_tools)
-        and all(t.distribution_hash or t.note for t in pip_tools)
-        and len(binaire_tools) + len(pip_tools) == len(regs),
-        f"binaires={[t.id for t in binaire_tools]} pip={[t.id for t in pip_tools]}")
-    cas("1d. tout tool de rôle 'outil' a son binaire dans la whitelist",
-        all(t.id in PM.BINAIRES_AUTORISES for t in regs.values() if t.role == "outil")
+    # 1c — « binaire » + « pip » épuisaient l'ensemble quand le registre comptait six
+    # tools. Depuis l'arrivée d'outils installés par npm, l'égalité
+    # `binaire + pip == tout` est fausse : le test échouait sur une hypothèse périmée,
+    # pas sur un défaut d'intégrité. La règle est donc DÉCLARÉE PAR MODE, et un mode
+    # inconnu est un échec — pas un silence.
+    REGLES_INTEGRITE = {
+        "binaire": lambda x: bool(x.sha256),
+        "pip": lambda x: bool(x.distribution_hash or x.note),
+        "npm": lambda x: bool(x.version),
+    }
+    modes = sorted({t.installation for t in regs.values()})
+    non_couverts = sorted(set(modes) - set(REGLES_INTEGRITE))
+    cas("1c. chaque mode d'installation porte SA preuve d'intégrité (honnête)",
+        all(t.installation and REGLES_INTEGRITE.get(t.installation, lambda x: False)(t)
+            for t in regs.values())
+        and not non_couverts,
+        f"modes={modes} · non couverts={non_couverts}")
+    cas("1d. tout tool de rôle 'outil' est autorisé à l'exécution",
+        # L'autorisation réelle a DEUX sources, et ce test n'en vérifiait qu'une :
+        # `binaire_autorise` consulte la liste du cœur PUIS le manifeste
+        # d'approvisionnement (un outil que bootstrap sait épingler est un outil
+        # exécutable). Comparer à la seule liste du cœur déclarait non autorisés des
+        # outils que le chargeur accepte — et que la plateforme exécute réellement.
+        all(PM.binaire_autorise(t.id) for t in regs.values() if t.role == "outil")
         and any(t.role == "moteur" for t in regs.values()),
-        f"whitelist={PM.BINAIRES_AUTORISES}")
+        f"autorité = binaire_autorise (cœur {sorted(PM.BINAIRES_AUTORISES)} "
+        "∪ manifeste d'approvisionnement)")
 
     r = Registry()
     tool_par_provider = {}
@@ -137,8 +155,13 @@ def main() -> int:
     cas("3d. chaque provider du registre est rattaché à son tool au pool",
         not manquants_prov, f"manquants={sorted(manquants_prov)}")
     # Le runtime ignore le pool : aucune référence dans le cœur + falsification
+    # Chercher le mot « pool » trouvait `ThreadPoolExecutor` dans pipeline.py : un
+    # exécuteur de threads n'est pas une lecture de `pool.yaml`, et le test échouait pour
+    # une raison sans rapport avec l'invariant (mesuré le 31/08/2026). On cherche la
+    # RÉFÉRENCE AU FICHIER — corroborée par la falsification ci-dessous, qui reste la
+    # vraie preuve : vider le fichier ne doit pas changer l'empreinte du registre.
     refs = subprocess.run(
-        f"grep -l 'pool' {RACINE}/slice/*.py 2>/dev/null || true",
+        f"grep -l 'pool\\.yaml' {RACINE}/slice/*.py 2>/dev/null || true",
         shell=True, capture_output=True, text=True).stdout.strip()
     empreinte_avant = Registry().empreinte()
     pool_path.write_text("entrees: []\n# falsifié pour le test\n", encoding="utf-8")

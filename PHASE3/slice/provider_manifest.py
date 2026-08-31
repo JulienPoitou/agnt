@@ -115,6 +115,16 @@ class Extraction:
     # aurait sinon traversé la validation sans être vu.
     jetons_outil: list = field(default_factory=list)
     masquer_large: list = field(default_factory=list)
+    # Champs dont la VALEUR est un secret, déclarés par le manifest (31/08/2026).
+    #
+    # `masquer_large` dit « ce champ contient du texte libre, méfie-toi » ; celui-ci dit
+    # « ce champ EST le secret ». La différence n'est pas cosmétique : le masquage par
+    # motif (`assainissement.masquer`) ne peut pas reconnaître une valeur que l'outil a
+    # déshabillée de son préfixe — mesuré, trufflehog3 rend `"secret": "16C7e42F…"`
+    # SANS le `ghp_`, donc aucun motif ne le voit. Déclarer le champ permet de masquer
+    # la valeur par STRUCTURE, sans rien deviner. Le cœur ne sait toujours pas quel
+    # outil c'est : il applique ce que le manifest déclare.
+    champs_secrets: list = field(default_factory=list)
     # Séparateur du modèle `csv`, déclaré (pas deviné) : `;` est réellement employé par des
     # exports d'outils, et un mauvais séparateur ne lève aucune erreur — il produit UNE
     # colonne, donc tous les champs à None, donc un scan vide.
@@ -130,7 +140,8 @@ class Extraction:
                 "contexte": self.contexte, "champs": self.champs,
                 "paquet_depuis_regle": self.paquet_depuis_regle,
                 "jetons_outil": self.jetons_outil,
-                "masquer_large": self.masquer_large, "parser": self.parser}
+                "masquer_large": self.masquer_large,
+                "champs_secrets": self.champs_secrets, "parser": self.parser}
 
 
 @dataclass(frozen=True)
@@ -382,6 +393,7 @@ def valider(doc: dict, capability: str) -> Manifest:
             paquet_depuis_regle=list(ex.get("paquet_depuis_regle") or []),
             jetons_outil=list(ex.get("jetons_outil") or []),
             masquer_large=list(ex.get("masquer_large") or []),
+            champs_secrets=list(ex.get("champs_secrets") or []),
             parser=ex.get("parser", ""),
             nettoyage_regle=_nettoyage_regle_valide(doc, ex),
         ),

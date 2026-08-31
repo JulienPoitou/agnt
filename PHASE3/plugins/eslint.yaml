@@ -74,8 +74,9 @@ requirements:
   sandbox: true
 capacite:
   description: >
-    Règles de sécurité JavaScript de base (ESLint, sans extension) : évaluation de code, URLs
+    Règles de sécurité JavaScript de base, sans extension tierce : évaluation de code, URLs
     javascript:, constructions implicites dangereuses, par fichier et par ligne.
+    (Aucun nom d'outil : cette description est envoyée au moteur d'intention.)
   domaines: [code]
   entree: [files]
   sortie: findings

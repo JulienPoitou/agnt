@@ -84,8 +84,13 @@ CLEFS_PLUGIN = ("id", "capacites", "entrees", "binaire", "outillage", "version_m
                 "fichiers_requis")
 CLEFS_EXECUTION = ("commande", "args", "code_succes", "env")
 CLEFS_SORTIE = ("format", "fichier")
+# `champs_secrets` (31/08/2026) : champs dont la VALEUR est un secret, masqués par
+# structure dans les artefacts plutôt que reconnus par motif. Ajouté ici volontairement :
+# une clé inconnue fait refuser le plugin, et c'est la règle — la liste est fermée pour
+# qu'ajouter une garde soit un acte délibéré, pas un oubli.
 CLEFS_LECTURE = ("modele", "items_from", "nested_from", "nested_key", "contexte", "champs",
-                 "separateur", "parser", "masquer_large", "jetons_outil", "nettoyage_regle")
+                 "separateur", "parser", "masquer_large", "jetons_outil", "nettoyage_regle",
+                 "champs_secrets")
 CLEFS_REQUIREMENTS = ("reseau", "privileges", "base_fichiers", "timeout_s", "sandbox")
 CLEFS_CAPACITE = ("description", "domaines", "entree", "sortie", "mots_cles", "interne",
                   "mode_selection", "max_providers", "generique")

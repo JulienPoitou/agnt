@@ -631,8 +631,11 @@ async function lancerUnRun() {
   }
 }
 
-async function brancher() {
-  const caps = await json("/api/capacites");
+async function brancher(capsConnu) {
+  // `capsConnu` : la sonde déjà faite par `principal`. Sans ce paramètre, brancher une
+  // page coûtait deux fois le même aller-retour — ou, à l'inverse, on peignait la
+  // maquette avant d'avoir regardé (voir `principal`).
+  const caps = capsConnu || await json("/api/capacites");
   if (!caps.ok) {                                   // pas d'API → on reste en maquette, en le disant
     etatLigne("moteur non branché · maquette", "");
     return false;
@@ -693,9 +696,24 @@ async function brancher() {
 }
 
 async function principal() {
+  // L'ORDRE n'est pas cosmétique, et c'est un défaut d'honnêteté corrigé le 31/08/2026.
+  // Ce code peignait `donnees_exemple.json` — des findings INVENTÉS — avant même de
+  // regarder si le moteur répondait, sous un bandeau affirmant « le moteur n'est pas
+  // branché (api.py non démarré) ». Deux faussetés en même temps : une panne que nous
+  // n'avons pas constatée, et des résultats qu'un opérateur pouvait lire comme les
+  // siens. Sur un écran de sécurité, une donnée inventée non étiquetée est un défaut,
+  // pas un confort de démarrage.
+  //
+  // La maquette devient donc un REPLI quand l'API est injoignable — jamais un
+  // avant-goût à chaque chargement.
+  const caps = await json("/api/capacites");
+  if (caps.ok) {
+    await brancher(caps);
+    if (document.getElementById("cible").children.length) etatLigne("prêt", "ok");
+    return;
+  }
   const exemple = await json("donnees_exemple.json");
   if (exemple.ok) rendu(exemple.objet);
-  const reel = await brancher();
-  if (reel && document.getElementById("cible").children.length) etatLigne("prêt", "ok");
+  etatLigne("moteur non branché · maquette", "");
 }
 principal();

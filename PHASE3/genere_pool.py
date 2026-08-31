@@ -77,6 +77,18 @@ def main() -> int:
         provs_par_tool.setdefault(tid, []).append(p.id)
 
     exclues = 0
+    # 31/08/2026 — `REPO_DU_TOOL` était une SECONDE source de vérité : un outil
+    # n'apparaissait « integrated » que si quelqu'un l'avait ajouté À LA MAIN dans cette
+    # carte. Les sept providers déclarés par plugin (radon, ruff, eslint, npm, pip-audit,
+    # detect-secrets, trufflehog3) étaient donc intégrés au registre — donc exécutables,
+    # donc dans les plans — et ABSENTS de cette vue. Deux vérités concurrentes sur le même
+    # fait, exactement ce que l'invariant 20 interdit.
+    #
+    # La source unique est le REGISTRE : est intégré tout tool auquel un provider est
+    # rattaché. `REPO_DU_TOOL` ne sert plus qu'à l'attribution amont, et elle est
+    # FACULTATIVE — un tool sans dépôt Phase 1 est déclaré quand même, avec sa provenance
+    # dite, plutôt que passé sous silence.
+    _tool_ids = sorted(provs_par_tool)
     entrees = []
     for l in sorted(lignes, key=lambda x: x["owner_repo"]):
         repo = (l["owner_repo"] or "").strip()
@@ -107,6 +119,33 @@ def main() -> int:
                                "licence": fiche["licence"] or None,
                                "interet": fiche["interet_fonctionnel"] or None}
         entrees.append(entree)
+
+    # Les outils intégrés QUE LE CATALOGUE PHASE 1 NE CONNAÎT PAS encore sont ajoutés
+    # ici, d'après le registre — jamais d'après une liste recopiée.
+    deja = {e["source"] for e in entrees if e["statut_operationnel"] == "integrated"}
+    for tid in _tool_ids:
+        if tid not in regs or tid in {t for t, rp in REPO_DU_TOOL.items()
+                                      if rp in deja}:
+            continue
+        repo = REPO_DU_TOOL.get(tid)
+        if repo is not None and repo in deja:
+            continue
+        t = regs[tid]
+        entrees.append({
+            "source": repo or f"hors-catalogue/{tid}",
+            "provenance": "phase1" if repo else "registre",
+            "verdict_phase1": None,
+            "forme": "cli",
+            "capacites": sorted({p.capability for p in r.providers()
+                                 if p.id in provs_par_tool[tid] and p.capability}),
+            "statut_technique": "verified",
+            "statut_operationnel": "integrated",
+            "providers": sorted(provs_par_tool[tid]),
+            "tool": {"id": t.id, "version": t.version, "sha256": t.sha256 or None,
+                     "distribution_hash": t.distribution_hash or None,
+                     "licence": t.licence, "role": t.role},
+        })
+        deja.add(repo or f"hors-catalogue/{tid}")
 
     comptes: dict[str, int] = {}
     for e in entrees:

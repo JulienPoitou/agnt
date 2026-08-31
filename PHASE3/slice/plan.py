@@ -187,7 +187,8 @@ class Plan:
 
 def construire(requete: str, cible: str, providers: list[str], registre: Registry,
                moteur_intent: str, exclus_applicabilite: dict | None = None,
-               exclus_conditions: dict | None = None) -> Plan:
+               exclus_conditions: dict | None = None,
+               exclus_disponibilite: dict | None = None) -> Plan:
     """Construit le plan à partir du registre.
 
     Chaque étape refuse un provider qui n'appartient pas à la capacité demandée :
@@ -256,6 +257,12 @@ def construire(requete: str, cible: str, providers: list[str], registre: Registr
     # même endroit que les écartements de sélection et d'applicabilité.
     if exclus_conditions:
         selection["conditions"] = dict(exclus_conditions)
+    # Disponibilité (D10, 31/08/2026) : un outil absent de la machine est écarté AVANT la
+    # troncature du fan-out, et son écartement est écrit ici plutôt que tu. Sans cette
+    # ligne, « pourquoi ce scanner n'a rien rendu » restait une question sans réponse :
+    # l'outil ne figure dans aucun step, donc aucune couverture ne le mentionne.
+    if exclus_disponibilite:
+        selection["disponibilite"] = dict(exclus_disponibilite)
 
     plan = Plan(
         requete=requete,

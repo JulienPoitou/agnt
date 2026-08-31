@@ -133,13 +133,21 @@ def main() -> int:
     print("\n--- exécution ---")
     e = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo",
                         avec_internes=True)
+    # Comptage par PROVIDER, plus par outil — et la distinction n'est pas cosmétique.
+    # `source["tool"]` nomme le BINAIRE (décision du 2026-08-30, `findings.py`) : le
+    # clusterer compte les outils distincts d'un cluster pour affirmer une convergence,
+    # et compter `bandit` et `bandit_custom` comme deux moteurs indépendants alors
+    # qu'ils sont le même binaire sur deux jeux de règles SURÉVALUAIT la convergence —
+    # une affirmation de sécurité fausse, pas un détail de présentation.
+    # Ce cas parle d'un PROVIDER (« le provider custom produit des findings ») : il doit
+    # donc lire `source["provider"]`. Lire `tool` le faisait porter sur le moteur.
     par_outil = {}
     for f in e.findings:
-        par_outil[f["source"]["tool"]] = par_outil.get(f["source"]["tool"], 0) + 1
+        par_outil[f["source"]["provider"]] = par_outil.get(f["source"]["provider"], 0) + 1
     cas("5. le provider custom produit des findings", par_outil.get("bandit_custom", 0) > 0,
-        f"par outil : {par_outil}")
+        f"par provider : {par_outil}")
 
-    custom = [f for f in e.findings if f["source"]["tool"] == "bandit_custom"]
+    custom = [f for f in e.findings if f["source"]["provider"] == "bandit_custom"]
     cas("5b. leurs champs sont corrects",
         all(f["source"]["original_rule_id"] and f["location"]["file"] for f in custom),
         f"{len(custom)} findings, règles="
@@ -147,7 +155,7 @@ def main() -> int:
     cas("5c. le parser a produit les mêmes règles que le format JSON",
         {f["source"]["original_rule_id"] for f in custom}
         == {f["source"]["original_rule_id"] for f in e.findings
-            if f["source"]["tool"] == "bandit"},
+            if f["source"]["provider"] == "bandit"},
         "custom et json convergent sur le même jeu de règles")
 
     # ------------------------------------------------ 6. secrets
@@ -163,32 +171,68 @@ def main() -> int:
     ids_registre = {p.id for p in reg.providers()}
     caps_registre = {c.id for c in reg.capabilities()}
 
-    cas("7a. les capacités obligatoires sont présentes", OBLIGATOIRES <= caps_plan,
-        f"manquantes : {sorted(OBLIGATOIRES - caps_plan)}")
+    # 7a — une capacité obligatoire absente du plan a DEUX causes, et elles ne se
+    # réparent pas du même geste : le moteur ne l'a pas planifiée (défaut réel), ou
+    # aucun de ses outils n'est exécutable sur CETTE machine (fait d'environnement —
+    # trivy et grype absents, pip-audit écarté parce que la cage coupe le réseau).
+    # L'ancien critère les confondait et faisait passer une machine incomplète pour une
+    # régression du moteur.
+    #
+    # Le ledger tranche, parce que chaque provider écarté y porte un statut ET une raison
+    # NOMMÉE. L'invariant vérifié devient donc plus fort, pas plus faible : une capacité
+    # obligatoire est soit planifiée, soit absente avec une cause dite pour chacun de ses
+    # outils. Un moteur qui « oublierait » une capacité sans motif resterait un échec.
+    manquantes = sorted(OBLIGATOIRES - caps_plan)
+    ledger = list(e.statuts or [])
+    inexplicables = [cap for cap in manquantes
+                     if not any(x.get("capability") == cap for x in ledger)
+                     or any(not x.get("raison") for x in ledger
+                            if x.get("capability") == cap)]
+    cas("7a. les capacités obligatoires sont présentes — sinon leur absence est nommée",
+        not inexplicables,
+        (f"manquantes : {manquantes} · causes : "
+         + ", ".join(f"{x['provider']}={x['statut']}" for x in ledger
+                     if x.get("capability") in manquantes)
+         + (f" · INEXPLIQUÉES : {inexplicables}" if inexplicables else "")))
     cas("7b. aucune capacité inconnue n'est sélectionnée", caps_plan <= caps_registre,
         f"inconnues : {sorted(caps_plan - caps_registre)}")
     provs_plan = {s["provider"] for s in steps}
     cas("7c. chaque provider sélectionné existe dans le registre",
         provs_plan <= ids_registre, f"inconnus : {sorted(provs_plan - ids_registre)}")
-    cas("7d. chaque provider déclaratif a un manifest valide",
-        all(p.manifest is not None for p in reg.providers()
-            if p.id in provs_plan and p.id in {"bandit", "bandit_custom"}),
-        "bandit et bandit_custom ont un manifest")
+    import adapters as AD
+    cas("7d. chaque provider sélectionné a un mode d'exécution connu du cœur",
+        # La version précédente ne contrôlait que `bandit` et `bandit_custom`, deux noms
+        # écrits en dur : les quatorze autres providers du registre passaient entre les
+        # mailles, et le test devenait faux dès qu'un outil était ajouté. L'invariant
+        # réel est plus large et se DÉRIVE : le cœur sait exécuter un provider soit par
+        # son manifest, soit par un adaptateur historique enregistré — et pas autrement.
+        all(reg.provider(pid).manifest is not None or pid in AD.ADAPTATEURS
+            for pid in provs_plan),
+        f"providers : {sorted(provs_plan)} · adaptateurs connus : {sorted(AD.ADAPTATEURS)}")
     cas("7e. chaque étape porte un risque déclaré",
         all(s["risque"] in ("PASSIVE", "ACTIVE", "INTRUSIVE", "DESTRUCTIVE") for s in steps),
         f"risques : {sorted({s['risque'] for s in steps})}")
-    cas("7f. aucun outil interdit n'est introduit",
-        # checkov ajouté le 2026-08-28 : provider IAC_SCAN validé, intégré par manifest.
-        # semgrep_go ajouté le 2026-08-29 : chantier largeur-Go, capacité
-        # CODE_STATIC_ANALYSIS_GO, intégré par manifest (zéro binaire nouveau).
-        # L'intention du critère est « pas d'outil NON AUTORISÉ » — la liste suit les
-        # intégrations décidées (motif « attentes extensibles » de la Phase 5A).
-        # grype + kics ajoutés le 2026-08-29 : étape 4 (GO utilisateur), qualifiés
-        # par le harnais sur exécutions sandbox réelles (dossiers de qualification
-        # dans testrepo_sca/ et testrepo_iac/), intégrés par manifest. Même motif.
-        provs_plan <= {"semgrep", "trivy", "gitleaks", "bandit", "bandit_custom", "checkov",
-                       "semgrep_go", "grype", "kics"},
-        f"providers : {sorted(provs_plan)}")
+    # 7f — une CONSTANTE QUI RECOPIAIT LE CATALOGUE. Neuf noms pour seize providers,
+    # rallongée à la main à chaque intégration (checkov en 08-28, semgrep_go en 08-29,
+    # grype+kics en 08-29…) : le test échouait donc à chaque nouvel outil, non parce
+    # qu'un outil non autorisé était apparu, mais parce que personne n'avait rallongé la
+    # liste. C'est exactement la duplication de connaissance que l'architecture veut
+    # supprimer, et elle rendait le critère inopérant : il ne pouvait rien détecter.
+    #
+    # Or l'autorisation a DÉJÀ une source unique : `binaire_autorise`, que le chargeur de
+    # manifest invoque au chargement (liste du cœur, puis manifeste d'approvisionnement —
+    # « `which` n'est pas une autorisation »). On vérifie l'invariant À SA SOURCE.
+    binaires_plan = {pid: Path(AD.binaire_de(reg.provider(pid))).name
+                     for pid in sorted(provs_plan)}
+    # `{BIN}/trivy` : le jeton est résolu au lancement, l'autorisation se juge sur le nom
+    # nu — la même normalisation que `adapters.resoudre_exe`.
+    refus_autorisation = {pid: PM.binaire_est_autorise(nom)
+                          for pid, nom in binaires_plan.items()
+                          if nom and not PM.binaire_autorise(nom)}
+    cas("7f. aucun outil non autorisé n'est introduit",
+        not refus_autorisation,
+        f"binaires : {binaires_plan}"
+        + (f" · REFUSÉS : {refus_autorisation}" if refus_autorisation else ""))
     cas("7g. des providers supplémentaires restent autorisés",
         len(provs_plan) > 3,
         f"{len(provs_plan)} providers pour 3 capacités obligatoires")

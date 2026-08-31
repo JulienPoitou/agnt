@@ -9,7 +9,7 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 | notes | `a9f853547f2a` |
 | matrice_phase1 | `d8819269b585` |
 | registre | `748b2d9fd97a` |
-| manifeste | `3438846190ac` |
+| manifeste | `a8ae4c47f43b` |
 
 ## Matrice des capacités
 

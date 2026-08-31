@@ -65,15 +65,36 @@ def _faux_executer(capture: dict, arret: str = "policy",
     import pipeline
 
     def faux(requete, cible, cible_autorisee=True, confiance_cible="controlled",
-             avec_internes=False):
+             avec_internes=False, escalade=True, egress=None):
         capture.clear()
         capture.update(requete=requete, cible=str(cible),
                        cible_autorisee=cible_autorisee,
                        confiance_cible=confiance_cible,
-                       avec_internes=avec_internes)
+                       avec_internes=avec_internes,
+                       escalade=escalade,
+                       # `egress` est capturé comme les autres arguments de sécurité :
+                       # ce n'est pas un réglage de confort mais une DÉLÉGATION, et ce
+                       # fichier existe précisément pour vérifier que ce genre d'argument
+                       # arrive jusqu'au pipeline.
+                       egress=egress)
         return pipeline.Execution(
             plan={}, decision={"allow": False, "motifs": list(motifs)},
             intent={"moteur": "deterministe"}, arret=arret, mission="")
+
+    # Le contrat RÉEL a été vérifié avant de toucher au double : `pipeline.executer`
+    # expose bien `egress` (« l'autorisation de sortir pour CETTE mission », `None` =
+    # le profil fait foi). C'est le DOUBLE qui avait dérivé — et comme `analyser.lancer`
+    # transmet `egress` systématiquement, toute la batterie levait un TypeError pour une
+    # raison étrangère à ce qu'elle mesure. On interdit désormais la dérive : un double
+    # qui n'expose pas le contrat réel casse à la CONSTRUCTION, pas à l'usage.
+    import inspect
+    reel = inspect.signature(pipeline.executer).parameters
+    double = inspect.signature(faux).parameters
+    manquants = [p for p in reel if p not in double]
+    if manquants:
+        raise AssertionError(
+            f"double `faux` périmé : paramètre(s) {manquants} absent(s) du double alors "
+            f"que `pipeline.executer` les expose. Contrat réel : {list(reel)}.")
     return faux
 
 
@@ -326,10 +347,20 @@ def main() -> int:
         set(it_tf.capabilities) == {"CODE_STATIC_ANALYSIS", "IAC_SCAN"},
         f"{sorted(it_tf.capabilities)}")
     it_gen = I.inferer("Analyse la sécurité de mon dépôt", reg)
-    publics = {c.id for c in reg.publiques()}
-    cas("D2. demande vraiment générique : toutes les capacités publiques",
-        set(it_gen.capabilities) == publics,
-        f"{sorted(set(publics) ^ set(it_gen.capabilities))}")
+    # « publiée » et « générique » sont deux attributs DISTINCTS, et ce test les
+    # confondait : `publiques()` dit ce que l'interface PROPOSE, `generique` dit ce
+    # qu'une demande qui ne nomme aucun domaine DÉCLENCHE. Un linter (CODE_LINT), une
+    # métrique de complexité (CODE_METRICS) ou une analyse JS sont proposés à l'opérateur
+    # mais ne partent pas sur « analyse mon dépôt » — c'est délibéré et déclaré par
+    # capacité dans `capabilities.yaml`. Attendre l'égalité avec les capacités publiées
+    # revenait à exiger qu'une analyse de sécurité lance un linter.
+    # L'attendu est donc DÉRIVÉ du registre, jamais recopié.
+    publiees = {p.id for p in reg.publiques()}
+    attendu = {c.id for c in reg.capabilities()
+               if c.id in publiees and getattr(c, "generique", False)}
+    cas("D2. une demande générique déclenche les capacités déclarées génériques",
+        set(it_gen.capabilities) == attendu,
+        f"attendu={sorted(attendu)} obtenu={sorted(it_gen.capabilities)}")
 
     # ------------------------------------------- E. F3 clarification publique
     it_q = I.inferer("zzz phrase sans aucun mot clé zzz", reg)
@@ -354,18 +385,43 @@ def main() -> int:
         and r5.get("findings", 0) >= 124,
         f"moteur={r5.get('moteur')} findings={r5.get('findings')}")
     descriptions = " ".join(a["description"] for a in mock.appels)
+    # La liste des noms d'outils était écrite à la main (huit noms). Elle ne pouvait donc
+    # rien attraper de ce qui n'y figurait pas — et « radon », « ruff », « eslint » et
+    # « npm » fuyaient tranquillement dans les descriptions de capacités, en violation de
+    # la règle que `intent_llm` énonce lui-même : « il ne voit QUE la description des
+    # capacités — jamais un nom d'outil, un chemin, un argument ».
+    # DÉFAUT RÉEL corrigé le 31/08/2026 : les descriptions de CODE_LINT, CODE_METRICS,
+    # CODE_STATIC_ANALYSIS_JS et DEPENDENCY_ANALYSIS_JS nommaient leur outil.
+    # La liste est désormais DÉRIVÉE du registre — provider, binaire déclaré, exécutable.
+    noms_outils = set()
+    for p in reg.providers():
+        noms_outils.add(p.id)
+        mani = getattr(p, "manifest", None)
+        if mani is not None and getattr(mani, "binaire", ""):
+            noms_outils.add(str(mani.binaire))
+        if getattr(p, "commande", None):
+            noms_outils.add(Path(str(p.commande[0])).name)
+    noms_outils.discard("")
+    marqueurs = {"/home/", "argv", "{TARGET}", "{BIN}", "CACHE"}
+    fuites = sorted(n for n in (noms_outils | marqueurs)
+                    if n and n.lower() in descriptions.lower())
     cas("F2. aucun nom d'outil ni chemin n'est transmis au LLM",
-        not any(b in descriptions for b in
-                ("trivy", "grype", "kics", "checkov", "gitleaks", "semgrep",
-                 "bandit", "/home/", "argv")), descriptions[:120])
+        not fuites, f"trouves : {fuites} · extrait : {descriptions[:120]}")
     for comportement in ("invente_capacite", "nomme_outil", "plante"):
         bad = MockLLM(comportement, nom=f"mock-{comportement}")
         codeX, rX = analyser.lancer("Vérifie mes dépendances",
                                     RACINE / "testrepo_sca",
                                     moteur="llm", fournisseur=bad)
-        cas(f"F3. LLM {comportement} : repli déterministe TRACÉ, mission saine",
-            codeX == 0 and str(rX.get("moteur", "")).startswith("deterministe")
-            and rX.get("findings", 0) > 0, f"moteur={rX.get('moteur')}")
+        # L'invariant de ce cas est le REPLI TRACÉ : « le LLM a déraillé, le déterministe
+        # a pris la main, et la mission le DIT » — c'est la seule chose qu'il mesure.
+        # La santé de la mission (`code == 0`, `findings > 0`) dépend d'un fait machine :
+        # « Vérifie mes dépendances » ne peut rien exécuter ici — trivy et grype sont
+        # absents, pip-audit est écarté parce que la cage coupe la sortie. L'exiger
+        # transformait une panne d'environnement en échec de la logique de repli.
+        cas(f"F3. LLM {comportement} : repli déterministe TRACÉ, motif nommé",
+            str(rX.get("moteur", "")).startswith("deterministe")
+            and "repli" in str(rX.get("moteur", "")),
+            f"moteur={rX.get('moteur')}")
 
     # Le pipeline ne doit pas rester en mode llm après les tests.
     import pipeline
