@@ -41,6 +41,22 @@
 </header>
 
 <main id="poste" class="grille"></main>
+
+<!-- Historique récent : relecture de l'archive des missions via GET /api/missions
+     (listing) puis GET /api/missions/<id> (détail projeté par slice/mission_history.py).
+     Le statut est dérivé du journal par le lecteur canonique, jamais saisi par la page ;
+     un comptage de constats n'apparaît que si un findings.json a réellement été lu —
+     sinon la ligne dit « constats non produits », pas « 0 ». -->
+<section class="voile" id="voile-historique">
+  <div class="histo-tete">
+    <h2>Historique récent</h2>
+    <small id="historique-note"></small>
+    <button id="historique-rafraichir" disabled title="recharger la liste depuis l'archive">rafraîchir</button>
+  </div>
+  <div class="histo-liste" id="historique-liste">
+    <p class="note">l'historique se charge quand le moteur est branché (api.py démarré)</p>
+  </div>
+</section>
 <footer class="pied" id="pied"></footer>
 <script src="app.js"></script>
 </body>

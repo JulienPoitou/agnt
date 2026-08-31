@@ -187,3 +187,85 @@ pre.rapport {
 /* Le ledger vivant : même typographie que la ligne d'état, mais il contient un
    tableau complet et doit pouvoir retourner à la ligne. */
 .etat.vivante { white-space: normal; }
+
+/* La ligne d'état d'un run qui n'est pas terminé respire : un point qui pulse,
+   rien d'autre. Un « en cours » figé se lit comme un écran planté. */
+.etat.vif::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); margin-right: 7px; vertical-align: 1px;
+  animation: pouls 1.2s ease-in-out infinite;
+}
+@keyframes pouls { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+
+/* ------------------------------------------------------------------ historique récent */
+.voile { max-width: 1140px; margin: 0 auto; padding: 0 20px 26px; }
+.histo-tete { display: flex; align-items: baseline; gap: 12px; padding: 4px 0 10px; flex-wrap: wrap; }
+.histo-tete h2 {
+  margin: 0; font: 600 13px/1 var(--sans); letter-spacing: .01em; color: var(--texte);
+  display: flex; align-items: baseline; gap: 10px;
+}
+.histo-tete h2::before { content: "07"; font: 9.5px/1 var(--mono); color: var(--doux); letter-spacing: .12em; }
+.histo-tete small { font: 10.5px/1 var(--mono); color: var(--doux); }
+.histo-tete button {
+  margin-left: auto; background: transparent; color: var(--doux); border: 1px solid var(--trait);
+  border-radius: 6px; padding: 5px 10px; font: 11px/1 var(--sans); cursor: pointer;
+}
+.histo-tete button:hover:not(:disabled) { color: var(--texte); border-color: var(--doux); }
+.histo-tete button:disabled { opacity: .45; cursor: not-allowed; }
+
+.histo-liste { display: grid; gap: 6px; }
+.histo-liste .note { margin: 2px 0; }
+.histo-ligne {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  background: var(--panneau); border: 1px solid var(--trait); border-radius: 8px;
+  padding: 9px 13px; font: 12.5px/1.4 var(--sans); color: var(--texte); cursor: pointer;
+}
+.histo-ligne:hover { border-color: #35424f; }
+.histo-ligne.choisi { border-color: var(--accent); }
+.histo-ligne .histo-etat { display: inline-flex; gap: 8px; align-items: center; flex: none; }
+.histo-date { font: 10.5px/1 var(--mono); color: var(--doux); white-space: nowrap; }
+.histo-question {
+  flex: 1; min-width: 12ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 12.5px/1.3 var(--sans);
+}
+.histo-cible { font: 11px/1 var(--mono); color: var(--doux); white-space: nowrap; }
+.histo-constats { font: 11px/1 var(--mono); color: var(--texte); white-space: nowrap; }
+.histo-constats.incertain { color: var(--doux); font-style: italic; }
+.histo-duree { font: 10.5px/1 var(--mono); color: var(--doux); white-space: nowrap; }
+
+/* ----------------------------------------------------------------- vue historique */
+.retour { display: flex; align-items: center; gap: 12px; }
+.retour button {
+  background: transparent; color: var(--doux); border: 1px solid var(--trait); border-radius: 6px;
+  padding: 6px 12px; font: 11.5px/1 var(--sans); cursor: pointer;
+}
+.retour button:hover { color: var(--texte); border-color: var(--doux); }
+.retour .raison { font: 10.5px/1.4 var(--mono); color: var(--doux); }
+.journal { margin: 4px 0 0; padding-left: 20px; }
+.journal li { font: 11.5px/1.6 var(--mono); color: var(--doux); display: flex; gap: 10px; }
+.journal li .histo-date { min-width: 11ch; padding-top: 2px; }
+
+/* ---------------------------------------------------------------------- accueil */
+.etapes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.etape {
+  background: var(--panneau-doux); border: 1px solid var(--trait); border-radius: 8px;
+  padding: 12px 14px; display: flex; gap: 10px; align-items: baseline;
+}
+.etape b { font: 700 20px/1 var(--mono); color: var(--accent); }
+.etape span { font: 12.5px/1.35 var(--sans); }
+
+/* ------------------------------------------------------------- petits écrans */
+@media (max-width: 900px) {
+  .barre { flex-wrap: wrap; }
+  .lancer { flex-wrap: wrap; }
+  .lancer .q { flex-basis: 100%; }
+  .chaine { grid-template-columns: 1fr; }
+  .etapes { grid-template-columns: 1fr; }
+  .histo-ligne { flex-wrap: wrap; }
+  .histo-question { flex-basis: 100%; order: 5; white-space: normal; }
+  .entete { grid-template-columns: 1fr; }
+}
+
+/* Un refus n'a pas de « grand chiffre » : l'état s'écrit en mots, plus petit,
+   parce qu'un « 0 » en 27 px se lit comme une preuve d'absence. */
+.chiffres b.sans { font: 600 12.5px/1.2 var(--sans); padding-top: 7px; letter-spacing: .02em; color: var(--doux); }

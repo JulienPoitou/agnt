@@ -139,6 +139,7 @@ function routeur(scénario) {
                  outils_statuts: [{statut: "termine", donnees: AVEC_STATUTS, code: 0}],
                  escalade: [{statut: "termine", donnees: AVEC_ESCALADE_REFUSEE, code: 0}],
                  outils_vides: [{statut: "termine", donnees: SANS_OUTIL, code: 0}],
+                 historique: [{statut: "en_cours"}, {statut: "termine", donnees: DONNEES, code: 0}],
                  sert_puis_meurt: [{statut: "en_cours"}],
                  redemarre: [{statut: "en_cours"}],
                  api_morte: []}[scénario];
@@ -160,7 +161,7 @@ function routeur(scénario) {
     }
     if (String(url) === "/api/cibles") return reponde({cibles: [{nom: PROJET, chemin: BUNDLE, langages: ["javascript"]}]});
     if (String(url) === "/api/runs" && (opts || {}).method === "POST") {
-      return reponde({id: "run-de-test", statut: "en_file"});
+      return reponde({id: "run-de-test", statut: "en_file", position: 1});
     }
     if (String(url).startsWith("/api/runs/")) {
       if (scénario === "sert_puis_meurt" && n >= 1) { throw new Error("ECONNRESET · serveur arrêté"); }
@@ -169,6 +170,17 @@ function routeur(scénario) {
                 json: async () => ({})};
       }
       return reponde(polls[Math.min(n++, polls.length - 1)]);
+    }
+    if (String(url).startsWith("/api/missions")) {
+      COMPTES[scénario].missions = (COMPTES[scénario].missions || 0) + 1;
+      if (String(url) === "/api/missions" || String(url).startsWith("/api/missions?")) {
+        return reponde(HISTO_LISTE);
+      }
+      const mid = String(url).slice("/api/missions/".length);
+      if (HISTO_DETAILS[mid]) return reponde(HISTO_DETAILS[mid]);
+      return {ok: false, status: 404,
+              text: async () => JSON.stringify({error: {code: "MISSION_NOT_FOUND", message: "Mission introuvable"}}),
+              json: async () => ({})};
     }
     return {ok: false, status: 404, text: async () => "", json: async () => null};
   };
@@ -236,8 +248,135 @@ const AVEC_ESCALADE_REFUSEE = (() => {
   d.chaine.statuts = [];
   return d;
 })();
-const SANS_OUTIL = (() => { const d = JSON.parse(JSON.stringify(DONNEES));
+const SANS_OUTIL = (() => { const d = JSON.parse(JSON.stringify(DONNEES)); 
   d.chaine = d.chaine || {}; d.chaine.statuts = []; return d; })();
+
+/* ------------------------------------------------------- LOT 4 · l'historique
+ * Données du contrat agnt.history.v1, shapes relevés sur l'API RÉELLE (api.py en
+ * face de mission_history.py). Le point sensible n'est pas la richesse : c'est la
+ * frontière « prouvé / non produit ». `findings_summary` n'existe que si le lecteur
+ * a LU un findings.json — la mission refusée n'en a pas, l'incomplète non plus. */
+const EXEC_UNAVAILABLE = (provider) => ({
+  schema_version: "agnt.execution-status.v1", provider_id: provider, display_name: provider,
+  applicability: {value: "applicable", proof: "derived"},
+  selection: {value: "selectionne", proof: "recorded"},
+  condition: {value: "inconnu", proof: "unknown"},
+  authorization: {value: "autorise", proof: "derived"},
+  availability: {value: "indisponible", proof: "recorded"},
+  execution: {value: "unavailable", invocation: "non", output: "non_exploitable",
+              proof: "recorded", reason_code: "binary_missing"},
+  detection: {value: "non_evalue", proof: "recorded"},
+  completeness: {state: "complete", missing: [], limitations: []}});
+const EXEC_TERMINE = (provider, n) => ({
+  schema_version: "agnt.execution-status.v1", provider_id: provider, display_name: provider,
+  applicability: {value: "applicable", proof: "derived"},
+  selection: {value: "selectionne", proof: "recorded"},
+  condition: {value: "inconnu", proof: "unknown"},
+  authorization: {value: "autorise", proof: "derived"},
+  availability: {value: "disponible", proof: "derived"},
+  execution: {value: "termine", invocation: "oui", output: "exploitable", proof: "recorded"},
+  detection: n > 0 ? {value: "findings_presents", proof: "recorded", findings_count: n}
+                   : {value: "rien_trouve", proof: "recorded", findings_count: 0},
+  completeness: {state: "complete", missing: [], limitations: []}});
+const HISTO_LISTE = {
+  schema_version: "agnt.history.v1",
+  items: [
+    {mission_id: "m-20260831T180157Z-92f5af2b", detail_href: "/api/missions/m-20260831T180157Z-92f5af2b",
+     request: {title: "Analyse la sécurité de ce dépôt de test"},
+     target: {type: "repository", display_name: "testrepo"},
+     status: "refuse", created_at: "2026-08-31T18:01:57Z", updated_at: "2026-08-31T18:01:58Z",
+     started_at: "2026-08-31T18:01:57Z", completed_at: "2026-08-31T18:01:58Z", duration_ms: 1000,
+     artifacts: {detail: true, findings: false, clusters: false, report: false}},
+    {mission_id: "m-20260830T101010Z-aaaaaaaaaaaa", detail_href: "/api/missions/m-20260830T101010Z-aaaaaaaaaaaa",
+     request: {title: "Analyse la sécurité de mon dépôt"},
+     target: {type: "repository", display_name: "mocha"},
+     status: "termine", created_at: "2026-08-30T10:10:10Z", updated_at: "2026-08-30T10:10:45Z",
+     started_at: "2026-08-30T10:10:13Z", completed_at: "2026-08-30T10:10:45Z", duration_ms: 35000,
+     run_id: "6c6da33e8bba224d",
+     findings_summary: {total: 2, by_severity: {HIGH: 1, MEDIUM: 1}}, clusters_count: 1,
+     artifacts: {detail: true, findings: true, clusters: true, report: true}},
+    {mission_id: "m-20260829T171452Z-e314acbd", detail_href: "/api/missions/m-20260829T171452Z-e314acbd",
+     request: {title: "test batterie"},
+     target: {type: "repository", display_name: "testrepo_go"},
+     status: "inconnu", created_at: "2026-08-29T17:14:52Z", updated_at: "2026-08-29T17:14:52Z",
+     artifacts: {detail: true, findings: false, clusters: false, report: false},
+     incomplete: true, incomplete_reason: "Aucun événement terminal n'a été consigné"},
+  ],
+  page: {limit: 12, next_cursor: null}};
+/* Deux findings RÉELS du bundle, passés par la moulinette de projection : la
+ * projection échappe `<`/`>` (elle ne sait pas qui la lira) ; la page doit les
+ * restituer en texte vrai — elle ne rend jamais de markup. */
+const HISTO_FINDINGS = (() => {
+  const base = (DONNEES.findings || []).slice(0, 2);
+  const fs = base.length ? base : [{id: "f-h1", source: {tool: "semgrep"},
+    location: {file: "a.js", line: 1}, severity: {value: "HIGH"}, evidence: {message: "x"}}];
+  const projetes = JSON.parse(JSON.stringify(fs));
+  projetes.forEach((f, i) => {
+    f.evidence = {...(f.evidence || {})};
+    f.evidence.message = (f.evidence.message || "") + (i === 0
+      ? " — motif échappé par la projection : if (a &lt; b) &amp;&amp; c &gt; d" : "");
+  });
+  return projetes;
+})();
+const HISTO_DETAILS = {
+  "m-20260831T180157Z-92f5af2b": {
+    schema_version: "agnt.history.v1",
+    mission: HISTO_LISTE.items[0],
+    data: {
+      request: {original: "Analyse la sécurité de ce dépôt de test",
+                canonical: "analyse la securite de ce depot de test"},
+      executions: [EXEC_UNAVAILABLE("semgrep"), EXEC_UNAVAILABLE("trivy")],
+      execution_status_schema: "agnt.execution-status.v1",
+      events: [
+        {sequence: 1, timestamp: "2026-08-31T18:01:57Z", kind: "mission_created", safe_message: "Mission créée"},
+        {sequence: 2, timestamp: "2026-08-31T18:01:57Z", kind: "security", safe_message: "Périmètre de confiance consigné"},
+        {sequence: 3, timestamp: "2026-08-31T18:01:58Z", kind: "plan", safe_message: "Providers filtrés par disponibilité (2 écarté(s))"},
+        {sequence: 4, timestamp: "2026-08-31T18:01:58Z", kind: "mission_stopped", safe_message: "Mission arrêtée : arrêt consigné"},
+      ],
+      timeline: {schema_version: "agnt.timeline.v1", state: "recorded", ordering: "sequence",
+                 events: [], returned_events: 0, total_events: 4, truncated: false,
+                 next_cursor: null, limitations: []},
+    },
+    missing_artifacts: []},
+  "m-20260830T101010Z-aaaaaaaaaaaa": {
+    schema_version: "agnt.history.v1",
+    mission: HISTO_LISTE.items[1],
+    data: {
+      request: {original: "Analyse la sécurité de mon dépôt",
+                canonical: "analyse la securite de mon depot"},
+      executions: [EXEC_TERMINE("semgrep", 2), EXEC_TERMINE("bandit_custom", 0)],
+      execution_status_schema: "agnt.execution-status.v1",
+      findings: HISTO_FINDINGS,
+      clusters: {clusters: [{cluster_id: "c-1", cle: "a.js:1", confiance: "moyenne",
+                             reason: ["même fichier"], members: [HISTO_FINDINGS[0].id]}],
+                 non_regroupe: [], stats: {findings_en_entree: 2, clusters: 1,
+                                           findings_regroupes: 1, findings_non_regroupes: 1, reduction: "50%"}},
+      report: {available: true, format: "markdown",
+               content: "# Rapport\n\nExtrait projeté : if (a &lt; b) &amp;&amp; c &gt; d\n\n2 constats."},
+      events: [
+        {sequence: 1, timestamp: "2026-08-30T10:10:10Z", kind: "mission_created", safe_message: "Mission créée"},
+        {sequence: 2, timestamp: "2026-08-30T10:10:45Z", kind: "mission_completed", safe_message: "Mission terminée"},
+      ],
+      timeline: {schema_version: "agnt.timeline.v1", state: "recorded", ordering: "sequence",
+                 events: [], returned_events: 0, total_events: 2, truncated: false,
+                 next_cursor: null, limitations: []},
+    },
+    missing_artifacts: []},
+  "m-20260829T171452Z-e314acbd": {
+    schema_version: "agnt.history.v1",
+    mission: HISTO_LISTE.items[2],
+    data: {
+      request: {original: "test batterie", canonical: "test batterie"},
+      executions: [],
+      execution_status_schema: "agnt.execution-status.v1",
+      events: [{sequence: 1, timestamp: "2026-08-29T17:14:52Z", kind: "mission_created",
+                safe_message: "Mission créée"}],
+      timeline: {schema_version: "agnt.timeline.v1", state: "recorded", ordering: "sequence",
+                 events: [], returned_events: 0, total_events: 1, truncated: false,
+                 next_cursor: null, limitations: []},
+    },
+    missing_artifacts: ["events"]},
+};
 
 /* ----------------------------------------------------------------------- l'exécution */
 function videFile(file) { while (file.length) file.shift()(); }
@@ -420,13 +559,37 @@ const ATTENDUS = {
             /MAQUETTE/.test(HTML), "index.html ne porte plus le bandeau");
     vérifie("l'état de la page dit « non branché »", /non branché/i.test(out.textes.join(" ")),
             JSON.stringify(out.textes.join(" ").slice(0, 90)));
+    vérifie("sans API, l'historique n'invente rien : le repli dit pourquoi il est vide",
+            /historique indisponible/.test((v.getElementById("historique-liste") || {textContent: ""}).textContent),
+            JSON.stringify((v.getElementById("historique-liste") || {textContent: ""}).textContent.slice(0, 90)));
+  },
+  historique: (v, out) => {
+    const joint = out.textes.join(" ");
+    vérifie("l'historique liste les missions de l'archive",
+            /refusé/.test(joint) && /terminé/.test(joint) && /inconnu/.test(joint),
+            joint.slice(0, 120));
+    // La frontière que ce harnais doit tenir : un comptage de constats n'existe qu'après
+    // lecture d'un findings.json par le lecteur. La mission refusée n'en a pas → « non
+    // produits », jamais « 0 ». La mission terminée en a un → le chiffre s'affiche.
+    vérifie("une mission sans findings.json dit « constats non produits »",
+            /constats non produits/.test(joint));
+    vérifie("une mission avec findings.json affiche son compte prouvé",
+            /2 constats/.test(joint), joint.slice(joint.search(/constat/) - 30, 80));
+    vérifie("aucun « 0 constat » n'est fabriqué dans l'historique",
+            !/0 constat/.test(joint));
+    vérifie("la mission incomplète est marquée comme telle", /incomplète/.test(joint));
+    vérifie("l'historique est rechargé après un run terminé",
+            (COMPTES.historique.missions || 0) >= 2, (COMPTES.historique.missions || 0) + " lectures");
+    const bouton = v.getElementById("historique-rafraichir");
+    vérifie("le bouton de rafraîchissement existe et est actif",
+            !!bouton && !bouton.disabled, bouton ? "disabled=" + bouton.disabled : "absent");
   },
 };
 
 let échecs = 0;
 for (const scénario of ["termine", "hostile", "refuse", "erreur", "sans_findings",
                         "outils_statuts", "outils_vides", "escalade", "sert_puis_meurt",
-                        "redemarre", "api_morte"]) {
+                        "redemarre", "api_morte", "historique"]) {
   const doc = await rendu(scénario);
   const out = {textes: [], balises: [], titres: [], ruban: null};
   const rub = doc.getElementById("ruban");
@@ -499,6 +662,121 @@ for (const scénario of ["termine", "hostile", "refuse", "erreur", "sans_finding
     app.blocVivant({mission: "m-x", outils: null});
     vérifie("ledger vivant : une réponse sans `outils` ne fait pas tomber la page",
             /cache/.test(viv.className), viv.className);
+  }
+}
+
+/* ---------------------------------------------------- LOT 4 : l'historique, cliqué */
+{
+  // Le listing est jugé dans la boucle principale ; ici, c'est le PARCOURS qui est
+  // jugé : cliquer une mission passée relit son archive, l'affiche honnêtement, et
+  // rend la main pour une nouvelle mission. Données du contrat agnt.history.v1.
+  const doc = await rendu("historique");
+  const liste = doc.getElementById("historique-liste");
+  const lignes = (liste.children || []).filter((c) => typeof c.onclick === "function");
+  vérifie("l'historique rend chaque mission cliquable", lignes.length === 3,
+          lignes.length + " ligne(s)");
+
+  // 1 · une mission REFUSÉE : le détail doit dire l'absence de résultat, pas un zéro.
+  lignes[0].onclick();
+  await laisseTourner();
+  let vue = doc.getElementById("poste").textContent;
+  vérifie("détail · la mission refusée se relit avec son identifiant",
+          vue.includes("m-20260831T180157Z-92f5af2b"), vue.slice(0, 90));
+  vérifie("détail · « aucun résultat produit » est dit, pas un comptage vide",
+          /aucun résultat d'analyse/.test(vue) && !/0 constat/.test(vue), vue.slice(0, 140));
+  vérifie("détail · la table d'exécution nomme l'indisponibilité des outils",
+          /unavailable/.test(vue) && /binary_missing/.test(vue), vue.slice(90, 200));
+  vérifie("détail · le journal montre l'arrêt", /Mission arrêtée/.test(vue));
+  vérifie("détail · pas de « undefined » ni d'objet stringifié",
+          !/undefined|\[object Object\]|NaN/.test(vue),
+          (vue.match(/.{0,40}(undefined|\[object Object\]|NaN).{0,20}/) || [""])[0]);
+
+  // 2 · le bouton retour rend la place à une nouvelle mission.
+  const retour = (doc.getElementById("poste").children || [])[0];
+  const boutonRetour = retour && (retour.children || []).find((c) => typeof c.onclick === "function");
+  vérifie("détail · un bouton « nouvelle mission » existe", !!boutonRetour);
+  if (boutonRetour) {
+    boutonRetour.onclick();
+    await laisseTourner();
+    vue = doc.getElementById("poste").textContent;
+    vérifie("retour · l'accueil du mode branché revient", /choisis la cible/.test(vue),
+            vue.slice(0, 90));
+  }
+
+  // 3 · une mission TERMINÉE avec preuves : constats, regroupement, rapport dé-échappé.
+  const liste2 = doc.getElementById("historique-liste");
+  const lignes2 = (liste2.children || []).filter((c) => typeof c.onclick === "function");
+  lignes2[1].onclick();
+  await laisseTourner();
+  vue = doc.getElementById("poste").textContent;
+  const ids = HISTO_FINDINGS.map((f) => f.id).filter(Boolean);
+  vérifie("détail · les constats archivés sont nommés",
+          ids.length > 0 && ids.every((id) => vue.includes(id)),
+          ids.join(","));
+  vérifie("détail · le regroupement archivé se lit", /c-1/.test(vue) && /réduction/.test(vue));
+  vérifie("détail · le rapport projeté s'affiche", /Rapport humain/.test(vue) && /2 constats/.test(vue));
+  // la projection échappe < et > ; la page ne rend jamais de markup, donc elle doit
+  // restituer le texte VRAI — lire « &lt; » à l'écran serait un double échappement.
+  vérifie("détail · l'échappement de projection est défait à l'affichage (textContent only)",
+          vue.includes("if (a < b)") && vue.includes("c > d") && !/&lt;|&gt;/.test(vue),
+          (vue.match(/.{0,30}&(lt|gt);.{0,20}/) || ["aucun échappement résiduel"])[0]);
+  vérifie("détail · un zéro PROUVÉ (rien_trouve) s'affiche comme tel",
+          /0 observation sur des cibles analysées/.test(vue));
+
+  // 4 · l'accueil se juge SANS clic RUN : une instance fraîche, branchée, puis silence.
+  //    (dans la boucle principale, le RUN remplace l'accueil par le résultat : le
+  //     vérifier là aurait été vérifier un écran déjà remplacé.)
+  {
+    const docA = documentPour(HTML);
+    const tempoA = [];
+    const fA = globalThis.fetch;
+    globalThis.fetch = routeur("historique");
+    tempoActive = tempoA;
+    try {
+      new Function("document", "window", "fetch", "setTimeout", "console", SOURCE)(
+        docA, {document: docA}, globalThis.fetch,
+        (fn) => { tempoA.push(fn); return tempoA.length; },
+        {log() {}, warn() {}, error() {}});
+      await laisseTourner();
+    } finally {
+      globalThis.fetch = fA;
+    }
+    const accueil = docA.getElementById("poste").textContent;
+    vérifie("l'accueil du mode branché dit le parcours (avant tout RUN)",
+            /choisis la cible/.test(accueil) && /écris la mission/.test(accueil),
+            accueil.slice(0, 90));
+  }
+
+  // 5 · une mission inconnue de l'archive : le refus de lecture est nommé, pas muet.
+  //     L'instance fraîche reçoit un fetch « moteur non branché » pour /api/capacites
+  //     (principal() se tait en mode maquette) et le vrai routeur pour le reste :
+  //     la dernière écriture de la ligne d'état est alors celle de voirMission.
+  {
+    const docE = documentPour(HTML);
+    const routeurVrai = routeur("historique");
+    const faux = async (url, opts) => {
+      if (String(url) === "/api/capacites")
+        return {ok: false, status: 0, text: async () => "", json: async () => null};
+      return routeurVrai(url, opts);
+    };
+    let voir = null;
+    try {
+      voir = new Function("document", "window", "fetch", "setTimeout", "console",
+                          SOURCE + "\n;return {voirMission};")(
+        docE, {document: docE}, faux, () => 0, {log() {}, warn() {}, error() {}});
+    } catch (e) {
+      vérifie("le script s'évalue pour le LOT 4", false, String(e));
+    }
+    if (voir) {
+      // d'abord laisser principal() se taire (mode maquette : deux fetchs puis rien),
+      // sinon sa dernière écriture de la ligne d'état recouvre celle de voirMission.
+      await laisseTourner();
+      await voir.voirMission("m-20260831T235959Z-inconnue");
+      await laisseTourner();
+      const etat = docE.getElementById("etat").textContent;
+      vérifie("une mission introuvable produit une erreur lisible, pas un écran vide",
+              /Mission introuvable/.test(etat), etat.slice(0, 90));
+    }
   }
 }
 
