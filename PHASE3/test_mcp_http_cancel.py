@@ -272,7 +272,7 @@ def main() -> int:
         print(("OK    " if condition else "ECHEC ") + name
               + (f" — {detail}" if detail else ""))
 
-    if not transports.enregistre("mcp"):
+    if not transports.fournit("mcp"):
         MB.initialiser_mcp(transports)
     previous_token = os.environ.get("MCP_HTTP_CANCEL_TOKEN")
     os.environ["MCP_HTTP_CANCEL_TOKEN"] = SECRET

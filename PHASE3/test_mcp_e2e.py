@@ -292,10 +292,11 @@ def main() -> int:
         pipeline_tmp = Path(tempfile.mkdtemp(prefix="agnt-mcp-pipeline-"))
         target = pipeline_tmp / "repo"
         target.mkdir()
-        old_missions, old_sortie = MS.MISSIONS, PIPE.SORTIE
+        # CORE a supprimé le chemin de sortie GLOBAL (`pipeline.SORTIE`) : les artefacts
+        # bruts vivent dans `<mission>/run`. Rediriger MS.MISSIONS suffit donc.
+        old_missions = MS.MISSIONS
         old_profile = PIPE.profils.CONTROLLED_DEV
         MS.MISSIONS = pipeline_tmp / "missions"
-        PIPE.SORTIE = pipeline_tmp / "sortie"
         PIPE.profils.CONTROLLED_DEV = dataclasses.replace(
             old_profile, reseau_autorise=True,
             commentaire="profil réseau explicitement activé par le test local")
@@ -315,7 +316,7 @@ def main() -> int:
                  == "controlled-http-server"
                  and execution.findings[0]["source"]["tool"] == "review_code")
         finally:
-            MS.MISSIONS, PIPE.SORTIE = old_missions, old_sortie
+            MS.MISSIONS = old_missions
             PIPE.profils.CONTROLLED_DEV = old_profile
             shutil.rmtree(pipeline_tmp, ignore_errors=True)
     finally:

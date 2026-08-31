@@ -165,7 +165,11 @@ e_test = pipeline.Execution(plan={}, decision={}, egress={"demande": "mission", 
                             vague_parallele=4,
                             clusters={"stats": {}, "clusters": [], "non_regroupe": []})
 _IT = types.SimpleNamespace(requete="grille", capabilities=["CODE_METRICS"], motifs=[])
-_PLAN = types.SimpleNamespace(plan_id="p", empreinte=lambda: "empreinte-de-plan")
+# `steps` fait partie du contrat réel de Plan (la vue `providers` du rapport en vient) :
+# un double qui omet ce champ ferait échouer _rapport au lieu de mesurer le rapport.
+# Aucune attente n'est modifiée — le double est seulement complété.
+_PLAN = types.SimpleNamespace(plan_id="p", empreinte=lambda: "empreinte-de-plan",
+                              steps=())
 rap = pipeline._rapport(_IT, _PLAN, e_test)
 cas("14. le rapport porte l'état de la garde et le parallélisme appliqué (clés présentes, même fermé)",
     "egress" in rap and "outils_par_vague" in rap and rap["egress"]["autorise"] is True

@@ -18,6 +18,7 @@ RACINE = Path(__file__).parent
 sys.path.insert(0, str(RACINE / "slice"))
 
 import adapters as A  # noqa: E402
+import cible as CIB  # noqa: E402
 import findings as F  # noqa: E402
 import mcp_bootstrap as MB  # noqa: E402
 import mission as MS  # noqa: E402
@@ -292,8 +293,12 @@ def main() -> int:
 
     # Ce cas ne lance pas OPA : il vérifie seulement la frontière d'entrée. La validation
     # d'OPA reste signalée comme bloquée si le binaire n'est pas installé dans l'image.
+    # MCP-004 : le type de cible n'est plus un littéral passé à la policy. OPA lit le
+    # descripteur STRUCTURÉ porté par le plan (`cible_descr` = Cible.to_dict()), donc le
+    # type RÉEL de la cible. Le plan de test porte donc un vrai descripteur.
+    descr_repo = CIB.normaliser(RACINE).to_dict()
     policy_plan = PL.construire("revue MCP", "repo://fixture", ["review_mcp"],
-                                reg, "test-mcp")
+                                reg, "test-mcp", cible_descr=descr_repo)
     policy_input = PO.PolicyEngine.entree(policy_plan, reg, True)
     detail = policy_input["registre"]["providers_detail"][0]
     case("15. l'entrée OPA porte le binding enregistré, sans endpoint ni credential",
@@ -302,6 +307,17 @@ def main() -> int:
          and "endpoint" not in detail and "auth_env" not in detail
          and policy_input["cible"]["type"] == "repository"
          and policy_input["plan"]["steps"][0]["transport"] == "mcp")
+
+    # La preuve que plus rien n'est codé en dur : une cible FICHIER doit annoncer
+    # `filesystem` à OPA. Avec l'ancien littéral "repository", ce cas était impossible.
+    descr_fichier = CIB.normaliser(Path(__file__)).to_dict()
+    entree_fichier = PO.PolicyEngine.entree(
+        PL.construire("revue MCP", "repo://fixture", ["review_mcp"], reg, "test-mcp",
+                      cible_descr=descr_fichier), reg, True)
+    case("15bis. le type de cible suit le descripteur réel, pas un littéral",
+         entree_fichier["cible"]["type"] == "filesystem"
+         and policy_input["cible"]["type"] == "repository",
+         f"repo={policy_input['cible']['type']} fichier={entree_fichier['cible']['type']}")
 
     # ----------------------------------------------------------- adaptateur + normaliseur
     tmp = Path(tempfile.mkdtemp(prefix="agnt-mcp-simulated-"))

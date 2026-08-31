@@ -181,11 +181,11 @@ def terrain_hostile(*, texte_modele: str | None = None, erreur: Exception | None
             pass
 
         def evaluer(self, plan, registre, cible_autorisee, confiance_cible="controlled",
-                    profil=None, cible_type="repository"):
-            # `cible_type` a été ajouté à l'entrée policy par la ligne MCP (be68844) :
-            # le double doit l'accepter, sinon la campagne s'arrête sur un TypeError au
-            # lieu de mesurer les gardes. La signature reste alignée sur
-            # PO.PolicyEngine.evaluer — le double n'élargit rien et n'adoucit rien.
+                    profil=None):
+            # Signature strictement alignée sur PO.PolicyEngine.evaluer : le double
+            # n'élargit rien et n'adoucit rien. MCP-004 a supprimé le paramètre
+            # cible_type — le type de cible vient du descripteur porté par le plan
+            # (`cible_descr`), pas d'un littéral passé à la policy.
             return decision or PO.Decision(allow=True, motifs=("politique_simulee",))
 
     import fournisseurs_llm as FL

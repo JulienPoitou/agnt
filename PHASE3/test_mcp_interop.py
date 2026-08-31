@@ -271,7 +271,7 @@ def main() -> int:
         print(("OK    " if condition else "ECHEC ") + name
               + (f" — {detail}" if detail else ""))
 
-    if not transports.enregistre("mcp"):
+    if not transports.fournit("mcp"):
         MB.initialiser_mcp(transports)
 
     root = Path(tempfile.mkdtemp(prefix="agnt-mcp-interop-"))
@@ -332,9 +332,10 @@ def main() -> int:
         target = root / "repository"
         target.mkdir()
         missions = root / "missions"
-        sortie = root / "sortie"
-        old_missions, old_sortie = MS.MISSIONS, PIPE.SORTIE
-        MS.MISSIONS, PIPE.SORTIE = missions, sortie
+        # `pipeline.SORTIE` n'existe plus (CORE : artefacts par mission dans
+        # `<mission>/run`) ; rediriger MS.MISSIONS suffit.
+        old_missions = MS.MISSIONS
+        MS.MISSIONS = missions
         pipeline_factory = CountingFactory()
         try:
             execution = PIPE.executer(
@@ -362,7 +363,7 @@ def main() -> int:
                  execution.rapport["egress"]["autorise"] is False
                  and pipeline_registry.provider("independent_sdk").manifest.endpoint == "")
         finally:
-            MS.MISSIONS, PIPE.SORTIE = old_missions, old_sortie
+            MS.MISSIONS = old_missions
 
         # ------------------------------------------------------ outil absent
         missing, missing_transport, missing_audit, _, _, _ = run_backend(
