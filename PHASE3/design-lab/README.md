@@ -1,3 +1,11 @@
+> **AGNT design-lab.** Ce labo ne sert que des captures réelles : la matrice
+> `gate-002-product-api` (17 réponses HTTP de l'API CORE) vit dans `public/data/`,
+> sa provenance dans `public/data/PROVENANCE.md`, et la vérification navigateur
+> état par état dans `docs/VERIFICATION-2026-08-31.md` (captures dans
+> `docs/verification/`). L'écran `/dashboard` est le navigateur de cette matrice ;
+> chaque état — liste, filtres, vide, 400, pagination, 11 détails — est branché sur
+> SA capture. Le README d'origine du template suit, inchangé.
+
 # Next.js Admin Template with TypeScript & Shadcn UI
 
 **Studio Admin** - Includes multiple dashboards, authentication layouts, customizable theme presets, and more.
