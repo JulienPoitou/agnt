@@ -589,6 +589,29 @@ def main() -> int:
             and "/home/user/.mcp" not in brut and "provider_kind_horsliste" not in prov,
             json.dumps(prov, ensure_ascii=False))
 
+        # ------------------------------------------------------------ 21. projection console-ready
+        import mission_history as MH
+        console = MH.resume_console("m-20260830T120005Z-00000001", MS.MISSIONS)
+        cas("21. résumé console : résultat terminé et zéro prouvé",
+            console["status"] == "termine" and console["findings_count"] == 0
+            and console["result"]["state"] == "available"
+            and "semgrep" in console["providers"]["executes"],
+            json.dumps(console, ensure_ascii=False))
+        refuse = MH.resume_console("m-20260830T120003Z-00000003", MS.MISSIONS)
+        cas("21b. résumé console : refus sans faux zéro et motif terminal",
+            refuse["status"] == "refuse" and refuse["findings_count"] is None
+            and refuse["result"]["state"] == "unavailable"
+            and refuse["terminal_reason"], json.dumps(refuse, ensure_ascii=False))
+        missing = MH.resume_console("m-20260830T120000Z-00000006", MS.MISSIONS)
+        cas("21c. résumé console : artefact findings absent explicitement",
+            missing["findings_count"] is None
+            and missing["result"]["reason"] == "missing_findings_artifact"
+            and missing["status"] == "termine", json.dumps(missing, ensure_ascii=False))
+        partial = MH.resume_console("m-20260830T115958Z-00000008", MS.MISSIONS)
+        cas("21d. résumé console : mission partielle lisible",
+            partial["status"] == "inconnu" and partial["result"]["state"] == "unavailable"
+            and partial.get("incomplete") is True, json.dumps(partial, ensure_ascii=False))
+
     finally:
         serveur.shutdown()
         serveur.server_close()

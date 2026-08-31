@@ -1276,6 +1276,87 @@ def _executions(chemin: Path, evenements: list[dict], plan, rapport) -> list[dic
                               executions.get(pid), arret_motif) for pid in vus]
 
 
+# --------------------------------------------------------------------------- console summary
+def resume_console(mission_id: str, racine=None, *, proprietaire=None) -> dict:
+    """Projection compacte destinée à la console propriétaire.
+
+    Cette vue est additive : elle réutilise exclusivement ``projeter`` et le ledger
+    d'exécution déjà canonique. Elle ne recompte donc ni les findings ni les providers.
+    En particulier, un artefact absent reste ``None`` et porte une raison lisible au
+    lieu de devenir un zéro de présentation.
+    """
+    detail = projeter(mission_id, racine, proprietaire=proprietaire)
+    mission = detail["mission"]
+    donnees = detail["data"]
+    executions = donnees.get("executions") or []
+    par_etat = {
+        "selectionnes": [], "non_disponibles": [], "non_applicables": [],
+        "refuses": [], "echoues": [], "executes": [],
+    }
+    for execution in executions:
+        provider = execution.get("provider_id")
+        statut = execution.get("execution", {}).get("value")
+        if statut == "unavailable":
+            cle = "non_disponibles"
+        elif statut == "non_lance":
+            raison = execution.get("execution", {}).get("reason_code")
+            cle = ("non_applicables" if raison in ("target_not_applicable", "condition_blocked")
+                   else "refuses" if raison in ("policy_denied", "policy_unavailable")
+                   else "selectionnes")
+        elif statut in ("echoue", "timed_out", "cancelled"):
+            cle = "echoues"
+        elif statut == "termine":
+            cle = "executes"
+        elif statut == "en_cours":
+            cle = "selectionnes"
+        else:
+            continue
+        if provider and provider not in par_etat[cle]:
+            par_etat[cle].append(provider)
+
+    findings = mission.get("findings_summary")
+    if isinstance(findings, dict) and isinstance(findings.get("total"), int):
+        findings_count = findings["total"]
+        result = {"state": "available", "reason": "findings_artifact_readable"}
+    else:
+        findings_count = None
+        if "findings" in detail.get("missing_artifacts", []):
+            reason = "missing_findings_artifact"
+        elif mission.get("status") == "termine":
+            reason = "findings_artifact_unreadable"
+        elif mission.get("status") in ("refuse", "erreur"):
+            reason = "mission_stopped_before_result"
+        else:
+            reason = "result_not_produced"
+        result = {"state": "unavailable", "reason": reason}
+
+    terminal_reason = None
+    timeline = donnees.get("timeline") or {}
+    for event in reversed(timeline.get("events") or []):
+        if event.get("kind") == "mission_stopped":
+            terminal_reason = event.get("safe_summary")
+            break
+    return {
+        "mission_id": mission.get("mission_id", mission_id),
+        "request": mission.get("request", {}),
+        "target": mission.get("target", {}),
+        "status": mission.get("status", "inconnu"),
+        "terminal_reason": terminal_reason,
+        "findings_count": findings_count,
+        "result": result,
+        "providers": par_etat,
+        "artifacts": mission.get("artifacts", {}),
+        "timeline": {
+            "state": timeline.get("state", "unavailable"),
+            "event_count": timeline.get("total_events", 0),
+            "last_event": ((timeline.get("events") or [])[-1].get("safe_summary")
+                           if timeline.get("events") else None),
+        },
+        **({"incomplete": True, "incomplete_reason": mission["incomplete_reason"]}
+           if mission.get("incomplete") else {}),
+    }
+
+
 # --------------------------------------------------------------------------- détail
 def _plan_sur(plan) -> dict | None:
     """Le plan, projeté SANS argv (commande/args = données d'exécution). Un plan
