@@ -24,7 +24,7 @@ python3 PHASE3/interface/api.py --host 0.0.0.0 --port 8141
 | `GET /` | la page |
 | `GET /api/cibles` | les dépôts que le cœur accepte de scanner (mêmes règles que la CLI) |
 | `GET /api/capacites` | le catalogue publié, pour remplir le sélecteur |
-| `POST /api/runs` | `{cible, question, modele, confiance, moteur}` → `{run_id, statut}` |
+| `POST /api/runs` | `{cible: CHEMIN absolu (pas le nom), question, modele, confiance, moteur}` → `{run_id, statut}` |
 | `GET /api/runs/<id>` | l'état, puis les artefacts de la mission quand elle est terminée |
 
 Une **file à un consommateur** : les montages de `Sandbox` partagent `PHASE3/run`, donc deux
