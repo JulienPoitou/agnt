@@ -322,10 +322,12 @@ def _archiver_mission(e, cible: Path) -> Path | None:
         return None
     sortie = MS.MISSIONS / e.mission / "sortie"
     sortie.mkdir(parents=True, exist_ok=True)
-    src_run = RACINE / "run"
-    if src_run.exists():
-        # La MÊME politique de conservation que le bundle : une archive de mission qui
-        # échappe à l'assainissement est une fuite rangée dans un autre tiroir.
+    # Réalignement : la source est le répertoire de travail DE CETTE mission (`e.sortie`,
+    # posé par le pipeline), pas le chemin global `RACINE/run` — mais la politique de
+    # conservation reste CELLE DU BUNDLE : une archive de mission qui échappe à
+    # l'assainissement est une fuite rangée dans un autre tiroir.
+    src_run = Path(e.sortie) if getattr(e, "sortie", "") else None
+    if src_run and src_run.exists():
         _publier_sorties(src_run, sortie)
     for nom, objet in (("plan", e.plan), ("findings", e.findings),
                        ("clusters", e.clusters), ("rapport", e.rapport),
@@ -370,13 +372,13 @@ def lancer(mission: str, cible: Path, moteur: str = "auto",
         if fournisseur is None:
             fournisseur = fournisseur_auto
 
-    ancien_moteur, ancien_four = pipeline.MOTEUR_INTENT, pipeline.FOURNISSEUR_LLM
-    try:
-        pipeline.MOTEUR_INTENT = moteur
-        pipeline.FOURNISSEUR_LLM = fournisseur if moteur == "llm" else None
-        e = pipeline.executer(mission, cible, confiance_cible=confiance, egress=egress)
-    finally:
-        pipeline.MOTEUR_INTENT, pipeline.FOURNISSEUR_LLM = ancien_moteur, ancien_four
+    # Le moteur est passé EN PARAMÈTRE, plus posé sur des globales de module : deux missions
+    # concurrentes peuvent choisir deux moteurs différents sans se réécrire l'une l'autre
+    # (multi-mission, 2026-08-30). `pipeline.executer` lit `moteur_intent`/`fournisseur_llm`
+    # locaux et ne mute plus `pipeline.MOTEUR_INTENT`/`FOURNISSEUR_LLM`.
+    e = pipeline.executer(mission, cible, confiance_cible=confiance, egress=egress,
+                          moteur_intent=moteur,
+                          fournisseur_llm=fournisseur if moteur == "llm" else None)
 
     sortie = _archiver_mission(e, cible)
     resume = {
@@ -421,8 +423,6 @@ def main(argv: list[str]) -> int:
     requete = args[1] if len(args) > 1 else "Analyse la sécurité de mon dépôt"
 
     moteur, fournisseur, note = _choisir_moteur(moteur)
-    pipeline.MOTEUR_INTENT = moteur
-    pipeline.FOURNISSEUR_LLM = fournisseur
 
     if not cible.exists():
         print(f"ERREUR : cible introuvable : {cible}")
@@ -448,7 +448,9 @@ def main(argv: list[str]) -> int:
     # retombe sur le déterministe. Il est affiché plus bas, dans le résumé.
 
     try:
-        e = pipeline.executer(requete, cible, confiance_cible=confiance, egress=egress)
+        e = pipeline.executer(requete, cible, confiance_cible=confiance, egress=egress,
+                              moteur_intent=moteur,
+                              fournisseur_llm=fournisseur if moteur == "llm" else None)
     except Exception as exc:                       # noqa: BLE001
         # Un refus d'exécution est une INFORMATION, pas une panne : « quelle dépendance
         # manque, quels outils étaient prêts » se lit sans décoder un traceback. Une panne
@@ -539,7 +541,13 @@ def main(argv: list[str]) -> int:
     # Conserver la donnée brute si elle est sûre ; sinon conserver son empreinte, ses
     # métadonnées et une version masquée. Un secret en clair dans nos artefacts serait
     # une fuite que NOUS créons — constaté pour de vrai avec Bandit.
-    src_run = RACINE / "run"
+    # Réalignement : la source est le répertoire de travail DE CETTE mission (`e.sortie`),
+    # pas un chemin global partagé — sinon la mission suivante, en exécutant, effacerait ce
+    # que celle-ci s'apprête à examiner. La politique reste `_publier_sorties` (corps
+    # unique bundle/archive, raw_* ET brut_* examinés) — l'ancienne boucle inline de la
+    # ligne CORE ombrait la variable `cible` et laissait le manifeste pointer sur un
+    # fichier redacted au lieu de la cible.
+    src_run = Path(e.sortie)
     conservation = _publier_sorties(src_run, dossier)
 
     manifeste = {

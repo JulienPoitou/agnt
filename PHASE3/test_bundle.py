@@ -99,10 +99,12 @@ def main() -> int:
 
     # ------------------------------------------------ sorties intermédiaires
     print("\n--- sorties intermédiaires ---")
-    run_dir = RACINE / "run"
-    if run_dir.exists():
+    # Les sorties intermédiaires vivent SOUS la mission (`<mission>/run`), plus dans un
+    # `PHASE3/run` global (isolation multi-mission) : c'est là qu'on les cherche.
+    run_dirs = sorted((ARTIFACTS / "missions").glob("*/run"))
+    if run_dirs:
         inter = {}
-        for f in sorted(run_dir.glob("raw_*.json")):
+        for f in sorted(run_dirs[-1].glob("raw_*.json")):
             n = ASS.contient_secret(f.read_text(encoding="utf-8", errors="replace"))
             if n:
                 inter[f.name] = n

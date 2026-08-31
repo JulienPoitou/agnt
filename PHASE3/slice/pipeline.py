@@ -23,6 +23,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 import adapters
+import cible as CIB
 import clusterer
 import garde_chemin as GC
 import mission as MS
@@ -38,7 +39,6 @@ import conditions as COND
 from sandbox import CACHE_BIN, CACHE_DB, CACHE_REGLES, Sandbox
 
 RACINE = Path(__file__).resolve().parent.parent     # PHASE3/
-SORTIE = RACINE / "run"
 
 # Moteur d'intention : "deterministe" (référence) ou "llm".
 # Le LLM ne remplace QUE le matching — jamais le contrat, ni le registre, ni OPA.
@@ -65,6 +65,13 @@ def outils_par_vague() -> int:
         return 1
     return max(1, min(n, 8))
 
+# Moteur d'intention PAR DÉFAUT d'une exécution. `executer()` les accepte désormais en
+# paramètres (`moteur_intent`, `fournisseur_llm`) : un appelant qui les fournit ne dépend
+# plus de ces globales, et deux missions peuvent choisir deux moteurs différents dans le
+# même processus sans se marcher dessus. Ces deux noms restent lisibles comme DÉFAUT de
+# dernier recours (compatibilité ascendante : les tests et appelants historiques qui les
+# posaient continuent de fonctionner), mais la bibliothèque ne les MUTE plus — c'est le
+# changement qui compte pour le multi-mission, pas l'existence de la constante.
 MOTEUR_INTENT = "deterministe"
 FOURNISSEUR_LLM = None
 
@@ -108,19 +115,27 @@ class Execution:
     egress: dict = field(default_factory=dict)
     # Nombre d'outils menés de front dans une vague (0 = suite du profil, aujourd'hui 4).
     vague_parallele: int = 0
+    # Répertoire de travail de CETTE exécution (raw_*/brut_* de la vague). Par mission,
+    # plus par processus : deux missions concurrentes ne se réécrivent pas. Chaîne vide
+    # = exécution arrêtée avant l'étape d'exécution (intent, policy, conditions…).
+    sortie: str = ""
 
 
-def _prepare_sortie() -> Path:
-    """Prépare le répertoire de sortie.
+def _sortie_mission(miss) -> Path:
+    """Répertoire de travail de la mission : `raw_*`/`brut_*` d'une vague, par mission.
 
-    Attention : ce répertoire est BINDÉ dans le sandbox. On vide son CONTENU, on ne le
-    supprime jamais — supprimer un répertoire déjà bindé casse le montage.
+    Avant ce lot, la sortie était un répertoire GLOBAL (`PHASE3/run`) vidé au début de
+    CHAQUE exécution : deux missions concurrentes se réécrivaient l'une l'autre, et le
+    simple fait d'exécuter une mission effaçait les preuves de la précédente. Le dossier
+    de mission (append-only, déjà unique) devient la frontière d'isolation : on crée un
+    sous-répertoire neuf, on ne vide jamais un répertoire partagé.
+
+    Ce répertoire est BINDÉ dans le sandbox : on le crée avant, et on ne le supprime
+    jamais ensuite (supprimer un répertoire déjà bindé casserait le montage).
     """
-    SORTIE.mkdir(parents=True, exist_ok=True)
-    for f in SORTIE.iterdir():
-        if f.is_file():
-            f.unlink()
-    return SORTIE
+    sortie = miss.chemin / "run"
+    sortie.mkdir(parents=True, exist_ok=True)
+    return sortie
 
 
 def _racines_de(cible: Path) -> tuple:
@@ -346,18 +361,32 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
     _ledger(miss, registre, plan_dict, decision_dict, exec_.raw, exec_.couverture, trouves)
 
 
-def executer(requete: str, cible: Path, cible_autorisee: bool = True,
+def executer(requete: str, cible, cible_autorisee: bool = True,
              confiance_cible: str = "controlled",
              avec_internes: bool = False, escalade: bool = True,
-             egress: bool | None = None) -> Execution:
-    """`egress` : l'autorisation de sortir (réseau) pour CETTE mission.
+             egress: bool | None = None,
+             moteur_intent: str | None = None,
+             fournisseur_llm: object | None = None) -> Execution:
+    """Exécute une mission de bout en bout.
 
+    `egress` : l'autorisation de sortir (réseau) pour CETTE mission.
     `None` = on s'en tient au profil (donc coupé, aujourd'hui). `True` n'est pas un réglage
     de confort : c'est une DÉLÉGATION, et elle est traitée comme telle — le profil effectif
     de la mission est reconstruit avec (`dataclasses.replace`), transmis à OPA pour que la
     décision porte la même information que l'exécution, consigné au journal, et inscrit dans
     l'empreinte de contexte par `sandbox.limites_appliquees()`. Un `True` silencieux aurait
     produit des findings dont personne ne peut dire s'ils viennent d'une cage ouverte.
+
+    `moteur_intent` / `fournisseur_llm` : le moteur d'intention de CETTE mission. Ces
+    paramètres rendent le choix d'exécution EXPLICITE et local à l'appel, au lieu de
+    passer par des globales de module mutables (`MOTEUR_INTENT`, `FOURNISSEUR_LLM`) que
+    deux missions concurrentes se disputeraient. `None` = repli sur les globales
+    (comportement historique, conservé pour compatibilité).
+
+    `cible` : accepte un `Path` (appel historique), une chaîne (chemin local ou URL),
+    ou une `cible.Cible` déjà construite. Elle est normalisée UNE FOIS à l'entrée
+    (`cible.normaliser`) ; une cible non locale est représentée, jamais convertie en
+    chemin ni exécutée en sous-processus local.
     """
     if confiance_cible not in CONFIANCES:
         # Pas de repli : une valeur non reconnue vaudrait «controlled» par accident,
@@ -365,12 +394,28 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         raise PipelineError(
             f"confiance de cible inconnue : {confiance_cible!r} · admises : "
             f"{' | '.join(CONFIANCES)}")
+    # Le moteur d'intention est résolu UNE FOIS, localement : c'est le choix de CETTE
+    # mission, pas un état que l'appelant aurait dû poser sur le module.
+    moteur_intent = MOTEUR_INTENT if moteur_intent is None else moteur_intent
+    fournisseur_llm = FOURNISSEUR_LLM if fournisseur_llm is None else fournisseur_llm
     registre = Registry()
 
-    # ---------------------------------------------------------------- 0. mission
+    # ---------------------------------------------------------------- 0. cible
+    # Normalisation UNIQUE de frontière (2026-08-30) : un Path historique, une chaîne
+    # (chemin ou URL), ou un descripteur déjà construit deviennent UNE Cible structurée.
+    # En aval, le cœur ne reconvertit plus jamais la cible en Path : il lit le
+    # descripteur (`cib`) et, quand elle existe, sa forme locale (`chemin_cible`).
+    # Une URL n'est donc jamais convertie en chemin, jamais montée, jamais exécutée
+    # en sous-processus local.
+    cib = CIB.normaliser(cible)
+    chemin_cible = cib.chemin_local          # Path | None
+    reference_cible = cib.reference
+
+    # ---------------------------------------------------------------- 0b. mission
     # Le dossier append-only s'ouvre AVANT toute décision : un arrêt (intent non
     # résolu, policy) doit être tracé autant qu'une exécution complète.
-    miss = MS.ouvrir(requete, P.canonicaliser(requete), Path(cible))
+    miss = MS.ouvrir(requete, P.canonicaliser(requete), reference_cible,
+                     cible_descr=cib.to_dict())
     # La confiance APPLIQUÉE est consignée immédiatement, avant la policy : « qu'est-ce
     # qu'on a cru de cette cible ? » doit se relire dans le dossier de mission même si
     # la policy refuse ensuite — et même si OPA est indisponible.
@@ -399,13 +444,23 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     # ---------------------------------------------------------------- 1. intention
     # Les garde-fous déterministes s'appliquent dans les DEUX modes : une demande
     # explicitement interdite n'est jamais soumise à un modèle.
-    if MOTEUR_INTENT == "llm" and FOURNISSEUR_LLM is not None:
+    if moteur_intent == "llm" and fournisseur_llm is not None:
         import intent_llm
         it = intent_llm.garde_fous(requete, registre)
         if it is None:
-            it = intent_llm.inferer(requete, registre, FOURNISSEUR_LLM)
+            it = intent_llm.inferer(requete, registre, fournisseur_llm)
     else:
         it = intent.inferer(requete, registre, avec_internes=avec_internes)
+
+    # La DÉCISION d'intention est consignée pour tous les états — y compris les arrêts :
+    # « pourquoi cette capacité » se relit dans le journal (motif du matching), pas en
+    # rouvrant plan.json. Un journal qui s'arrête à « intent_rejected » ne dit pas QUOI
+    # a été compris ni pourquoi. Les `motifs` sont les mots-clés qui ont matché, jamais
+    # des noms d'outil (le registre ne les expose pas au moteur d'intention).
+    MS.consigner(miss, "intention", statut=it.statut,
+                 capabilities=list(it.capabilities),
+                 motifs=dict(it.motifs), moteur=it.moteur,
+                 question=it.question, motif=it.motif)
 
     # Un intent non résolu n'exécute RIEN. Ni plan, ni policy, ni outil.
     # C'est testé : c'est la différence entre « il manque une information » et
@@ -470,9 +525,12 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
 
     # --------------------------------------------- 1b. applicabilité (étape 3)
     # Filtrage DÉTERMINISTE et déclaratif, AVANT le plan : un provider dont les
-    # globs déclarés ne correspondent à aucun fichier de la cible est écarté avec
-    # motif tracé. Sans déclaration, le provider reste éligible (pas de devinette).
-    provs, exclus = P.filtrer_applicabilite(provs, registre, Path(cible))
+    # target_types ne couvrent pas le type de la cible — ou dont les globs déclarés
+    # ne correspondent à aucun fichier local — est écarté avec motif tracé. Sans
+    # déclaration, le provider reste éligible (pas de devinette). C'est ICI qu'une
+    # cible non locale (url) écarte tous les providers locaux : elle ne descend
+    # jamais vers un sous-processus sandboxé.
+    provs, exclus = P.filtrer_applicabilite(provs, registre, cib)
     if exclus:
         MS.consigner(miss, "applicabilite",
                      ecartes={k: v for k, v in exclus.items()})
@@ -528,11 +586,19 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
                          statuts=st)
 
     # ---------------------------------------------------------------- 2. plan typé
-    plan = P.construire(requete, str(cible), provs, registre, it.moteur,
+    plan = P.construire(requete, reference_cible, provs, registre, it.moteur,
                         exclus_applicabilite=exclus, exclus_conditions=exclus_cond,
-                        exclus_disponibilite=exclus_dispo)
+                        exclus_disponibilite=exclus_dispo,
+                        cible_descr=cib.to_dict())
+    # La SÉLECTION est consignée avec le plan : « pourquoi ce provider et pas l'autre »
+    # se lit dans le journal (choisis, écartés, motif), pas seulement dans plan.json. Le
+    # motif vient de `plan.construire` — priorité déclarée, fan_out, ou choix imposé — et
+    # c'est exactement la trace que le futur UI consommera pour expliquer une étape.
+    # (Réalignement : `exclus_disponibilite` — dimension de disponibilité de PR #2 —
+    # et `cible_descr` — descripteur de cible CORE — sont conservés TOUS LES DEUX.)
     MS.consigner(miss, "plan", plan_id=plan.plan_id,
-                 providers=[s.provider for s in plan.steps])
+                 providers=[s.provider for s in plan.steps],
+                 selection=plan.selection)
 
     # ---------------------------------------------------------------- 3. policy
     # Une politique QUI NE PEUT PAS RÉPONDRE n'est pas une politique qui refuse :
@@ -592,8 +658,18 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     # ---------------------------------------------------------------- 4. garde de chemin
     # OPA a autorisé la cible DEMANDÉE. Ici on vérifie ce qui est RÉELLEMENT accessible :
     # OPA ne peut pas savoir qu'un symlink sort du workspace.
+    # Barrière de défense (2026-08-30) : une cible NON LOCALE n'a pas de chemin. Elle ne
+    # peut pas arriver ici aujourd'hui (aucun provider compatible n'a survécu à
+    # l'applicabilité), mais si un futur transport distant en laissait passer une, elle
+    # ne doit jamais être traitée comme un pseudo-chemin local : refus explicite, pas
+    # de conversion, pas de montage.
+    if chemin_cible is None:
+        raise PipelineError(
+            f"cible non locale {cib.type!r} ({cib.reference_sure()}) sans chemin local : "
+            f"le transport sandbox_cli ne peut pas la prendre en charge — elle doit être "
+            f"routée par un transport distant enregistré, pas montée comme un Path")
     try:
-        rapport_chemin = GC.verifier_cible(cible, [cible])
+        rapport_chemin = GC.verifier_cible(chemin_cible, [chemin_cible])
         for step in plan.steps:
             GC.verifier_args([*step.commande, *step.args])
     except Exception as exc:
@@ -607,12 +683,15 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         raise
 
     # ---------------------------------------------------------------- 5. exécution
-    sortie = _prepare_sortie()
+    # La sortie vit SOUS la mission, pas dans un répertoire global partagé (multi-mission,
+    # 2026-08-30). Chaque mission écrit ses raw_*/brut_* chez elle : rien à vider, rien à
+    # se disputer entre deux exécutions concurrentes.
+    sortie = _sortie_mission(miss)
     GC.verifier_sortie(sortie / "rapport.json", sortie)
     sbx = Sandbox(
         bwrap=shutil.which("bwrap") or "bwrap",
         egress_autorise=egress_accorde,
-        racine_scan=cible,
+        racine_scan=chemin_cible,
         racine_regles=CACHE_REGLES,
         racine_db=CACHE_DB,
         sortie=sortie,
@@ -620,7 +699,7 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
     )
 
     ctx = RUN.capturer(sbx, PO.POLICY_FILE, registre.empreinte())
-    ctx.input_digest, ctx.input_commit, ctx.working_tree_dirty = RUN.digest_cible(cible)
+    ctx.input_digest, ctx.input_commit, ctx.working_tree_dirty = RUN.digest_cible(chemin_cible)
     exec_ = Execution(plan=plan.to_dict(),
                       decision={"allow": True, "motifs": list(decision.motifs)},
                       intent=it.to_dict(),
@@ -628,7 +707,8 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
                       egress=egress_info,
                       run_id=RUN.nouveau_run_id(plan.plan_id, ctx, ctx.input_digest),
                       contexte=ctx.to_dict(),
-                      chemin=rapport_chemin.to_dict())
+                      chemin=rapport_chemin.to_dict(),
+                      sortie=str(sortie))
     MS.consigner(miss, "contexte", run_id=exec_.run_id,
                  contexte_empreinte=ctx.contexte_empreinte,
                  input_digest=ctx.input_digest, input_commit=ctx.input_commit,
@@ -645,7 +725,7 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         domaines_du_provider[_p.id] = dom[0] if dom else None
         binaire_de_provider[_p.id] = (_p.manifest.binaire if _p.manifest is not None
                                       else Path(_p.commande[0]).name)
-    V = _ContexteVague(miss=miss, registre=registre, exec_=exec_, sbx=sbx, cible=cible,
+    V = _ContexteVague(miss=miss, registre=registre, exec_=exec_, sbx=sbx, cible=chemin_cible,
                        sortie=sortie, ctx=ctx, trouves=trouves, tous_findings=tous_findings,
                        domaines=domaines_du_provider, binaires=binaire_de_provider)
     _vague(plan.steps, V, plan.to_dict(), {"allow": True, "motifs": list(decision.motifs)},
@@ -667,8 +747,9 @@ def executer(requete: str, cible: Path, cible_autorisee: bool = True,
         declencheurs = STAT.declencheurs_escalade(provisoire, registre, tentes, MAX_ESCALADE)
         if declencheurs:
             noms = [d["suppleant"] for d in declencheurs]
-            plan2 = P.construire(plan.requete, str(cible), noms, registre,
-                                 f"{plan.moteur_intent}+escalade")
+            plan2 = P.construire(plan.requete, reference_cible, noms, registre,
+                                 f"{plan.moteur_intent}+escalade",
+                                 cible_descr=cib.to_dict())
             decision2 = None
             try:
                 decision2 = moteur.evaluer(plan2, registre, cible_autorisee,
@@ -758,16 +839,17 @@ def main() -> int:
     cible = Path(sys.argv[2]) if len(sys.argv) > 2 else RACINE / "testrepo"
 
     e = executer(requete, cible)
-    SORTIE.mkdir(parents=True, exist_ok=True)
-    (SORTIE / "plan.json").write_text(json.dumps(e.plan, ensure_ascii=False, indent=2),
+    sortie = Path(e.sortie) if e.sortie else (RACINE / "run")
+    sortie.mkdir(parents=True, exist_ok=True)
+    (sortie / "plan.json").write_text(json.dumps(e.plan, ensure_ascii=False, indent=2),
                                       encoding="utf-8")
-    (SORTIE / "findings.json").write_text(json.dumps(e.findings, ensure_ascii=False, indent=2),
+    (sortie / "findings.json").write_text(json.dumps(e.findings, ensure_ascii=False, indent=2),
                                           encoding="utf-8")
-    (SORTIE / "clusters.json").write_text(json.dumps(e.clusters, ensure_ascii=False, indent=2),
+    (sortie / "clusters.json").write_text(json.dumps(e.clusters, ensure_ascii=False, indent=2),
                                           encoding="utf-8")
-    (SORTIE / "rapport.json").write_text(json.dumps(e.rapport, ensure_ascii=False, indent=2),
+    (sortie / "rapport.json").write_text(json.dumps(e.rapport, ensure_ascii=False, indent=2),
                                          encoding="utf-8")
-    (SORTIE / "run.json").write_text(
+    (sortie / "run.json").write_text(
         json.dumps({"execution_profile": e.profil,
                     # Présent ici aussi : `analyser.py` et `pipeline.main()` écrivent deux
                     # `run.json` du même fait, et l'un des deux omittrait la garde qu'un
@@ -821,7 +903,7 @@ def main() -> int:
             print(f"     NON analysé : {na['cible']} [{na['etat']}] {na['raison']}")
         for lim in c["limites"]:
             print(f"     limite      : {lim}")
-    print(f"\nécrit dans {SORTIE}")
+    print(f"\nécrit dans {sortie}")
     return 0
 
 

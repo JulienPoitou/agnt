@@ -8,11 +8,12 @@ dupliquée ici : si elle existait ici, elle serait contournable par la CLI.
 
 Trois lois de ce fichier :
 
-1. **Une exécution à la fois.** `pipeline` écrit ses objets dans `PHASE3/run/` avant que
-   `_archiver_mission` ne les copie sous la mission : ce répertoire est partagé, donc deux
-   runs simultanés se réécriraient l'un l'autre. La file à un consommateur est ce qui
-   rend le partage sûr, pas une politesse. (Rendre `run/` par-exécution = travail sur le
-   pipeline, hors périmètre ici.)
+1. **Une exécution à la fois.** La file à un consommateur sérialise les runs : l'écriture
+   des artefacts est désormais PAR MISSION (`<mission>/run`, posé par le pipeline), donc
+   deux runs ne se réécrivent plus — mais cette interface garde la file parce qu'elle
+   reste la borne de simplicité et de visibilité de ce service (un run en cours se lit,
+   le suivant attend). Ce n'est plus un garde-fou contre un répertoire partagé, c'est un
+   choix d'ordonnancement assumé.
 2. **La cible est un choix, jamais un chemin.** `GET /api/cibles` renvoie une liste
    construite ici ; `POST /api/runs` ne prend qu'un nom de cette liste. Ce n'est pas une
    micro-optimisation : la cage monte `--ro-bind / /`, donc ce qui limite la lecture, c'est
@@ -43,6 +44,7 @@ import traceback
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 ICI = Path(__file__).resolve().parent
 RACINE = ICI.parent                      # PHASE3/
@@ -182,6 +184,81 @@ def _vivante(question: str, cible: str, depuis: float) -> dict | None:
     ev["mission"] = retenue.name
     ev["dossier"] = str(retenue)
     return ev
+
+
+def _mission_recente(question: str, cible: str, depuis: float) -> str | None:
+    """Le `mission_id` du dossier de mission correspondant à ce run, ou `None`.
+
+    Même règle de correspondance que `_vivante` (question + cible + horodatage) —
+    dernier recours quand ni le résumé ni l'objet de refus ne portent le mission_id.
+    Ne rend jamais de chemin : seulement le nom du dossier."""
+    try:
+        import mission as _ms
+    except Exception:                                   # noqa: BLE001
+        return None
+    dossier = getattr(_ms, "MISSIONS", None)
+    if dossier is None or not dossier.is_dir():
+        return None
+    for d in sorted(dossier.iterdir(), reverse=True):
+        if not d.is_dir() or d.is_symlink():
+            continue
+        tete = d / "mission.json"
+        if not tete.is_file():
+            continue
+        try:
+            if tete.stat().st_mtime < depuis - 0.5:
+                continue
+            ent = json.loads(tete.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if ent.get("requete") != question:
+            continue
+        if str((ent.get("cible") or {}).get("chemin") or "") not in (cible, str(Path(cible))):
+            continue
+        return d.name
+    return None
+
+
+def _mission_id_du_run(etat: dict) -> str | None:
+    """Le `mission_id` durable associé à ce run, lu dans ce qui a été consigné.
+
+    Le POST `/api/runs` rend un identifiant TEMPORAIRE de file ; le mission_id, lui,
+    n'existe qu'une fois la mission ouverte. Il se lit dans le résumé (succès ou
+    arrêt propre), sinon dans l'objet de refus (fail-closed), sinon par la règle de
+    correspondance de `_mission_recente`. Champ ADDITIF : rien d'existant n'est
+    modifié, aucun chemin n'est exposé."""
+    resume = etat.get("resume") or {}
+    if resume.get("mission"):
+        return str(resume["mission"])
+    donnees = etat.get("donnees") or {}
+    run = donnees.get("run") or {}
+    if run.get("mission"):
+        return str(run["mission"])
+    refus = etat.get("refus") or {}
+    mp = refus.get("mission")
+    if mp:
+        try:
+            return Path(mp).name
+        except (TypeError, ValueError):
+            return None
+    return _mission_recente(etat.get("question") or "", etat.get("cible") or "",
+                            float(etat.get("pose_le") or 0.0))
+
+
+def _proprietaires_actifs() -> dict:
+    """mission_id → statut de file prouvé (`en_file`/`en_cours`) pour les runs
+    actuellement dans la file/ETATS. C'est la SEULE preuve de propriété en
+    mémoire : sans elle, une mission sans événement terminal est `inconnu`."""
+    actifs: dict = {}
+    with VERROU:
+        etats = [dict(e) for e in ETATS.values()]
+    for etat in etats:
+        if etat.get("statut") not in ("en_file", "en_cours"):
+            continue
+        mid = _mission_id_du_run(etat)
+        if mid:
+            actifs[mid] = etat["statut"]
+    return actifs
 
 
 def _marquer(rid: str, **champs) -> None:
@@ -369,7 +446,8 @@ class Gestionnaire(BaseHTTPRequestHandler):
 
     # ---- lecture
     def do_GET(self):  # noqa: N802 (nom imposé par BaseHTTPRequestHandler)
-        chemin = self.path.split("?", 1)[0]
+        partie = urlparse(self.path)
+        chemin = partie.path
         if chemin.startswith("/api/"):
             pass
         elif chemin in ("/", "/index.html"):
@@ -381,6 +459,10 @@ class Gestionnaire(BaseHTTPRequestHandler):
             return self._json({"cibles": cibles_admises()})
         if chemin == "/api/capacites":
             return self._json(_capacites())
+        if chemin == "/api/missions":
+            return self._missions(partie)
+        if chemin.startswith("/api/missions/"):
+            return self._mission_detail(partie)
         if chemin.startswith("/api/runs/"):
             rid = chemin.rsplit("/", 1)[-1]
             with VERROU:
@@ -396,8 +478,63 @@ class Gestionnaire(BaseHTTPRequestHandler):
                              float(etat.get("pose_le") or 0.0))
                 if v is not None:
                     etat["vivante"] = v
-            return self._json({"id": rid, **etat})
+            # Deux champs ADDITIFS du lecteur d'historique : le mission_id durable (le `id`
+            # du POST est un identifiant de file TEMPORAIRE) et le lien vers son détail.
+            # Absents = mission pas encore ouverte (ou pas d'archive) : `null`, pas d'invention.
+            mission_id = _mission_id_du_run(etat)
+            return self._json({"id": rid, **etat,
+                               "mission_id": mission_id,
+                               "detail_href": f"/api/missions/{mission_id}" if mission_id else None})
         return self.send_error(404)
+
+    # ---- lecture de l'historique (délégation au lecteur canonique, rien n'est projeté ici)
+    def _missions(self, partie):
+        """GET /api/missions — listing paginé. Toujours HTTP 200 ; `items` toujours
+        présent ; vide = `{"items": []}`. Le tri, la pagination, les filtres et la
+        projection vivent dans `slice/mission_history.py`."""
+        import mission_history as MH
+        qs = parse_qs(partie.query)
+        inconnus = [k for k in qs if k not in ("limit", "cursor", *MH.FILTRES_V1)]
+        if inconnus:
+            return self._erreur("INVALID_FILTER",
+                                "filtre inconnu : " + ", ".join(sorted(inconnus))
+                                + " — admis : limit, cursor, " + ", ".join(MH.FILTRES_V1),
+                                400)
+        try:
+            reponse = MH.lister(limit=(qs.get("limit") or [None])[0],
+                                cursor=(qs.get("cursor") or [None])[0],
+                                status=(qs.get("status") or [None])[0],
+                                target_type=(qs.get("target_type") or [None])[0],
+                                proprietaire=_proprietaires_actifs().get)
+        except MH.RequeteInvalide as e:
+            return self._erreur("INVALID_ARGUMENT", str(e), 400)
+        return self._json(reponse)
+
+    def _mission_detail(self, partie):
+        """GET /api/missions/{mission_id} — le détail projeté, ou 404 SANS chemin."""
+        import mission_history as MH
+        mid = partie.path[len("/api/missions/"):]
+        qs = parse_qs(partie.query)
+        inconnus = [k for k in qs if k not in ("timeline_limit", "timeline_cursor")]
+        if inconnus:
+            return self._erreur("INVALID_FILTER",
+                                "paramètre inconnu : " + ", ".join(sorted(inconnus))
+                                + " — admis : timeline_limit, timeline_cursor", 400)
+        try:
+            reponse = MH.projeter(mid,
+                                  timeline_limit=(qs.get("timeline_limit") or [None])[0],
+                                  timeline_cursor=(qs.get("timeline_cursor") or [None])[0],
+                                  proprietaire=_proprietaires_actifs().get)
+        except MH.MissionIntrouvable:
+            return self._erreur("MISSION_NOT_FOUND", "Mission introuvable", 404)
+        except MH.RequeteInvalide as e:
+            return self._erreur("INVALID_ARGUMENT", str(e), 400)
+        return self._json(reponse)
+
+    def _erreur(self, code, message, statut_http):
+        """Enveloppe d'erreur du contrat History §10. Message redacté, jamais de
+        chemin, jamais de trace."""
+        return self._json({"error": {"code": code, "message": message}}, statut_http)
 
     # ---- écriture
     def do_POST(self):  # noqa: N802

@@ -65,7 +65,16 @@ class PolicyEngine:
                 ],
                 "empreinte": registre.empreinte(),
             },
-            "cible": {"autorisee": cible_autorisee, "confiance": confiance_cible},
+            "cible": {"autorisee": cible_autorisee, "confiance": confiance_cible,
+                      # Additif (2026-08-30) : le descripteur STRUCTURÉ de la cible,
+                      # à côté des champs historiques qu'OPA compare déjà. Les règles
+                      # actuelles ne lisent que `autorisee`/`confiance` — ces deux clés
+                      # ne cassent donc rien — et une règle future pourra décider sur
+                      # `type`/`local` (cible distante = pas de sous-processus local)
+                      # sans changer le schéma. `getattr` : `entree()` peut recevoir un
+                      # plan antérieur sans descripteur.
+                      "type": (getattr(plan, "cible_descr", None) or {}).get("type"),
+                      "local": (getattr(plan, "cible_descr", None) or {}).get("local")},
             # Le moteur DÉCLARE ce qu'il sait faire ; OPA DÉCIDE. Si cette déclaration
             # ment, la garde ne vaut rien — d'où le test dédié.
             # Le profil vient de profils.py, pas d'un dictionnaire improvisé ici.

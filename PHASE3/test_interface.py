@@ -43,6 +43,7 @@ sys.path.insert(0, str(RACINE / "interface"))
 
 import api                                                    # noqa: E402
 import pipeline as P                                          # noqa: E402
+import adapters as AD                                         # noqa: E402 — seam « disponibilité » (alignement PR #2)
 
 BUNDLE = RACINE / "dogfooding" / "rapports" / "mocha"
 MISSIONS = RACINE / "artifacts" / "missions"
@@ -91,6 +92,14 @@ def main() -> int:
     base = f"http://127.0.0.1:{serveur.server_address[1]}"
     fil = threading.Thread(target=serveur.serve_forever, daemon=True)
     fil.start()
+    # Alignement d'intégration (étape 1bis « disponibilité », PR #2) : sans outils
+    # installés, la disponibilité refuse chaque RUN AVANT la policy, et le chemin
+    # d'erreur que cette batterie mesure (PolicyError → motif + objet erreur préservés
+    # jusqu'à la face) ne serait plus exercé. Le serveur tourne DANS ce processus : la
+    # neutralisation est donc visible par le pipeline de l'API. AUCUNE attente n'est
+    # modifiée — la scène redevient celle d'une machine après bootstrap.sh.
+    _exe_de = AD.exe_de
+    AD.exe_de = lambda p: "/bin/true"
     try:
         # ---------------------------------------------------------------- les fichiers statiques
         code, page = http(base, "/")
@@ -207,9 +216,11 @@ def main() -> int:
                 shutil.rmtree(d, ignore_errors=True)
 
         # ---------------------------------------------------------------- la file d'attente
-        # L'API n'autorise qu'un RUN à la fois, et ce n'est pas un détail de confort : le
-        # répertoire `PHASE3/run/` des sorties brutes est PARTAGÉ entre les missions. Si deux
-        # missions y écrivaient en parallèle, la seconde viderait les preuves de la première.
+        # L'API garde un consommateur unique. La raison a changé en 2026-08-30 : les sorties
+        # brutes vivent désormais PAR MISSION (`<mission>/run`, posé par le pipeline), donc
+        # deux missions ne se réécrivent plus. La file reste un choix d'ordonnancement et de
+        # visibilité — un run en cours se lit, le suivant attend — pas un garde-fou contre un
+        # répertoire partagé.
         deux = []
         for question in ("Analyse la sécurité de ce dépôt", "Cherche les secrets de ce dépôt"):
             c, lance = http(base, "/api/runs", {"cible": liste[0]["chemin"], "question": question,
@@ -241,7 +252,7 @@ def main() -> int:
         motifs = {str(((t.get("resume") or {}).get("motif")) or "") for t in terminaux.values()}
         verifie("un RUN en file derrière un autre ne reçoit pas la décision du premier",
                 len(motifs) <= 2, " · ".join(sorted(m[:60] for m in motifs if m)))
-        verifie("la sérialisation effective de l'écriture dans PHASE3/run/ est mesurée",
+        verifie("l'écriture concurrente dans le répertoire de mission est mesurée",
                 None, "aucune exécution d'outil n'est possible ici (opa et bwrap absents) : la file "
                       "est jugée sur ses compteurs, pas sur ses octets. À rejouer après bootstrap.sh.")
         for d in sorted(set(MISSIONS.glob("m-*")) - avant) if MISSIONS.is_dir() else []:
@@ -278,6 +289,7 @@ def main() -> int:
         verifie("la page porte le bandeau qui sépare la maquette du chemin réel",
                 code == 200 and "MAQUETTE" in str(ruban), "index.html sans marqueur MAQUETTE")
     finally:
+        AD.exe_de = _exe_de
         serveur.shutdown()
         serveur.server_close()
 
