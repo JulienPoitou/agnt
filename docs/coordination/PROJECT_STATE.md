@@ -197,11 +197,11 @@ Ordre : PR#2 → main  →  CORE History aligné  →  gates Product+Security su
 |---|---|---|
 | 0 | ~~ORCHESTRATEUR~~ | ~~Corriger l'incident bootstrap~~ **FAIT 31/08** (renormalisation eol, PR #3 → main). |
 | 1 | ORCHESTRATEUR | Vérifier PR #2 sur worktree (preuve minimale) puis merger dans `main` ; mettre à jour ce fichier (base d'intégration). |
-| 2 | CORE | Retenter une commande (self-heal attendu) ; lire la mémoire (`git fetch origin main && git show origin/main:docs/coordination/PROJECT_STATE.md` — le checkout 4433af6 ne la contient pas) ; produire le handoff `eebefbc` ; **aucun nouveau code sur la base 4433af6** avant re-alignment post-PR#2. |
+| 2 | CORE | Session `arena/01a0575c-agnt`. 1) retenter une commande (incident bootstrap résolu sur main) ; 2) lire la mémoire (`git show origin/main:docs/coordination/PROJECT_STATE.md`) ; 3) `git merge --ff-only eebefbc` (récupération des 11 commits, ff garanti) ; 4) CONFIRMER par exécution (`test_mission_history_api.py`, `test_transports.py`, `test_observabilite.py`, classés PASS/FAIL/BLOCKED/NON ÉVALUÉ) ; 5) handoff v1 + push ; 6) **STOP — aucun nouveau code** avant merge PR#2 + re-alignment (∩ PR#2 = 5 fichiers cœur). |
 | 3 | SECURITY | Produire le handoff `08a8150` (justifier le périmètre 125 fichiers ; confirmer invariants labo : double opt-in, egress fermé, aucun bypass). |
 | 4 | PRODUCT | Préparer l'exécution du gate `--base-url` contre l'arbre CORE intégré (après action 3 de la section précédente). |
-| 5 | WEB | Rester en attente (gates). Aucun code UI avant feu vert double. |
-| 6 | MCP | Rien d'assigné — le raccord Transport se fera en intégration coordonnée. |
+| 5 | WEB | **Override propriétaire 31/08** : mission parallèle « 20 prototypes UI » (Next.js sous `web/`) donnée directement par le propriétaire — suspend le blocage gate pour une EXPLORATION UX isolée. Containment : `web/prototypes/` étiquetés MOCK uniquement, aucun toucher à `PHASE3/interface` ni aux API, jamais de merge des prototypes en l'état, mode ATTACK = libellé inerte tant que SEC-LAB-001 n'est pas livré. **Au 31/08 après-midi : 0 commit, 0 push (vérifié API GitHub)** — travail non commité dans sa session ; à faire committer sur sa branche session. Anomalie signalée dans sa transcription : prototype 06 écrit hors dépôt (`/home/user/aggregates/`). |
+| 6 | MCP | Session `arena/01a05760-agnt`. Même séquence de reprise que CORE avec `git merge --ff-only 6e04ff8` (5 commits), rejouer la batterie MCP (serveurs locaux HTTP/Streamable/stdio + interop SDK `mcp==2.1.1`), handoff v1, puis STOP. **Le brief « P0 Provider abstraction » reçu par MCP est SUSPENDU** : il contredit la séparation Provider/Transport livrée par CORE et la décision MCP-004 (raccord au Transport canonique à l'intégration coordonnée). Aucun redesign registry/provider/adapter sans décision orchestrateur réconciliée avec le propriétaire. |
 | 7 | DEVOPS | Rien sans accord propriétaire. |
 
 ---
