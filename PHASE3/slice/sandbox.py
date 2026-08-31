@@ -63,6 +63,23 @@ CACHE_DB = CACHE_RACINE / "trivy-cache"
 RACINE_MONTEURS = Path(os.environ.get("ARENA_SECOPS_MONTEURS",
                                       str(Path(__file__).resolve().parent.parent)))
 
+# Ressources de la cage qui ne servent QU'À CERTAINS outils (31/08/2026).
+#
+# Le dépôt scanné, le répertoire de sortie et le gitconfig sont structurels : toute
+# exécution les emploie (`--chdir` sur le scan, le rapport écrit dans la sortie, git qui
+# refuse un dépôt au propriétaire douteux). Les règles Semgrep et la base de
+# vulnérabilités, elles, ne concernent que l'outil qui les cite.
+#
+# Le défaut mesuré : `verifie()` les exigeait TOUTES à chaque `exec`, et `commande()` les
+# montait toutes. Un dépôt Python analysé par bandit — qui n'ouvre ni règle ni base —
+# tombait donc sur « base Trivy introuvable : …/trivy-cache » (1,3 Go à télécharger) avant
+# le premier Popen. Faux prérequis : il faisait échouer un run qui n'en avait pas besoin,
+# et il MASQUAIT l'obstacle suivant, réel celui-là (bwrap, montages du bootstrap).
+#
+# Ce n'est pas un assouplissement : ce qui est employé reste exigé, à la même ligne, avec
+# le même message. Seul l'inutile cesse d'être obligatoire.
+RESSOURCES_OPTIONNELLES = ("regles", "db")
+
 
 # --------------------------------------------------------------------------- environnement
 # L'outil qui lit un dépôt hostile ne voyage pas avec les secrets de l'hôte.
@@ -239,15 +256,54 @@ class Sandbox:
     M_OUT: str = str(RACINE_MONTEURS / "mt-out")
     M_GITCONF: str = str(RACINE_MONTEURS / "gitconfig.ro")
 
-    def verifie(self) -> list[str]:
-        """Vérifie les préconditions AVANT de lancer, pour échouer avec un message utile."""
+    def besoins(self, argv: list[str] | None = None, env: dict | None = None) -> frozenset:
+        """Les ressources OPTIONNELLES que cette exécution utilise réellement.
+
+        Jugé sur la commande et l'environnement RÉELLEMENT construits, pas sur une
+        table « qui a besoin de quoi » écrite à côté — même autorité que
+        `conditions.egress_de`, et pour la même raison : une seconde déclaration
+        finirait par diverger de ce qui part vraiment dans la cage.
+
+        Les jetons `{REGLES}` et `{DB}` des manifests sont résolus par `adapters`
+        en `M_REGLES` / `M_DB` AVANT d'arriver ici : un provider qui ne cite ni
+        l'un ni l'autre ne peut pas les lire, donc les exiger serait un faux
+        prérequis. Un provider qui les cite les exige, et `verifie()` refuse s'ils
+        manquent — c'est la même ligne de code qui monte et qui vérifie.
+        """
+        jetons = [str(a) for a in (argv or [])]
+        jetons += [str(v) for v in (env or {}).values()]
+        requis = set()
+        for nom, point in (("regles", self.M_REGLES), ("db", self.M_DB)):
+            p = str(point or "")
+            if p and any(p in j for j in jetons):
+                requis.add(nom)
+        return frozenset(requis)
+
+    def verifie(self, besoins=None) -> list[str]:
+        """Vérifie les préconditions AVANT de lancer, pour échouer avec un message utile.
+
+        `besoins` = les ressources optionnelles réellement employées (cf. `besoins()`).
+        `None` conserve le comportement historique : TOUT est exigé (appel de
+        diagnostic, `harnais.py`, contrôle d'environnement complet). L'exécution,
+        elle, passe le besoin dérivé : un outil qui n'ouvre jamais la base Trivy
+        ne doit pas tomber parce qu'elle n'est pas téléchargée — ce faux prérequis
+        global masquait le vrai obstacle suivant.
+        """
+        requis = set(RESSOURCES_OPTIONNELLES) if besoins is None else set(besoins)
+        sources = [("dépôt", self.racine_scan), ("sortie", self.sortie),
+                   ("gitconfig", self.gitconfig)]
+        points = [self.M_SCAN, self.M_OUT, self.M_GITCONF]
+        if "regles" in requis:
+            sources.insert(1, ("règles", self.racine_regles))
+            points.insert(1, self.M_REGLES)
+        if "db" in requis:
+            sources.insert(2 if "regles" in requis else 1, ("base Trivy", self.racine_db))
+            points.insert(2 if "regles" in requis else 1, self.M_DB)
         prob = []
-        for nom, chemin in (("dépôt", self.racine_scan), ("règles", self.racine_regles),
-                            ("base Trivy", self.racine_db), ("sortie", self.sortie),
-                            ("gitconfig", self.gitconfig)):
+        for nom, chemin in sources:
             if chemin is None or not Path(chemin).exists():
                 prob.append(f"{nom} introuvable : {chemin}")
-        for pt in (self.M_SCAN, self.M_REGLES, self.M_DB, self.M_OUT, self.M_GITCONF):
+        for pt in points:
             if not Path(pt).exists():
                 prob.append(f"point de montage absent : {pt} (lancer bootstrap.sh)")
         # identité, pas seulement existence : c'est ici que le cache détourné par
@@ -255,13 +311,25 @@ class Sandbox:
         prob += empreintes_conformes(CACHE_BIN, self.racine_regles)
         return prob
 
-    def commande(self, argv: list[str]) -> list[str]:
+    def commande(self, argv: list[str], besoins=None) -> list[str]:
+        """La commande bwrap. Les montages optionnels suivent `besoins` (cf. `verifie`).
+
+        Ce n'est pas cosmétique : bwrap REFUSE de démarrer si la source d'un
+        `--ro-bind` n'existe pas. Monter la base Trivy pour un outil qui ne la lit
+        pas faisait donc échouer la cage entière sur une absence sans rapport avec
+        l'analyse demandée.
+        """
+        requis = set(RESSOURCES_OPTIONNELLES) if besoins is None else set(besoins)
+        optionnels: list[str] = []
+        if "regles" in requis:
+            optionnels += ["--ro-bind", str(self.racine_regles), self.M_REGLES]
+        if "db" in requis:
+            optionnels += ["--ro-bind", str(self.racine_db), self.M_DB]
         return [
             self.bwrap,
             "--ro-bind", "/", "/",
             "--ro-bind", str(self.racine_scan), self.M_SCAN,
-            "--ro-bind", str(self.racine_regles), self.M_REGLES,
-            "--ro-bind", str(self.racine_db), self.M_DB,
+            *optionnels,
             "--ro-bind", str(self.gitconfig), self.M_GITCONF,
             "--bind", str(self.sortie), self.M_OUT,
             "--dev", "/dev", "--proc", "/proc", "--tmpfs", "/tmp",
@@ -350,7 +418,12 @@ class Sandbox:
     def exec(self, argv: list[str], env: dict | None = None,
              timeout: int | None = None) -> Resultat:
         delai = self.delai_effectif(timeout)
-        prob = self.verifie()
+        # Prérequis CONDITIONNELS au provider réellement exécuté : dérivés de sa
+        # commande et de son environnement déclaré (`{REGLES}` / `{DB}` déjà résolus
+        # par adapters). Rien n'est adouci — ce qui est employé reste exigé, et un
+        # manque reste un refus explicite avant tout Popen.
+        requis = self.besoins(argv, env)
+        prob = self.verifie(requis)
         if prob:
             raise SandboxError("sandbox inutilisable : " + "; ".join(prob))
 
@@ -369,7 +442,7 @@ class Sandbox:
             }),
         })
 
-        cmd = self.commande(argv)
+        cmd = self.commande(argv, requis)
         # start_new_session=True crée un groupe de processus dont on est le meneur.
         # Indispensable : subprocess.run ne tue que l'enfant DIRECT au timeout, et
         # --die-with-parent ne tue que l'enfant direct de bwrap. Vérifié pour de vrai :
