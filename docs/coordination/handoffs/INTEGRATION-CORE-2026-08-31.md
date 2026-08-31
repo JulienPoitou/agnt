@@ -98,12 +98,28 @@ attentes restent identiques. Seam choisi : `adapters.exe_de`, neutralisé locale
 - Aucune attente de test modifiée ou adoucie (seules les entrées de scène sont alignées).
 - Aucun manifest, aucune règle OPA, aucun sandbox modifié.
 
-## 6. Prochaine action
+## 6. Gates exécutés sur l'API intégrée réelle (2026-08-31, serveur `api.py --port 8141` sur l'arbre intégré)
 
-1. Gate Product (`product_api_gate.py --base-url`) contre l'API intégrée réelle.
-2. Gate Security (rejeu `dae445a` + campagne) sur la même API.
-3. PR de cette intégration vers main, puis re-alignment MCP (MCP-004).
+- **Product gate** (`product_api_gate.py`, contrats `agnt.history.v1`/`timeline.v1`/`execution-status.v1`, extrait de `3f96e25`, stdlib seule, GET uniquement) :
+  `--require-full-coverage --submission-id db1c6c5f5383` → **3470 PASS · 0 FAIL · 1 SKIP**.
+  Le SKIP restant = « full semantic case coverage » (états `cancelled`/`timeout`/`mcp`/`zero`
+  non produisibles dans cet environnement sans outils ni OPA). Preuve incluse :
+  `submission_id` (`db1c6c5f5383`, POST /api/runs) ≠ `mission_id`
+  (`m-20260831T113617Z-4bf75f78`) — distinction vérifiée sur API réelle.
+- **Security gate** (`history_timeline_gate.py` de `dae445a`, extrait de `08a8150`) :
+  `--base-url` sur la même API → **26/26 GET → PASS** (liste + tous les détails de mission,
+  y compris la mission refusée créée pendant le gate). Harnais de construction du gate :
+  `test_history_timeline_security.py` 46/46 sur l'arbre SECURITY.
+- Aucune fuite, aucun faux zéro, aucune contradiction masquée, aucune clé inconnue,
+  aucun vocabulaire MCP non allowlisté détecté par le gate Security.
 
-Confiance : HAUTE sur les 9 suites vertes et sur la campagne (sorties lues, rc capturés,
-contrôle de base rejoué). NULLE sur toute évaluation OPA/sandbox réelle ici.
+## 7. Prochaine action
+
+1. PR de cette intégration vers main (feu vert gates accordé sur l'API intégrée).
+2. Re-alignment MCP sur l'arbre CORE intégré (MCP-004 : transports canoniques,
+   `cible_type` dérivé, batterie 104 cas rejouée).
+3. Feu vert WEB uniquement après merge de CORE dans main + gates rejoués sur main.
+
+Confiance : HAUTE sur les 9 suites vertes, la campagne et les deux gates (sorties lues,
+rc capturés, contrôle de base rejoué). NULLE sur toute évaluation OPA/sandbox réelle ici.
 === END AGNT HANDOFF ===

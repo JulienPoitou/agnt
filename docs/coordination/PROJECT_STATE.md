@@ -204,7 +204,7 @@ Ordre : PR#2 → main ✅ (FAIT, b85bc91)  →  re-align CORE sur main  →  gat
 
 1. ~~**PR #2 → main**~~ ✅ **FAIT** (`b85bc91`) + preuve minimale exécutée après coup.
 2. ~~**Re-align CORE sur main**~~ ✅ **FAIT** (orchestrateur, session `arena/01a05783-agnt`) : 3 conflits résolus (union des dimensions disponibilité + descripteur de cible ; invariant « état par mission » + politique de conservation unique) ; défaut d'ombrage `cible` de la ligne CORE corrigé ; batterie verte (voir handoff `INTEGRATION-CORE-2026-08-31.md`). PR vers main à ouvrir après les gates.
-3. **Gates sur API intégrée réelle** (en cours) : Product (`product_api_gate.py --base-url`, `3f96e25`) ET Security (`dae445a` + campagne adversariale) contre la même API, captures complètes. → feu vert WEB.
+3. **Gates sur API intégrée réelle** ✅ **EXÉCUTÉS (31/08, serveur sur l'arbre intégré)** : Product `3470 PASS · 0 FAIL · 1 SKIP` (SKIP = états sémantiques non produisibles sans outils ; preuve submission_id ≠ mission_id incluse) ; Security `26/26 PASS` (liste + détails, y compris mission refusée ; harnais du gate 46/46). → **feu vert gates sur l'arbre intégré** (rejeu à refaire sur main après merge, sans changer les verdicts attendus).
 4. **PR CORE → main**, puis **raccord CORE+MCP Transport** (MCP-004) : re-align MCP sur l'arbre CORE intégré (attendre des re-confits sur `pipeline.py`/`transports.py` après CORE) ; supprimer `transports.py` MCP provisoire au profit du canonique ; corriger `cible_type="repository"` en dur (dériver le type réel) ; rejouer les 104 cas MCP.
 5. **Lots WEB** selon la carte `3268641`, après double feu vert (prototypes perdus — reconstruction décidée avec le propriétaire, pas en l'état des 20 prototypes).
 6. **SEC-LAB-001** : handoff v1 exigé d'abord (protocole), puis revue du périmètre 125 fichiers et audit ; ensuite seulement STRAT-001 (Strix) sur décision propriétaire.
@@ -217,7 +217,7 @@ Ordre : PR#2 → main ✅ (FAIT, b85bc91)  →  re-align CORE sur main  →  gat
 | # | Qui | Action |
 |---|---|---|
 | 0 | ~~ORCHESTRATEUR~~ | ~~Incident bootstrap~~ **FAIT** (PR #3). ~~Merger PR #2 + vérifier~~ **FAIT**. ~~Mémoire à jour~~ **FAIT** (PR #5, merged). ~~Re-align CORE + batterie~~ **FAIT** (ce lot, handoff `INTEGRATION-CORE-2026-08-31.md`). Reste : gates, PR CORE→main, puis MCP. |
-| 1 | ORCHESTRATEUR | Exécuter le gate Product contre l'API de l'arbre intégré (`arena/01a05783-agnt`), puis le rejeu Security (`dae445a`) ; consigner captures et verdicts ; ensuite PR de la ligne CORE vers main. |
+| 1 | ORCHESTRATEUR | ~~Gates Product+Security sur l'API intégrée~~ **FAIT** (3470 PASS / 0 FAIL et 26/26). Reste : PR de la ligne CORE vers main, rejeu gates sur main, puis MCP-004. |
 | 2 | PRODUCT | Vérifier les verdicts du gate sur l'arbre intégré ; certifier ou lister les écarts par contrat `agnt.history.v1`/`timeline.v1`/`execution-status.v1`. |
 | 3 | SECURITY | **Produire le handoff v1 de `08a8150`** (protocole ci-dessous : périmètre 125 fichiers justifié, invariants labo, tests labo, non-bypass, périmètre non touché). Puis préparer le rejeu du gate History (`dae445a`) sur l'API intégrée. |
 | 4 | MCP (reprise `arena/builder-mcp`) | **STOP jusqu'à l'atterrissage CORE.** Le brief « P0 Provider abstraction » reste SUSPENDU (contredit Provider/Transport CORE + MCP-004). Ensuite : re-align sur l'arbre CORE intégré, supprimer `transports.py` provisoire, corriger `cible_type` dur (dériver le type réel), rejouer les 104 cas. |
