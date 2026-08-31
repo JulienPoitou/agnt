@@ -34,17 +34,29 @@ API canonique — quatre fonctions, UNE exception (`TransportError`) :
     enregistrer(nom: str, executeur) -> None     # pose l'exécuteur
     fournit(nom: str) -> bool                    # « est-ce exécutable ? »
     connus() -> tuple[str, ...]                  # diagnostic / messages de refus
-    deleguer(nom: str, prov, sbx)                # exécute ET rend le résultat
+    deleguer(nom: str, prov, sbx, /, **contexte) # exécute ET rend le résultat
 
 Sémantique, point par point :
 
-· **Appel de l'exécuteur** : `deleguer` appelle `executeur(prov, sbx)` — DEUX arguments
-  positionnels, et rien d'autre. Des paramètres mot-clés supplémentaires à valeur par
-  défaut (`*, target=None, arguments=None, transport_factory=None`) sont donc compatibles
-  tels quels. Retour attendu : le même objet brut que `adapters.executer` produit.
-· **Fail-closed, sans repli** : un nom non enregistré lève `TransportError`. Il n'y a
-  AUCUN chemin qui rabatte sur un sous-processus local — un provider qui demande MCP
-  exécuté en CLI local est exactement le mélange de concepts que ce module interdit.
+· **Appel de l'exécuteur** : `deleguer` appelle `executeur(prov, sbx)` **sans contexte**,
+  ou `executeur(prov, sbx, **contexte)` **avec contexte**. En pratique le chemin réel
+  (`adapters.executer`) passe TOUJOURS le contexte — un exécuteur tiers doit donc
+  accepter ces quatre mots-clés :
+
+      executeur(prov, sbx, *, target=None, arguments=None,
+                transport_factory=None, cancel_event=None) -> ResultatBrut
+
+  Un exécuteur strictement à deux paramètres `(prov, sbx)` ne fonctionne que si
+  `deleguer` est appelé sans contexte (cas des tests) : par `adapters.executer` il lèvera
+  `TypeError`. C'est voulu — un transport qui perdrait silencieusement la cible ou
+  l'annulation serait bien plus grave qu'un échec net. (Corrigé le 31/08 : la version
+  précédente de cette note annonçait « deux arguments positionnels, et rien d'autre »,
+  ce qui était faux depuis MCP-004.)
+· **Fail-closed, sans repli, à DEUX couches** : un nom non enregistré lève
+  `TransportError` au dispatch, et le registre refuse déjà la CONSTRUCTION d'un `Provider`
+  dont le transport n'est pas dans `connus()`. Il n'existe AUCUN chemin qui rabatte sur un
+  sous-processus local — un provider externe exécuté en CLI local est exactement le mélange
+  de concepts que ce module interdit.
 · **Une seule exception** : le cœur ne distingue pas `UnknownTransport` /
   `DuplicateTransport`. Un raccord qui veut lever ses propres types doit les faire
   hériter de `TransportError`, sinon `adapters` ne les attrape pas.
@@ -57,6 +69,11 @@ Sémantique, point par point :
   dans les messages de refus) ; `fournit("sandbox_cli")` est donc `True`.
 · **Aucun retrait** : un transport retiré à chaud casserait des manifests déjà chargés.
   La validation des manifests se fait au chargement contre `connus()`/`fournit()`.
+· **`transport: mcp` exige un contrat MCP** (MCP-004) : `manifest` + `server_id` + `tool`,
+  validés par `mcp_provider.valider` au chargement du registre. Un provider externe sans
+  contrat de transport est refusé — ce n'est pas du zèle, c'est ce qui borne une exécution
+  hors de la machine.
+
 
 Correspondance avec le registre provisoire de la branche MCP :
 
