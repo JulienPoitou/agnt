@@ -14,8 +14,8 @@ Trois lois de ce fichier :
    reste la borne de simplicité et de visibilité de ce service (un run en cours se lit,
    le suivant attend). Ce n'est plus un garde-fou contre un répertoire partagé, c'est un
    choix d'ordonnancement assumé.
-2. **La cible est un choix, jamais un chemin.** `GET /api/cibles` renvoie une liste
-   construite ici ; `POST /api/runs` ne prend qu'un nom de cette liste. Ce n'est pas une
+2. **La cible est un chemin, jamais un nom.** `GET /api/cibles` renvoie une liste ;
+   `POST /api/runs` ne prend qu'un chemin de cette liste (le nom → 400). Ce n'est pas une
    micro-optimisation : la cage monte `--ro-bind / /`, donc ce qui limite la lecture, c'est
    ce qu'on autorise, pas ce qu'on sandboxe.
 3. **Un refus est un résultat.** `PolicyError`, `PipelineError`, outil absent, cible
