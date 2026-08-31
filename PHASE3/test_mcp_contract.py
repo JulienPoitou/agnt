@@ -160,6 +160,51 @@ def main() -> int:
         ecrasement_refuse = True
     ok("0quater. transport mcp d'un tiers jamais écrasé", ecrasement_refuse)
     MB.reinitialiser_pour_test()
+
+    # ---------------------------------------------------------------- contrat deleguer
+    # MCP-004 n'ajoute qu'UNE chose au module canonique du cœur : `deleguer` transmet un
+    # contexte par appel. Ces trois cas bornent cette extension — c'est la seule
+    # modification d'une interface fondamentale, elle doit être prouvée rétrocompatible.
+    recus = {}
+
+    def deux_args(prov, sbx):
+        recus["deux_args"] = (prov, sbx)
+        return "ok-deux-args"
+
+    def avec_contexte(prov, sbx, **ctx):
+        recus["ctx"] = ctx
+        return "ok-ctx"
+
+    transports.enregistrer("agnt_test_deux_args", deux_args)
+    transports.enregistrer("agnt_test_ctx", avec_contexte)
+
+    ok("0quinquies. un exécuteur à deux paramètres fonctionne toujours sans contexte",
+       transports.deleguer("agnt_test_deux_args", "P", "S") == "ok-deux-args"
+       and recus["deux_args"] == ("P", "S"))
+
+    ok("0hexies. le contexte par appel atteint l'exécuteur qui l'accepte",
+       transports.deleguer("agnt_test_ctx", "P", "S", cancel_event="stop",
+                           target="cible") == "ok-ctx"
+       and recus["ctx"] == {"cancel_event": "stop", "target": "cible"})
+
+    try:
+        transports.deleguer("agnt_test_deux_args", "P", "S", cancel_event="stop")
+        perte_silencieuse = False
+    except TypeError:
+        # Un transport qui PERDRAIT l'annulation ou la cible en silence serait bien plus
+        # grave qu'un échec net : l'erreur doit remonter, jamais être avalée.
+        perte_silencieuse = True
+    ok("0septies. un contexte non accepté échoue nettement, jamais en silence",
+       perte_silencieuse)
+
+    try:
+        transports.deleguer("agnt_transport_inconnu", "P", "S")
+        inconnu_refuse = False
+    except transports.TransportError:
+        inconnu_refuse = True
+    ok("0octies. un transport inconnu ne retombe jamais sur le sous-processus local",
+       inconnu_refuse)
+
     reg = charge()
     prov = reg.provider("review_mcp")
     ok("1. provider MCP chargé sans commande locale", prov.transport == "mcp" and prov.commande == [])
