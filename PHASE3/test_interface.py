@@ -17,6 +17,8 @@ Ce qui est vérifié, dans les deux sens quand c'est possible :
     AUCUNE      un RUN qui n'aboutit pas ne doit rien inventer : ni findings à zéro, ni
                 « erreur » générique à la place d'un refus de politique
     FABRIQUÉE   la maquette reste identifiée comme telle
+    HISTOIRE    un run réel abouti reparaît dans GET /api/missions et son détail rend
+                une timeline : c'est le maillon « revoir l'historique » du parcours
 
 Ce qui N'EST PAS vérifié ici : le rendu DOM (c'est `_domtest.mjs`), le moteur lui-même
 (c'est le reste des suites), et l'exécution réelle d'un outil — sur cette machine, `opa`
@@ -212,6 +214,35 @@ def main() -> int:
                     statut in ("termine", "refuse", "erreur") and ("arret" in trace or "confiance" in trace),
                     f"{len(nouveaux)} dossier(s) ; types : " +
                     ",".join(sorted({json.loads(l).get('type', '?') for l in trace.splitlines() if l.strip()})))
+            # ---------------------------------------------------- revoir l'historique
+            # Dernier maillon du parcours propriétaire. La page ne le consomme pas
+            # encore (mesuré : aucun `/api/missions` dans app.js/index.html — WEB-001/002,
+            # voir docs/coordination/WEB_DOGFOOD_V0.md), mais l'API HISTORY est en main
+            # et doit pouvoir être relue depuis ce run réel : c'est ce que l'écran
+            # affichera un jour. Jugé ici sur la mission RÉELLE, pas sur une fabriquée.
+            mid = etat.get("mission_id") or ((etat.get("donnees") or {}).get("run") or {}).get("mission")
+            verifie("le run terminal expose un mission_id durable (distinct de l'id de file)",
+                    bool(mid) and mid != identifiant, f"mission_id={mid!r} id={identifiant}")
+            if mid:
+                c, hist = http(base, "/api/missions?limit=100")
+                items = (hist or {}).get("items") if isinstance(hist, dict) else None
+                verifie("GET /api/missions répond avec l'enveloppe du contrat History",
+                        c == 200 and isinstance(items, list)
+                        and (hist or {}).get("schema_version") == "agnt.history.v1",
+                        f"code={c} schema={(hist or {}).get('schema_version')!r}")
+                trouve = next((i for i in (items or []) if i.get("mission_id") == mid), None)
+                verifie("la mission du run apparaît dans l'historique, statut terminal conservé",
+                        bool(trouve) and trouve.get("status") == statut
+                        and isinstance(trouve.get("artifacts"), dict),
+                        json.dumps(trouve, ensure_ascii=False)[:220] if trouve
+                        else f"absente de {len(items or [])} item(s)")
+                c, det = http(base, f"/api/missions/{mid}")
+                timeline = ((det or {}).get("data") or {}).get("timeline") or {}
+                verifie("GET /api/missions/<id> rend la timeline de la même mission",
+                        c == 200 and isinstance(det, dict)
+                        and isinstance(timeline.get("events"), list)
+                        and bool(timeline.get("events")),
+                        f"code={c} events={len(timeline.get('events') or [])}")
             for d in nouveaux:                               # rien ne reste de la campagne locale
                 shutil.rmtree(d, ignore_errors=True)
 
