@@ -250,7 +250,7 @@ un exécuteur `(prov, sbx)` fonctionne toujours sans contexte ; un contexte non 
 agent      : MCP
 domaine    : providers externes / transport MCP / normalisation / provenance
 branche    : arena/01a05760-agnt  (session) — PR ouverte vers main
-base       : e7262f9 (main : CORE intégré, PR#2 incluse) — rebase, 12 commits
+base       : e7262f9 (main : CORE intégré, PR#2 incluse) — rebase, 13 commits
 statut     : MCP-004 TERMINÉ — raccordé au Transport canonique, batterie rejouée
 
 commits (sur e7262f9)
@@ -266,6 +266,7 @@ commits (sur e7262f9)
   23a0795  align test doubles and battery with canonical CORE contracts
   99363e9  name every transport by its canonical registry name
   d5212a9  bound the deleguer context extension with contract tests
+  f735640  record MCP-004 status and handoff
 
 MCP-004 — ce qui a été fait
   - transports.py dupliqué SUPPRIMÉ : un seul registre, celui du cœur
