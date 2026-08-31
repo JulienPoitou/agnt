@@ -1,4 +1,108 @@
 "use client";
-import { useState } from "react"; import type { Detail, Mission } from "@/lib/api";
-const labels:any={termine:"Terminé",refuse:"Refusé",inconnu:"Inconnu",en_file:"En file",en_cours:"En cours",erreur:"Erreur"};
-export function MissionWorkspace({history,detail}:{history:{items:Mission[]},detail:Detail}){const [selected,setSelected]=useState(detail.mission.mission_id);const [finding,setFinding]=useState<any>(null);const current=history.items.find(x=>x.mission_id===selected)||detail.mission;return <div className="agnt-shell"><aside className="mission-index"><div className="brand">AGNT <small>DESIGN LAB</small></div><div className="eyebrow">MISSIONS · {history.items.length}</div>{history.items.map(m=><button className={m.mission_id===selected?"mission active":"mission"} key={m.mission_id} onClick={()=>setSelected(m.mission_id)}><b>{m.request.title}</b><span>{m.target.display_name}</span><em className={'status '+m.status}>{labels[m.status]||m.status}</em></button>)}</aside><main className="case"><header className="case-head"><div><div className="eyebrow">MISSION / {current.mission_id}</div><h1>{current.request.title}</h1><p>{current.target.type} · {current.target.display_name} · run {current.run_id||"inconnu"}</p></div><span className={'status large '+current.status}>{labels[current.status]||current.status}</span></header><nav className="case-tabs"><span className="selected">Overview</span><span>Findings <b>{detail.data.findings.length}</b></span><span>Executions</span><span>Report</span></nav><section className="coverage"><div><label>CONFIDENCE</label><strong>Non consignée</strong></div><div><label>PROVIDERS</label><strong>{detail.data.executions?.length??"inconnu"}</strong></div><div><label>FINDINGS</label><strong>{current.findings_summary?.total??"inconnu"}</strong></div><div><label>CORRELATIONS</label><strong>{current.clusters_count??"inconnu"}</strong></div></section><section className="content-grid"><div><div className="section-title"><h2>Findings</h2><span>source : capture certifiée</span></div><div className="finding-table">{detail.data.findings.map(f=><button key={f.id} onClick={()=>setFinding(f)}><span className={'severity '+f.severity.value.toLowerCase()}>{f.severity.value}</span><strong>{f.evidence.title||"Evidence sans titre"}</strong><span>{f.source.tool}</span><code>{f.location.file}{f.location.line?`:${f.location.line}`:""}</code></button>)}</div><div className="section-title"><h2>Execution status</h2><span>agnt.execution-status.v1</span></div><div className="execution-list">{(detail.data.executions||[]).map(x=><div key={x.provider_id}><strong>{x.provider_id}</strong><span className="status termine">selection enregistrée</span><small>provenance conservée</small></div>)}</div></div><aside className="report"><div className="eyebrow">REPORT</div><h2>{detail.data.report?.available?"Rapport disponible":"Rapport inconnu"}</h2><p>{detail.data.report?.content||"Aucun rapport disponible dans cette capture."}</p><div className="eyebrow timeline-label">TIMELINE</div>{(detail.data.timeline||[]).slice(0,5).map((e,i)=><div className="event" key={i}><i/ ><span>{String(e.type||e.event||"événement")}</span><small>seq {String(e.seq??"inconnu")}</small></div>)}</aside></section>{finding&&<div className="drawer-backdrop" onClick={()=>setFinding(null)}><aside className="drawer" onClick={e=>e.stopPropagation()}><button onClick={()=>setFinding(null)}>Close</button><div className="eyebrow">EVIDENCE · {finding.id}</div><h2>{finding.evidence.title||"Evidence"}</h2><p>{finding.evidence.description||"Description non consignée."}</p><dl><dt>Provider</dt><dd>{finding.source.tool}</dd><dt>Location</dt><dd>{finding.location.file}{finding.location.line?`:${finding.location.line}`:""}</dd><dt>Severity origin</dt><dd>{finding.severity.origin}</dd></dl></aside></div>}</main></div>}
+
+import { useState } from "react";
+
+import type { HistoryList, MissionDetail } from "@/lib/api";
+
+const labels: Record<string, string> = {
+  termine: "Terminé",
+  refuse: "Refusé",
+  erreur: "Erreur",
+  inconnu: "Inconnu",
+  en_file: "En file",
+  en_cours: "En cours",
+};
+
+export function MissionWorkspace({
+  history,
+  detail,
+}: Readonly<{ history: HistoryList; detail: MissionDetail }>) {
+  const [selected, setSelected] = useState(detail.mission.mission_id);
+  const current = history.items.find((x) => x.mission_id === selected) ?? detail.mission;
+  const findings = current.findings_summary;
+  return (
+    <div className="agnt-shell">
+      <aside className="mission-index">
+        <div className="brand">
+          AGNT <small>DESIGN LAB</small>
+        </div>
+        <div className="eyebrow">MISSIONS · {history.items.length}</div>
+        {history.items.map((m) => (
+          <button
+            className={m.mission_id === selected ? "mission active" : "mission"}
+            key={m.mission_id}
+            onClick={() => setSelected(m.mission_id)}
+          >
+            <b>{m.request.title}</b>
+            <span>{m.target.display_name}</span>
+            <em className={"status " + m.status}>{labels[m.status] ?? m.status}</em>
+          </button>
+        ))}
+      </aside>
+      <main className="case">
+        <header className="case-head">
+          <div>
+            <div className="eyebrow">MISSION / {current.mission_id}</div>
+            <h1>{current.request.title}</h1>
+            <p>
+              {current.target.type} · {current.target.display_name} · run {current.run_id ?? "aucun run_id publié"}
+            </p>
+          </div>
+          <span className={"status large " + current.status}>{labels[current.status] ?? current.status}</span>
+        </header>
+        <section className="coverage">
+          <div>
+            <label>PROVIDERS</label>
+            <strong>{detail.data.executions.length}</strong>
+          </div>
+          <div>
+            <label>FINDINGS</label>
+            <strong>{findings ? findings.total : "inconnu (non consigné)"}</strong>
+          </div>
+          <div>
+            <label>CORRÉLATIONS</label>
+            <strong>{current.clusters_count ?? "inconnu (non consigné)"}</strong>
+          </div>
+          <div>
+            <label>TIMELINE</label>
+            <strong>
+              {detail.data.timeline.returned_events}/{detail.data.timeline.total_events}
+            </strong>
+          </div>
+        </section>
+        <section className="content-grid">
+          <div>
+            <div className="section-title">
+              <h2>Executions</h2>
+              <span>agnt.execution-status.v1</span>
+            </div>
+            <div className="execution-list">
+              {detail.data.executions.map((x) => (
+                <div key={x.provider_id}>
+                  <strong>{x.display_name}</strong>
+                  <span className={"status " + x.execution.value}>execution : {x.execution.value}</span>
+                  <small>detection : {x.detection.value}</small>
+                </div>
+              ))}
+            </div>
+          </div>
+          <aside className="report">
+            <div className="eyebrow">TIMELINE · agnt.timeline.v1</div>
+            <p>
+              {detail.data.timeline.state} · legacy events : {detail.data.events.length} (compteurs indépendants,
+              jamais fusionnés)
+            </p>
+            {detail.data.timeline.events.map((e) => (
+              <div className="event" key={e.event_id}>
+                <span>{e.kind}</span>
+                <small>
+                  seq {e.position} · {e.safe_summary}
+                </small>
+              </div>
+            ))}
+          </aside>
+        </section>
+      </main>
+    </div>
+  );
+}

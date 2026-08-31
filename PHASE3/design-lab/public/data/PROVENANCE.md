@@ -34,6 +34,14 @@ diff -r docs/coordination/captures/gate-002-product-api \
 - Les fixtures de contrat `examples/anonymized-capture/` : idem, leur maison est le dossier
   du gate côté docs, pas ce front. Le lab n'affiche **que** les captures réelles gate-002.
 
+## État
+
+- Les 18 fichiers JSON (17 corps + manifeste) sont présents dans `public/data/gate-002-product-api/`,
+  vérifiés `diff -r` identiques à la source au commit de ce push (seul README.md de la source n'est
+  pas copié, il reste dans `docs/coordination/`).
+- `src/lib/api.ts` type ces captures en Zod (`tsc --noEmit` : 0 erreur) et les expose via le
+  manifeste : chaque réponse porte son rôle, son URL et son statut HTTP réels.
+
 ## Serment du front
 
 Le front n'affiche que ce qui est présent dans ces fichiers. Une absence n'est jamais un zéro :
