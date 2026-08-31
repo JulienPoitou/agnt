@@ -26,12 +26,25 @@ sys.path.insert(0, str(RACINE / "slice"))
 
 CAS = []
 ECHECS = []
+# Ce qui n'a PAS pu être mesuré (dépendance d'environnement absente). Un cas non évalué
+# n'est JAMAIS compté comme un succès — même convention que `test_utilisation`.
+NON_EVALUES: list = []
 
 
 def cas(nom: str, cond: bool, detail: str = ""):
     CAS.append((nom, cond, detail))
     if not cond:
         ECHECS.append(nom)
+
+
+# Scanners dont la section 4 (e2e réels) a besoin.
+_OUTILS = ("semgrep", "bandit", "trivy", "grype", "gitleaks", "detect-secrets", "checkov")
+
+
+def _outils_absents(*noms) -> bool:
+    """Aucun des binaires nommés n'est résolvable : c'est l'environnement, pas le code."""
+    import shutil
+    return all(shutil.which(n) is None for n in (noms or _OUTILS))
 
 
 REGISTRE_SYNTHETIQUE = """
@@ -142,6 +155,30 @@ def main() -> int:
     # ------------------------------------------------------------ 4. e2e réels
     import pipeline
     e_go = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo_go")
+    if not e_go.plan and _outils_absents():
+        # NON ÉVALUÉ, pas échec : les sections 1 à 3 (fan-out déclaré, budgets,
+        # montages) ont été mesurées ci-dessus et le restent. La section 4 exige deux
+        # missions RÉELLES avec de vrais findings : sans outil installé, l'étape
+        # « disponibilité » écarte tous les providers, la mission s'arrête AVANT le plan
+        # et `e_go.plan["steps"]` levait un KeyError qui masquait la cause — et qui
+        # supprimait aussi l'affichage des cas déjà mesurés.
+        # Aucune attente n'est relâchée : la garde ne se déclenche que si AUCUN scanner
+        # n'est résolvable ; sinon un vrai défaut réapparaît en échec.
+        raison = (f"aucun plan produit (arrêt {e_go.arret!r}) et aucun scanner "
+                  "résolvable sur cette machine")
+        for nom in ("4a. e2e dépôt Go : semgrep_go exécuté",
+                    "4b. e2e dépôt Python : semgrep_go écarté AVANT exécution, motif tracé",
+                    "4c. les deux missions restent complètes (findings > 0, mission tracée)"):
+            NON_EVALUES.append((nom, raison))
+        for nom, ok, detail in CAS:
+            print(f"  [{'OK' if ok else 'ECHEC'}] {nom}"
+                  + (f"  — {detail}" if detail and not ok else ""))
+        for nom, motif in NON_EVALUES:
+            print(f"  [NON EVALUE] {nom}  — {motif}")
+        print(f"\ntest_fanout : {len(CAS) - len(ECHECS)}/{len(CAS)} cas passés · "
+              f"{len(NON_EVALUES)} non évalué(s)")
+        print("NON ÉVALUÉ : dépendance d'environnement absente (outils + opa).")
+        return 2
     steps_go = sorted({s["provider"] for s in e_go.plan["steps"]})
     e_py = pipeline.executer("Analyse la sécurité de mon dépôt", RACINE / "testrepo")
     steps_py = sorted({s["provider"] for s in e_py.plan["steps"]})
