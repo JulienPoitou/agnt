@@ -43,7 +43,18 @@ STATUTS = ("non_disponible", "non_applicable", "non_selectionne", "non_autorise"
 
 
 def _outils_de(plan: dict) -> list[str]:
-    return [s.get("provider") for s in (plan.get("steps") or [])]
+    """Retourne uniquement les identifiants réellement exploitables du plan.
+
+    Les archives de missions sont relues alors qu'une écriture peut avoir été
+    interrompue. Une étape partielle (ou un plugin mal formé) ne doit pas faire
+    planter la projection avec un ``sorted`` mélangeant ``None`` et des chaînes,
+    ni devenir un faux provider affiché à l'interface.
+    """
+    if not isinstance(plan, dict):
+        return []
+    return [s["provider"] for s in (plan.get("steps") or [])
+            if isinstance(s, dict) and isinstance(s.get("provider"), str)
+            and s["provider"].strip()]
 
 
 def _couverture_par(couverture: list[dict]) -> dict:
