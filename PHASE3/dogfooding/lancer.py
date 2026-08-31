@@ -48,9 +48,11 @@ def lancer(nom: str) -> dict:
     duree = round(time.monotonic() - t0, 1)
     mem_apres = _mem_dispo()
 
-    # Les raw vivent dans PHASE3/run, vidé à chaque exécution : on les sauve.
-    for f in sorted((PHASE3 / "run").glob("raw_*.json")):
-        shutil.copy(f, out / f.name)
+    # Les raw vivent dans le répertoire de travail de la mission (`e.sortie`), pas dans un
+    # `PHASE3/run` global vidé à chaque exécution : on les sauve depuis la mission.
+    if e is not None and getattr(e, "sortie", ""):
+        for f in sorted(Path(e.sortie).glob("raw_*.json")):
+            shutil.copy(f, out / f.name)
 
     metriques = {"cible": nom, "commit": _commit(cible), "duree_s": duree,
                  "erreur": erreur, "mem_dispo_avant_mo": mem_avant,

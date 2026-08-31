@@ -23,6 +23,7 @@ import yaml
 
 import conditions as COND
 import provider_manifest as PM
+import transports
 
 REGISTRY_PATH = Path(__file__).parent / "capabilities.yaml"
 
@@ -80,6 +81,11 @@ class Provider:
     # de Trivy, le réseau de tel autre). Validées au chargement par `conditions.valider` :
     # une clé mal orthographiée refuse le registre, elle ne désarme pas la garde en silence.
     conditions: dict = field(default_factory=dict)
+    # Transport d'exécution (2026-08-30) : COMMENT ce provider s'exécute, distinct de CE
+    # QU'IL veut. Déclaratif au manifest ; `sandbox_cli` (sous-processus dans la cage) pour
+    # les adaptateurs historiques. Validé au chargement : un transport non fourni refuse le
+    # registre, il n'est jamais rabattu en silence sur le sous-processus.
+    transport: str = "sandbox_cli"
 
     def __post_init__(self) -> None:
         if self.risque not in RISQUES:
@@ -240,6 +246,11 @@ class Registry:
                     preconditions=dict(p.get("preconditions", {})),
                     cout=p.get("cout", "faible"),
                     priorite=prio,
+                    # Le transport vient du manifest (validé à son chargement) ; les
+                    # adaptateurs historiques, eux, sont des sous-processus sandboxés par
+                    # construction. Le registre n'invente jamais un transport.
+                    transport=(mani.transport if mani is not None
+                                else transports.TRANSPORT_SANDBOX_CLI),
                 )
                 if prov.id in self._prov:
                     raise RegistryError(f"provider en double : {prov.id}")

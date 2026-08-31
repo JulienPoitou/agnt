@@ -35,29 +35,40 @@ def _ts() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def ouvrir(requete: str, requete_canonique: str, cible: Path) -> Mission:
+def ouvrir(requete: str, requete_canonique: str, cible, cible_descr: dict | None = None) -> Mission:
     MISSIONS.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc)
-    graine = f"{cible}|{requete}|{ts.isoformat()}"
+    reference = str(cible)
+    graine = f"{reference}|{requete}|{ts.isoformat()}"
     mid = f"m-{ts.strftime('%Y%m%dT%H%M%SZ')}-{hashlib.sha256(graine.encode()).hexdigest()[:8]}"
     chemin = MISSIONS / mid
     chemin.mkdir(parents=True)
+    # L'en-tête décrit la cible. Deux formes, jamais mélangées :
+    #   · `descripteur` : la forme STRUCTURÉE (type, référence sûre, local, chemin) —
+    #     posée quand l'appelant détient le descripteur canonique (le pipeline) ;
+    #   · `type` legacy (« repertoire »/« fichier »/« absent ») : l'inférence
+    #     historique, conservée quand on n'a qu'un Path (appels et tests antérieurs).
+    cible_entete: dict = {"chemin": reference}
+    if cible_descr:
+        cible_entete["descripteur"] = dict(cible_descr)
+    else:
+        chemin_local = cible if isinstance(cible, Path) else None
+        cible_entete["type"] = (
+            "repertoire" if chemin_local is not None and chemin_local.is_dir()
+            else "fichier" if chemin_local is not None and chemin_local.is_file()
+            else "absent")
     entete = {
         "mission_id": mid,
         "cree_le": ts.isoformat(timespec="seconds"),
         "requete": requete,
         "requete_canonique": requete_canonique,
-        "cible": {
-            "chemin": str(cible),
-            "type": ("repertoire" if cible.is_dir()
-                     else "fichier" if cible.is_file() else "absent"),
-        },
+        "cible": cible_entete,
         "format_journal": "journal.jsonl — append-only, une ligne par événement",
     }
     (chemin / "mission.json").write_text(
         json.dumps(entete, ensure_ascii=False, indent=2), encoding="utf-8")
     m = Mission(mid, chemin)
-    consigner(m, "ouverture", requete=requete, cible=str(cible))
+    consigner(m, "ouverture", requete=requete, cible=reference)
     return m
 
 

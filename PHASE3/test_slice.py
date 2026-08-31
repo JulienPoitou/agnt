@@ -130,16 +130,19 @@ def main() -> int:
     # ------------------------------------------- 5. exécution réelle dans le sandbox
     e = pipeline.executer(REQUETE, CIBLE)
     codes = {r["provider"]: r["code_retour"] for r in e.raw}
+    # Les raw vivent dans le répertoire de travail de la mission (`e.sortie`), plus dans un
+    # `PHASE3/run` global partagé — c'est l'isolation multi-mission qui l'exige.
+    sortie_run = Path(e.sortie)
     produits = [r["provider"] for r in e.raw
-                if (RACINE / "run" / r["fichier"]).exists()
-                and (RACINE / "run" / r["fichier"]).stat().st_size > 2]
+                if (sortie_run / r["fichier"]).exists()
+                and (sortie_run / r["fichier"]).stat().st_size > 2]
     # Au moins les trois outils historiques ; un provider déclaratif peut s'y ajouter.
     critere(5, "les outils s'exécutent dans une sandbox limitée",
             {"semgrep", "trivy", "gitleaks"} <= set(produits),
             f"codes={codes} · sorties non vides={sorted(produits)}")
 
     # --------------------------------------------------- 6. raw results conservés
-    raws = sorted((RACINE / "run").glob("raw_*.json"))
+    raws = sorted(sortie_run.glob("raw_*.json"))
     tailles = {p.name: p.stat().st_size for p in raws}
     critere(6, "les raw results sont conservés",
             len(raws) >= 3 and all(t > 2 for t in tailles.values()),
