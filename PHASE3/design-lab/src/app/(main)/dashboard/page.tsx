@@ -1,12 +1,13 @@
-import { getDetail, getHistory } from "@/lib/api";
+import { CAPTURES } from "@/lib/api";
 
 import { MissionWorkspace } from "./_components/mission-workspace";
+import { resolveView } from "./_components/capture-notes";
 
-export default async function Page() {
-  const history = getHistory();
-  const first = history.items[0];
-  if (!first) throw new Error("la capture « list » ne contient aucune mission");
-  const detail = getDetail(first.mission_id);
-  if (!detail) throw new Error(`détail capturé absent pour ${first.mission_id}`);
-  return <MissionWorkspace history={history} detail={detail} />;
+export default async function Page({
+  searchParams,
+}: Readonly<{ searchParams: Promise<Record<string, string | string[] | undefined>> }>) {
+  const raw = await searchParams;
+  const key = typeof raw.v === "string" ? raw.v : undefined;
+  const active = resolveView(key, CAPTURES);
+  return <MissionWorkspace captures={CAPTURES} active={active} />;
 }
