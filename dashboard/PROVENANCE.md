@@ -16,13 +16,33 @@ d'origine). Il a été extrait de GitHub le 2026-09-01 (archive
   contrats d'API (`/api/*`) attendus par la SPA.
 - `Makefile`, `docker-compose.yml`, `README.md` — outillage d'origine.
 
-## Intégration visée
+## Intégration (état au 2026-09-01)
 
-Le backend réel d'agnt est `PHASE3/interface/api.py` (moteur Python). Le plan
-d'intégration est d'adapter le client `webui/src/api/client.ts` et les types
-`webui/src/types/api.ts` aux points d'entrée de cette API (cibles, capacités,
-runs, journal), sur le modèle de ce qui a été fait pour la console `src/`
-(PR #19). D'ici là, la SPA tourne sur le mock.
+**Le tableau de bord est branché sur le moteur réel** via
+`PHASE3/interface/dashboard_api.py` : un serveur Python (aucune dépendance, même
+style qu'`api.py`) qui sous-classe le `Gestionnaire` d'`api.py`, réutilise sa file
+et son worker (`analyser.lancer()`), sert la SPA buildée et projette l'archive de
+mission vers le contrat que la SPA lit.
+
+```bash
+cd dashboard/webui && npm run build          # une fois, ou après modification de la SPA
+python3 PHASE3/interface/dashboard_api.py    # → http://127.0.0.1:8142
+```
+
+En dev (rechargement à chaud) : `cd dashboard/webui && VITE_API_TARGET=http://127.0.0.1:8142 npm run dev`.
+
+Réel : cibles, capacités, historique des missions (scans), findings, journal
+(onglet Events), rapport markdown (`/api/report/{id}`), lancement d'un run
+(`POST /api/scan`). Refusé nommément (501) : arrêt, suppression d'archive,
+planifications, chat, réglages en écriture — le moteur ne les a pas. Neutre :
+WebSocket `/ws` non implémenté (le live feed affiche « déconnecté »), tokens/
+itérations/RAM (mesures que le moteur ne produit pas).
+
+## Intégration visée ensuite
+
+Voir `docs/TACHES_RESTANTES.md` (section « Tableau de bord ») : remplacer la
+grille « 22 phases » Xalgoryx par le registre des six étapes AGNT, brancher le
+New Scan sur les capacités/confiances réelles, WebSocket, rebranding.
 
 ## Licence
 

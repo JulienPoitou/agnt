@@ -17,11 +17,10 @@ dogfooding sur 4 dépôts réels. Journal : `PROJET_ETAT.md`.
 - `PHASE3/` — batteries de tests (`test_*.py`), fixtures (`testrepo*`), harnais, dogfooding.
 - `PHASE3/dogfooding/` — cibles réelles épinglées, observations, utilisabilité.
 - `dashboard/` — **le tableau de bord** (UI web React/Vite, reprise du dashboard
-  Xalgoryx, Apache 2.0 — voir `dashboard/PROVENANCE.md`). Le backend Go livré
-  avec n'est pas exécuté : l'intégration visée est le branchement sur
-  `PHASE3/interface/api.py`. En attendant, un backend mock (`webui/mock-backend.mjs`)
-  permet de le lancer en démo :
-  `cd dashboard/webui && npm install && npm run dev`.
+  Xalgoryx, Apache 2.0 — voir `dashboard/PROVENANCE.md`), branché sur le moteur
+  réel par `PHASE3/interface/dashboard_api.py` :
+  `python3 PHASE3/interface/dashboard_api.py` → http://127.0.0.1:8142
+  (builder d'abord la SPA : `cd dashboard/webui && npm install && npm run build`).
 
 ## Lancer la belle interface (console web)
 
