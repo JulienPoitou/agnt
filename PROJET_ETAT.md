@@ -2874,3 +2874,31 @@ seulement, ouvrir le profil « non fiable » et brancher les outils actifs (nmap
 `isolateur_oci.py` — dont la commande produite reste, texte pour texte, celle du harnais
 (`verifier_conformite()`), ce que cette épreuve confirme a posteriori : les dix limites d'une
 commande identique ont été mesurées tenantes sur un vrai runtime OCI.
+
+---
+
+# OCI · harnais corrigé — 12/12, le profil « non fiable » peut être ouvert (01/09/2026)
+
+Les deux défauts du mesureur diagnostiqués le même jour (bloc précédent) sont corrigés dans
+`test_oci.sh`, sur mesure et sans toucher une seule option de confinement (le `run()` est
+octet pour octet celui d'`isolateur_oci.py`, et `test_isolateur.py` reste **11/11**) :
+
+1. **Tests 8/9** : `tr -s ' ' | cut -d' '` ne pouvait pas lire `/proc/self/status` (séparateur
+   tabulation). Deux gestes pour arriver à la bonne correction : un premier essai `tr -s '\t '`
+   a échoué **et c'est informatif** — `-s` ne fait que resserrer une répétition, il ne convertit
+   pas ; `tr '\t' ' '` traduit. Mesure de contrôle dans le conteneur confiné :
+   `CapEff → 0000000000000000`, `NoNewPrivs → 1`.
+2. **Test 6/10b** : le conteneur du test de timeout est désormais nommé
+   (`oci-epreuve-timeout`) et supprimé APRÈS la mesure de durée (`docker rm -f`) — la mesure de
+   `timeout` est inchangée, mais le comptage 10b ne voit plus le `sleep 30` orphelin que
+   `timeout` laissait tourner côté démon.
+
+**Rejoué : 12 OK · 0 ÉCHEC, sortie 0** — « Les dix limites tiennent. Le profil « non fiable peut
+être ouvert. » Limites mesurées sur Docker Desktop 29.7.2 / WSL2 Ubuntu 24.04, image
+`python:3.13-slim` (digest `sha256:881d8073…`), depuis WSL via le même wrapper CLI.
+
+**Conséquence assumée** : le verrou qui fermait le profil « dépôt non fiable » est levé côté
+harnais. L'ouverture effective du profil (choix du propriétaire, délégué ce jour) se fait dans
+le même mouvement que le branchement des outils actifs qualifiés dans
+`PHASE5/QUALIF_OUTILS_ACTIFS.md` (PR #21) — l'exécution des outils non fiables passe par
+`isolateur_oci.py`, dont la commande est celle qui vient d'être éprouvée.
