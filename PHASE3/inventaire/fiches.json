@@ -6,8 +6,8 @@
    "fiches": "b647ef29b6ef",
    "notes": "a9f853547f2a",
    "matrice_phase1": "d8819269b585",
-   "registre": "748b2d9fd97a",
-   "manifeste": "a8ae4c47f43b"
+   "registre": "4e5786c98f94",
+   "manifeste": "a0da577a8063"
   },
   "formule": "valeur / (1 + complexite + risque) — voir l'en-tête du script",
   "nb_fiches": 126,
@@ -119,11 +119,12 @@
   "IAC_SCAN": {
    "providers": [
     "checkov",
-    "kics"
+    "kics",
+    "hadolint"
    ],
-   "passifs": 2,
+   "passifs": 3,
    "mode": "fan_out",
-   "max": 2,
+   "max": 3,
    "entree": [
     "cible"
    ],
@@ -131,6 +132,22 @@
    "domaines": [
     "cloud",
     "iac"
+   ]
+  },
+  "SHELL_ANALYSIS": {
+   "providers": [
+    "shellcheck"
+   ],
+   "passifs": 1,
+   "mode": "un_seul",
+   "max": 1,
+   "entree": [
+    "cible"
+   ],
+   "sortie": "finding/code-issue",
+   "domaines": [
+    "code",
+    "shells"
    ]
   },
   "CODE_LINT": {
@@ -2686,11 +2703,16 @@
     "score": 4,
     "priorite": 0.4,
     "deja_au_registre": false,
-    "epingle_au_manifeste": false
+    "epingle_au_manifeste": true
    },
    "etat_machine": {
-    "outil_present": false,
-    "epingle": {}
+    "outil_present": true,
+    "epingle": {
+     "version": "2.2.1",
+     "installation": "binaire",
+     "licence": "MIT",
+     "source": "https://github.com/ffuf/ffuf/releases/download/v2.2.1/ffuf_2.2.1_linux_amd64.tar.gz"
+    }
    },
    "preuve": "déclaré (non mesuré ici)",
    "verdict_phase1": "A_NOTER",
@@ -3188,7 +3210,7 @@
     "motif_declassement": "rôle Phase 1 « provider » : concurrent ou lib, pas un provider — inventorié, mais hors file d'intégration"
    },
    "etat_machine": {
-    "outil_present": true,
+    "outil_present": false,
     "epingle": {
      "version": "1.5.0",
      "installation": "pip",

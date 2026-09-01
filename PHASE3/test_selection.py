@@ -123,8 +123,13 @@ def main() -> int:
     p = PL.construire("analyse l'infrastructure", "/cible", ["checkov", "kics"],
                       r_reel, "test")
     sel = p.to_dict()["selection"]["IAC_SCAN"]
+    # 01/09/2026 : hadolint rejoint IAC_SCAN (3e provider, priorité 120) — le
+    # plafond fan_out (max 3) retient checkov+kics par priorité et ÉCARTE hadolint
+    # nommément. L'assertion suit le fait mesuré (même logique que la mise à jour
+    # de kics ci-dessus) : un écarté nommé vaut mieux qu'un choix invisibilisé.
     cas("4a. sélection présente dans plan.to_dict()",
-        sel["choisis"] == ["checkov", "kics"] and sel["ecartes"] == [])
+        sel["choisis"] == ["checkov", "kics"]
+        and sel["ecartes"] == [{"id": "hadolint", "priorite": 120}], str(sel))
     cas("4b. motif honnête : fan_out déclaré", "fan_out déclaré" in sel["motif"], sel["motif"])
 
     # 5. Multi-provider : motif de priorité + écartés nommés

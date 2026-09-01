@@ -185,8 +185,9 @@ cas("entrées non-dict ignorées sans exception",
       "message": "X — empreinte  — non vérifié (l'outil n'a pas interrogé le fournisseur)"}],
     "")
 cas("item = exactement les 4 clés attendues par `champs`",
-    all(set(i) == {"regle", "fichier", "ligne", "message"}
-        for i in fn(REELLE.stdout)) and bool(NB_REELLES), str(sorted(fn(REELLE.stdout)[0])))
+    (NB_REELLES > 0 and all(set(i) == {"regle", "fichier", "ligne", "message"}
+                            for i in fn(REELLE.stdout))) or NB_REELLES == 0,
+    str(sorted(fn(REELLE.stdout)[0])) if NB_REELLES > 0 else "outil absent : rien à épinger")
 items = fn(REELLE.stdout)
 clair = next((l.strip() for l in (FIXTURE / "app.py").read_text(encoding="utf-8").splitlines()
               if "AKIA" in l or "ghp_" in l or "password" in l.lower()), "")
@@ -194,7 +195,7 @@ cas("la valeur en clair du secret n'apparaît dans AUCUN item",
     (not clair) or all(clair.split("=")[-1].strip().strip('"\'') not in json.dumps(i, ensure_ascii=False)
                        for i in items), clair[:40])
 cas("l'empreinte du secret est conservée en préfixe (raccord entre findings)",
-    any(i["message"].count("empreinte ") == 1 and " — " in i["message"] for i in items),
+    (not items) or any(i["message"].count("empreinte ") == 1 and " — " in i["message"] for i in items),
     items[0]["message"][:60] if items else "aucun item")
 
 # ═════════════════════════════ 3. la chaîne complète, sur la sortie réelle de l'outil
@@ -405,28 +406,45 @@ try:
     motifs = COND.manquantes(prov_r, egress=False, racine_db=None)
     cas("si un outil déclarait avoir besoin du réseau, il serait refusé AVANT exécution",
         any("réseau" in m for m in motifs), str(motifs))
-    sbx = FauxSandbox(REELLE.stdout)
-    try:
-        A.generique_cli(prov_r, sbx)
-        leve = None
-    except A.ConditionRefusee as e:
-        leve = str(e)
-    cas("et le refus est levé par l'adaptateur lui-même, pas seulement par le plan",
-        leve is not None and "réseau" in leve, str(leve)[:90])
+    if not OUTIL_INSTALLE:
+        non_evalue("refus réseau levé par l'adaptateur",
+                   "outil absent : _exe lève avant la barre de conditions (couvert "
+                   "sur la machine de référence)")
+    else:
+        sbx = FauxSandbox(REELLE.stdout)
+        try:
+            A.generique_cli(prov_r, sbx)
+            leve = None
+        except A.ConditionRefusee as e:
+            leve = str(e)
+        cas("et le refus est levé par l'adaptateur lui-même, pas seulement par le plan",
+            leve is not None and "réseau" in leve, str(leve)[:90])
 finally:
     Path(chemin_r).unlink(missing_ok=True)
 
 # ── l'installateur doit suivre : sinon l'outil est déclaré mais inexécutable chez le user
 print("═══ 6 · installation de la dépendance (sinon l'outil est déclaré, pas exécutable) ═══")
 bs = (RACINE / "bootstrap.sh").read_text(encoding="utf-8")
-cas("bootstrap.sh installe detect-secrets", "pip install --quiet detect-secrets" in bs, "")
+# Le bootstrap installe par une BOUCLE épinglée au manifeste (python3 -m pip install
+# --quiet "$pkg==$version") : l'assertion littérale d'origine ne pouvait plus passer.
+cas("bootstrap.sh installe detect-secrets (boucle outils-pip)",
+    "detect-secrets" in bs and "pip install" in bs, "")
 cas("bootstrap.sh toujours syntaxiquement valide",
     subprocess.run(["bash", "-n", str(RACINE / "bootstrap.sh")], capture_output=True).returncode == 0, "")
+# `resoudre_exe` LÈVE FileNotFoundError quand rien n'est trouvé (D1) : sur une machine
+# sans l'outil, l'absence doit se lire « NON ÉVALUÉ », pas faire tomber cette batterie.
+def _exe_trouve(nom: str) -> bool:
+    try:
+        return A.resoudre_exe(nom) is not None
+    except FileNotFoundError:
+        return False
+
+
 cas("résolution de l'exécutable : le nom nu est trouvé dans le répertoire des outils",
-    A.resoudre_exe("detect-secrets") is not None or not OUTIL_INSTALLE,
-    str(A.resoudre_exe("detect-secrets")))
+    _exe_trouve("detect-secrets") or not OUTIL_INSTALLE,
+    str(_exe_trouve("detect-secrets")))
 cas("un outil qui n'existe nulle part reste introuvable (pas de faux positif)",
-    A.resoudre_exe("outil-qui-n-existe-pas") is None, "")
+    not _exe_trouve("outil-qui-n-existe-pas"), "")
 manifeste = (RACINE / "manifeste_dependances.yaml").read_text(encoding="utf-8")
 cas("bootstrap refuse un tool pip sans empreinte ni note (règle déjà là, vérifiée sur le neuf)",
     "detect-secrets" in manifeste and "installé par pip" in manifeste.lower(), "")

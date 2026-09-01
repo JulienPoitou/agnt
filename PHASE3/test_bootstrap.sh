@@ -33,7 +33,7 @@ trap 'rm -rf "$TRAVAIL"' EXIT
 # --------------------------------------------------------------- sourcing du contexte
 # Tout bootstrap.sh jusqu'à la boucle de pré-vérification : en-tête, chemins, sha_attendu,
 # verifier_binaire. La borne est cherchée, et son absence est un échec du test — pas un saut.
-fin=$(grep -n '^for b in trivy gitleaks opa grype kics; do' "$B/bootstrap.sh" | head -1 | cut -d: -f1)
+fin=$(grep -n '^for b in trivy gitleaks opa grype kics shellcheck hadolint shellcheck_scan hadolint_scan; do' "$B/bootstrap.sh" | head -1 | cut -d: -f1)
 [ -n "$fin" ] || { echo "ÉCHEC  borne de sourcing introuvable dans bootstrap.sh"; exit 1; }
 # On prend tout l'en-tête, jusqu'à la veille de la première boucle : les variables de chemins,
 # `log`, `err`, `sha_attendu`, `verifier_binaire`. `set +e` est ajouté parce que bootstrap.sh

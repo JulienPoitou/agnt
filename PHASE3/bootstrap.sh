@@ -93,7 +93,7 @@ verifier_binaire() {  # verifier_binaire <nom> <chemin>
 # Pré-vérification de ce qui est DÉJÀ dans le cache — dans tous les modes, avant toute
 # action. (La borne de sourcing de test_bootstrap.sh est la ligne `for` ci-dessous :
 # tout ce qui précède — et rien de ce qui suit — est exécuté au sourcing.)
-for b in trivy gitleaks opa grype kics; do
+for b in trivy gitleaks opa grype kics shellcheck hadolint shellcheck_scan hadolint_scan; do
   verifier_binaire "$b" "$BIN/$b" || exit 1
 done
 
@@ -116,6 +116,7 @@ Composants :
   regles-semgrep   jeux python / security-audit / javascript / golang (semgrep.dev)
   trivy / trivy-db scanner + sa base de vulnérabilités (1,3 Go hors workspace)
   gitleaks / grype / kics   binaires des releases GitHub (+ requêtes kics, base grype)
+  shellcheck / hadolint   linters passifs + wrappers de récursion versionnés (empreintes au manifeste)
   tout             tous les composants ci-dessus, dans cet ordre
 FIN
 }
@@ -396,6 +397,91 @@ armer_kics() {
   fi
 }
 
+armer_shellcheck() {
+  local version
+  version=$(epingle shellcheck version) || return 1
+  [ -x "$BIN/shellcheck" ] || {
+    log "shellcheck $version"
+    local txz; txz="$(mktemp /tmp/shellcheck.XXXXXX.tar.xz)"
+    telecharge "https://github.com/koalaman/shellcheck/releases/download/v$version/shellcheck-v$version.linux.x86_64.tar.xz" "$txz" || { rm -f "$txz"; return 1; }
+    verifier_archive shellcheck "$txz" || { rm -f "$txz"; return 1; }
+    tar -xJf "$txz" -C "$BIN" --strip-components=1 shellcheck-v$version/shellcheck || {
+      rm -f "$txz"; err "shellcheck : archive inattendue (binaire absent du tarball)"; return 1; }
+    rm -f "$txz"
+  }
+  # Wrapper de récursion : shellcheck ne scanne pas un répertoire (mesuré 2026-09-01 :
+  # rc=2 « inappropriate type »). Contenu VERSIONNÉ ici, empreinte épinglée au
+  # manifeste (shellcheck_scan) — réécrit à chaque exécution (contenu déterministe,
+  # pas un artefact téléchargé) puis vérifié par la boucle du bas : modifier le
+  # contenu ici sans re-épingler REFUSE l'environnement.
+  cat > "$BIN/shellcheck_scan" << 'FIN_SCANNER'
+#!/bin/sh
+# Wrapper de récursion pour shellcheck — shellcheck ne prend pas de répertoire
+# (mesuré 2026-09-01 : rc=2 « inappropriate type »). Contenu VERSIONNÉ dans
+# bootstrap.sh et épinglé par empreinte dans manifeste_dependances.yaml ;
+# installé par bootstrap.sh à côté du binaire.
+#
+# Usage : shellcheck_scan <rep_cible> <fichier_sortie_json>
+#   · aucun .sh/.bash → fichier de sortie VIDE, rc=0 (rien à scanner ; en
+#     pratique l'applicabilité a déjà écarté cette cible — jamais « 0 constat »
+#     d'un scan qui aurait dû avoir lieu)
+#   · xargs -r : jamais de shellcheck sans argument (sinon lecture de stdin)
+#   · -S style : les findings de style sont inclus, avec leur niveau d'origine
+#   · rc=10 : la sortie n'est pas du JSON valide (troncature, outil qui parle
+#     sur stdout) — un rc hors vocabulaire de shellcheck (0-4), jamais un 0
+#     fabriqué sur une sortie illisible
+DIR=$(dirname "$0")
+if [ -z "$(find "$1" -type f \( -name '*.sh' -o -name '*.bash' \) -print -quit)" ]; then
+  : > "$2"
+  exit 0
+fi
+find "$1" -type f \( -name '*.sh' -o -name '*.bash' \) -print0 \
+  | xargs -0 -r "$DIR/shellcheck" -f json -S style > "$2"
+python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$2" || exit 10
+exit 0
+FIN_SCANNER
+  chmod +x "$BIN/shellcheck_scan"
+}
+
+armer_hadolint() {
+  local version
+  version=$(epingle hadolint version) || return 1
+  [ -x "$BIN/hadolint" ] || {
+    log "hadolint $version"
+    local dest; dest="$(mktemp /tmp/hadolint.XXXXXX.bin)"
+    telecharge "https://github.com/hadolint/hadolint/releases/download/v$version/hadolint-linux-x86_64" "$dest" || { rm -f "$dest"; return 1; }
+    # L'asset EST le binaire (non compressé) : l'empreinte du « tarball » vaut pour
+    # le binaire ; la pose se fait par déplacement, pas par extraction.
+    verifier_archive hadolint "$dest" || { rm -f "$dest"; return 1; }
+    mv "$dest" "$BIN/hadolint"
+    chmod +x "$BIN/hadolint"
+  }
+  # Wrapper hadolint_scan : contenu VERSIONNÉ (même politique que shellcheck_scan).
+  cat > "$BIN/hadolint_scan" << 'FIN_SCANNER'
+#!/bin/sh
+# Wrapper de récursion pour hadolint — pas de mode répertoire en 2.15.1 (mesuré
+# 2026-09-01 : « Invalid option --recursive »). Contenu VERSIONNÉ dans
+# bootstrap.sh et épinglé par empreinte ; installé par bootstrap.sh.
+#
+# Usage : hadolint_scan <rep_cible> <fichier_sortie_json>
+#   · --no-fail : rc=0 dès que les findings sont écrits — un rc=1 de hadolint
+#     nu vient d'un autre défaut (fichier absent) et ne doit PAS se lire
+#     « 0 constat » ; d'où la validation JSON ci-dessous
+#   · aucun Dockerfile* → fichier de sortie VIDE, rc=0 (applicabilité déjà passée)
+#   · rc=10 : sortie non JSON valide — hors vocabulaire hadolint, jamais un 0 fabriqué
+DIR=$(dirname "$0")
+if [ -z "$(find "$1" -type f \( -name 'Dockerfile' -o -name 'Dockerfile.*' \) -print -quit)" ]; then
+  : > "$2"
+  exit 0
+fi
+find "$1" -type f \( -name 'Dockerfile' -o -name 'Dockerfile.*' \) -print0 \
+  | xargs -0 -r "$DIR/hadolint" --no-fail --format json > "$2"
+python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$2" || exit 10
+exit 0
+FIN_SCANNER
+  chmod +x "$BIN/hadolint_scan"
+}
+
 # ---------------------------------------------------------------- préparations locales
 # Locales et gratuites : faites dans TOUS les modes (y compris la vérification seule) —
 # elles sont le prérequis de l'isolateur, pas un téléchargement.
@@ -420,6 +506,10 @@ if [ "$MODE_LISTE" -eq 1 ] && [ "${#ARMEMENTS[@]}" -eq 0 ]; then
   printf '  %-22s %s\n' "gitleaks" "$(etat_binaire gitleaks)"
   printf '  %-22s %s\n' "grype" "$(etat_binaire grype)"
   printf '  %-22s %s\n' "kics" "$(etat_binaire kics)"
+  printf '  %-22s %s
+' "shellcheck (+scan)" "$(etat_binaire shellcheck) / $(etat_binaire shellcheck_scan)"
+  printf '  %-22s %s
+' "hadolint (+scan)" "$(etat_binaire hadolint) / $(etat_binaire hadolint_scan)"
   for t in semgrep bandit checkov detect-secrets radon pip-audit ruff trufflehog3; do
     printf '  %-22s %s\n' "$t (pip)" "$(command -v "$t" >/dev/null 2>&1 && echo "présent ($(command -v "$t"))" || echo absent)"
   done
@@ -446,6 +536,8 @@ voulu trivy          && tenter trivy armer_trivy
 voulu gitleaks       && tenter gitleaks armer_gitleaks
 voulu grype          && tenter grype armer_grype
 voulu kics           && tenter kics armer_kics
+voulu shellcheck     && tenter shellcheck armer_shellcheck
+voulu hadolint       && tenter hadolint armer_hadolint
 voulu trivy-db       && tenter trivy-db armer_trivy_db
 
 # ---------------------------------------------------------------- règles : divergence signalée
@@ -470,7 +562,7 @@ fi
 # dans le cache, « environnement prêt » affiché. Même fonction, même politique : empreinte
 # épinglée absente du manifeste = on n'invente rien ; présente et divergente = on refuse,
 # avant de dire que l'environnement est prêt.
-for b in trivy gitleaks opa grype kics; do
+for b in trivy gitleaks opa grype kics shellcheck hadolint shellcheck_scan hadolint_scan; do
   verifier_binaire "$b" "$BIN/$b" || exit 1
 done
 
