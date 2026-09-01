@@ -288,7 +288,7 @@ export default function OAuthModal({
               error === "codex cli credentials not found" && (
                 <p className="text-xs text-muted-foreground">
                   Run <code className="font-mono">codex login</code> as the
-                  Xalgorix service user, or make the host file
+                  AGNT service user, or make the host file
                   <code className="mx-1 font-mono">~/.codex/auth.json</code>
                   available at
                   <code className="ml-1 font-mono">

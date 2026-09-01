@@ -25,10 +25,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { api, type CibleAdmise } from "@/api/client";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { PHASES } from "@/components/phase-progress";
-import { api } from "@/api/client";
 import { useAuthProfiles, useLLMSettings, useProviders, useStartScan } from "@/api/queries";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,25 @@ export default function NewScanPage() {
   const llmQuery = useLLMSettings();
 
   const [targetsText, setTargetsText] = useState("");
+  // Cibles admises par le moteur (GET /api/cibles) : la seule liste que le
+  // moteur acceptera. Un refus hors liste est un résultat — autant choisir dedans.
+  const ciblesQuery = useQuery({
+    queryKey: ["cibles"],
+    queryFn: api.cibles,
+    staleTime: 30_000,
+  });
+  const cibles: CibleAdmise[] = ciblesQuery.data?.cibles ?? [];
+
+  function ajouterCible(chemin: string) {
+    const actuelles = targetsText
+      .split(/[\n,]/)
+      .map((x) => x.trim())
+      .filter(Boolean);
+    if (!actuelles.includes(chemin)) actuelles.push(chemin);
+    // Le moteur exécute UNE mission à la fois : une seule cible, le refus
+    // multi-cibles est nommé côté serveur — on n'écrit qu'une ligne.
+    setTargetsText(actuelles[actuelles.length - 1] ?? chemin);
+  }
   const [name, setName] = useState("");
   const [scanMode, setScanMode] = useState("single");
   const [reconMode, setReconMode] = useState<ActivityMode>("active");
@@ -255,7 +275,7 @@ export default function NewScanPage() {
           {t("newScan.heading")}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground text-pretty">
-          Configure target, scope, and methodology phases. Xalgorix orchestrates
+          Configure target, scope, and methodology phases. AGNT orchestrates
           recon and active probes, then synthesizes findings with the agent.
         </p>
       </div>
@@ -278,8 +298,34 @@ export default function NewScanPage() {
                 className="mono text-xs"
               />
               <p className="text-[11px] text-muted-foreground">
-                One per line, or comma-separated. Domains, hosts, or URLs.
+                Chemin d'une cible admise par le moteur (une seule cible par
+                mission). Sélectionne dans la liste ci-dessous ou saisis un chemin.
               </p>
+              {cibles.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-medium text-muted-foreground">
+                    Cibles admises par le moteur :
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {cibles.map((c) => (
+                      <button
+                        key={c.chemin}
+                        type="button"
+                        onClick={() => ajouterCible(c.chemin)}
+                        className="rounded-md border border-border bg-background px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:border-accent-foreground/30 hover:text-foreground"
+                        title={c.chemin}
+                      >
+                        <span className="mono">{c.nom}</span>
+                        {c.langages && c.langages.length > 0 && (
+                          <span className="ml-1 opacity-60">
+                            ({c.langages.join(", ")})
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {targets.length > 1 && (
                 <div className="flex flex-wrap gap-1">
                   {targets.map((t) => (
@@ -316,12 +362,12 @@ export default function NewScanPage() {
               <span className="font-medium text-foreground">HAR capture</span>, or{" "}
               <span className="font-medium text-foreground">Postman collection</span>,{" "}
               <span className="font-medium text-foreground">Burp export</span>, or an{" "}
-              <span className="font-medium text-foreground">Android APK</span>. Xalgorix
+              <span className="font-medium text-foreground">Android APK</span>. AGNT
               seeds the scan with the target&apos;s real endpoints and parameters (and any captured
               session), so it tests the actual attack surface instead of relying on crawling. This
               is the single biggest boost to black-box coverage. You can attach{" "}
               <span className="font-medium text-foreground">multiple files at once</span> — e.g. a
-              Postman collection plus its environment — and Xalgorix resolves{" "}
+              Postman collection plus its environment — and AGNT resolves{" "}
               <code className="text-foreground">{"{{variables}}"}</code> and auth across them.
             </p>
             <div className="flex items-center gap-3">

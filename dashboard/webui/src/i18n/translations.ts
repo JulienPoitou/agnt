@@ -1,4 +1,4 @@
-// Translation dictionaries for the Xalgorix dashboard.
+// Translation dictionaries for the AGNT dashboard.
 //
 // English is the source of truth: every key MUST exist in `en`. Other locales
 // may be partial — the `t()` helper falls back to the English string (and then
@@ -55,12 +55,13 @@ const en: Dict = {
   "nav.live": "Live Feed",
   "nav.email": "Email Triage",
   "nav.reports": "Reports",
+  "nav.capacites": "Capacités",
   "nav.integrations": "Integrations",
   "nav.settings": "Settings",
   "sidebar.localScanner": "Local scanner",
   "sidebar.commandHint": "Ctrl+K for actions",
   "sidebar.github": "GitHub",
-  "sidebar.githubTitle": "View Xalgorix on GitHub",
+  "sidebar.githubTitle": "View AGNT on GitHub",
   "sidebar.securityScanner": "security scanner",
 
   // Topbar
@@ -265,12 +266,13 @@ const zhCN: Dict = {
   "nav.live": "实时动态",
   "nav.email": "邮件分诊",
   "nav.reports": "报告",
+  "nav.capacites": "能力",
   "nav.integrations": "集成",
   "nav.settings": "设置",
   "sidebar.localScanner": "本地扫描器",
   "sidebar.commandHint": "按 Ctrl+K 打开操作面板",
   "sidebar.github": "GitHub",
-  "sidebar.githubTitle": "在 GitHub 上查看 Xalgorix",
+  "sidebar.githubTitle": "在 GitHub 上查看 AGNT",
   "sidebar.securityScanner": "安全扫描器",
 
   // Topbar

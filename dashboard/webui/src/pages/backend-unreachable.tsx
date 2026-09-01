@@ -7,7 +7,7 @@ import { useAuth } from "@/store/auth";
 /**
  * Rendered by `AuthBootstrap` when `/api/auth/status` returns either a
  * network-level failure (HttpError.status === 0) or 404 — i.e. there is
- * no Xalgorix backend on the other side of `/api/*`. The login screen
+ * no AGNT backend on the other side of `/api/*`. The login screen
  * would be misleading here (signing in would just produce another 404),
  * so we replace the entire app with a remediation page that:
  *
@@ -45,7 +45,7 @@ export function BackendUnreachable() {
               <div>
                 <CardTitle className="text-balance">Backend unreachable</CardTitle>
                 <CardDescription>
-                  The Xalgorix API isn&apos;t responding on this host.
+                  The AGNT API isn&apos;t responding on this host.
                 </CardDescription>
               </div>
             </div>

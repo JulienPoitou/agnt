@@ -87,7 +87,7 @@ function buildTranscript(
   metadata: Record<string, unknown>,
 ): string {
   const lines = [
-    "Xalgorix live feed export",
+    "AGNT live feed export",
     `Exported: ${exportedAt.toISOString()}`,
     `Events: ${events.length}`,
   ];

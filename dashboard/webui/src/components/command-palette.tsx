@@ -34,7 +34,7 @@ const NAV_ITEMS = [
   { label: "Findings", to: "/findings", icon: ShieldAlert },
   { label: "Live Feed", to: "/live", icon: Radio },
   { label: "Reports", to: "/reports", icon: FileText },
-  { label: "Integrations", to: "/integrations", icon: Plug },
+  { label: "Capacités", to: "/capacites", icon: Plug },
   { label: "Settings", to: "/settings", icon: Settings },
 ];
 
