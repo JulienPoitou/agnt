@@ -27,15 +27,23 @@ class Cluster:
     membres: list[str]
     confiance: str
     cle: str = ""
+    remediation: dict | None = None
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "cluster_id": self.cluster_id,
             "confidence": self.confiance,
             "reason": self.raison,
             "members": self.membres,
             "cle": self.cle,
         }
+        if self.remediation is not None:
+            d["remediation"] = (
+                self.remediation.to_dict()
+                if hasattr(self.remediation, "to_dict")
+                else self.remediation
+            )
+        return d
 
 
 def _regles(findings: list) -> list[tuple[str, list[str], str]]:

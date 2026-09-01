@@ -354,6 +354,50 @@ def generer(e, cible) -> str:
     A("| `raw_*.json` | sorties brutes des outils, non retraitées |")
     A("| `rapport.sarif` | export SARIF des observations |")
     A("")
+
+    # ============================================================ 7. REMÉDIATION
+    A("## 7. Suggestions de Remédiation")
+    A("")
+    A("> **Avertissement de sécurité (Zéro sur-affirmation) :** Les propositions ci-dessous sont")
+    A("> des suggestions générées de manière déterministe. Aucune modification n'est appliquée")
+    A("> automatiquement sur le dépôt sans validation humaine préalable.")
+    A("")
+    try:
+        from remediation import generer_remediations
+        res_rem = generer_remediations(e.findings, r.get("clusters"))
+        rems_findings = res_rem.get("findings") or {}
+    except Exception:
+        rems_findings = {}
+
+    if not rems_findings:
+        A("_Aucune suggestion de remédiation automatique disponible pour les observations retenues._")
+        A("")
+    else:
+        for fid, rem in rems_findings.items():
+            f_item = ids.get(fid) or {}
+            src = f_item.get("source") or {}
+            loc = f_item.get("location") or {}
+            rem_type = rem.get("type", "config_fix")
+            conf = rem.get("confidence", "low")
+            desc = rem.get("description", "")
+            details = rem.get("details") or {}
+
+            A(f"### `{_sur(fid, dans_code_span=True)}` — {_sur(src.get('tool', 'outil'))} (type: `{rem_type}`, confiance: `{conf}`)")
+            A("")
+            A(f"- **Description :** {_sur(desc)}")
+            if details.get("file_path"):
+                A(f"- **Fichier cible :** `{_sur(details['file_path'], dans_code_span=True)}`")
+            if details.get("target_version"):
+                A(f"- **Version cible suggérée :** `{_sur(details['target_version'], dans_code_span=True)}`")
+
+            patch = details.get("patch")
+            if patch:
+                A("- **Unified Patch suggéré :**")
+                A("```diff")
+                A(patch.strip())
+                A("```")
+            A("")
+
     A("---")
     A("")
     A("_Rapport généré de façon déterministe, sans modèle de langage. À profil, cible et")

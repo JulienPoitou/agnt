@@ -62,6 +62,22 @@ SECRET = "<masqué>"
 
 
 @dataclass
+class Remediation:
+    type: str  # "dependency_bump" | "code_patch" | "config_fix"
+    confidence: str  # "high" | "medium" | "low"
+    description: str
+    details: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "type": self.type,
+            "confidence": self.confidence,
+            "description": self.description,
+            "details": self.details,
+        }
+
+
+@dataclass
 class Finding:
     id: str
     source: dict
@@ -70,9 +86,10 @@ class Finding:
     severity: dict
     evidence: dict
     statut: str = "open"
+    remediation: Remediation | dict | None = None
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "id": self.id,
             "source": self.source,
             "identity": self.identity,
@@ -85,6 +102,13 @@ class Finding:
             "cycle": {"first_seen": None, "last_seen": None, "false_positive": False,
                       "reopened": False, "verified": False},
         }
+        if self.remediation is not None:
+            d["remediation"] = (
+                self.remediation.to_dict()
+                if hasattr(self.remediation, "to_dict")
+                else self.remediation
+            )
+        return d
 
 
 # COORDONNÉES DE CIBLE (2026-08-30). Jusqu'ici, `location` était un triplet
