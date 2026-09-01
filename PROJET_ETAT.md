@@ -2778,6 +2778,46 @@ le dire plutôt que la glisser dans un commit de merge) : `pyflakes` rend 1 impo
 dans `test_adversaire.py`. Les mêmes warnings sur `8c89916` avant fusion : identiques, donc rien
 d'importé par ici.
 
+## Armement du Groupe B vérifié, déclaration NON appliquée (2026-09-01)
+
+Chantier `qualif/outils-actifs` (branche dédiée, clone séparé — l'épreuve OCI
+tourne de son côté sur `oci/epreuve-isolation`) : la qualification des trois
+premiers outils actifs de pentest (nmap, nuclei, ffuf) est **préparée et
+mesurée**, pas activée. Dossier : `PHASE5/QUALIF_OUTILS_ACTIFS.md` ; suite
+nouvelle : `PHASE3/test_qualif_outils_actifs.py` (**30/30**, verte sans Docker
+ni OPA — c'est son objet : des invariants fail-closed vérifiables partout).
+
+**Mesuré le jour même** (téléchargement + empreintes, binaires déposés dans
+`~/.cache/arena_secops/bin` sous WSL Ubuntu 24.04) : nuclei 3.11.1 (archive
+double-attestée : SHA-256 local = digest publié par l'API GitHub ; binaire
+`c4958814…`), ffuf 2.2.1 (même discipline, `86307885…`/`6325a181…`), nmap 7.98
+(tarball source épinglé `ce847313…` — pas de binaire amont, régime « note »).
+Les trois entrées sont dans `manifeste_dependances.yaml` avec
+`role: outil-actif` : épingle de l'ARMEMENT, pas une déclaration — le registre
+(`capabilities.yaml`) ne propose toujours AUCUN provider actif, et la policy
+garde son verrou `sandbox_non_durci_outil_actif`.
+
+**Découverte de la suite** (le jour de son écriture, contre une première
+version trop grossière d'elle-même) : `profils.py` déclare le profil cible
+`limites_a_prouver` avec `durci=True` — assumé et nommé pour ne pas dire
+« hardened ». L'invariant qui compte n'est pas « aucun profil durci déclaré »
+mais **la porte** : `obtenir()` doit lever (PermissionError) et `actif()`
+ne doit jamais le retourner. La suite fixe cette propriété ; le jour où
+l'épreuve OCI passe et que le profil devient utilisable, elle tombera —
+c'est le rappel de mettre à jour les invariants avec la réalité.
+
+**Reste avant activation** (checklist complète dans le dossier) : `test_oci.sh`
+10/10, décision D9 (jeton `{URL}`), arbitrage NPSL nmap, épinglage
+nuclei-templates + wordlist ffuf, cibles de test locales uniquement. Les champs
+« à mesurer » des blocs YAML proposés (extraction, `code_succes`) se rempliront
+par exécution réelle sur la cible de contrôle — jamais en copiant la doc.
+
+**Vérifications rejouées** : `test_qualif_outils_actifs.py` 30/30 (Windows) ;
+sous WSL : `test_empreintes.py` 13/13 (les trois entrées passent la vérification
+d'empreintes existante), `test_qualif_outils_actifs.py` 30/30 ;
+`test_isolateur.py` : « La commande est correcte. Elle n'est PAS éprouvée ».
+Sur Windows seul, `test_empreintes` et `test_statuts_outils` restent bloqués à
+`import resource` (module Linux-only, limite d'environnement connue, inchangée).
 ---
 
 # OCI · première épreuve de l'isolateur — test_oci.sh REFUSÉ, limites mesurées tenantes (01/09/2026)
