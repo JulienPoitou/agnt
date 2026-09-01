@@ -422,7 +422,7 @@ def gitleaks(prov, sbx: Sandbox) -> ResultatBrut:
 
 
 # ------------------------------------------------------------------ adaptateur générique
-def generique_cli(prov, sbx: Sandbox) -> ResultatBrut:
+def generique_cli(prov, sbx: Sandbox, target: Target | None = None) -> ResultatBrut:
     """Exécute un provider déclaré par MANIFEST, sans code spécifique à l'outil.
 
     C'est la preuve recherchée en Phase 5A : un outil ajouté dans un fichier YAML
@@ -446,9 +446,14 @@ def generique_cli(prov, sbx: Sandbox) -> ResultatBrut:
     # « not_scanned » en aval, mais l'artefact `raw_kics.json` (null) et la ligne de
     # journal, eux, racontaient une exécution. Un outil absent doit échouer ICI (D1),
     # pas produire un vide plus loin.
+    # Résolution de la cible (locale ou URL/distante)
+    val_url = target.value if target and target.kind in ("url", "host", "network") else (
+        str(sbx.racine_scan) if sbx.racine_scan else ""
+    )
     _chemins = {
         "BIN": _exe(prov),
         "TARGET": sbx.M_SCAN,
+        "URL": val_url,
         "OUT": sortie_int,
         "OUT_DIR": sbx.M_OUT,
         "REGLES": sbx.M_REGLES,
@@ -709,7 +714,7 @@ def executer(prov, sbx: Sandbox, *, target: Target | None = None,
             target=target, arguments=arguments,
             transport_factory=transport_factory, cancel_event=cancel_event)
     if getattr(prov, "manifest", None) is not None:
-        return generique_cli(prov, sbx)
+        return generique_cli(prov, sbx, target=target)
     fn = ADAPTATEURS.get(prov.id)
     if fn is None:
         raise KeyError(

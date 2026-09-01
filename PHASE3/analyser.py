@@ -163,6 +163,7 @@ _DRAPEAUX = {
     # exigée (`true`/`false`) parce qu'un opérateur doit pouvoir écrire explicitement qu'il
     # ferme ce que le profil avait ouvert. Le nu, lui, est refusé — `None` en second.
     "--egress": (("true", "false"), None),
+    "--cible-autorisee": (("true", "false"), None),
 }
 
 
@@ -365,7 +366,8 @@ def _archiver_mission(e, cible: Path) -> Path | None:
 
 def lancer(mission: str, cible: Path, moteur: str = "auto",
            fournisseur=None, confiance: str = "controlled",
-           egress: bool | None = None) -> tuple[int, dict]:
+           egress: bool | None = None,
+           cible_autorisee: bool = False) -> tuple[int, dict]:
     """Exécute une mission de bout en bout. Retourne (code_sortie, résumé).
 
     API pour les tests : elle ne passe PAS par le bundle Phase 4 (pas d'écriture dans
@@ -389,7 +391,8 @@ def lancer(mission: str, cible: Path, moteur: str = "auto",
     # concurrentes peuvent choisir deux moteurs différents sans se réécrire l'une l'autre
     # (multi-mission, 2026-08-30). `pipeline.executer` lit `moteur_intent`/`fournisseur_llm`
     # locaux et ne mute plus `pipeline.MOTEUR_INTENT`/`FOURNISSEUR_LLM`.
-    e = pipeline.executer(mission, cible, confiance_cible=confiance, egress=egress,
+    e = pipeline.executer(mission, cible, cible_autorisee=cible_autorisee,
+                          confiance_cible=confiance, egress=egress,
                           moteur_intent=moteur,
                           fournisseur_llm=fournisseur if moteur == "llm" else None)
 
@@ -436,6 +439,8 @@ def main(argv: list[str]) -> int:
     confiance_explicite = "confiance" in options
     egress = _booleen(options, "egress")
     egress_explicite = "egress" in options
+    cible_aut_bool = _booleen(options, "cible-autorisee")
+    cible_autorisee = False if cible_aut_bool is None else cible_aut_bool
 
     cible = Path(args[0]).resolve()
     requete = args[1] if len(args) > 1 else "Analyse la sécurité de mon dépôt"
@@ -466,7 +471,8 @@ def main(argv: list[str]) -> int:
     # retombe sur le déterministe. Il est affiché plus bas, dans le résumé.
 
     try:
-        e = pipeline.executer(requete, cible, confiance_cible=confiance, egress=egress,
+        e = pipeline.executer(requete, cible, cible_autorisee=cible_autorisee,
+                              confiance_cible=confiance, egress=egress,
                               moteur_intent=moteur,
                               fournisseur_llm=fournisseur if moteur == "llm" else None)
     except Exception as exc:                       # noqa: BLE001
@@ -538,6 +544,7 @@ def main(argv: list[str]) -> int:
         json.dumps(e.clusters, ensure_ascii=False, indent=2), encoding="utf-8")
     (dossier / "run.json").write_text(
         json.dumps({"execution_profile": e.profil, "confiance_cible": confiance,
+                    "cible_autorisee": cible_autorisee,
                     "egress": e.egress,
                     "plan_id": e.plan["plan_id"],
                     "input_digest": e.contexte.get("input_digest"),
@@ -578,6 +585,7 @@ def main(argv: list[str]) -> int:
         # Pas seulement « quel profil » : ce que la policy a vu de LA cible. Un refus
         # pour mémoire non bornée ne se comprend qu'avec la confiance appliquée.
         "confiance_cible": confiance,
+        "cible_autorisee": cible_autorisee,
         "decision_policy": e.decision,
         "moteur_intent": e.intent.get("moteur"),
         "identifiants": {

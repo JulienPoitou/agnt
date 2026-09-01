@@ -410,7 +410,7 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
     _ledger(miss, registre, plan_dict, decision_dict, exec_.raw, exec_.couverture, trouves)
 
 
-def executer(requete: str, cible, cible_autorisee: bool = True,
+def executer(requete: str, cible, cible_autorisee: bool = False,
              confiance_cible: str = "controlled",
              avec_internes: bool = False, escalade: bool = True,
              egress: bool | None = None,

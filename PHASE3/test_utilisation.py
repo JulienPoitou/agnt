@@ -64,7 +64,7 @@ def _faux_executer(capture: dict, arret: str = "policy",
     """
     import pipeline
 
-    def faux(requete, cible, cible_autorisee=True, confiance_cible="controlled",
+    def faux(requete, cible, cible_autorisee=False, confiance_cible="controlled",
              avec_internes=False, escalade=True, egress=None,
              moteur_intent=None, fournisseur_llm=None, *, registre=None,
              policy_engine=None, transport_factories=None):
