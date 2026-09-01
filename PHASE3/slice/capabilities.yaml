@@ -743,7 +743,119 @@ capabilities:
             porter le nom de variable ; pas de secret en clair attendu dans ce
             format (l'outil analyse la syntaxe, pas le contenu des chaînes).
 
-# hadolint : TROISIÈME provider de IAC_SCAN — chevauchement PARTIEL assumé avec
-# checkov/kics (les règles DL/SC de hadolint ne recouvrent ni l'un ni l'autre ;
-# même discipline que trivy/grype : convergence par cible, identifiants différents).
-# Inséré ici (fin de la liste providers de IAC_SCAN, après kics).
+  - id: NETWORK_DISCOVERY
+    description: >
+      Découverte d'hôtes, de ports et de services sur une cible réseau — ACTIVE,
+      exige un profil durci (isolateur OCI éprouvé) et une cible explicitement
+      autorisée (jeton {URL}, décision D9).
+    domaines: [reseau, offensive]
+    entree: [cible]
+    sortie: finding/host-service
+    providers:
+      - id: nmap
+        kind: tool
+        mode: CLI
+        risque: ACTIVE
+        cout: eleve
+        priorite: 100
+        commande: ["nmap"]
+        manifest:
+          id: nmap
+          kind: tool
+          mode: cli
+          binaire: nmap
+          tool_id: nmap
+          argv:
+            - "{BIN}"
+            - "-oX"
+            - "{OUT}"
+            - "{URL}"
+          output:
+            format: xml
+          extraction:
+            modele: xml
+            items_from: nmaprun
+          risk: ACTIVE
+          target_types: [host, network, url]
+          code_succes: [0]
+          conditions:
+            reseau: true
+
+  - id: WEB_VULN_SCAN_ACTIVE
+    description: >
+      Scan de vulnérabilités web par modèles (nuclei) — ACTIVE, exigences réseau.
+    domaines: [webapp, offensive]
+    entree: [cible]
+    sortie: finding/web-vuln
+    providers:
+      - id: nuclei
+        kind: tool
+        mode: CLI
+        risque: ACTIVE
+        cout: moyen
+        priorite: 110
+        commande: ["nuclei"]
+        manifest:
+          id: nuclei
+          kind: tool
+          mode: cli
+          binaire: nuclei
+          tool_id: nuclei
+          argv:
+            - "{BIN}"
+            - "-target"
+            - "{URL}"
+            - "-jsonl"
+            - "-o"
+            - "{OUT}"
+            - "-silent"
+          output:
+            format: jsonl
+          extraction:
+            modele: lignes_json
+            items_from: items
+          risk: ACTIVE
+          target_types: [url]
+          code_succes: [0]
+          conditions:
+            reseau: true
+
+  - id: WEB_ENDPOINT_DISCOVERY_ACTIVE
+    description: >
+      Découverte de chemins/paramètres web par fuzzing de liste de mots (ffuf) — ACTIVE.
+    domaines: [webapp, offensive]
+    entree: [cible]
+    sortie: finding/web-endpoint
+    providers:
+      - id: ffuf
+        kind: tool
+        mode: CLI
+        risque: ACTIVE
+        cout: moyen
+        priorite: 120
+        commande: ["ffuf"]
+        manifest:
+          id: ffuf
+          kind: tool
+          mode: cli
+          binaire: ffuf
+          tool_id: ffuf
+          argv:
+            - "{BIN}"
+            - "-u"
+            - "{URL}/FUZZ"
+            - "-of"
+            - "json"
+            - "-o"
+            - "{OUT}"
+            - "-s"
+          output:
+            format: json
+          extraction:
+            modele: plat
+            items_from: results
+          risk: ACTIVE
+          target_types: [url]
+          code_succes: [0]
+          conditions:
+            reseau: true

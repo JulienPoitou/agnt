@@ -31,7 +31,7 @@ from pathlib import Path
 # {OUT_DIR} (étape 4) : certains outils écrivent dans un RÉPERTOIRE de sortie
 # (kics --output-path) plutôt que dans un fichier ({OUT}). Occurrence observée,
 # extension générique du vocabulaire — le cœur fournit le chemin, jamais le manifest.
-PLACEHOLDERS = ("{BIN}", "{TARGET}", "{OUT}", "{OUT_DIR}", "{REGLES}", "{DB}")
+PLACEHOLDERS = ("{BIN}", "{TARGET}", "{URL}", "{OUT}", "{OUT_DIR}", "{REGLES}", "{DB}")
 
 # Fragments interdits dans un argument, indépendamment d'OPA : seconde barrière.
 FRAGMENTS_INTERDITS = (";", "&&", "||", "|", "`", "$(", ">", "<", "\n", "\r", "\x00")
@@ -61,7 +61,9 @@ BINAIRES_AUTORISES = ("semgrep", "trivy", "gitleaks", "bandit", "checkov",
                       # parsers_*.py, 4 épingles au manifeste, wrappers versionnés dans
                       # bootstrap.sh. Les deux sont passifs (lecture des fichiers cibles,
                       # aucun réseau dans l'argv, limites consignées).
-                      "shellcheck", "shellcheck_scan", "hadolint", "hadolint_scan")
+                      "shellcheck", "shellcheck_scan", "hadolint", "hadolint_scan",
+                      # 01/09/2026 — Outils actifs Groupe B (nmap, nuclei, ffuf)
+                      "nmap", "nuclei", "ffuf")
 
 FORMATS_SORTIE = ("json", "jsonl", "sarif", "csv", "xml", "custom")
 

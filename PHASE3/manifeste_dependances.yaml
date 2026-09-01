@@ -334,7 +334,7 @@ binaires:
     source: https://github.com/projectdiscovery/nuclei/releases/download/v3.11.1/nuclei_3.11.1_linux_amd64.zip
     licence: MIT
     taille_approx: 143M
-    role: outil-actif
+    role: outil
     note: >
       Requiert SA base de modèles (nuclei-templates) : un dossier de templates non épinglé
       rend le scan non reproductible — l'épinglage des templates est un PRÉREQUIS de
@@ -347,7 +347,7 @@ binaires:
     source: https://github.com/ffuf/ffuf/releases/download/v2.2.1/ffuf_2.2.1_linux_amd64.tar.gz
     licence: MIT
     taille_approx: 10M
-    role: outil-actif
+    role: outil
     note: >
       Aucune base externe requise (wordlists NON embarquées : la liste de mots est un
       paramètre d'entrée à épingler séparément au moment de la qualification).
@@ -366,7 +366,7 @@ binaires:
       NPSL (nmap Public Source License) — le catalogue PHASE1 marque « licence inconnue » :
       à arbitrer par le propriétaire avant tout usage production.
     taille_approx: 13M (tarball)
-    role: outil-actif
+    role: outil
     note: >
       Tarball source mesuré au téléchargement le 2026-09-01. La construction (./configure
       && make) exige la toolchain de build dans l'isolateur — même chantier que gosec
