@@ -315,6 +315,63 @@ binaires:
       de `npm` et signale son absence (le plugin se chargerait quand même, et l'outil serait
       introuvable à l'exécution — le silence que ce fichier existe pour casser).
 
+  # ─────────────────────────────────────────── OUTILS ACTIFS (Groupe B, épingle anticipée)
+  # Empreintes relevées le 2026-09-01 (chantier qualif/outils-actifs, PHASE5/QUALIF_OUTILS_ACTIFS.md).
+  # Épingle de l'ARMEMENT, PAS une déclaration : ces binaires ne sont déclarés dans AUCUNE
+  # capacité de capabilities.yaml tant que l'isolateur OCI n'est pas éprouvé (test_oci.sh)
+  # et tant que la décision D9 (jeton {URL}) n'est pas passée. Un manifeste sans déclaration
+  # est inerte : bootstrap.sh peut vérifier, le registre ne propose rien, et la policy refuse
+  # de toute façon tout step ACTIVE tant que profil_sandbox.durci est faux.
+  # Binaires extraits déposés dans ~/.cache/arena_secops/bin (WSL Ubuntu 24.04) et vérifiés
+  # exécutables le 2026-09-01 : nuclei -version → v3.11.1 ; ffuf -V → 2.2.1.
+
+  nuclei:
+    version: "3.11.1"
+    sha256: c49588140f357cbdddd5436dec11201953a4c5390faeec90777f9ee2cfd70251
+    # Empreinte de l'ARCHIVE téléchargée, double-attestée : mesurée localement ET publiée
+    # par l'API GitHub (assets[].digest) — les deux coïncident.
+    archive_sha256: ea63d4ae232808cd7c6bc00d0142428e231fab59dae01042246097d195835ab6
+    source: https://github.com/projectdiscovery/nuclei/releases/download/v3.11.1/nuclei_3.11.1_linux_amd64.zip
+    licence: MIT
+    taille_approx: 143M
+    role: outil-actif
+    note: >
+      Requiert SA base de modèles (nuclei-templates) : un dossier de templates non épinglé
+      rend le scan non reproductible — l'épinglage des templates est un PRÉREQUIS de
+      qualification (voir PHASE5/QUALIF_OUTILS_ACTIFS.md), pas un détail.
+
+  ffuf:
+    version: "2.2.1"
+    sha256: 6325a181abcdf3488ea321b1dc6cf420090cc7908ed19deae857fdc2796e4196
+    archive_sha256: 86307885810d3c36ba4a3e9ba5178c2d9027bba0dd7f4ea39e39e7c972b62396
+    source: https://github.com/ffuf/ffuf/releases/download/v2.2.1/ffuf_2.2.1_linux_amd64.tar.gz
+    licence: MIT
+    taille_approx: 10M
+    role: outil-actif
+    note: >
+      Aucune base externe requise (wordlists NON embarquées : la liste de mots est un
+      paramètre d'entrée à épingler séparément au moment de la qualification).
+
+  nmap:
+    version: "7.98"
+    sha256: null
+    # nmap ne publie pas de binaire Linux autonome : la distribution passe par le tarball
+    # source ou les paquets système (apt). Régime « note » assumé, comme detect-secrets :
+    # l'empreinte du BINAIRE dépend de la chaîne de build de la machine — ce qui est
+    # épinglé ici, c'est la SOURCE.
+    tarball_sha256: ce847313eaae9e5c9f21708e42d2ab7b56c7e0eb8803729a3092f58886d897e6
+    source: https://nmap.org/dist/nmap-7.98.tar.bz2
+    licence: >-
+      NPSL (nmap Public Source License) — le catalogue PHASE1 marque « licence inconnue » :
+      à arbitrer par le propriétaire avant tout usage production.
+    taille_approx: 13M (tarball)
+    role: outil-actif
+    note: >
+      Tarball source mesuré au téléchargement le 2026-09-01. La construction (./configure
+      && make) exige la toolchain de build dans l'isolateur — même chantier que gosec
+      (« go command required », reporté le 2026-08-31). Alternative assumée : paquet apt
+      de la distro (régime sans empreinte binaire, version à relire à l'armement).
+
 
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
