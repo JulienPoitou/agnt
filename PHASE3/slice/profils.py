@@ -80,10 +80,14 @@ CONTROLLED_DEV = Profil(
 )
 
 # Nom volontairement « limites_a_prouver » et NON « hardened ».
-# Le mot « durci » ne doit pas être employé tant que les dix points suivants n'ont pas
-# été testés un par un : mémoire max, swap, CPU, PID, taille des fichiers, timeout,
-# réseau, capabilities, no-new-privileges, nettoyage après arrêt.
-# En l'état, seuls timeout, capabilities, réseau et taille des fichiers sont testés.
+# ÉTAT AU 01/09/2026 : les dix limites sont désormais ÉPROUVÉES sur un vrai runtime
+# OCI — `test_oci.sh` rend 12/12, sortie 0 (Docker Desktop 29.7.2 / WSL2 Ubuntu 24.04,
+# cf. PROJET_ETAT.md, deux blocs datés du 01/09). Ce qui reste vrai : ce profil n'est
+# PAS UTILISABLE tant que l'exécution du moteur ne passe pas par `isolateur_oci.py` —
+# les limites sont prouvées SUR LE HARNAIS, pas encore APPLIQUÉES au chemin
+# d'exécution. Déclarer `durci` maintenant désactiverait la garde de refus sans rien
+# appliquer : le verrou de `obtenir()` reste donc fermé, et il ne s'ouvrira qu'avec
+# le branchement de l'isolateur OCI dans le pipeline.
 LIMITES_A_PROUVER = Profil(
     nom="limites_a_prouver",
     memoire_bornee=True,
@@ -91,10 +95,11 @@ LIMITES_A_PROUVER = Profil(
     risques_admis=("PASSIVE", "ACTIVE"),
     durci=True,
     commentaire=(
-        "Profil cible, NON DISPONIBLE et NON TESTÉ. Exige cgroups v2 ou un runtime OCI. "
-        "Ne doit pas être utilisé : le déclarer sans limites appliquées désactiverait la "
-        "garde de refus. Reste à tester : mémoire max, swap, CPU, PID, taille des "
-        "fichiers, timeout, réseau, capabilities, no-new-privileges, nettoyage."
+        "Limites ÉPROUVÉES sur runtime OCI (test_oci.sh 12/12, 01/09/2026) mais NON "
+        "APPLIQUÉES par le chemin d'exécution du moteur : l'exécution passe encore par "
+        "la cage bwrap, qui ne sait pas borner la mémoire. Utilisable quand le pipeline "
+        "routera les outils non fiables vers isolateur_oci.py (docker : mémoire, swap, "
+        "CPU, PID, fsize, timeout, réseau, caps, no-new-privileges, nettoyage)."
     ),
 )
 

@@ -2,18 +2,26 @@
 #
 # Grammaire lue par slice/plugins.py, rien d'autre. Aucun fichier du cœur n'a été touché
 # pour faire entrer ruff — ni capabilities.yaml, ni un parser.
+#
+# D7 (arbitrage propriétaire 01/09/2026) : ruff_lint est TRANSFÉRÉ de CODE_LINT (capacité
+# créée par ce plugin, supprimée) vers CODE_STATIC_ANALYSIS — existante, passée en
+# fan_out(2) dans capabilities.yaml au même moment. La voie plugin SAIT s'attacher à une
+# capacité existante (plugins.py fusionne par_capacite) ; le jour où CODE_STATIC_ANALYSIS
+# n'était pas fan_out, l'attachement aurait rendu ruff décoratif — c'est ce qui avait motivé
+# la capacité dédiée, et c'est le verrou qui vient d'être levé.
 id: ruff_lint
 capacites:
-  - CODE_LINT
+  - CODE_STATIC_ANALYSIS
 entrees:
   - repository
 binaire: ruff
 outillage: ruff                # entrée épinglée dans manifeste_dependances.yaml
 version_min: "0.16.5"
 licence: MIT
-# Rang, pas score (leçon écrite dans pip_audit.yaml : le PLUS PETIT gagne). CODE_LINT n'a
-# qu'un provider, rien n'arbitre aujourd'hui — déclaré pour ne pas redevenir un doute.
-priorite: 100
+# Rang, pas score (leçon écrite dans pip_audit.yaml : le PLUS PETIT gagne). Depuis D7,
+# ruff partage CODE_STATIC_ANALYSIS avec semgrep : 110 le place DERRIÈRE semgrep (100) —
+# la troncature fan_out(2) les prend tous les deux, et l'ordre du plan reste explicite.
+priorite: 110
 cout: faible
 risque: PASSIVE
 description: >
@@ -72,26 +80,6 @@ requirements:
   privileges: aucun
   timeout_s: 600
   sandbox: true
-capacite:
-  # Capability NOUVELLE, déclarée par le plugin (le cœur ne connaît pas ruff). Ce n'est pas
-  # un caprice d'écriture : CODE_STATIC_ANALYSIS est en mode « un_seul », donc y accrocher
-  # ruff produirait un provider déclaré et jamais planifié. Créer la capacité rend l'outil
-  # atteignable par une question ; la rendre fan_out plus tard est une décision de registre.
-  description: >
-    Lint Python : règles d'erreurs et de style, plus le port d'un jeu de règles de
-    sécurité, par fichier et par ligne. Entrée de QUALITÉ de code et seconde lecture de
-    sécurité — ses findings de sécurité ne sont PAS interchangeables avec ceux de
-    l'analyse statique dédiée : mêmes familles, pas même couverture de règles.
-    (Aucun nom d'outil ici : cette description est envoyée au moteur d'intention, qui ne
-    doit connaître que des capacités — jamais un binaire. Voir `intent_llm` et le test
-    « F2 » de test_utilisation.)
-  domaines: [code]
-  entree: [files]
-  sortie: findings
-  mots_cles: [lint, ruff, style, "ligne longue", "ligne trop longue", "import inutilisé",
-             "import inutilise", "variable non utilisée", "variable non utilisee",
-             "code mort", "qualité de code", "qualite de code", "problèmes de syntaxe"]
 a_verifier:
-  - "CODE_STATIC_ANALYSIS est en mode « un_seul » (choisir_providers prend le premier passif) : tant que c'est le cas, un second outil de SAST déclaré sur cette capacité ne sera JAMAIS sélectionné — c'est la raison pour laquelle ruff est posé sur CODE_LINT, et non collé à semgrep. Passer la capacité en fan_out (décision de registre, voir DECISIONS_PROPOSEES) supprimerait cette doublure."
   - "le port S* de ruff n'est pas équivalent à bandit : mêmes familles, pas même couverture de règles. Aucun finding de l'un ne doit être présenté comme absent chez l'autre."
   - "filename est rendu en chemin ABSOLU par ruff (mesuré) : la plateforme relativise à l'affichage, pas à l'artefact — vérifier que le rapport humain ne réécrit pas un chemin d'hôte dans un contexte où il n'a rien à faire."
