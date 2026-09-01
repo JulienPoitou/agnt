@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-09-01 22:18:57 UTC",
+  "global_metrics": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 10,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1_score": 0.0
+  },
+  "execution_times": {},
+  "targets_evaluations": [
+    {
+      "target": "testrepo",
+      "expected_count": 3,
+      "actual_count": 0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 3,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "execution_times": {}
+    },
+    {
+      "target": "testrepo_go",
+      "expected_count": 2,
+      "actual_count": 0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "execution_times": {}
+    },
+    {
+      "target": "testrepo_iac",
+      "expected_count": 3,
+      "actual_count": 0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 3,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "execution_times": {}
+    },
+    {
+      "target": "testrepo_sca",
+      "expected_count": 2,
+      "actual_count": 0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "execution_times": {}
+    }
+  ]
+}

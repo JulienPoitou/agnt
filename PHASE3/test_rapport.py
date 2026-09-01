@@ -39,6 +39,7 @@ SECTIONS = [
     "## 4. Preuves",
     "## 5. Reproductibilité",
     "## 6. Artefacts",
+    "## 7. Suggestions de Remédiation",
 ]
 
 # Termes interdits : ils affirment une confirmation que le système ne possède pas.

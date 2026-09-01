@@ -457,6 +457,24 @@ def generer(e, cible) -> str:
     A("un test réel, ou une correction suivie d'une nouvelle analyse.")
     A("")
 
+    # -------------------------------------------------- remédiations suggérées
+    try:
+        from remediation import generer_remediations
+        res_rem = generer_remediations(e.findings, clusters)
+        rems_clusters = res_rem.get("clusters") or {}
+    except Exception:
+        rems_clusters = {}
+
+    if rems_clusters:
+        A("## Suggestions de Remédiation")
+        A("")
+        A("Des propositions de corrections automatisées déterministes (mises à jour de dépendances,")
+        A("patches de code, ou durcissements de configuration) sont suggérées :")
+        A("")
+        for cl_id, rem in rems_clusters.items():
+            A(f"- **Regroupement {cl_id}** ({rem.get('type')}, confiance {rem.get('confidence')}) : {sur(rem.get('description', ''))}")
+        A("")
+
     # ---------------------------------------------------------- machinerie, tout en bas
     A("---")
     A("")

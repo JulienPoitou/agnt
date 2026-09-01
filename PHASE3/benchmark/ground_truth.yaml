@@ -1,0 +1,66 @@
+# Vérité Terrain (Ground Truth) pour le Harnais de Benchmark AGNT.
+#
+# Ce fichier décrit les vulnérabilités et faiblesses attendues (CVE, CWE, paquet, fichier, ligne)
+# par dépôt de test / fixture pour mesurer objectivement la Précision, le Rappel et le F1-Score.
+
+version: "1.0"
+targets:
+  testrepo:
+    description: "Fixture Python / SAST / SCA / Secret de base"
+    expected_findings:
+      - id: "GT-PYYAML-CVE"
+        cve: "CVE-2020-14343"
+        cwe: "CWE-20"
+        package: "PyYAML"
+        file: "requirements.txt"
+        category: "DEPENDENCY_ANALYSIS"
+      - id: "GT-PYYAML-LOAD"
+        rule_id: "avoid-pyyaml-load"
+        cwe: "CWE-502"
+        file: "app.py"
+        approx_line: 5
+        category: "CODE_STATIC_ANALYSIS"
+      - id: "GT-EXPRESS-CVE"
+        package: "express"
+        file: "package-lock.json"
+        category: "DEPENDENCY_ANALYSIS"
+
+  testrepo_go:
+    description: "Fixture Go / SAST / SCA / Secret"
+    expected_findings:
+      - id: "GT-GO-TEXT-CVE"
+        package: "golang.org/x/text"
+        file: "go.mod"
+        category: "DEPENDENCY_ANALYSIS"
+      - id: "GT-GO-SECRET"
+        rule_id: "github-pat"
+        file: "main.go"
+        category: "SECRET_DETECTION"
+
+  testrepo_iac:
+    description: "Fixture Terraform / Kubernetes / Dockerfile IaC"
+    expected_findings:
+      - id: "GT-DOCKER-USER"
+        rule_id: "DL3002"
+        file: "Dockerfile"
+        approx_line: 5
+        category: "IAC_SCAN"
+      - id: "GT-TF-S3-PUBLIC"
+        rule_id: "CKV_AWS_20"
+        file: "main.tf"
+        category: "IAC_SCAN"
+      - id: "GT-K8S-PRIVILEGED"
+        file: "k8s.yaml"
+        category: "IAC_SCAN"
+
+  testrepo_sca:
+    description: "Fixture SCA multi-manifestes"
+    expected_findings:
+      - id: "GT-SCA-PYYAML"
+        package: "PyYAML"
+        file: "requirements.txt"
+        category: "DEPENDENCY_ANALYSIS"
+      - id: "GT-SCA-EXPRESS"
+        package: "express"
+        file: "package-lock.json"
+        category: "DEPENDENCY_ANALYSIS"
