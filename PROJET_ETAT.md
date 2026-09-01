@@ -2818,3 +2818,59 @@ d'empreintes existante), `test_qualif_outils_actifs.py` 30/30 ;
 `test_isolateur.py` : « La commande est correcte. Elle n'est PAS éprouvée ».
 Sur Windows seul, `test_empreintes` et `test_statuts_outils` restent bloqués à
 `import resource` (module Linux-only, limite d'environnement connue, inchangée).
+---
+
+# OCI · première épreuve de l'isolateur — test_oci.sh REFUSÉ, limites mesurées tenantes (01/09/2026)
+
+`PHASE3/test_oci.sh` a tourné **pour de vrai**, hors de l'environnement de développement :
+Windows 11 hôte, WSL2 Ubuntu 24.04 (noyau 6.18.33.2-microsoft-standard-WSL2), Docker Desktop
+29.7.2 (moteur Linux WSL2), CLI appelée depuis WSL via un wrapper `~/.local/bin/docker` vers
+`docker.exe` Windows — l'intégration WSL de Docker Desktop n'étant pas activée et n'ayant pas été
+modifiée. Image `python:3.13-slim`, digest `sha256:881d80734ee0…`. Le clone d'épreuve est un clone
+dédié (`agnt-oci`, branche `oci/epreuve-isolation`) ; aucun autre clone n'a servi. Prérequis du
+harnais : Docker uniquement — `bootstrap.sh` (opa, bwrap, outils épinglés) n'est pas exigé par
+cette épreuve et n'a pas été armé ici (les ~3,7 Go ne seraient pas consommés sans nécessité).
+
+**Résultat brut, rejoué deux fois, strictement identique : 9 OK · 3 ÉCHEC(S), code de sortie 1.**
+
+```
+  OK    0. le conteneur démarre
+  OK    1. mémoire (256m) — allocation de 512 Mo refusée
+  OK    2. swap — mémoire.max=268435456 swap.max=0
+  OK    3. CPU (0.5) — cpu.max=50000 100000
+  OK    4. PID (64) — pids.max=64
+  OK    5. taille des fichiers (10 Mo) — écriture de 20 Mo refusée
+  OK    6. timeout — sleep 30 interrompu après 5s
+  OK    7. réseau — aucune connexion sortante
+  ECHEC 8. capabilities — CapEff=CapEff:	0000000000000000 (attendu tout à zéro)
+  ECHEC 9. no-new-privileges — NoNewPrivs=NoNewPrivs:	1 (attendu 1)
+  OK    10. système de fichiers en lecture seule
+  ECHEC 10b. nettoyage — 1 conteneur(s) résiduel(s)
+```
+
+**Verdict du harnais : PROFIL « NON FIABLE » REFUSÉ. Un refus est un résultat : le profil reste
+fermé, rien n'a été modifié pour « faire passer » le test — ni `policy.rego`, ni le moteur, ni le
+harnais lui-même.** Mais les trois échecs ont été diagnostiqués un par un, par mesure directe, et
+**aucun des trois ne montre une limite qui cède** :
+
+1. **Tests 8 et 9 — bug de parsing du harnais.** `/proc/self/status` sépare libellé et valeur par
+   une **tabulation**, pas un espace. `grep CapEff … | tr -s ' ' | cut -d' ' -f2` rend donc la
+   ligne entière (`CapEff:\t0000000000000000`) et la comparaison échoue. Mesure directe dans le
+   conteneur confiné par les mêmes options : `CapEff:^I0000000000000000$` et `NoNewPrivs:^I1$`
+   (`cat -A`) — **les capabilities sont nulles et no-new-privileges est actif**. Les limites 8 et
+   9 TIENNENT ; c'est le harnais qui ne peut pas le lire.
+2. **Test 10b — course entre le test 6 et le comptage.** `timeout 5 docker run … sleep 30` tue le
+   **CLI** à 5 s, pas le conteneur : le `sleep 30` continue côté démon. Au moment du comptage
+   `docker ps -aq --filter ancestor=…`, le conteneur du test 6 est encore vivant — mesuré :
+   `ddaf9241c40f Up 6 seconds "sleep 30"`. Après extinction naturelle, le même filtre rend
+   **zéro** conteneur. Le `--rm` tient ; c'est la mort du conteneur, pas du CLI, que le harnais
+   devrait attendre.
+
+**Ce qui reste à faire, dans l'ordre** : (1) décision du propriétaire de corriger le harnais —
+parsing tab des deux lectures `/proc` (ou comparaison par motif), et attente de la mort réelle du
+conteneur du test 6 avant le comptage 10b ; ce sont des corrections du MESUREUR, à valider comme
+telles, pas du code du moteur ; (2) rejouer `test_oci.sh` jusqu'au « 10/10 » ; (3) alors
+seulement, ouvrir le profil « non fiable » et brancher les outils actifs (nmap, ffuf, nuclei) sur
+`isolateur_oci.py` — dont la commande produite reste, texte pour texte, celle du harnais
+(`verifier_conformite()`), ce que cette épreuve confirme a posteriori : les dix limites d'une
+commande identique ont été mesurées tenantes sur un vrai runtime OCI.
