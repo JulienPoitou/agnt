@@ -116,8 +116,8 @@ export default function Landing() {
       </div>
 
       <div className="foot">
-        <span>agnt::console — maquette de rejeu, moteur hors ligne</span>
-        <span>source : capture versionnée du dépôt</span>
+        <span>agnt::console — rejeu honnête, ou moteur réel via ./lancer.sh</span>
+        <span>source : capture versionnée du dépôt · API PHASE3/interface/api.py</span>
       </div>
     </div>
   );
