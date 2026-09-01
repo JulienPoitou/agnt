@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-// Xalgorix 22-phase methodology. The backend reports `current_phase` and
+// Xalgorix (d'origine) 22-phase methodology. The backend reports `current_phase` and
 // `phases` as 1-based ids into this list, and the New Scan form lets the
 // operator opt into any subset. Keeping a single source of truth here
 // prevents the dashboard from drifting out of sync with the scan form.

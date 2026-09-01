@@ -7,7 +7,7 @@ import ScanDetailPage from "@/pages/scan-detail"
 import NewScanPage from "@/pages/new-scan"
 import FindingsPage from "@/pages/findings"
 import ReportsPage from "@/pages/reports"
-import IntegrationsPage from "@/pages/integrations"
+import CapacitesPage from "@/pages/capacites"
 import LivePage from "@/pages/live"
 import InstancesPage from "@/pages/instances"
 import EmailTriagePage from "@/pages/email-triage"
@@ -46,7 +46,7 @@ const routes: RouteObject[] = [
       { path: "schedules", element: <SchedulesPage /> },
       { path: "findings", element: <FindingsPage /> },
       { path: "reports", element: <ReportsPage /> },
-      { path: "integrations", element: <IntegrationsPage /> },
+      { path: "capacites", element: <CapacitesPage /> },
       { path: "live", element: <LivePage /> },
       { path: "instances", element: <InstancesPage /> },
       { path: "email", element: <EmailTriagePage /> },

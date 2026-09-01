@@ -334,7 +334,7 @@ export default function ScanDetailPage() {
           <CardHeader>
             <CardTitle className="text-sm">{t("scanDetail.phaseProgress")}</CardTitle>
             <CardDescription>
-              Xalgorix runs a {PHASES.length}-phase autonomous methodology.
+              AGNT runs a {PHASES.length}-phase autonomous methodology.
               Currently:{" "}
               <span className="text-foreground">
                 {currentPhaseLabel(scan.current_phase)}

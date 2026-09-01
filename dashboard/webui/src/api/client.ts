@@ -209,8 +209,31 @@ function listQuery(params: ListParams): string {
   return qs ? `?${qs}` : "";
 }
 
+/** Cibles admises par le moteur AGNT (GET /api/cibles). */
+export interface CibleAdmise {
+  nom: string;
+  chemin: string;
+  fichiers_vus?: string[];
+  langages?: string[];
+}
+
+/** Capacités publiées du registre AGNT (GET /api/capacites). */
+export interface CapacitesResponse {
+  confiances?: string[];
+  moteurs?: string[];
+  capacites?: { id: string; description: string }[];
+  providers?: string[];
+  plugins?: Record<string, unknown>;
+  profil?: Record<string, unknown>;
+  llm?: Record<string, unknown>;
+  registre_erreur?: string;
+}
+
 export const api = {
   authStatus: () => http<AuthStatus>("/api/auth/status"),
+  // ── Moteur AGNT : cibles admises + capacités publiées (lecture seule) ──
+  cibles: () => http<{ cibles: CibleAdmise[] } | null>("/api/cibles"),
+  capacites: () => http<CapacitesResponse>("/api/capacites"),
   login: (username: string, password: string) =>
     http<{ status: string }>("/api/auth/login", {
       method: "POST",
