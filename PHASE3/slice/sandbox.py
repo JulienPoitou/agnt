@@ -191,6 +191,24 @@ def empreintes_conformes(bin_dir: Path | None = None, regles_dir: Path | None = 
     return problemes
 
 
+def _python_user_site_hote() -> str | None:
+    """Le chemin des paquets pip utilisateur de l'hôte, pour le transmettre au sandbox.
+
+    Le sandbox met HOME=/tmp (sécurité : l'outil ne lit pas les configs de l'hôte).
+    Conséquence : Python ne trouve plus les paquets installés via `pip install --user`,
+    comme checkov. On ne peut pas remettre HOME=/home/user — c'est volontaire.
+    La solution est d'ajouter le site-packages utilisateur au PYTHONPATH : l'outil
+    retrouve ses modules sans récupérer les fichiers de config de l'hôte.
+    """
+    import site
+    try:
+        p = Path(site.getusersitepackages())
+    except Exception:
+        return None
+    return str(p) if p.is_dir() else None
+
+
+
 class SandboxError(Exception):
     pass
 
@@ -240,14 +258,25 @@ class Sandbox:
     M_GITCONF: str = str(RACINE_MONTEURS / "gitconfig.ro")
 
     def verifie(self) -> list[str]:
-        """Vérifie les préconditions AVANT de lancer, pour échouer avec un message utile."""
+        """Vérifie les préconditions AVANT de lancer, pour échouer avec un message utile.
+
+        La base Trivy n'est PAS vérifiée ici : elle n'est nécessaire qu'aux providers
+        qui la déclarent (trivy, grype), et cette condition est déjà jugée par
+        `conditions.manquantes()` au moment de la sélection. L'exiger globalement
+        empêche tout outil de tourner tant que Trivy n'est pas installé — y compris
+        checkov, semgrep, bandit, gitleaks qui n'en ont aucun besoin.
+        """
         prob = []
         for nom, chemin in (("dépôt", self.racine_scan), ("règles", self.racine_regles),
-                            ("base Trivy", self.racine_db), ("sortie", self.sortie),
+                            ("sortie", self.sortie),
                             ("gitconfig", self.gitconfig)):
             if chemin is None or not Path(chemin).exists():
                 prob.append(f"{nom} introuvable : {chemin}")
-        for pt in (self.M_SCAN, self.M_REGLES, self.M_DB, self.M_OUT, self.M_GITCONF):
+        # M_DB n'est exigé que si une base est montée (racine_db non nulle et existante).
+        points_obligatoires = [self.M_SCAN, self.M_REGLES, self.M_OUT, self.M_GITCONF]
+        if self.racine_db is not None and Path(self.racine_db).exists():
+            points_obligatoires.append(self.M_DB)
+        for pt in points_obligatoires:
             if not Path(pt).exists():
                 prob.append(f"point de montage absent : {pt} (lancer bootstrap.sh)")
         # identité, pas seulement existence : c'est ici que le cache détourné par
@@ -256,12 +285,19 @@ class Sandbox:
         return prob
 
     def commande(self, argv: list[str]) -> list[str]:
-        return [
+        cmd = [
             self.bwrap,
             "--ro-bind", "/", "/",
             "--ro-bind", str(self.racine_scan), self.M_SCAN,
             "--ro-bind", str(self.racine_regles), self.M_REGLES,
-            "--ro-bind", str(self.racine_db), self.M_DB,
+        ]
+        # La base Trivy n'est montée que si elle existe — un outil qui n'en a pas
+        # besoin (checkov, semgrep, bandit, gitleaks) ne doit pas échouer parce
+        # qu'un répertoire déclaré par bootstrap est absent de cette machine.
+        # La condition d'usage est déjà jugée par `conditions.manquantes()`.
+        if self.racine_db is not None and Path(self.racine_db).exists():
+            cmd += ["--ro-bind", str(self.racine_db), self.M_DB]
+        cmd += [
             "--ro-bind", str(self.gitconfig), self.M_GITCONF,
             "--bind", str(self.sortie), self.M_OUT,
             "--dev", "/dev", "--proc", "/proc", "--tmpfs", "/tmp",
@@ -282,6 +318,7 @@ class Sandbox:
             "--die-with-parent",
             *argv,
         ]
+        return cmd
 
     @staticmethod
     def _tue_le_groupe(pid: int) -> None:
@@ -356,7 +393,7 @@ class Sandbox:
 
         # Les montages d'abord, l'hôte ensuite filtré, le déclaré en dernier (voir
         # `environ_outil` : c'est l'ordre qui préserve le comportement historique).
-        e = environ_outil(declare=env, montages={
+        montages = {
             "HOME": "/tmp",
             "TMPDIR": "/tmp",
             "GIT_CONFIG_GLOBAL": self.M_GITCONF,
@@ -367,7 +404,19 @@ class Sandbox:
                 "HTTPS_PROXY": "http://127.0.0.1:9",
                 "NO_PROXY": "",
             }),
-        })
+        }
+        # PYTHONPATH : le sandbox met HOME=/tmp, donc Python ne trouve plus les paquets
+        # pip utilisateur (checkov, etc.). On ajoute le site-packages de l'hôte.
+        # Mis dans `declare` (pas `montages`) car le déclaré gagne en dernier :
+        # si un provider déclare déjà PYTHONPATH, on fusionne au lieu d'écraser.
+        declare = dict(env or {})
+        py_site = _python_user_site_hote()
+        if py_site:
+            if "PYTHONPATH" in declare:
+                declare["PYTHONPATH"] = py_site + os.pathsep + declare["PYTHONPATH"]
+            else:
+                declare["PYTHONPATH"] = py_site
+        e = environ_outil(declare=declare, montages=montages)
 
         cmd = self.commande(argv)
         # start_new_session=True crée un groupe de processus dont on est le meneur.
@@ -392,6 +441,3 @@ class Sandbox:
                             ASS.masquer((err or "") + "\n[timeout]")[0], True)
         return Resultat(proc.returncode, ASS.masquer(out or "")[0],
                         ASS.masquer(err or "")[0], False)
-
-
-
