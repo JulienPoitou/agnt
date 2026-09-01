@@ -285,7 +285,8 @@ def _travail() -> None:
             code, resume = analyser.lancer(question, Path(cible), moteur=moteur,
                                            fournisseur=fournisseur,
                                            confiance=options.get("confiance", "controlled"),
-                                           egress=options.get("egress"))
+                                           egress=options.get("egress"),
+                                           cible_autorisee=options.get("cible_autorisee", False))
             sortie = resume.get("sortie")
             donnees = _charger(sortie) if sortie else None
             if donnees is not None:      # le résumé du moteur complète l'archive, sans la contredire
@@ -573,6 +574,9 @@ class Gestionnaire(BaseHTTPRequestHandler):
         egress = corps.get("egress")
         if egress is not None and not isinstance(egress, bool):
             return self._json({"erreur": "egress : attendu true, false, ou absent"}, 400)
+        cible_autorisee = corps.get("cible_autorisee")
+        if cible_autorisee is not None and not isinstance(cible_autorisee, bool):
+            return self._json({"erreur": "cible_autorisee : attendu true, false, ou absent"}, 400)
 
         rid = uuid.uuid4().hex[:12]
         with VERROU:
@@ -583,6 +587,8 @@ class Gestionnaire(BaseHTTPRequestHandler):
         options = {"moteur": moteur, "confiance": confiance, "modele": corps.get("modele")}
         if egress is not None:
             options["egress"] = egress
+        if cible_autorisee is not None:
+            options["cible_autorisee"] = cible_autorisee
         FILE.put((rid, question, cible, options))
         # `position` est la TAILLE DE LA FILE au moment de l'insertion, pas le rang dans une
         # attente : avec un travailleur qui débite aussitôt, deux RUNs consécutifs indiquent

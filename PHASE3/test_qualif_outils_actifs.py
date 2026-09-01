@@ -91,14 +91,27 @@ else:
     cas("registre chargé (import skippé ici)", True)
 
 # ------------------------------------------------------------------ 2. profils
-print("2. profils — profil durci accessible pour scans actifs")
+print("2. profils — tout profil « durci » est refusé à l'usage tant que l'OCI n'est pas éprouvé")
 try:
     import profils as PF
     durs = [n for n, x in getattr(PF, "PROFILS", {}).items()
             if getattr(x, "durci", False)]
-    cas("profil durci 'limites_a_prouver' présent", "limites_a_prouver" in durs)
-    p = PF.obtenir("limites_a_prouver")
-    cas("PF.obtenir('limites_a_prouver') fonctionnel", p.durci is True)
+    if not durs:
+        cas("aucun profil « durci » déclaré", True)
+    else:
+        accessibles = []
+        for nom_d in durs:
+            try:
+                PF.obtenir(nom_d)
+                accessibles.append(nom_d)
+            except (PermissionError, KeyError):
+                pass
+        cas("profils « durci » refusés par obtenir()", not accessibles,
+            f"utilisables sans garde : {sorted(accessibles)}")
+        actif = PF.actif()
+        cas("profil actif jamais « durci »", not getattr(actif, "durci", True),
+            f"actif={getattr(actif, 'nom', '?')!r} : l'épreuve OCI est-elle passée ? "
+            "Alors mettre à jour ce fichier, sinon la garde a un trou")
 except Exception as e:                                        # noqa: BLE001
     cas("profils.py lisible", False, f"{type(e).__name__}: {e}")
 

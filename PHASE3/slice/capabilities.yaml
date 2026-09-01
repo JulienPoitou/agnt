@@ -746,8 +746,7 @@ capabilities:
   - id: NETWORK_DISCOVERY
     description: >
       Découverte d'hôtes, de ports et de services sur une cible réseau — ACTIVE,
-      exige un profil durci (isolateur OCI éprouvé) et une cible explicitement
-      autorisée (jeton {URL}, décision D9).
+      exige un profil durci et une cible explicitement autorisée.
     domaines: [reseau, offensive]
     entree: [cible]
     sortie: finding/host-service
@@ -783,7 +782,7 @@ capabilities:
 
   - id: WEB_VULN_SCAN_ACTIVE
     description: >
-      Scan de vulnérabilités web par modèles (nuclei) — ACTIVE, exigences réseau.
+      Scan de vulnérabilités web par modèles — ACTIVE, exigences réseau.
     domaines: [webapp, offensive]
     entree: [cible]
     sortie: finding/web-vuln
@@ -822,7 +821,7 @@ capabilities:
 
   - id: WEB_ENDPOINT_DISCOVERY_ACTIVE
     description: >
-      Découverte de chemins/paramètres web par fuzzing de liste de mots (ffuf) — ACTIVE.
+      Découverte de chemins et paramètres web par fuzzing de liste de mots — ACTIVE.
     domaines: [webapp, offensive]
     entree: [cible]
     sortie: finding/web-endpoint

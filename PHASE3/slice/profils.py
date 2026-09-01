@@ -102,15 +102,23 @@ PROFILS = {p.nom: p for p in (CONTROLLED_DEV, LIMITES_A_PROUVER)}
 
 
 def obtenir(nom: str) -> Profil:
-    """Retourne un profil."""
+    """Retourne un profil. `limites_a_prouver` est refusé à l'usage : il décrit une cible,
+    pas un état réel."""
     if nom not in PROFILS:
         raise KeyError(f"profil inconnu : {nom!r} · disponibles : {sorted(PROFILS)}")
+    if nom == LIMITES_A_PROUVER.nom:
+        raise PermissionError(
+            f"le profil {nom!r} n'est pas utilisable : ses limites ne sont ni appliquées "
+            f"ni testées. L'utiliser désactiverait la garde de refus.")
     return PROFILS[nom]
 
 
-def actif(nom: str = "controlled_dev") -> Profil:
-    """Profil réellement en vigueur."""
-    if nom in PROFILS:
-        return PROFILS[nom]
+def actif() -> Profil:
+    """Profil réellement en vigueur.
+
+    Déclarer un profil durci sans limites appliquées serait un mensonge qui désactiverait
+    la garde de refus. Donc : tant que la mémoire n'est pas bornée, le profil actif est
+    `controlled_dev`, quoi qu'on demande.
+    """
     return CONTROLLED_DEV
 
