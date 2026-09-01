@@ -124,9 +124,14 @@ else
 fi
 
 # ---------------------------------------------------------- 6. timeout
+# Le conteneur est NOMMÉ : `timeout` tue le CLI à 5 s, pas le conteneur — le
+# `sleep 30` continue côté démon et faussait le comptage 10b (mesuré le 01/09/2026,
+# cf. PROJET_ETAT.md : « ddaf9241c40f Up 6 seconds "sleep 30" »). La mesure de
+# DURÉE reste inchangée ; le nettoyage explicite vient APRÈS la mesure.
 DEBUT=$(date +%s)
-timeout 5 docker run --rm "$IMAGE" sleep 30 >/dev/null 2>&1
+timeout 5 docker run --rm --name oci-epreuve-timeout "$IMAGE" sleep 30 >/dev/null 2>&1
 FIN=$(date +%s)
+docker rm -f oci-epreuve-timeout >/dev/null 2>&1
 DUREE=$((FIN-DEBUT))
 if [ "$DUREE" -lt 10 ]; then
   ok "6. timeout — sleep 30 interrompu après ${DUREE}s"
@@ -142,7 +147,11 @@ else
 fi
 
 # ---------------------------------------------------------- 8. capabilities
-C=$(run grep CapEff /proc/self/status 2>/dev/null | tr -s ' ' | cut -d' ' -f2)
+# `/proc/self/status` sépare libellé et valeur par une TABULATION, pas un espace :
+# `tr '\t' ' '` TRADUIT la tabulation (un `tr -s` ne ferait que resserrer une
+# répétition sans la convertir — mesuré le 01/09/2026, cf. PROJET_ETAT.md) avant
+# que `cut` ne sépare sur l'espace.
+C=$(run grep CapEff /proc/self/status 2>/dev/null | tr '\t' ' ' | cut -d' ' -f2)
 if [ "$C" = "0000000000000000" ]; then
   ok "8. capabilities — CapEff nul"
 else
@@ -150,7 +159,7 @@ else
 fi
 
 # ---------------------------------------------------------- 9. no-new-privileges
-N=$(run grep NoNewPrivs /proc/self/status 2>/dev/null | tr -s ' ' | cut -d' ' -f2)
+N=$(run grep NoNewPrivs /proc/self/status 2>/dev/null | tr '\t' ' ' | cut -d' ' -f2)
 if [ "$N" = "1" ]; then
   ok "9. no-new-privileges — actif"
 else
