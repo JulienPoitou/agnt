@@ -1,0 +1,53 @@
+# Xalgorix — one-command run. Publishes the dashboard on http://localhost:9137
+# and persists all data (scans, reports, and settings) to a named volume.
+#
+#   docker compose up -d
+#   docker compose logs -f      # shows the generated admin password on first run
+#
+# You do NOT need an LLM key to start — the dashboard launches without one and
+# you can configure the model + API key under Settings → LLM (it persists to the
+# volume). Set the env vars below only if you'd rather bake them in.
+services:
+  xalgorix:
+    image: xalgord/xalgorix:latest
+    # Or build locally instead of pulling:  build: .
+    #
+    # Full host-like permissions so the engine's toolset behaves as it does when
+    # run natively as root. Docker's DEFAULT sandbox drops capabilities
+    # (e.g. NET_ADMIN) and applies a seccomp/AppArmor filter, which breaks
+    # low-level tools: iptables/route/interface changes, ARP-spoof/MITM
+    # (ettercap/bettercap), tun/tap VPNs, ptrace-based debuggers (gdb/strace),
+    # masscan interface tuning, and tools that create their own namespaces.
+    #
+    # NOTE: an image cannot grant itself these — they MUST be set at run time.
+    # This compose file is the recommended launch path precisely so you get them
+    # by default with no extra flags. The container is meant to be a disposable,
+    # network-isolated scanning sandbox running as root; privileged mode is the
+    # intended posture. Never expose the dashboard publicly without auth.
+    privileged: true
+    # ── Prefer least-privilege instead of `privileged: true`? Comment the line
+    #    above and uncomment this targeted set (covers the pentest toolset while
+    #    stopping short of full device access):
+    # cap_add:
+    #   - NET_ADMIN      # iptables/nftables, routes, interfaces, ARP/MITM, VPN
+    #   - NET_RAW        # raw sockets / SYN scans (in Docker's default set too)
+    #   - SYS_PTRACE     # gdb / strace / debug attach
+    # security_opt:
+    #   - seccomp=unconfined     # allow mount/unshare/bpf/perf_event_open/keyctl
+    #   - apparmor=unconfined
+    ports:
+      - "9137:9137"
+    # Uncomment to bake in credentials / LLM (all optional). If you omit the
+    # login, a random admin password is generated and printed to the logs on
+    # first start. The LLM can be set here or under Settings → LLM.
+    # environment:
+    #   XALGORIX_USERNAME: admin
+    #   XALGORIX_PASSWORD: change-me-please
+    #   XALGORIX_LLM: openai/gpt-5.6
+    #   XALGORIX_API_KEY: your_provider_api_key
+    volumes:
+      - xalgorix-data:/data
+    restart: unless-stopped
+
+volumes:
+  xalgorix-data:

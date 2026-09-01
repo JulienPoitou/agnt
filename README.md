@@ -16,6 +16,12 @@ dogfooding sur 4 dépôts réels. Journal : `PROJET_ETAT.md`.
 - `PHASE3/slice/` — le cœur (pipeline, registre, sandbox bwrap, policy OPA, extraction, clusterer, rapports).
 - `PHASE3/` — batteries de tests (`test_*.py`), fixtures (`testrepo*`), harnais, dogfooding.
 - `PHASE3/dogfooding/` — cibles réelles épinglées, observations, utilisabilité.
+- `dashboard/` — **le tableau de bord** (UI web React/Vite, reprise du dashboard
+  Xalgoryx, Apache 2.0 — voir `dashboard/PROVENANCE.md`). Le backend Go livré
+  avec n'est pas exécuté : l'intégration visée est le branchement sur
+  `PHASE3/interface/api.py`. En attendant, un backend mock (`webui/mock-backend.mjs`)
+  permet de le lancer en démo :
+  `cd dashboard/webui && npm install && npm run dev`.
 
 ## Prérequis (machine de développement)
 
