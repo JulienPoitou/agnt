@@ -23,10 +23,27 @@ capabilities:
   - id: CODE_STATIC_ANALYSIS
     description: >
       Analyse statique du code source : injection de commande, hachages faibles,
-      appels dangereux, motifs d'insécurité.
+      appels dangereux, motifs d'insécurité. Complétée par un second lecteur
+      rapide (lint Python : erreurs, style, port S des règles de sécurité) —
+      lectures DIFFÉRENTES du même fichier, couvertures non interchangeables.
     domaines: [code, appsec]
     entree: [cible]
     sortie: finding/code-issue
+    # D7 (arbitrage propriétaire 01/09/2026) : passage en fan_out(2). Avant :
+    # `un_seul` prenait le premier passif éligible, donc tout second outil SAST
+    # déclaré sur cette capacité — par la voie plugin, dont c'est la promesse —
+    # était « chargé, validé, présent dans le registre… et absent de tout plan »
+    # (mesuré sur ruff). semgrep (100) reste premier ; ruff_lint (110) arrive en
+    # second par le plugin du même nom. max_providers=2 : un troisième outil
+    # SAST serait un arbitrage explicite de plus, pas un effet de bord.
+    mode_selection: fan_out
+    max_providers: 2
+    # Mots-clés repris de l'ancienne capacité CODE_LINT (supprimée par D7) : les
+    # questions de lint doivent continuer d'atteindre un plan, désormais via
+    # CODE_STATIC_ANALYSIS — qui porte réellement le lint Python depuis ce jour.
+    mots_cles: [lint, style, "ligne longue", "ligne trop longue", "import inutilisé",
+                "import inutilise", "variable non utilisée", "variable non utilisee",
+                "code mort", "qualité de code", "qualite de code", "problèmes de syntaxe"]
     providers:
       - id: semgrep
         kind: cli

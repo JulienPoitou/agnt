@@ -166,8 +166,10 @@ chargés = {c["id"]: c for c in vue["charges"]}
 cas("les deux nouveaux fichiers se chargent, et rien dans `plugins/` n'est refusé",
     {"ruff_lint", "trufflehog3"} <= set(chargés) and not vue["refuses"],
     json.dumps(vue["refuses"], ensure_ascii=False))
-cas("ruff CRÉE sa capacité (CODE_LINT) : posé sur CODE_STATIC_ANALYSIS, il ne serait jamais sélectionné",
-    chargés.get("ruff_lint", {}).get("capacite_creee") == "CODE_LINT", chargés.get("ruff_lint"))
+cas("ruff S'ATTACHE à CODE_STATIC_ANALYSIS (D7, 01/09/2026) : plus de capacité doublure, la capacité est fan_out(2)",
+    chargés.get("ruff_lint", {}).get("capacite_creee") is None
+    and chargés.get("ruff_lint", {}).get("capacites") == ["CODE_STATIC_ANALYSIS"],
+    chargés.get("ruff_lint"))
 cas("trufflehog3 ne crée rien : il rejoint SECRET_DETECTION, en dernier rang",
     chargés.get("trufflehog3", {}).get("capacite_creee") is None
     and chargés.get("trufflehog3", {}).get("capacites") == ["SECRET_DETECTION"],
@@ -427,10 +429,11 @@ non_evalue("npm audit sous la vraie bulle, réseau accordé",
 # ═════════════════════════════ 5 · sélection : portée réelle, inertie assumée
 print("═══ 5 · sélection : qui est vraiment planifié ═══")
 choix = IN.choisir_providers(IN.inferer("Analyse la sécurité de mon dépôt", reg), reg)
-cas("à demande générique, ruff ne déplace aucune sélection existante", "ruff_lint" not in choix, choix)
+cas("à demande générique, ruff EST planifié aux côtés de semgrep (D7 : fan_out(2) sur CODE_STATIC_ANALYSIS)",
+    "ruff_lint" in choix and "semgrep" in choix, choix)
 dem_lint = IN.inferer("Cherche les problèmes de lint et les imports inutilisés dans le dépôt", reg)
-cas("la capacité créée par le plugin est atteignable par les mots qu'il déclare",
-    "CODE_LINT" in dem_lint.capabilities, dem_lint.capabilities)
+cas("les mots de lint atteignent CODE_STATIC_ANALYSIS (CODE_LINT supprimée par D7, mots-clés transférés)",
+    "CODE_STATIC_ANALYSIS" in dem_lint.capabilities, dem_lint.capabilities)
 cas("et ruff_lint est bien le provider sélectionné sur cette capacité",
     "ruff_lint" in IN.choisir_providers(dem_lint, reg), IN.choisir_providers(dem_lint, reg))
 sec = reg.capability("SECRET_DETECTION")
@@ -443,9 +446,8 @@ cas("SECRET_DETECTION est en fan_out max 2 : trufflehog3, dernier rang, est tron
 a_verif_th3 = " ".join(str(x) for x in (doc_th3.get("a_verifier") or []))
 cas("cette inertie n'est pas souterraine : le fichier du plugin l'écrit et nomme la décision à prendre",
     "max_providers" in a_verif_th3 and "DECISIONS_PROPOSEES" in a_verif_th3, a_verif_th3[:200])
-a_verif_ruff = " ".join(str(x) for x in (doc_ruff.get("a_verifier") or []))
-cas("idem pour ruff : la raison pour laquelle il n'est pas branché sur CODE_STATIC_ANALYSIS est écrite",
-    "un_seul" in a_verif_ruff and "fan_out" in a_verif_ruff, a_verif_ruff[:180])
+cas("ruff est branché sur CODE_STATIC_ANALYSIS (D7) : le transfert est écrit dans le fichier du plugin",
+    doc_ruff.get("capacites") == ["CODE_STATIC_ANALYSIS"], doc_ruff.get("capacites"))
 
 
 cas("tout alias déclaré par un plugin est un alias que le cœur CONSOMME (sinon la donnée est perdue)",
