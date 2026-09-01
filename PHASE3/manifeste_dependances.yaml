@@ -330,7 +330,7 @@ binaires:
     sha256: c49588140f357cbdddd5436dec11201953a4c5390faeec90777f9ee2cfd70251
     # Empreinte de l'ARCHIVE téléchargée, double-attestée : mesurée localement ET publiée
     # par l'API GitHub (assets[].digest) — les deux coïncident.
-    archive_sha256: ea63d4ae232808cd7c6bc00d0142428e231fab59dae01042246097d195835ab6
+    tarball_sha256: ea63d4ae232808cd7c6bc00d0142428e231fab59dae01042246097d195835ab6
     source: https://github.com/projectdiscovery/nuclei/releases/download/v3.11.1/nuclei_3.11.1_linux_amd64.zip
     licence: MIT
     taille_approx: 143M
@@ -343,7 +343,7 @@ binaires:
   ffuf:
     version: "2.2.1"
     sha256: 6325a181abcdf3488ea321b1dc6cf420090cc7908ed19deae857fdc2796e4196
-    archive_sha256: 86307885810d3c36ba4a3e9ba5178c2d9027bba0dd7f4ea39e39e7c972b62396
+    tarball_sha256: 86307885810d3c36ba4a3e9ba5178c2d9027bba0dd7f4ea39e39e7c972b62396
     source: https://github.com/ffuf/ffuf/releases/download/v2.2.1/ffuf_2.2.1_linux_amd64.tar.gz
     licence: MIT
     taille_approx: 10M
@@ -354,11 +354,12 @@ binaires:
 
   nmap:
     version: "7.98"
-    sha256: null
     # nmap ne publie pas de binaire Linux autonome : la distribution passe par le tarball
-    # source ou les paquets système (apt). Régime « note » assumé, comme detect-secrets :
-    # l'empreinte du BINAIRE dépend de la chaîne de build de la machine — ce qui est
-    # épinglé ici, c'est la SOURCE.
+    # source ou les paquets système (apt). L'empreinte portée par `sha256` est celle du
+    # TARBALL SOURCE (l'artefact épinglé, ce qui existe) — PAS celle d'un binaire, qui
+    # dépend de la chaîne de build. La note le dit ; ne pas lire ce champ comme une
+    # empreinte d'exécutable.
+    sha256: ce847313eaae9e5c9f21708e42d2ab7b56c7e0eb8803729a3092f58886d897e6
     tarball_sha256: ce847313eaae9e5c9f21708e42d2ab7b56c7e0eb8803729a3092f58886d897e6
     source: https://nmap.org/dist/nmap-7.98.tar.bz2
     licence: >-
@@ -371,6 +372,67 @@ binaires:
       && make) exige la toolchain de build dans l'isolateur — même chantier que gosec
       (« go command required », reporté le 2026-08-31). Alternative assumée : paquet apt
       de la distro (régime sans empreinte binaire, version à relire à l'armement).
+
+  # ───────────────────────────────────────────── LINTERS PASSIFS (shellcheck, hadolint)
+  # Intégrés le 2026-09-01 (chantier qualif/outils-actifs, phase « passifs ») :
+  # DÉCLARÉS dans capabilities.yaml (SHELL_ANALYSIS ; hadolint sous IAC_SCAN) avec
+  # parsers nommés. Contrairement au bloc « outils actifs » ci-dessus, ceux-ci sont
+  # déclarés ET armés : exécution vérifiée sous WSL Ubuntu 24.04, sorties réelles
+  # mesurées (JSON à plat, rc mesurés — voir les notes et PHASE3/test_outil_*.py).
+  # Ces deux outils ne prennent PAS de répertoire (mesuré : shellcheck rc=2,
+  # hadolint « Invalid option --recursive ») : bootstrap installe à leurs côtés un
+  # wrapper de récursion VERSIONNÉ (contenu dans bootstrap.sh), épinglé ci-dessous
+  # comme un binaire à part entière — il est exécuté, il a une empreinte.
+
+  shellcheck:
+    version: "0.11.0"
+    sha256: 4da528ddb3a4d1b7b24a59d4e16eb2f5fd960f4bd9a3708a15baddbdf1d5a55b
+    tarball_sha256: 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
+    source: https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz
+    licence: GPL-3.0
+    taille_approx: 10M
+    role: outil
+    note: >
+      Empreintes relevées le 2026-09-01 : SHA-256 de l'archive mesuré localement ET
+      publié par l'API GitHub (assets[].digest) — les deux coïncident. `--version`
+      mesuré sous WSL : version 0.11.0.
+
+  shellcheck_scan:
+    version: "0.11.0"
+    sha256: bdea4932c7fac7b56e8f74d53508799e2c9524b9579d788a774562bb0f2bf351
+    source: bootstrap.sh (composant shellcheck)
+    licence: GPL-3.0 (le wrapper suit le dépôt ; il appelle le binaire GPL-3.0)
+    taille_approx: 1K
+    role: outil
+    note: >
+      shellcheck ne scanne pas un répertoire (mesuré 2026-09-01 : rc=2). Le wrapper
+      énumère *.sh/*.bash, concatène le JSON, valide la sortie avant rc=0 (rc=10 si
+      non-JSON : jamais un « 0 constat » sur une sortie illisible).
+
+  hadolint:
+    version: "2.15.1"
+    sha256: c7187db94eeeeca956519a6af171adc31453941a1e777961f6e680f697c8c507
+    tarball_sha256: c7187db94eeeeca956519a6af171adc31453941a1e777961f6e680f697c8c507
+    source: https://github.com/hadolint/hadolint/releases/download/v2.15.1/hadolint-linux-x86_64
+    licence: GPL-3.0
+    taille_approx: 4M
+    role: outil
+    note: >
+      L'« archive » EST le binaire (asset unique non compressé) : les deux empreintes
+      coïncident, double-attestées contre l'API GitHub. Pas de mode répertoire
+      (mesuré 2026-09-01) — d'où le wrapper hadolint_scan. --no-fail mesuré : rc=0
+      même avec findings → code_succes [0] propre.
+
+  hadolint_scan:
+    version: "2.15.1"
+    sha256: c4bc710e67dd0dabc82805115685520ccf39c0dd83dacd1302a7e60ede859a7a
+    source: bootstrap.sh (composant hadolint)
+    licence: GPL-3.0 (le wrapper suit le dépôt ; il appelle le binaire GPL-3.0)
+    taille_approx: 1K
+    role: outil
+    note: >
+      Énumère Dockerfile et Dockerfile.* récursivement, --no-fail, validation JSON
+      avant rc=0. Voir shellcheck_scan pour la convention d'empreinte du wrapper.
 
 
 regles:

@@ -54,7 +54,14 @@ BINAIRES_AUTORISES = ("semgrep", "trivy", "gitleaks", "bandit", "checkov",
                       # detect-secrets ne sort jamais sur le réseau en mode `scan` (la
                       # vérification en ligne --verify n'est pas dans l'argv, et la limite
                       # est consignée avec).
-                      "detect-secrets")
+                      "detect-secrets",
+                      # 01/09/2026 — shellcheck + hadolint (et leurs wrappers de récursion,
+                      # qui SONT les binaires exécutés : pas de mode répertoire, mesuré).
+                      # Même promesse : 2 providers dans capabilities.yaml, 2 parsers
+                      # parsers_*.py, 4 épingles au manifeste, wrappers versionnés dans
+                      # bootstrap.sh. Les deux sont passifs (lecture des fichiers cibles,
+                      # aucun réseau dans l'argv, limites consignées).
+                      "shellcheck", "shellcheck_scan", "hadolint", "hadolint_scan")
 
 FORMATS_SORTIE = ("json", "jsonl", "sarif", "csv", "xml", "custom")
 

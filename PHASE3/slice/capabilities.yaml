@@ -466,8 +466,13 @@ capabilities:
     # Étape 4 (2026-08-29) : fan-out checkov × kics — moteurs de règles
     # indépendants (checkov : checks Python ; kics : 1810 requêtes OPA). Les
     # désaccords de couverture sont une information mesurable.
+    # 01/09/2026 : plafond 2 → 3 avec hadolint (règles DL, troisième moteur
+    # indépendant). Analogique de D10 : ici le plafond est le levé AVANT de
+    # déclarer le provider — l'outil serait sinon « chargé et jamais planifié »
+    # (le défaut que D10 nomme pour SECRET_DETECTION). Révisable par le
+    # propriétaire, tracé dans PROJET_ETAT.md.
     mode_selection: fan_out
-    max_providers: 2
+    max_providers: 3
     providers:
       # ------------------------------------------------------------------ CHECKOV
       # Provider ajouté par manifest (niveau 1) le 2026-08-28.
@@ -630,3 +635,115 @@ capabilities:
             varient entre deux exécutions (mesuré) — l'ensemble des détections,
             non. severity est portée par la requête, pas par le fichier.
 
+
+      - id: hadolint
+        kind: tool
+        mode: CLI
+        risque: PASSIVE
+        cout: faible
+        priorite: 120          # derrière checkov (100) et kics (110) : complète, ne remplace pas
+        commande: ["hadolint_scan"]
+        manifest:
+          id: hadolint
+          kind: tool
+          mode: cli
+          binaire: hadolint_scan
+          tool_id: hadolint_scan   # convention : tool_id = nom du binaire exécuté (le wrapper)
+          argv:
+            - "{BIN}/hadolint_scan"
+            - "{TARGET}"
+            - "{OUT}"
+          output:
+            format: custom               # le JSON est écrit par le wrapper, lu depuis {sortie}
+          extraction:
+            parser: hadolint             # les codes DL/SC sont conservés TELS QUELS
+            items_from: items
+            champs:
+              regle: regle
+              fichier: fichier
+              ligne: ligne
+              severite: severite
+              message: message
+          risk: PASSIVE
+          target_types: [repository, filesystem]
+          # Mesuré 2026-09-01 : --no-fail rend 0 dès que les findings sont écrits
+          # (error/warning/info) ; le rc=1 nu (fichier absent) ne peut pas se lire
+          # « 0 constat » — la sortie serait vide, et le rc hors code_succes est un échec.
+          code_succes: [0]
+          applicabilite:
+            # PAS docker-compose* : hadolint ne lint que les Dockerfiles ; les
+            # Dockerfile sans extension et suffixés (Dockerfile.prod) sont couverts.
+            globs:
+              - "Dockerfile"
+              - "Dockerfile.*"
+          limite: >
+            hadolint 2.15.1 ne scanne pas un répertoire (mesuré : « Invalid option
+            --recursive ») : le wrapper hadolint_scan (VERSIONNÉ dans bootstrap.sh,
+            épinglé au manifeste) énumère Dockerfile / Dockerfile.* récursivement.
+            --no-fail est OBLIGATOIRE : sans lui, rc=1 dès le premier finding, et un
+            rc non épinglé serait une erreur, pas un résultat. `level`
+            (error/warning/info/style) conservé BRUT dans severity.value — pas de
+            mapping CVSS inventé. Les seuils de failure (--failure-threshold) ne
+            sont pas utilisés : filtrer la sévérité côté outil créerait deux vérités.
+
+  - id: SHELL_ANALYSIS
+    description: >
+      Analyse statique des scripts shell (bash/sh) : variables non quotées,
+      expansions de mots non protégées, rm -rf sur variables, cd sans garde,
+      mauvaises pratiques détectables à la lecture.
+    domaines: [code, shells]
+    entree: [cible]
+    sortie: finding/code-issue
+    providers:
+      - id: shellcheck
+        kind: tool
+        mode: CLI
+        risque: PASSIVE
+        cout: faible
+        priorite: 100
+        commande: ["shellcheck_scan"]
+        manifest:
+          id: shellcheck
+          kind: tool
+          mode: cli
+          binaire: shellcheck_scan
+          tool_id: shellcheck_scan   # convention : tool_id = nom du binaire exécuté (le wrapper)
+          argv:
+            - "{BIN}/shellcheck_scan"
+            - "{TARGET}"
+            - "{OUT}"
+          output:
+            format: custom               # le JSON est écrit par le wrapper, lu depuis {sortie}
+          extraction:
+            parser: shellcheck           # shellcheck rend code NUMÉRIQUE (2034) : SC<code> est
+            items_from: items            # reconstruit par le parser, pas deviné côté cœur
+            champs:
+              regle: regle
+              fichier: fichier
+              ligne: ligne
+              severite: severite
+              message: message
+          risk: PASSIVE
+          target_types: [repository, filesystem]
+          # Mesuré 2026-09-01 : 0 = aucun finding, 1 = findings écrits (JSON valide).
+          # 2 (fichier-dir) et 10 (sortie non-JSON, wrapper) restent des ÉCHECS.
+          code_succes: [0, 1]
+          applicabilite:
+            globs:
+              - "*.sh"
+              - "*.bash"
+          limite: >
+            shellcheck 0.11.0 ne scanne pas un répertoire (mesuré : rc=2) : le
+            wrapper shellcheck_scan (VERSIONNÉ dans bootstrap.sh, épinglé au
+            manifeste) énumère *.sh/*.bash et concatène le JSON — un fichier qui
+            n'est pas .sh/.bash n'est pas analysé, et ce fait n'est PAS rendu
+            comme une couverture. `level` (error/warning/info/style) est conservé
+            BRUT dans severity.value (origine : outil) — la sémantique shellcheck
+            n'est pas celle CVSS, aucun mapping n'est inventé. Le messege peut
+            porter le nom de variable ; pas de secret en clair attendu dans ce
+            format (l'outil analyse la syntaxe, pas le contenu des chaînes).
+
+# hadolint : TROISIÈME provider de IAC_SCAN — chevauchement PARTIEL assumé avec
+# checkov/kics (les règles DL/SC de hadolint ne recouvrent ni l'un ni l'autre ;
+# même discipline que trivy/grype : convergence par cible, identifiants différents).
+# Inséré ici (fin de la liste providers de IAC_SCAN, après kics).

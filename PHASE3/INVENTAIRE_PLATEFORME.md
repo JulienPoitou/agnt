@@ -8,8 +8,8 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 | fiches | `b647ef29b6ef` |
 | notes | `a9f853547f2a` |
 | matrice_phase1 | `d8819269b585` |
-| registre | `748b2d9fd97a` |
-| manifeste | `a8ae4c47f43b` |
+| registre | `4e5786c98f94` |
+| manifeste | `a0da577a8063` |
 
 ## Matrice des capacités
 
@@ -29,12 +29,13 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 | DETECTION_RULES | absente | 0 | — | — | à écrire | idem | Elastic Security (Detection Rules) (0.5), Sigma (0.5), Splunk Security Content (0.5) |
 | ENDPOINT_COLLECTION | absente | 0 | — | — | à écrire | idem | Velociraptor (0.5714), MCPHub (0.3333) |
 | EXPLOITATION | absente | 0 | — | — | à écrire | idem | ThreatMapper (0.4286), AutoSploit (0.2857), MCP Servers Cybersecurity (neptune1212) (0.2857), Metasploit Framework (0.2857) |
-| IAC_SCAN | **oui** | 2 (2) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | tfsec (1.5), Checkov (0.4167), Trivy (0.35), KICS (Checkmarx) (0.0625) |
+| IAC_SCAN | **oui** | 3 (3) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | tfsec (1.5), Checkov (0.4167), Trivy (0.35), KICS (Checkmarx) (0.0625) |
 | INCIDENT_RESPONSE | absente | 0 | — | — | à écrire | idem | Cortex (0.5714), Velociraptor (0.5714), TheHive (0.4286), FlareVM (0.2857) |
 | LOG_ANALYSIS | absente | 0 | — | — | à écrire | idem | Wazuh (0.5), Zeek (0.5) |
 | MALWARE_ANALYSIS | absente | 0 | — | — | à écrire | idem | IntelOwl (0.5714), Kubescape (ARMO) (0.4286), Linux Malware Detect (0.4286), LOKI (0.4286) |
 | NETWORK_DISCOVERY | absente | 0 | — | — | à écrire | idem | axiom (0.5), Fscan (0.5), MCP for Security (f1tz) (0.5), RustScan (0.5) |
 | SECRET_DETECTION | **oui** | 3 (3) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | Kingfisher (0.6), SecretScanner (0.6), ThreatMapper (0.4286), detect-secrets (0.375) |
+| SHELL_ANALYSIS | **oui** | 1 (1) | cible | finding | déclaratif ou parser nommé | bwrap, réseau coupé, cible en lecture seule | — |
 | THREAT_INTEL | absente | 0 | — | — | à écrire | idem | IntelOwl (0.5714), LOKI (0.4286), TheHive (0.4286), Recon-ng (0.4) |
 | VULN_MANAGEMENT | absente | 0 | — | — | à écrire | idem | Dependency-Track (1.0), DefectDojo (0.8333) |
 | WEB_ENDPOINT_DISCOVERY | absente | 0 | — | — | à écrire | idem | axiom (0.5), MCP for Security (f1tz) (0.5), ffuf (0.4), SpiderFoot (0.3333) |
@@ -66,6 +67,7 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 - **CODE_STATIC_ANALYSIS_JS** : providers eslint_js ; mode `un_seul`
 - **CODE_STATIC_ANALYSIS_SUITE** : providers bandit ; mode `un_seul`
 - **DEPENDENCY_ANALYSIS_JS** : providers npm_audit ; mode `un_seul`
+- **SHELL_ANALYSIS** : providers shellcheck ; mode `un_seul`
 
 ## Outils nommés dans la commande du 2026-08-30, état par rapport à l'inventaire
 
@@ -80,7 +82,7 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 | dnsx | non | **absent de l'inventaire Phase 1** — à sourcer avant d'intégrer | — | — |
 | eslint-plugin-security | non | **absent de l'inventaire Phase 1** — à sourcer avant d'intégrer | — | — |
 | feroxbuster | non | **absent de l'inventaire Phase 1** — à sourcer avant d'intégrer | — | — |
-| ffuf | non | ffuf | json | 0.4 |
+| ffuf | oui | ffuf | json | 0.4 |
 | gitleaks | oui | Gitleaks | json | 0.75 |
 | gosec | non | **absent de l'inventaire Phase 1** — à sourcer avant d'intégrer | — | — |
 | grype | oui | Grype (Anchore) | json | 0.6 |
@@ -89,8 +91,8 @@ Généré par `python3 PHASE3/inventaire_plateforme.py`. **Ce fichier n'est pas 
 | masscan | non | **absent de l'inventaire Phase 1** — à sourcer avant d'intégrer | — | — |
 | naabu | non | **absent de l'inventaire Phase 1** — à sourcer avant d'intégrer | — | — |
 | nikto | non | Nikto | texte structuré | 0.3846 |
-| nmap | non | Nmap | xml | 0.3333 |
-| nuclei | non | Nuclei | jsonl | 0.6364 |
+| nmap | oui | Nmap | xml | 0.3333 |
+| nuclei | oui | Nuclei | jsonl | 0.6364 |
 | osv-scanner | non | **absent de l'inventaire Phase 1** — à sourcer avant d'intégrer | — | — |
 | semgrep | oui | Semgrep | json | 1.0 |
 | subfinder | non | **absent de l'inventaire Phase 1** — à sourcer avant d'intégrer | — | — |
