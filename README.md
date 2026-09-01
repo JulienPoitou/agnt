@@ -23,12 +23,34 @@ dogfooding sur 4 dépôts réels. Journal : `PROJET_ETAT.md`.
   permet de le lancer en démo :
   `cd dashboard/webui && npm install && npm run dev`.
 
+## Lancer la belle interface (console web)
+
+Une console React/Vite branchée sur le **vrai moteur** (le même `analyser.lancer` que la CLI) :
+
+```bash
+./lancer.sh            # installe ce qui manque, démarre l'API (8141) + la console (5173)
+# → ouvrir http://localhost:5173
+```
+
+- La console détecte l'API toute seule : bandeau **MOTEUR CONNECTÉ**, sélecteur de cible,
+  lancement d'un run, journal/observations/clusters/couverture réels.
+- Si l'API est éteinte, elle retombe sur le **rejeu** d'une exécution passée, affichée sous
+  bandeau MAQUETTE (jamais comme un résultat réel).
+- **Sans outils installés**, un run renvoie un **refus nommé** (ex. « binaire OPA introuvable »,
+  « aucun outil disponible ») — c'est le comportement attendu, pas un bug.
+- En production : `./lancer.sh --build` (build + `vite preview`).
+
 ## Prérequis (machine de développement)
 
 ```bash
-bash PHASE3/bootstrap.sh   # outils épinglés + empreintes vérifiées (~3,7 Go hors workspace)
+bash PHASE3/bootstrap.sh   # bwrap + OPA + outils épinglés, empreintes vérifiées (~3,7 Go hors workspace)
 bash PHASE3/reconstruire_fixtures.sh   # recrée l'historique git des fixtures (gitleaks)
 ```
+
+Pré-requis système : `python3-venv` et `node`/`npm`. L'interface elle-même n'a besoin que de
+PyYAML côté Python (créé automatiquement dans `.venv` par `lancer.sh`). Les scanners réels
+(trivy, semgrep, checkov, gitleaks…) et la sandbox **bwrap** sont installés par `bootstrap.sh` :
+sans eux, la console tourne mais les runs aboutissent à un refus nommé.
 
 Machine de référence : 2 Go de RAM suffisent (contrainte mesurée et documentée).
 

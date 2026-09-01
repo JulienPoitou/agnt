@@ -1,0 +1,6 @@
+# Seule dépendance Python TIERCE du cœur + de l'API d'interface.
+# Tous les autres imports du moteur sont des modules locaux de la bibliothèque
+# standard. Les gros scanners (semgrep, checkov, trivy, gitleaks…) sont épinglés
+# et installés par `bash PHASE3/bootstrap.sh` (~3,7 Go) — ils sont requis pour
+# produire de vrais constats ; sans eux, un run renvoie un REFUS NOMMÉ.
+PyYAML>=6.0
