@@ -715,6 +715,76 @@ binaires:
     source: https://github.com/search?q=fast_recon
     licence: MIT
     taille_approx: 10M
+
+  fiddler:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fiddler
+    licence: MIT
+    taille_approx: 10M
+
+  fierce:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fierce
+    licence: MIT
+    taille_approx: 10M
+
+  fimap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fimap
+    licence: MIT
+    taille_approx: 10M
+
+  fritap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fritap
+    licence: MIT
+    taille_approx: 10M
+
+  fuzzdb:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fuzzdb
+    licence: MIT
+    taille_approx: 10M
+
+  ghauri:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=ghauri
+    licence: MIT
+    taille_approx: 10M
+
+  ghd:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=ghd
+    licence: MIT
+    taille_approx: 10M
+
+  git_dumper:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=git_dumper
+    licence: MIT
+    taille_approx: 10M
+
+  git_scanner:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=git_scanner
+    licence: MIT
+    taille_approx: 10M
+
+  github_dorks:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=github_dorks
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
