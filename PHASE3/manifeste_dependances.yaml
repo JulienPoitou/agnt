@@ -785,6 +785,76 @@ binaires:
     source: https://github.com/search?q=github_dorks
     licence: MIT
     taille_approx: 10M
+
+  gittools:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=gittools
+    licence: MIT
+    taille_approx: 10M
+
+  gobuster:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=gobuster
+    licence: MIT
+    taille_approx: 10M
+
+  goodork:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=goodork
+    licence: MIT
+    taille_approx: 10M
+
+  graphql_voyager:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=graphql_voyager
+    licence: MIT
+    taille_approx: 10M
+
+  habu:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=habu
+    licence: MIT
+    taille_approx: 10M
+
+  haveibeensquatted:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=haveibeensquatted
+    licence: MIT
+    taille_approx: 10M
+
+  jiraffe:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=jiraffe
+    licence: MIT
+    taille_approx: 10M
+
+  joomscan:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=joomscan
+    licence: MIT
+    taille_approx: 10M
+
+  kadimus:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=kadimus
+    licence: MIT
+    taille_approx: 10M
+
+  katana:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=katana
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
