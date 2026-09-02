@@ -875,11 +875,70 @@ def executer(requete: str, cible, cible_autorisee: bool = False,
     # ---------------------------------------------------------------- 6. clustering v0
     exec_.clusters = clusterer.regrouper(tous_findings)
 
+    # ---------------------------------------------------------------- 6b. moteur Oracle de vérification — BLOCK 1 & 7 fix
+    import oracle as OR
+    # BLOCK 1 : passe Cible canonique + input_digest pour éviter dépendance FS implicite et lier preuve à la révision
+    try:
+        _ref = cib.reference_sure() if hasattr(cib, "reference_sure") else getattr(cib, "reference", reference_cible)
+    except Exception:
+        _ref = reference_cible
+    try:
+        engine = OR.OracleEngine(target=cib, input_digest=ctx.input_digest, target_ref=_ref, run_id=exec_.run_id)
+    except Exception:
+        engine = OR.OracleEngine(target_dir=chemin_cible, run_id=exec_.run_id, input_digest=ctx.input_digest, target_ref=_ref)
+    verdict_summary: dict[str, int] = {}
+    verifications_list: list[dict] = []
+    # BLOCK 7 : atomicité — on ne mute pas l'état global avant succès complet, try/except par finding
+    nouveaux_findings_dicts: list[dict] = []
+    findings_avec_erreurs = 0
+    for f_obj in list(tous_findings):
+        try:
+            v_res = engine.evaluer_finding(f_obj, autres_findings=tous_findings)
+        except Exception as exc:  # noqa: BLE001
+            from oracle import VerificationStatus as _VS, VerdictStatus as _VD, VerificationResult as _VR
+            v_res = _VR(
+                finding_id=getattr(f_obj, "id", "unknown"),
+                verifiable=True,
+                status=_VS.ERROR,
+                verdict=_VD.INCONCLUSIVE,
+                confidence=0.0,
+                justification=f"Crash Oracle isolé : {exc}",
+                trace=[f"Oracle crash: {type(exc).__name__}: {exc}"],
+            )
+            findings_avec_erreurs += 1
+        v_dict = v_res.to_dict()
+        try:
+            f_obj.verification = v_dict
+        except Exception:
+            pass
+        verifications_list.append(v_dict)
+        try:
+            nouveaux_findings_dicts.append(f_obj.to_dict())
+        except Exception:
+            nouveaux_findings_dicts.append(v_dict)
+        v_name = v_res.verdict.value
+        verdict_summary[v_name] = verdict_summary.get(v_name, 0) + 1
+        if getattr(v_res, "flags", {}).get("contradictory"):
+            verdict_summary["contradictory_flag"] = verdict_summary.get("contradictory_flag", 0) + 1
+
+    # Assignation atomique seulement après boucle complète
+    exec_.findings = nouveaux_findings_dicts
+    exec_.result_digest = RUN.digest_resultats(exec_.findings)
+    try:
+        MS.consigner(miss, "oracle", total=len(verifications_list), verdicts=verdict_summary, erreurs=findings_avec_erreurs)
+    except Exception:
+        pass
+
     # ---------------------------------------------------------------- 7. rapport
     exec_.rapport = _rapport(it, plan, exec_)
+    exec_.rapport["oracle"] = {
+        "summary": verdict_summary,
+        "verifications": verifications_list,
+    }
     exec_.mission = miss.id
     MS.consigner(miss, "cloture", findings=len(exec_.findings),
                  clusters=len(exec_.clusters.get("clusters") or []),
+                 oracle_summary=verdict_summary,
                  result_digest=exec_.result_digest)
     return exec_
 

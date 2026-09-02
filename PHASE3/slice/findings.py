@@ -87,8 +87,21 @@ class Finding:
     evidence: dict
     statut: str = "open"
     remediation: Remediation | dict | None = None
+    verification: dict | None = None
 
     def to_dict(self) -> dict:
+        cycle_verified = False
+        verdict_val = None
+        proof_capsule_val = None
+        flags_val = {}
+        contradictory_val = False
+        if self.verification is not None:
+            verdict_val = self.verification.get("verdict")
+            cycle_verified = self.verification.get("status") == "verifiable" and verdict_val in ("confirmed", "refuted")
+            proof_capsule_val = self.verification.get("proof_capsule")
+            flags_val = self.verification.get("flags") or {}
+            contradictory_val = bool(flags_val.get("contradictory")) or verdict_val == "contradictory"
+
         d = {
             "id": self.id,
             "source": self.source,
@@ -99,9 +112,14 @@ class Finding:
             "statut": self.statut,
             # Champs du cycle de vie que SARIF ne porte pas : c'est la raison pour
             # laquelle le modèle interne reste la source de vérité.
+            # BLOCK 5 : contradictory est un flag orthogonal, pas un verdict qui écrase la vérité
             "cycle": {"first_seen": None, "last_seen": None, "false_positive": False,
-                      "reopened": False, "verified": False},
+                       "reopened": False, "verified": cycle_verified,
+                       "verdict": verdict_val, "proof_capsule": proof_capsule_val,
+                       "flags": flags_val, "contradictory": contradictory_val},
         }
+        if self.verification is not None:
+            d["verification"] = self.verification
         if self.remediation is not None:
             d["remediation"] = (
                 self.remediation.to_dict()
