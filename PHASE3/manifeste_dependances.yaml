@@ -505,6 +505,76 @@ binaires:
     source: https://wpscan.org/
     licence: MIT
     taille_approx: 20M
+
+  authoscope:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=authoscope
+    licence: MIT
+    taille_approx: 10M
+
+  autochrome:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=autochrome
+    licence: MIT
+    taille_approx: 10M
+
+  beef:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=beef
+    licence: MIT
+    taille_approx: 10M
+
+  bettercap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=bettercap
+    licence: MIT
+    taille_approx: 10M
+
+  bingoo:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=bingoo
+    licence: MIT
+    taille_approx: 10M
+
+  blindelephant:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=blindelephant
+    licence: MIT
+    taille_approx: 10M
+
+  burpsuite:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=burpsuite
+    licence: MIT
+    taille_approx: 10M
+
+  cloudfail:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=cloudfail
+    licence: MIT
+    taille_approx: 10M
+
+  cms_explorer:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=cms_explorer
+    licence: MIT
+    taille_approx: 10M
+
+  commix:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=commix
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
