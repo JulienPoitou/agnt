@@ -1205,6 +1205,69 @@ binaires:
     source: https://github.com/search?q=wappalyzer
     licence: MIT
     taille_approx: 10M
+
+  webreaver:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=webreaver
+    licence: MIT
+    taille_approx: 10M
+
+  webscreenshot:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=webscreenshot
+    licence: MIT
+    taille_approx: 10M
+
+  weevely3:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=weevely3
+    licence: MIT
+    taille_approx: 10M
+
+  whatwaf:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=whatwaf
+    licence: MIT
+    taille_approx: 10M
+
+  whatweb:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=whatweb
+    licence: MIT
+    taille_approx: 10M
+
+  wpsploit:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=wpsploit
+    licence: MIT
+    taille_approx: 10M
+
+  xray:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=xray
+    licence: MIT
+    taille_approx: 10M
+
+  zap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=zap
+    licence: MIT
+    taille_approx: 10M
+
+  zmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=zmap
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
