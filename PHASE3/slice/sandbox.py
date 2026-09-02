@@ -245,6 +245,11 @@ class Sandbox:
     max_processus: int = 256
     max_cpu_secondes: int = 300
     max_fichier_octets: int = 512 * 1024 * 1024
+    # Cible DISTANTE (URL/hôte/réseau) : rien à monter en `--ro-bind`, et le répertoire de
+    # travail ne peut pas être le dépôt (il n'y en a pas). Posé par le pipeline quand le
+    # descripteur de cible n'est pas local ; `verifie()` et `commande()` en dépendent, et
+    # rien d'autre ne le déduit — la cage ne « devine » pas sa forme, on le lui déclare.
+    cible_distante: bool = False
 
     # Points de montage vus de l'intérieur. Défauts = les montages partagés du
     # bootstrap (comportement historique inchangé). Champs d'INSTANCE (étape 3) :
@@ -267,13 +272,22 @@ class Sandbox:
         checkov, semgrep, bandit, gitleaks qui n'en ont aucun besoin.
         """
         prob = []
-        for nom, chemin in (("dépôt", self.racine_scan), ("règles", self.racine_regles),
-                            ("sortie", self.sortie),
-                            ("gitconfig", self.gitconfig)):
+        # Cible distante : il n'y a PAS de dépôt à monter, et l'exiger serait mentir sur la
+        # mission. En revanche la cohérence est jugée : `cible_distante` avec un `racine_scan`
+        # posé est un état interdit (la cage ne sait pas laquelle des deux cibles elle garde),
+        # et sans sortie montable il n'y a rien à lire après le scan.
+        a_verifier = {"règles": self.racine_regles, "sortie": self.sortie,
+                      "gitconfig": self.gitconfig}
+        if not self.cible_distante:
+            a_verifier["dépôt"] = self.racine_scan
+        elif self.racine_scan is not None:
+            prob.append("état incohérent : cible_distante avec un racine_scan monté")
+        for nom, chemin in a_verifier.items():
             if chemin is None or not Path(chemin).exists():
                 prob.append(f"{nom} introuvable : {chemin}")
         # M_DB n'est exigé que si une base est montée (racine_db non nulle et existante).
-        points_obligatoires = [self.M_SCAN, self.M_REGLES, self.M_OUT, self.M_GITCONF]
+        points_obligatoires = ([self.M_REGLES, self.M_OUT, self.M_GITCONF] if self.cible_distante
+                               else [self.M_SCAN, self.M_REGLES, self.M_OUT, self.M_GITCONF])
         if self.racine_db is not None and Path(self.racine_db).exists():
             points_obligatoires.append(self.M_DB)
         for pt in points_obligatoires:
@@ -288,7 +302,11 @@ class Sandbox:
         cmd = [
             self.bwrap,
             "--ro-bind", "/", "/",
-            "--ro-bind", str(self.racine_scan), self.M_SCAN,
+            # Le dépôt n'est monté QUE s'il y en a un : « cible distante » veut dire que la
+            # donnée scannée est hors de la machine — monter quoi que ce soit en M_SCAN serait
+            # une cage avec une fausse entrée (le point de montage existe, le contenu non).
+            *([] if self.cible_distante
+               else ["--ro-bind", str(self.racine_scan), self.M_SCAN]),
             "--ro-bind", str(self.racine_regles), self.M_REGLES,
         ]
         # La base Trivy n'est montée que si elle existe — un outil qui n'en a pas
@@ -314,7 +332,10 @@ class Sandbox:
             # identifiants différents). Ancré sur la racine de scan : les chemins
             # relativisés deviennent ceux de la cible. M_SCAN est en lecture
             # seule — un outil qui écrirait dans son cwd échouerait bruyamment.
-            "--chdir", self.M_SCAN,
+            # Cible distante : il n'y a pas de M_SCAN ; le cwd est le répertoire de
+            # SORTIE (le seul monté en écriture), ancré sur un chemin fixe — même
+            # garantie de déterminisme, et un outil qui écrit « ./x » écrit dans l'artefact.
+            "--chdir", self.M_OUT if self.cible_distante else self.M_SCAN,
             "--die-with-parent",
             *argv,
         ]
@@ -368,7 +389,13 @@ class Sandbox:
                 # et un run « export accordé » produiraient la même empreinte de contexte — et
                 # le `run_id`, lui, est dérivé de cette empreinte.
                 "reseau": ("AUTORISÉ (`--unshare-net` retiré de la commande)"
-                           if self.egress_autorise else "coupé (`--unshare-net`)")}
+                           if self.egress_autorise else "coupé (`--unshare-net`)"),
+                # La clé n'existe QUE pour une cible distante : le `contexte_empreinte` des
+                # missions locales (dont le `run_id` est dérivé) ne doit pas bouger d'un octet
+                # parce qu'un champ a été ajouté au dataclass. Un run distant, lui, porte la
+                # trace que la cage n'a rien monté.
+                **({"cible": "DISTANTE (aucun montage de dépôt ; cwd = répertoire de sortie)"}
+                   if self.cible_distante else {})}
 
     def delai_effectif(self, demande: int | None) -> int:
         """Délai réellement appliqué : le plafond du profil GAGNE toujours.

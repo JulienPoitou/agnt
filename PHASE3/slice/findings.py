@@ -140,20 +140,16 @@ def _coordonnee(c: dict) -> tuple[str, str, str]:
 
 
 def _nettoie_url(v: str) -> str:
-    """Cache l'identifiant d'une URL.
+    """Cache l'identifiant d'une URL (`user:pass@` → `***@`), conserve le reste.
 
-    Une URL d'outil peut porter `https://user:***@hote/x` (Basic auth dans l'URL,
-    fréquent dans les sortie de scanners web) : le masque général des secrets ne reconnaît
-    pas cette forme parce qu'elle n'a pas de nom de variable. On ne la garde jamais telle
-    quelle — le finding a besoin du PATH, pas du couple d'identifiants.
+    Une URL d'outil peut porter du Basic auth — le masque général des secrets ne
+    reconnaît pas cette forme parce qu'elle n'a pas de nom de variable. On ne la garde
+    jamais telle quelle : le finding a besoin du PATH, pas du couple d'identifiants.
+    L'autorité est `assainissement.nettoie_url` depuis 02/09/2026 — le même masque sert
+    à l'écriture des en-têtes et journaux de mission, posé AU POINT D'ÉCRITURE.
     """
-    if "://" not in v:
-        return v
-    tete, _, reste = v.partition("://")
-    autorite, sep, suite = reste.partition("/")
-    if "@" in autorite:
-        autorite = "***@" + autorite.rsplit("@", 1)[1]
-    return tete + "://" + autorite + (sep + suite if sep else "")
+    from assainissement import nettoie_url
+    return nettoie_url(v)
 
 
 _RE_CVE = re.compile(r"(?i)\b(CVE-\d{4}-\d{4,})\b")
@@ -236,8 +232,15 @@ def vue_unifiee(f, *, versions: dict | None = None) -> dict:
         "remediation": ev.get("remediation") or None,
         "reference": ev.get("reference") or None,
         "message": ev.get("message") or None,
+        "preuve": ev.get("preuve") or None,
+        "source_id": ident.get("source_finding_id") or None,
         "empreinte": ident.get("fingerprint") or None,
         "statut": d.get("statut") or None,
+        # Le NIVEAU de ce qu'on affirme, pas un qualificatif du rapport : un finding
+        # normalisé est une OBSERVATION d'un outil ; il n'est « vérifié » que si le
+        # cycle de vie l'a déclaré (re-test, oracle). Le DAST, comme tout le reste,
+        # naît observation — c'est structurel, pas une option de configuration.
+        "verification": "verifie" if (d.get("cycle") or {}).get("verified") else "observe",
         "horodatage": src.get("horodatage") or None,
     }
     # ce que l'OUTIL n'a pas dit, distingué de ce qu'il a dit vide : un lecteur d'un export
@@ -638,7 +641,13 @@ def depuis_manifest(brut, mani, outil: str, racines=()) -> list:
                 "trust": getattr(mani, "trust", "trusted_local"),
             },
             identity={"canonical_rule_id": f"{outil}:{canon}",
-                      "fingerprint": empreinte},
+                      "fingerprint": empreinte,
+                      # L'identifiant que L'OUTIL donne au constat (numéro d'alerte ZAP,
+                      # event-id, …), quand le manifest le déclare — la trace vers la
+                      # source, pas une déduction du cœur. None si non déclaré : la clé
+                      # reste absente du dictionnaire comme pour `nom_regle`.
+                      **({"source_finding_id": c.get("source_id")}
+                         if c.get("source_id") else {})},
             location=location,
             severity={"value": str(c.get("severite") or "UNKNOWN").upper(),
                       "origine": outil},
@@ -648,7 +657,12 @@ def depuis_manifest(brut, mani, outil: str, racines=()) -> list:
                       # deux champs que plusieurs outils fournis réellement (checkov,
                       # kics, trivy) : déclarés dans `extraction.champs`, jamais déduits.
                       "remediation": c.get("remediation"),
-                      "confiance": c.get("confiance")},
+                      "confiance": c.get("confiance"),
+                      # la PREUVE telle que l'outil la nomme (extrait d'instance ZAP,
+                      # `extracted-results` de nuclei, `evidence` de semgrep…) : valeur
+                      # de l'outil, projetée telle quelle et passée par le masquage
+                      # large si le manifest le déclare. Jamais réécrite, jamais devinée.
+                      **({"preuve": c.get("preuve")} if c.get("preuve") else {})},
         ))
     return out
 

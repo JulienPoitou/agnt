@@ -42,6 +42,9 @@ RAISONS_LISIBLES = {
     "ligne_proche": "lignes proches",
     "same_rule": "même règle",
     "cross_tool": "observations provenant d'outils différents",
+    # corrélation sur coordonnée distante (règle `asset` du clusterer) : le même constat
+    # revu par un autre œil — pas une confirmation, une convergence d'observations.
+    "cross_ref": "constat convergent sur la même coordonnée",
 }
 
 CONFIANCES = {"high": "élevée", "medium": "moyenne", "low": "faible", "none": "aucune"}

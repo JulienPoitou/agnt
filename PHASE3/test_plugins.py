@@ -161,15 +161,22 @@ cas("pip_audit se branche sur une capacité qui EXISTE déjà, sans en créer",
     chargés.get("pip_audit", {}).get("capacite_creee") is None
     and chargés.get("pip_audit", {}).get("capacites") == ["DEPENDENCY_ANALYSIS"],
     chargés.get("pip_audit"))
-cas("le binaire d'un plugin épinglé est admis sans toucher BINAIRES_AUTORISES",
-    PM.binaire_autorise("radon") and not PM.binaire_autorise("nmap")
+# L'état a bougé depuis l'écriture de ce cas : `nmap` (01/09, Groupe B) puis
+# `zap-baseline.py` (02/09) sont épinglés avec le rôle `outil` et sont donc ADMIS, eux
+# aussi, sans toucher BINAIRES_AUTORISES — c'est exactement la porte conçue ici. Ce qui
+# reste refusé, et doit l'être, est le nom que le manifeste ne connaît pas du tout.
+cas("le binaire d'un plugin épinglé est admis sans toucher BINAIRES_AUTORISES ; et un nom "
+    "JAMAIS épinglé reste refusé",
+    PM.binaire_autorise("radon") and PM.binaire_autorise("nmap")
+    and not PM.binaire_autorise("outil-jamais-epingle")
     and "radon" not in PM.BINAIRES_AUTORISES,
     f"radon={PM.binaire_autorise('radon')} nmap={PM.binaire_autorise('nmap')}")
 cas("un chemin, un `./radon` ou le nom vide restent refusés (l'épingle n'est pas un blanc-seing)",
     not PM.binaire_autorise("/bin/sh") and not PM.binaire_autorise("./radon")
     and not PM.binaire_autorise(""), "")
 cas("la raison d'un refus non épinglé est une phrase exploitable, pas un code",
-    "manifeste_dependances.yaml" in PM.binaire_est_autorise("nmap"), PM.binaire_est_autorise("nmap"))
+    "manifeste_dependances.yaml" in PM.binaire_est_autorise("outil-jamais-epingle"),
+    PM.binaire_est_autorise("outil-jamais-epingle"))
 
 # ═════════════════════════════ 2 · les portes, vues de l'extérieur : falsifications
 print("═══ 2 · falsifications (un cas par défaut interdit) ═══")
@@ -185,7 +192,11 @@ m = motif_refus(ecrire_plugin(d, "redefinition.yaml", id="bandit"), capacites=CO
                 fournisseurs={"bandit"})
 cas("redéfinir un provider du cœur est refusé", "existe déjà" in m, m)
 
-m = motif_refus(ecrire_plugin(d, "sans_epingle.yaml", binaire="nmap", outillage="nmap"),
+# `nmap` est épinglé depuis le 01/09 (Groupe B) : ce n'est plus l'exemple d'un outil
+# NON épinglé — un fixture qui refuserait pour « licence incohérente » ne prouverait pas
+# la porte « sans épingle ». Le négatif doit être un nom absent du manifeste.
+m = motif_refus(ecrire_plugin(d, "sans_epingle.yaml", binaire="outil-jamais-epingle",
+                              outillage="outil-jamais-epingle"),
                 capacites=CODE)
 cas("outil non épinglé refusé au chargement, avec le nom du manifeste dans le motif",
     "manifeste_dependances.yaml" in m, m)
@@ -308,21 +319,39 @@ cas("plugin valide accepté : le provider porte la commande, les args et le mani
 print("═══ 3 · registre augmenté ═══")
 reg = REG.Registry()
 coeur = yaml.safe_load((RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8"))
-cas("aucune capacité n'a été écrite à la main dans le registre du cœur pour un plugin",
-    len(coeur.get("capabilities") or []) == 7, len(coeur.get("capabilities") or []))
+ids_coeur = {c["id"] for c in (coeur.get("capabilities") or [])}
+_fournisseurs_coeur = {pr["id"] for c in (coeur.get("capabilities") or [])
+                       for pr in (c.get("providers") or [])}
+_plugin_ids = {c["id"] for c in vue["charges"]}
+cas("aucune capacité n'a été écrite à la main dans le registre du cœur pour un plugin "
+    "(ni capacité créée par un plugin présente dans le fichier, ni provider de plugin "
+    "déclaré là — le compte du fichier suit les déclarations du cœur, pas un nombre figé)",
+    not (_plugin_ids & _fournisseurs_coeur)
+    and not any(cid in ids_coeur for cid in
+                {c["capacite_creee"] for c in vue["charges"] if c.get("capacite_creee")}),
+    f"fichier={len(coeur.get('capabilities') or [])} · fournisseurs_coeur∩plugins="
+    f"{sorted(_plugin_ids & _fournisseurs_coeur)}")
 creees = sorted({c["capacite_creee"] for c in vue["charges"] if c["capacite_creee"]})
-cas("le registre en service = les 7 capacités du cœur + celles que les plugins créent réellement",
-    len(reg.capabilities()) == 7 + len(creees)
+cas("le registre en service = les capacités du fichier cœur + celles que les plugins créent réellement",
+    len(reg.capabilities()) == len(ids_coeur) + len(creees)
     and set(creees) <= {c.id for c in reg.capabilities()},
-    f"cœur 7 + {creees} = {len(reg.capabilities())}")
+    f"cœur {len(ids_coeur)} + {creees} = {len(reg.capabilities())}")
 capm = reg.capability("CODE_METRICS")
 cas("la capacité créée porte le vocabulaire déclaré dans le plugin",
     "cyclomatique" in capm.mots_cles, capm.mots_cles[:4])
 cas("une capacité de plugin ne rejoint PAS la suite générique par défaut",
     capm.generique is False, capm.generique)
-cas("les capacités du cœur gardent generique=true (le comportement par défaut n'est pas inversé)",
-    all(c.generique for c in reg.capabilities() if c.id not in set(creees)),
-    [c.id for c in reg.capabilities() if not c.generique])
+# 02/09/2026 — le cœur a AJOUTÉ trois capacités ACTIVE qui renoncent nommément au
+# générique (un « scan de sécurité » n'arme pas un scanner actif). L'invariant réel est
+# donc double : le défaut n'est pas inversé pour les passives, et les exclusions sont
+# exactement les trois ACTIVE déclarées + les capacités créées par plugins.
+_DAST_C = {"NETWORK_DISCOVERY", "WEB_VULN_SCAN_ACTIVE", "WEB_ENDPOINT_DISCOVERY_ACTIVE"}
+cas("les capacités passives du cœur gardent generique=true ; les seules exclusions sont les "
+    "trois capacités ACTIVE (renoncement déclaré) et les capacités de plugin",
+    all(c.generique for c in reg.capabilities()
+        if c.id not in _DAST_C and c.id not in set(creees))
+    and all(c.generique is False for c in reg.capabilities() if c.id in _DAST_C),
+    sorted(c.id for c in reg.capabilities() if not c.generique))
 deps = reg.capability("DEPENDENCY_ANALYSIS")
 ids = [p.id for p in deps.providers]
 cas("le provider de plugin est ajouté EN FIN de liste (l'ordre d'arbitrage du cœur ne bouge pas)",
@@ -355,9 +384,13 @@ cas("la même configuration se recalcule à l'identique (déterminisme, pas d'ho
     f"{reprise} vs {empreintes['sans_plugin']}")
 
 base = IN.inferer("Analyse la sécurité de mon dépôt", reg)
-cas("la sélection d'une demande du cœur est strictement inchangée par la présence des plugins",
-    base.capabilities == ("CODE_STATIC_ANALYSIS", "CODE_STATIC_ANALYSIS_GO", "DEPENDENCY_ANALYSIS",
-                          "SECRET_DETECTION", "IAC_SCAN"), base.capabilities)
+cas("la sélection d'une demande du cœur reste l'expansion générique PASSIVE : les plugins n'y "
+    "ajoutent AUCUNE capacité et les capacités ACTIVE (DAST) n'y entrent pas — la seule "
+    "dérive admise est l'élargissement du cœur lui-même (SHELL_ANALYSIS, 01/09)",
+    set(base.capabilities) == {"CODE_STATIC_ANALYSIS", "CODE_STATIC_ANALYSIS_GO",
+                               "DEPENDENCY_ANALYSIS", "SECRET_DETECTION", "IAC_SCAN",
+                               "SHELL_ANALYSIS"}
+    and not any(cid in base.capabilities for cid in creees), base.capabilities)
 demande_plugin = IN.inferer("Évalue la complexité cyclomatique de ce dépôt", reg)
 cas("la capacité du plugin est atteignable par les mots qu'il déclare",
     "CODE_METRICS" in demande_plugin.capabilities, demande_plugin.capabilities)
@@ -385,8 +418,17 @@ if Path(bandit_bin).exists():
                        capture_output=True, text=True, timeout=300)
     brut_csv = r.stdout or ""
 lignes = [x for x in brut_csv.splitlines() if x.strip()]
-cas("bandit -f csv : l'outil est présent et a rendu quelque chose (mesure réelle, pas fixture)",
-    len(lignes) >= 2, f"{len(lignes)} lignes depuis {bandit_bin}")
+if not lignes:
+    # Ces trois cas veulent l'OCTET RÉEL de l'outil : sur une machine sans bandit, les
+    # SIMULER (fixture, shim muet) produirait des « passés » qui ne prouvent rien. Ils
+    # sont nommés non évalués — la matière est ailleurs, le signal ici doit rester vrai.
+    for _n in ("bandit -f csv : l'outil est présent et a rendu quelque chose (mesure réelle, pas fixture)",
+               "modèle csv : mapping lu sur l'ENTÊTE RÉELLE de l'outil, jamais supposé",
+               "modèle csv : chaque item projeté remplit fichier, règle, ligne, sévérité et message"):
+        non_evalue(_n, f"bandit introuvable ({bandit_bin}) — ces cas jugent ses octets réels")
+if lignes:
+    cas("bandit -f csv : l'outil est présent et a rendu quelque chose (mesure réelle, pas fixture)",
+        len(lignes) >= 2, f"{len(lignes)} lignes depuis {bandit_bin}")
 colonnes = [c.strip() for c in (lignes[0].split(",") if lignes else [])]
 # Les candidats sont des noms de colonnes DOCUMENTÉS par bandit ; le mapping ne retient que ce
 # que l'entête rend réellement. Si l'outil change ses colonnes, ce cas échoue — c'est le but.
@@ -402,13 +444,14 @@ for alias, candidats in (("fichier", ("filename", "Location")),
             break
 ex_csv = PM.Extraction(modele="csv", champs=mapping)
 it = EX.extraire(brut_csv, ex_csv) if mapping else []
-cas("modèle csv : mapping lu sur l'ENTÊTE RÉELLE de l'outil, jamais supposé",
-    len(mapping) == 5 and len(it) == len(lignes) - 1,
-    f"colonnes={colonnes} · mapping={mapping} · {len(it)} items")
-proj = [EX.champs(x, ex_csv) for x in it]
-cas("modèle csv : chaque item projeté remplit fichier, règle, ligne, sévérité et message",
-    len(proj) >= 1 and all(all(str(v or "").strip() for v in f.values()) for f in proj),
-    json.dumps(proj[:1], ensure_ascii=False))
+if lignes:
+    cas("modèle csv : mapping lu sur l'ENTÊTE RÉELLE de l'outil, jamais supposé",
+        len(mapping) == 5 and len(it) == len(lignes) - 1,
+        f"colonnes={colonnes} · mapping={mapping} · {len(it)} items")
+    proj = [EX.champs(x, ex_csv) for x in it]
+    cas("modèle csv : chaque item projeté remplit fichier, règle, ligne, sévérité et message",
+        len(proj) >= 1 and all(all(str(v or "").strip() for v in f.values()) for f in proj),
+        json.dumps(proj[:1], ensure_ascii=False))
 entete_espace = '" id "," message "\n 42 , secret \n'
 ex_esp = PM.Extraction(modele="csv", champs={"regle": "id", "message": "message"})
 it_esp = EX.extraire(entete_espace, ex_esp)
@@ -466,47 +509,65 @@ cas("les args obligatoires sont transmis au programme (sans eux : outil lancé s
 cas("le nom du programme est `binaire`, une seule fois",
     list(prov.commande) == ["radon"], prov.commande)
 
-sbx, res = lance_reel(prov, RACINE)
-cas("l'argv exécuté pointe sur l'exécutable résolu et sur la cible du scan",
-    sbx.argv[0].endswith("/radon") and sbx.argv[-1] == str(RACINE.resolve())
-    and "--min" in sbx.argv, sbx.argv)
-cas("l'outil a rendu du JSON exploitable, code 0",
-    res.code_retour == 0 and isinstance(res.donnees, dict) and res.donnees,
-    f"code={res.code_retour} · {str(res.stderr)[:150]}")
-items = EX.extraire(res.donnees, prov.manifest.extraction)
-blocs = sum(len(v) for v in (res.donnees or {}).values() if isinstance(v, list))
-cas("autant d'items que de blocs rendus par l'outil (le cœur ne perd ni n'invente)",
-    len(items) == blocs and blocs > 0, f"{len(items)} items · {blocs} blocs")
-norm = F.normaliser(prov.id, res.donnees, mani=prov.manifest, racines=(str(sbx.M_SCAN),))
-cas("des findings sortent d'un outil que le cœur ne connaît pas",
-    len(norm) > 0, f"{len(norm)} findings")
-if norm:
-    un = norm[0] if isinstance(norm[0], dict) else vars(norm[0])
-    loc, src = un.get("location") or {}, un.get("source") or {}
-    cas("le finding porte fichier et ligne issus de l'outil (jamais devinés)",
-        bool(loc.get("file")) and bool(loc.get("line")), json.dumps(un, ensure_ascii=False)[:200])
-    cas("la capacité du finding est celle CRÉÉE par le plugin",
-        src.get("capability") == "CODE_METRICS", src.get("capability"))
-    cas("l'identité de règle est construite depuis le provider (traçable, pas inventée)",
-        str(src.get("canonical_rule_id") or "").startswith("radon_cc:"), src.get("canonical_rule_id"))
-    sev = ((un.get("severity") or {}).get("value") if isinstance(un.get("severity"), dict)
-           else un.get("severity")) or ""
-    cas("aucune sévérité n'est inventée là où l'outil ne classe pas",
-        str(sev).upper() in ("", "UNKNOWN"), f"severity={sev!r}")
+# « exécution réelle » veut dire le vrai binaire : `lance_reel` sabote la cage, pas
+# l'outil. Sur une machine non armée, ces cas ne peuvent ni passer ni être simulés sans
+# mentir (un shim rendrait du faux JSON, et « le cœur ne perd ni n'invente » sur du vide
+# ne prouverait rien) — ils sont donc NOMMÉMENT non évalués, comme partout dans la
+# maison, et les cas de déclaration ci-dessus restent exigés dans tous les cas.
+if A.resoudre_exe("radon") is None:
+    for _n in ("l'argv exécuté pointe sur l'exécutable résolu et sur la cible du scan",
+               "l'outil a rendu du JSON exploitable, code 0",
+               "autant d'items que de blocs rendus par l'outil (le cœur ne perd ni n'invente)",
+               "des findings sortent d'un outil que le cœur ne connaît pas",
+               "le brut de l'outil est conservé dans le dossier sous un nom qui le dit"):
+        non_evalue(_n, "binaire radon absent — bootstrap n'a pas abouti sur cette machine")
 else:
-    cas("aucune sévérité n'est inventée (0 finding rendu)", True, "0 finding")
+    sbx, res = lance_reel(prov, RACINE)
+    cas("l'argv exécuté pointe sur l'exécutable résolu et sur la cible du scan",
+        sbx.argv[0].endswith("/radon") and sbx.argv[-1] == str(RACINE.resolve())
+        and "--min" in sbx.argv, sbx.argv)
+    cas("l'outil a rendu du JSON exploitable, code 0",
+        res.code_retour == 0 and isinstance(res.donnees, dict) and res.donnees,
+        f"code={res.code_retour} · {str(res.stderr)[:150]}")
+    items = EX.extraire(res.donnees, prov.manifest.extraction)
+    blocs = sum(len(v) for v in (res.donnees or {}).values() if isinstance(v, list))
+    cas("autant d'items que de blocs rendus par l'outil (le cœur ne perd ni n'invente)",
+        len(items) == blocs and blocs > 0, f"{len(items)} items · {blocs} blocs")
+    norm = F.normaliser(prov.id, res.donnees, mani=prov.manifest, racines=(str(sbx.M_SCAN),))
+    cas("des findings sortent d'un outil que le cœur ne connaît pas",
+        len(norm) > 0, f"{len(norm)} findings")
+    if norm:
+        un = norm[0] if isinstance(norm[0], dict) else vars(norm[0])
+        loc, src = un.get("location") or {}, un.get("source") or {}
+        cas("le finding porte fichier et ligne issus de l'outil (jamais devinés)",
+            bool(loc.get("file")) and bool(loc.get("line")), json.dumps(un, ensure_ascii=False)[:200])
+        cas("la capacité du finding est celle CRÉÉE par le plugin",
+            src.get("capability") == "CODE_METRICS", src.get("capability"))
+        cas("l'identité de règle est construite depuis le provider (traçable, pas inventée)",
+            str(src.get("canonical_rule_id") or "").startswith("radon_cc:"), src.get("canonical_rule_id"))
+        sev = ((un.get("severity") or {}).get("value") if isinstance(un.get("severity"), dict)
+               else un.get("severity")) or ""
+        cas("aucune sévérité n'est inventée là où l'outil ne classe pas",
+            str(sev).upper() in ("", "UNKNOWN"), f"severity={sev!r}")
+    else:
+        cas("aucune sévérité n'est inventée (0 finding rendu)", True, "0 finding")
 
-nom_brut = A.conserver_brut(sbx, sbx.dossier, res, "radon_cc")
-cas("le brut de l'outil est conservé dans le dossier sous un nom qui le dit",
-    bool(nom_brut) and nom_brut.startswith("brut_radon_cc"), nom_brut)
-if nom_brut:
-    copie = (sbx.dossier / nom_brut).read_text(encoding="utf-8")
-    cas("les octets conservés sont CE QUE L'OUTIL A RENDU (stdout, pas la re-construction du cœur)",
-        copie.strip() == (res.texte_brut or "").strip() and copie.strip() != "",
-        f"{len(copie)} octets")
-cas("un provider qui n'a rien rendu ne produit pas de brut fantôme",
-    A.conserver_brut(sbx, sbx.dossier, types.SimpleNamespace(
-        fichier="", donnees=None, code_retour=1, texte_brut=""), "radon_cc") is None, "")
+    nom_brut = A.conserver_brut(sbx, sbx.dossier, res, "radon_cc")
+    cas("le brut de l'outil est conservé dans le dossier sous un nom qui le dit",
+        bool(nom_brut) and nom_brut.startswith("brut_radon_cc"), nom_brut)
+    if nom_brut:
+        copie = (sbx.dossier / nom_brut).read_text(encoding="utf-8")
+        cas("les octets conservés sont CE QUE L'OUTIL A RENDU (stdout, pas la re-construction du cœur)",
+            copie.strip() == (res.texte_brut or "").strip() and copie.strip() != "",
+            f"{len(copie)} octets")
+with tempfile.TemporaryDirectory(prefix="agnt-brut-fantome-") as _td:
+    # Son propre dossier : ce cas juge `conserver_brut` sur un résultat vide, pas la
+    # présence d'un outil — il doit vivre des deux côtés de la garde ci-dessus.
+    cas("un provider qui n'a rien rendu ne produit pas de brut fantôme",
+        A.conserver_brut(types.SimpleNamespace(sortie=Path(_td)), Path(_td),
+                         types.SimpleNamespace(
+                             fichier="", donnees=None, code_retour=1, texte_brut=""),
+                         "radon_cc") is None, "")
 cas("extension déduite du format DÉCLARÉ (jsonl/sarif/csv/xml), pas d'une inspection du contenu",
     A.extension_de("jsonl") == "jsonl" and A.extension_de("sarif") == "json"
     and A.extension_de("xml") == "xml", "")
@@ -616,9 +677,20 @@ DOCS_RACINE = {"README_USAGE.md", "PROJET_ETAT.md", "CONTEXTE_PROJET.md",
 if en_cours:
     cas("le changement en vol ne touche rien hors de PHASE3, sauf les docs de la racine",
         set(HORS_PHASE3) <= DOCS_RACINE, HORS_PHASE3)
-    cas("et ce changement en vol ne passe pas par un fichier du cœur écrit pour un outil nommé",
-        not [x for x in TOUCHES if Path(x).name.startswith("parsers_")], sorted(
-            Path(x).name for x in TOUCHES if Path(x).name.startswith("parsers_")))
+    # Un NOUVEAU `parsers_<outil>.py` est le canal AUTORISÉ pour un format propriétaire
+    # (promesse du fichier unique : « un nouveau format = un fichier en plus, aucun
+    # changement du cœur ») — le lui reprocher punirait le travail bien fait. Ce qui est
+    # interdit, et jugé ici, est un fichier du cœur NOMMÉ d'après un outil (`slice/zap.py`
+    # serait une connaissance d'outil câblée hors des deux voies admises).
+    _OUTILS_NOMMES = ("zap", "nmap", "nuclei", "ffuf", "radon", "bandit", "semgrep",
+                      "trivy", "gitleaks", "grype", "kics", "checkov", "ruff", "eslint",
+                      "hadolint", "shellcheck", "gosec", "nikto", "sqlmap")
+    cas("et ce changement en vol ne passe par aucun fichier du cœur nommé d'après un outil "
+        "(les parsers_* sont le canal du format propriétaire, pas une faute)",
+        not [x for x in TOUCHES if Path(x).parent.name == "slice"
+             and not Path(x).name.startswith("parsers_")
+             and any(m in Path(x).name.lower() for m in _OUTILS_NOMMES)],
+        sorted(Path(x).name for x in TOUCHES if Path(x).parent.name == "slice")[:12])
 else:
     non_evalue("le changement en vol ne touche rien hors de PHASE3",
                "aucun delta en vol (lot fusionné) — rien à borner ; voir le cas « trois fichiers "
@@ -653,9 +725,13 @@ cas("aucune capacité n'a été ajoutée à la main dans capabilities.yaml",
     "CODE_METRICS" not in (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8")
     and "radon" not in (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8").lower(),
     sorted(NOMS)[:16])
-cas("capabilities.yaml déclare toujours ses sept capacités (rien n'y a été greffé)",
-    (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8").count("\n  - id: ") == 7,
-    (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8").count("\n  - id: "))
+# Le nombre était figé à 7 — il vaut tant que le cœur n'ajoute rien POUR LUI. Depuis
+# 02/09, le cœur déclare lui-même les trois capacités ACTIVE : un chiffre épinglé serait
+# rouge quand le travail est fait. Ce qui ne doit PAS bouger est l'appartenance : aucune
+# capacité NÉE d'un plugin ne peut se retrouver écrite dans le fichier du cœur.
+cas("capabilities.yaml n'a rien greffé des plugins : aucune capacité créée par un plugin n'y "
+    "figure (le compte du fichier suit les déclarations du cœur, pas un nombre figé)",
+    not (ids_coeur & set(creees)), sorted(ids_coeur & set(creees)))
 cas("le dossier chargé est exactement `plugins/*.yaml` — `propositions/` n'y est jamais",
     set(PL.fichiers()) == set((RACINE / "plugins").glob("*.yaml"))
     and not any("propositions" in str(f) for f in PL.fichiers()),

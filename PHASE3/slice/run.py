@@ -119,6 +119,19 @@ def capturer(sbx: Sandbox, policy: Path, registre_empreinte: str) -> Contexte:
     return c
 
 
+def digest_cible_distante(reference_sure: str) -> tuple[str, str, bool]:
+    """Empreinte d'entrée d'une cible NON matérialisée (url, host, network…).
+
+    Il n'y a pas d'arbre à hasher, pas de commit, pas d'arbre sale : le digère porte ce
+    qui EST connu — la référence canonique SANS credentials (`Cible.reference_sure()`),
+    jamais la référence brute (un run ne doit pas indexer un secret), et jamais un faux
+    digest d'un dépôt qui n'existe pas. Deux runs sur la même URL à deux heures différentes
+    partagent donc leur empreinte d'entrée : c'est exactement ce qu'on attend d'un run
+    re-jouable, et c'est le `run_id` qui en hérite.
+    """
+    return hashlib.sha256(str(reference_sure).encode("utf-8")).hexdigest()[:16], "", False
+
+
 def digest_cible(cible: Path) -> tuple[str, str, bool]:
     """Empreinte de l'ÉTAT RÉEL analysé — et non du seul commit.
 

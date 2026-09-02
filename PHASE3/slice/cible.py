@@ -50,6 +50,11 @@ TYPE_DEFAUT = "repository"
 # d'une cible distante, jamais un chemin.
 TYPE_URL = "url"
 
+# Les seuls schémas qu'une cible « url » peut porter : le vocabulaire des scanners
+# web eux-mêmes. Un autre schéma n'est pas « toléré faute de liste » — voir la garde
+# dans `__post_init__`.
+_SCHEMES_URL_ADMIS = ("http", "https")
+
 # Détection d'un schéma d'URI : ce qui distingue une URL d'un chemin local sans
 # deviner — un chemin qui commence par « https:// » n'existe pas, un URI si.
 _URI = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*://")
@@ -94,6 +99,22 @@ class Cible:
                 f"cible non locale {self.type!r} avec un chemin local "
                 f"({self.chemin_local}) — une cible distante n'est pas un Path, elle ne "
                 f"doit jamais être montée dans le sandbox")
+        # 02/09/2026 (revue adverse) — le vocabulaire « url » est celui d'un SCANNER
+        # WEB, et un schéma est un pouvoir, pas une décoration : `file:///etc/passwd`
+        # passé par la porte « cible distante » deviendrait une lecture de filesystem
+        # déguisée en sortie réseau (et le provider zap, lui, la suivrait — ZAP sait
+        # ouvrir file://). Les schémas admis sont exactement le vocabulaire des
+        # outils ; tout le reste est refusé ICI, au descripteur, avant argv, avant
+        # policy, avant tout montage. Un schéma non admis n'est pas « inconnu donc
+        # toléré » : c'est refusé nommément.
+        if self.type == TYPE_URL:
+            tete = self.reference.split("://", 1)[0].strip().lower()
+            if "://" in self.reference and tete not in _SCHEMES_URL_ADMIS:
+                raise CibleError(
+                    f"schéma {tete!r} refusé pour une cible « url » : seuls "
+                    f"{list(_SCHEMES_URL_ADMIS)} sont le vocabulaire d'un scanner web — "
+                    "un `file://` (ou tout autre schéma à pouvoir local) ne devient pas "
+                    "une cible distante en changeant de porte d'entrée")
 
     # ---------------------------------------------------------------- propriétés
     @property

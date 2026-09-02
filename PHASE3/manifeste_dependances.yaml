@@ -317,11 +317,14 @@ binaires:
 
   # ─────────────────────────────────────────── OUTILS ACTIFS (Groupe B, épingle anticipée)
   # Empreintes relevées le 2026-09-01 (chantier qualif/outils-actifs, PHASE5/QUALIF_OUTILS_ACTIFS.md).
-  # Épingle de l'ARMEMENT, PAS une déclaration : ces binaires ne sont déclarés dans AUCUNE
-  # capacité de capabilities.yaml tant que l'isolateur OCI n'est pas éprouvé (test_oci.sh)
-  # et tant que la décision D9 (jeton {URL}) n'est pas passée. Un manifeste sans déclaration
-  # est inerte : bootstrap.sh peut vérifier, le registre ne propose rien, et la policy refuse
-  # de toute façon tout step ACTIVE tant que profil_sandbox.durci est faux.
+  # État au 2026-09-02 : ces trois binaires sont DÉSORMAIS DÉCLARÉS dans capabilities.yaml
+  # (nuclei, ffuf, nmap sous capacités ACTIVE, avec extraction corrigée — les mappings de
+  # champs étaient vides, donc les findings aussi). La porte qui reste fermée est POLITIQUE,
+  # pas déclarative : le verrou `sandbox_non_durci_outil_actif` refuse tout step ACTIVE tant
+  # que `profil_sandbox.durci` est faux — volontaire, à ne pas relâcher sans l'isolateur OCI
+  # éprouvé (test_oci.sh). « Déclaré » veut ici dire : sélectionnable sur demande explicite,
+  # écarté avec motif nommé (conditions réseau) ou refusé avec raison (policy), jamais
+  # silencieusement.
   # Binaires extraits déposés dans ~/.cache/arena_secops/bin (WSL Ubuntu 24.04) et vérifiés
   # exécutables le 2026-09-01 : nuclei -version → v3.11.1 ; ffuf -V → 2.2.1.
 
@@ -372,6 +375,31 @@ binaires:
       && make) exige la toolchain de build dans l'isolateur — même chantier que gosec
       (« go command required », reporté le 2026-08-31). Alternative assumée : paquet apt
       de la distro (régime sans empreinte binaire, version à relire à l'armement).
+
+  zap-baseline.py:
+    version: "2.17.0"
+    # Empreinte MESURÉE le 2026-09-02 : le fichier `docker/zap-baseline.py` du tag v2.17.0
+    # du dépôt zaproxy/zaproxy, téléchargé via l'API GitHub (base64 du contenu) et sha256
+    # recalculé localement. Ce qui est épinglé est le SCRIPT d'orchestration — pas le
+    # runtime ZAP lui-même (Java + core) : l'image tarball Linux 2.17.0 (243 895 361
+    # octets) a un sha256 publié par la release (efe799aa362…dd5a, relevé via l'API) mais
+    # n'a été NI téléchargé NI exécuté sur cette machine, faute de JRE. La porte
+    # `binaire_autorise` s'ouvre sur cette empreinte de script ; la qualification réelle
+    # (exécution, codes mesurés) se consignera à l'armement, comme pour le reste du
+    # Groupe B.
+    sha256: 18df1d2275c2cc7113ec4dd061687f8c9d6b9032b2e9d7e561bcd173236eda42
+    source: https://github.com/zaproxy/zaproxy/releases/tag/v2.17.0
+    licence: Apache-2.0
+    role: outil
+    taille_approx: 25 338 o (script) ; runtime ZAP 243M (tarball, non déposé ici)
+    note: >
+      Script python3 lançant le core ZAP (nécessite `java` et `zap.sh` au PATH, ou le
+      dépôt à côté du script). Codes de retour lus dans SA SOURCE (0 PASS, 1 FAIL,
+      2 WARN, 3 défaut d'usage ou d'amorçage) : le manifest n'admet [0,1,2] que parce
+      que ces trois codes sont lus dans le script épinglé ci-dessus — non mesurés par
+      exécution ici (JRE absent), premier exécuté réel consigné à l'armement.
+      PREREQUIS NON RÉSOLU par cette épingle : le runtime ZAP (image ou binaire) doit
+      être déposé et vérifié avant la première exécution qualifiée.
 
   # ───────────────────────────────────────────── LINTERS PASSIFS (shellcheck, hadolint)
   # Intégrés le 2026-09-01 (chantier qualif/outils-actifs, phase « passifs ») :

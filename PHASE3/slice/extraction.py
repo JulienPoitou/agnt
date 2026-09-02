@@ -168,7 +168,8 @@ def _items_xml(brut, ex: Extraction) -> list[dict]:
         # Une sortie XML tronquée (outil tué en plein écriture) est un cas RÉEL : le scan
         # doit dire « rien d'exploitable » et non exploser la mission.
         return []
-    # `nested_from` = chemin de balises menant aux CONTENEURS (ex. 'nmaprun/host'),
+    # `nested_from` = chemin de balises menant aux CONTENEURS, RELATIF À L'ÉLÉMENT
+    # RACINE renvoyé par la lecture (nmap : la racine EST <nmaprun> → 'host'),
     # `nested_key` = balise des items dans chaque conteneur (ex. 'port'). Les deux sont
     # optionnels : 'findall' direct sur `nested_from` suffit pour la plupart des outils.
     chemin = (ex.nested_from or "").strip("/")
@@ -283,6 +284,14 @@ def champs(item: dict, ex: Extraction) -> dict:
     out = {}
     for alias, src in ex.champs.items():
         val = _chemin(item, src)
+        if val is None and src != alias and isinstance(item, dict) and alias in item:
+            # Projection DÉJÀ appliquée : le modèle xml écrit les items SOUS LEUR ALIAS
+            # (`_items_xml` applique le même mapping en amont). Sans ce repli, la seconde
+            # projection repasse les chemins bruts (« state@state ») sur un dictionnaire
+            # indexé par alias, ne trouve rien, et tout part en None — le bug qui vidait
+            # les findings de nmap. Le repli ne devine pas : il lit l'alias quand l'item
+            # le porte DÉJÀ, et laisse None quand personne ne l'a fourni.
+            val = item.get(alias)
         if alias in ex.masquer_large:
             # Texte libre déclaré à risque : masquage LARGE. Un faux positif ici masque
             # un hachage dans un message — acceptable. Rater une clé ne l'est pas.

@@ -408,18 +408,34 @@ def choisir_providers(intent: Intent, registre: Registry, disponible=None) -> li
     choix = []
     for cid in intent.capabilities:
         cap = registre.capability(cid)
-        passifs = [p for p in cap.providers if p.risque == "PASSIVE"]
+        # Filtre de RISQUE (2026-09-02) : la règle « providers PASSIFS seulement » restait
+        # vraie même quand la capacité ACTIVE était DEMANDÉE nommément — une demande explicite
+        # de scan web était donc structurellement insoluble (le provider écarté avant même
+        # qu'OPA ait un avis). La règle devient :
+        #   · demande GÉNÉRIQUE → PASSIFS seuls (ne jamais armer un outil actif par
+        #     inadvertance, exactement l'intention d'origine) ;
+        #   · capacité demandée EXPLICITEMENT (motif = mot-clé matché, pas « demande
+        #     générique ») → PASSIFS et ACTIFS sont ELIGIBLES. Éligibles, pas lancés :
+        #     disponibilité, applicabilité, conditions (réseau) et la POLITIQUE tranchent
+        #     (verrou `sandbox_non_durci_outil_actif`) décident ensuite, dans cet ordre.
+        #     Un outil actif refusé par OPA l'est pour de vrai — cette sélection lui rend
+        #     seulement la possibilité d'être refusé sur son risque, au lieu d'être
+        #     nié silencieusement.
+        motif = (getattr(intent, "motifs", None) or {}).get(cid)
+        explicite = bool(motif) and "générique" not in str(motif) and "generique" not in str(motif)
+        eligibles = [p for p in cap.providers
+                     if p.risque == "PASSIVE" or explicite]
         if disponible is not None:
-            passifs = [p for p in passifs if disponible(p)]
-        if not passifs:
-            # Aucun provider PASSIF exploitable pour cette capacité : la capacité ne
+            eligibles = [p for p in eligibles if disponible(p)]
+        if not eligibles:
+            # Aucun provider exploitable pour cette capacité : la capacité ne
             # contribue rien, elle n'est pas en erreur. Une capacité dont l'unique outil
             # est absent n'est pas une demande illégitime — c'est une machine incomplète,
             # et le rapport doit le dire (« non_disponible »), pas refuser la mission.
             continue
         # Priorité explicite (décision 2026-08-28) : la plus petite valeur gagne,
         # égalité tranchée par l'ordre de déclaration (tri stable).
-        ordonnes = sorted(passifs, key=lambda p: p.priorite)
+        ordonnes = sorted(eligibles, key=lambda p: p.priorite)
         if cap.mode_selection == "fan_out":
             choix.extend(p.id for p in ordonnes[:cap.max_providers])
         else:

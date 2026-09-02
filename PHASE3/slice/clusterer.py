@@ -132,6 +132,50 @@ def _regles(findings: list) -> list[tuple[str, list[str], str]]:
 
     paquets_lies = set(cve_par_paquet) & set(usage_par_paquet)
 
+    # --------------------------------------------------------------------------
+    # RÈGLE asset — la coordonnée non-repository comme sujet de corrélation.
+    #
+    # Le modèle de finding porte un vocabulaire de cible (url, hote, image, ressource)
+    # depuis le 2026-08-30, mais le clusterer ne regroupait QUE sur paquet et fichier :
+    # deux outils qui constatent la MÊME règle sur la MÊME URL restaient deux singletons,
+    # et un « même hôte, règles différentes » n'existait nulle part. Pour du code, le
+    # fichier est le sujet ; pour une cible web, le sujet est la coordonnée.
+    #
+    # Deux niveaux, jamais un seul :
+    #   · même coordonnée ET même règle canonique  → convergence (confiance high) :
+    #     c'est le même constat, vu par un ou plusieurs outils ;
+    #   · même coordonnée seulement                  → co-localisation (medium) : c'est
+    #     le même sujet, pas le même fait. La raison `same_asset` est celle du voisinage
+    #     de fichiers — même mot, même sens : rien n'affirme une corrélation de fond.
+    #
+    # Réservée aux assets NON repository : sur un dépôt, le fichier+proximité reste
+    # l'autorité (les digests historiques des bundles l'exigent), et une coordonnée
+    # absente ne regroupe rien. La règle n'est ni un remplacement, ni un fallback :
+    # elle ne s'applique qu'aux cibles qui n'avaient AUCUN sujet de regroupement.
+    # --------------------------------------------------------------------------
+    par_coordonnee = defaultdict(list)
+    for f in findings:
+        _loc = f.location or {}
+        _asset = _loc.get("asset") or "repository"
+        if _asset == "repository":
+            continue
+        _val = _loc.get(_asset)
+        if _val:
+            par_coordonnee[(_asset, str(_val))].append(f)
+    coordonnees_multiples = {k for k, v in par_coordonnee.items() if len(v) > 1}
+    # Une coordonnée est CONVERGENTE quand deux de ses findings portent la même règle
+    # canonique. Le qualificatif porte sur le groupe entier (mêmes raisons pour tous ses
+    # membres) : scinder par règle produirait des clusters d'un seul membre — du remplissage
+    # qui se lit comme une corrélation.
+    canons_par_coordonnee = defaultdict(lambda: defaultdict(int))
+    for _k, _groupe in par_coordonnee.items():
+        for _g in _groupe:
+            _c = (_g.source or {}).get("canonical_rule_id")
+            if _c:
+                canons_par_coordonnee[_k][_c] += 1
+    convergentes = {k for k in coordonnees_multiples
+                    if any(n > 1 for n in canons_par_coordonnee[k].values())}
+
     out = []
     for f in findings:
         loc = f.location or {}
@@ -174,6 +218,18 @@ def _regles(findings: list) -> list[tuple[str, list[str], str]]:
         if rid:
             out.append((f"regle:{rid}", ["same_rule"], "low"))
             continue
+        # 3bis. coordonnée distante (url/hote/image/ressource). Après les règles
+        # fichier et paquet, jamais avant : sur un dépôt, le fichier a la main.
+        asset = loc.get("asset") or "repository"
+        if asset != "repository" and loc.get(asset):
+            cle_c = (asset, str(loc.get(asset)))
+            if cle_c in coordonnees_multiples:
+                if cle_c in convergentes:
+                    out.append((f"asset:{cle_c[0]}:{cle_c[1]}",
+                                ["same_asset", "same_rule", "cross_ref"], "high"))
+                else:
+                    out.append((f"asset:{cle_c[0]}:{cle_c[1]}", ["same_asset"], "medium"))
+                continue
         # 4. sinon : on ne regroupe pas.
         out.append((f"seul:{f.id}", [], "none"))
     return out

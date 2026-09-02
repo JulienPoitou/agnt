@@ -767,6 +767,12 @@ capabilities:
     domaines: [reseau, offensive]
     entree: [cible]
     sortie: finding/host-service
+    # JAMAIS dans l'expansion générique : une demande « scan de sécurité » ne doit pas
+    # armer un scan de ports. La capacité n'est éligible (puis autorisée par la
+    # politique) que si elle est DEMANDÉE par un de ces mots.
+    generique: false
+    mots_cles: ["scan réseau", "scan de ports", "ports ouverts", "découverte de ports",
+                "nmap", "inventaire réseau", "services exposés"]
     providers:
       - id: nmap
         kind: tool
@@ -790,12 +796,42 @@ capabilities:
             format: xml
           extraction:
             modele: xml
-            items_from: nmaprun
+            # 02/09/2026 — LA correction du produit d'items factices. L'ancienne
+            # déclaration (`items_from: nmaprun`) itérait TOUTES les balises sous
+            # <nmaprun> — chaque <host>, <taskinfo>, <runstats> et même chaque <port>
+            # devenaient des items SANS aucun champ projeté : des findings vides, tous
+            # de même empreinte. La structure réelle de `-oX` (mesurée sur le DTD publié
+            # de nmap 7.98) est nmaprun/host/port, avec l'adresse du port à la balise
+            # d'en-tête — d'où le contexte. CHEMIN RELATIF À L'ÉLÉMENT RACINE parsé :
+            # `ET.fromstring` d'un fichier réel DONNE <nmaprun> comme racine, donc le
+            # chemin déclaré est `host` — « nmaprun/host » ne trouvait rien et rendait
+            # zéro finding sur tout vrai fichier nmap (rouge trouvé par test_dast,
+            # 02/09/2026 ; la sémantique est dans `extraction._items_xml`).
+            nested_from: host
+            nested_key: port
+            contexte:
+              # L'attribut `addr` est porté par l'ENFANT <address> du <host>, pas par
+              # <host> lui-même (forme réelle de `-oX`, cf. DTD 7.98) — « @addr » lu
+              # sur le conteneur donnait None et l'asset retombait en « repository »
+              # (rouge trouvé par test_dast, 02/09/2026).
+              hote: "address@addr"
+            champs:
+              regle: "@portid"
+              nom_regle: "service@name"
+              message: "state@state"
+              preuve: "state@reason"
+              hote: "hote"
           risk: ACTIVE
           target_types: [host, network, url]
           code_succes: [0]
           conditions:
             reseau: true
+          limite: >
+            nmap ne classe pas : la sévérité reste UNKNOWN (jamais une traduction
+            inventée par le cœur). Un port ouvert n'est pas une vulnérabilité ; ce
+            finding est une observation de surface d'attaque, pas une faille. Le
+            protocole et l'état « open » viennent du raisonnement de l'outil lui-même
+            (state@reason), pas d'une confirmation du service.
 
   - id: WEB_VULN_SCAN_ACTIVE
     description: >
@@ -803,6 +839,12 @@ capabilities:
     domaines: [webapp, offensive]
     entree: [cible]
     sortie: finding/web-vuln
+    # Comme NETWORK_DISCOVERY : jamais armée par une demande générique, seulement par
+    # un mot-ci (et encore : si la politique le permet).
+    generique: false
+    mots_cles: ["scan web", "scan de vulnérabilités web", "vulnérabilités web",
+                "application web", "zap", "nuclei", "owasp", "dast", "pentest web",
+                "test d'intrusion web"]
     providers:
       - id: nuclei
         kind: tool
@@ -830,11 +872,93 @@ capabilities:
           extraction:
             modele: lignes_json
             items_from: items
+            # Champs MESURÉS sur le schéma de sortie publié de nuclei v3.11.1
+            # (`pkg/output/output.go`, `ResultEvent`) : `info` est INLINÉ au niveau
+            # racine de chaque ligne JSON (le bloc name/severity/description du template
+            # est à plat), l'URL touchée est `matched-at`, l'identifiant du template est
+            # `template-id`. Sans mapping déclaré (l'état d'avant), chaque ligne devenait
+            # un finding VIDE et tous portaient la même empreinte — 100 findings identiques
+            # pour 100 URL distinctes.
+            champs:
+              regle: template-id
+              nom_regle: name
+              severite: severity
+              message: description
+              url: matched-at
+              remediation: remediation
+              cwe: "classification.cwe-id"
+              reference: reference
+              preuve: extracted-results
+            masquer_large: [message, preuve, remediation]
           risk: ACTIVE
           target_types: [url]
           code_succes: [0]
           conditions:
             reseau: true
+          limite: >
+            la sévérité est celle du TEMPLATE (déclaration de son auteur), pas une
+            mesure sur la cible : un template « critical » qui matche prouve la
+            correspondance, pas l'exploitabilité. Les findings nuclei ne sont jamais
+            « vérifiés » — observation d'un matching.
+
+      - id: zap_baseline
+        kind: tool
+        mode: CLI
+        risque: ACTIVE
+        cout: eleve
+        priorite: 105
+        commande: ["zap-baseline.py"]
+        manifest:
+          id: zap_baseline
+          kind: tool
+          mode: cli
+          binaire: zap-baseline.py
+          tool_id: zap-baseline.py
+          argv:
+            - "{BIN}"
+            - "-t"
+            - "{URL}"
+            - "-J"
+            - "{OUT}"
+          output:
+            format: custom
+          extraction:
+            # Le cœur ne connaît ZAP que par ce nom de parser (voir `parsers_zap.py`) —
+            # second niveau de la promesse déclarative.
+            parser: zap_baseline
+            items_from: items
+            champs:
+              regle: regle
+              nom_regle: nom_regle
+              url: url
+              severite: severite
+              confiance: confiance
+              message: message
+              remediation: remediation
+              reference: reference
+              cwe: cwe
+              preuve: preuve
+              source_id: source_id
+            masquer_large: [message, remediation, preuve]
+          risk: ACTIVE
+          target_types: [url]
+          # Codes lus DANS `zap-baseline.py` (v2.17.0, épinglé) : 0 = PASS, 1 = FAIL
+          # trouvés, 2 = WARN trouvés (sans -I) — les trois sont un scan AYANT RENDU un
+          # rapport. 3 (usage, démarrage ZAP raté, summary absent) et tout autre code sont
+          # des échecs, jamais un « rien trouvé ».
+          code_succes: [0, 1, 2]
+          conditions:
+            reseau: true
+            # Plafond du déni-lenteté, lu par `conditions.timeout_effectif` : le spider
+            # ZAP (~1 min) + passif + démarrage JVM tiennent sous 900 s ; au-delà le
+            # cœur tue le groupe de processus et la couverture le dit.
+            timeout_s: 900
+          limite: >
+            baseline passif+léger (spider ~1 min, règles passives) : il ne remplace pas un
+            scan actif complet et ne prouve pas l'absence de vulnérabilité. Les codes de
+            retour admis sont ceux du script épinglé, lus dans sa source (non exécutés sur
+            cette machine — Java et l'image OCI absents) ; le premier exécuté réel est
+            consigné à l'armement (QUALIF des outils actifs).
 
   - id: WEB_ENDPOINT_DISCOVERY_ACTIVE
     description: >
@@ -842,6 +966,10 @@ capabilities:
     domaines: [webapp, offensive]
     entree: [cible]
     sortie: finding/web-endpoint
+    generique: false
+    mots_cles: ["énumération de chemins", "découverte d'endpoints",
+                "recherche de chemins web", "ffuf", "fuzzing de contenu",
+                "répertoire web accessible"]
     providers:
       - id: ffuf
         kind: tool
@@ -870,8 +998,25 @@ capabilities:
           extraction:
             modele: plat
             items_from: results
+            # Structure de `-of json` (documentation publiée de ffuf 2.2.1) : objet
+            # racine, tableau `results` d'entrées {url, input{FUZZ: mot}, status,
+            # length, words, lines, server, hostname, matcherstatus}. L'unique identifiant
+            # du constat est le MOT testé + l'URL rendue ; la sévérité n'existe pas chez
+            # cet outil — elle reste absente, jamais inventée.
+            champs:
+              regle: input.FUZZ
+              nom_regle: input.FUZZ
+              url: url
+              message: server
+              confiance: matcherstatus
+              preuve: input
           risk: ACTIVE
           target_types: [url]
           code_succes: [0]
           conditions:
             reseau: true
+          limite: >
+            une correspondance ffuf est un statut HTTP dans une liste de mots : c'est de
+            l'énumération de surface d'attaque, pas une vulnérabilité. La « confiance »
+            portée est le verdict du MATCHER de ffuf (matcherstatus), pas une évaluation
+            du contenu ; un 200 générique (soft-404) reste un finding ici.

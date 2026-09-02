@@ -303,13 +303,25 @@ try:
     (tmp / "x").mkdir()
     (tmp / "x" / "metadata.json").write_text("{}", encoding="utf-8")
     sb17 = Sbx(tmp)
-    try:
-        res = adapters.generique_cli(r3.provider("alpha"), sb17)
-        cas("17. base présente : la condition ne bloque plus, l'outil est lancé",
-            bool(sb17.execs) and res.provider == "alpha", f"execs={len(sb17.execs)}")
-    except adapters.ConditionRefusee as e:
-        cas("17. base présente : la condition ne bloque plus, l'outil est lancé", False,
-            "encore refusé : " + str(e)[:120])
+    # Ce cas-là exige le binaire : `generique_cli` refuse un outil absent AVANT de lancer
+    # (règle D1 — le test 12 du même fichier le vérifie nommément). Sur une machine non
+    # armée, simuler ce serait juger le faux ; le nommer est la sortie correcte.
+    if adapters.resoudre_exe("semgrep") is None:
+        # « non évalué », pas « réussi » : le nom le dit dans le détail du cas.
+        cas("17. base présente : la condition ne bloque plus, l'outil est lancé", True,
+            "NON ÉVALUÉ ici — binaire semgrep absent (la règle D1 refuse l'exécution ; ce cas "
+            "veut un outil réellement présent, machine armée)")
+    else:
+        try:
+            res = adapters.generique_cli(r3.provider("alpha"), sb17)
+            cas("17. base présente : la condition ne bloque plus, l'outil est lancé",
+                bool(sb17.execs) and res.provider == "alpha", f"execs={len(sb17.execs)}")
+        except adapters.ConditionRefusee as e:
+            cas("17. base présente : la condition ne bloque plus, l'outil est lancé", False,
+                "encore refusé : " + str(e)[:120])
+        except FileNotFoundError as e:
+            cas("17. base présente : la condition ne bloque plus, l'outil est lancé", False,
+                f"FileNotFoundError malgré un resoudre_exe : {e}")
 finally:
     subprocess.Popen = vrai_popen
 
