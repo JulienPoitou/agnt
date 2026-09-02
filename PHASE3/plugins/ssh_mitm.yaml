@@ -1,0 +1,39 @@
+# Proposition Web — ProxyMITM — SSH MITM
+# Source: awesome-pentest enaqx/ProxyMITM
+# URL: https://github.com/jtesta/ssh-mitm
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: ssh_mitm
+capacites:
+  - WEB_PROXY
+entrees:
+  - url
+  - hote
+binaire: ssh_mitm
+outillage: ssh_mitm
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  Proxy SSH — SSH MITM (https://github.com/jtesta/ssh-mitm). Proposition web AGNT V1.
+  Catégorie ProxyMITM → WEB_PROXY. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/ssh_mitm"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true

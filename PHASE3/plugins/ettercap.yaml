@@ -1,0 +1,39 @@
+# Proposition Web — ProxyMITM — Ettercap
+# Source: awesome-pentest enaqx/ProxyMITM
+# URL: http://www.ettercap-project.org
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: ettercap
+capacites:
+  - WEB_PROXY
+entrees:
+  - url
+  - hote
+binaire: ettercap
+outillage: ettercap
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  Suite MITM — Ettercap (http://www.ettercap-project.org). Proposition web AGNT V1.
+  Catégorie ProxyMITM → WEB_PROXY. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/ettercap"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true

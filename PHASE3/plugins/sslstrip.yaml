@@ -1,0 +1,39 @@
+# Proposition Web — ExploitWeb — sslstrip
+# Source: awesome-pentest enaqx/ExploitWeb
+# URL: https://www.thoughtcrime.org/software/sslstrip/
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: sslstrip
+capacites:
+  - WEB_EXPLOIT
+entrees:
+  - url
+  - hote
+binaire: sslstrip
+outillage: sslstrip
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  Stripping HTTPS — sslstrip (https://www.thoughtcrime.org/software/sslstrip/). Proposition web AGNT V1.
+  Catégorie ExploitWeb → WEB_EXPLOIT. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/sslstrip"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true

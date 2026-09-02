@@ -1,0 +1,39 @@
+# Proposition Web — Recon — passivedns
+# Source: awesome-pentest enaqx/Recon
+# URL: https://github.com/gamelinux/passivedns
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: passivedns
+capacites:
+  - WEB_RECON
+entrees:
+  - url
+  - hote
+binaire: passivedns
+outillage: passivedns
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  Sniffer DNS — passivedns (https://github.com/gamelinux/passivedns). Proposition web AGNT V1.
+  Catégorie Recon → WEB_RECON. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/passivedns"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true

@@ -1,0 +1,39 @@
+# Proposition Web — Injection — SQLmap
+# Source: awesome-pentest enaqx/Injection
+# URL: http://sqlmap.org/
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: sqlmap
+capacites:
+  - WEB_INJECTION
+entrees:
+  - url
+  - hote
+binaire: sqlmap
+outillage: sqlmap
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  SQL injection — SQLmap (http://sqlmap.org/). Proposition web AGNT V1.
+  Catégorie Injection → WEB_INJECTION. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/sqlmap"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true
