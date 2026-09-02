@@ -875,11 +875,33 @@ def executer(requete: str, cible, cible_autorisee: bool = False,
     # ---------------------------------------------------------------- 6. clustering v0
     exec_.clusters = clusterer.regrouper(tous_findings)
 
+    # ---------------------------------------------------------------- 6b. moteur Oracle de vérification
+    import oracle as OR
+    engine = OR.OracleEngine(target_dir=chemin_cible, run_id=exec_.run_id)
+    verdict_summary: dict[str, int] = {}
+    verifications_list: list[dict] = []
+    for f_obj in tous_findings:
+        v_res = engine.evaluer_finding(f_obj, autres_findings=tous_findings)
+        v_dict = v_res.to_dict()
+        f_obj.verification = v_dict
+        verifications_list.append(v_dict)
+        v_name = v_res.verdict.value
+        verdict_summary[v_name] = verdict_summary.get(v_name, 0) + 1
+
+    exec_.findings = [f.to_dict() for f in tous_findings]
+    exec_.result_digest = RUN.digest_resultats(exec_.findings)
+    MS.consigner(miss, "oracle", total=len(verifications_list), verdicts=verdict_summary)
+
     # ---------------------------------------------------------------- 7. rapport
     exec_.rapport = _rapport(it, plan, exec_)
+    exec_.rapport["oracle"] = {
+        "summary": verdict_summary,
+        "verifications": verifications_list,
+    }
     exec_.mission = miss.id
     MS.consigner(miss, "cloture", findings=len(exec_.findings),
                  clusters=len(exec_.clusters.get("clusters") or []),
+                 oracle_summary=verdict_summary,
                  result_digest=exec_.result_digest)
     return exec_
 
