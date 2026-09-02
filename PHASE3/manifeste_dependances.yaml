@@ -1135,6 +1135,76 @@ binaires:
     source: https://github.com/search?q=sylkie
     licence: MIT
     taille_approx: 10M
+
+  testssl:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=testssl
+    licence: MIT
+    taille_approx: 10M
+
+  tls_prober:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=tls_prober
+    licence: MIT
+    taille_approx: 10M
+
+  tlsmate:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=tlsmate
+    licence: MIT
+    taille_approx: 10M
+
+  tplmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=tplmap
+    licence: MIT
+    taille_approx: 10M
+
+  vhostscan:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=vhostscan
+    licence: MIT
+    taille_approx: 10M
+
+  w3af:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=w3af
+    licence: MIT
+    taille_approx: 10M
+
+  waftester:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=waftester
+    licence: MIT
+    taille_approx: 10M
+
+  wafw00f:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=wafw00f
+    licence: MIT
+    taille_approx: 10M
+
+  wapiti:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=wapiti
+    licence: MIT
+    taille_approx: 10M
+
+  wappalyzer:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=wappalyzer
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
