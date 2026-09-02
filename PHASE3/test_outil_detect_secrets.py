@@ -72,8 +72,8 @@ try:
     REELLE = sortie_reelle(["scan", "--all-files"], FIXTURE)
     SANS_ALL = sortie_reelle(["scan"], FIXTURE)
 except Exception as e:                                  # outil non installé sur cette machine
-    REELLE = types.CompletedProcess([], 127, "", str(e))
-    SANS_ALL = types.CompletedProcess([], 127, "", str(e))
+    REELLE = subprocess.CompletedProcess([], 127, "", str(e))
+    SANS_ALL = subprocess.CompletedProcess([], 127, "", str(e))
 OUTIL_INSTALLE = REELLE.returncode == 0 and bool(REELLE.stdout.strip())
 BASELINE = json.loads(REELLE.stdout) if OUTIL_INSTALLE else {}
 NB_REELLES = sum(len(v) for v in (BASELINE.get("results") or {}).values())

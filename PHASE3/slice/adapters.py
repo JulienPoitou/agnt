@@ -447,8 +447,9 @@ def generique_cli(prov, sbx: Sandbox, target: Target | None = None) -> ResultatB
     # journal, eux, racontaient une exécution. Un outil absent doit échouer ICI (D1),
     # pas produire un vide plus loin.
     # Résolution de la cible (locale ou URL/distante)
+    racine_scan = getattr(sbx, "racine_scan", None)
     val_url = target.value if target and target.kind in ("url", "host", "network") else (
-        str(sbx.racine_scan) if sbx.racine_scan else ""
+        str(racine_scan) if racine_scan else ""
     )
     _chemins = {
         "BIN": _exe(prov),
