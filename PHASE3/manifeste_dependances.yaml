@@ -1065,6 +1065,76 @@ binaires:
     source: https://github.com/search?q=skipfish
     licence: MIT
     taille_approx: 10M
+
+  smbmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=smbmap
+    licence: MIT
+    taille_approx: 10M
+
+  snitch:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=snitch
+    licence: MIT
+    taille_approx: 10M
+
+  sqlmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sqlmap
+    licence: MIT
+    taille_approx: 10M
+
+  ssh_mitm:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=ssh_mitm
+    licence: MIT
+    taille_approx: 10M
+
+  sslstrip:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sslstrip
+    licence: MIT
+    taille_approx: 10M
+
+  sslstrip2:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sslstrip2
+    licence: MIT
+    taille_approx: 10M
+
+  sslyze:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sslyze
+    licence: MIT
+    taille_approx: 10M
+
+  subbrute:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=subbrute
+    licence: MIT
+    taille_approx: 10M
+
+  subfinder:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=subfinder
+    licence: MIT
+    taille_approx: 10M
+
+  sylkie:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sylkie
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
