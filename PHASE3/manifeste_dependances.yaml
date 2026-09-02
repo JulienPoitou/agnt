@@ -645,6 +645,76 @@ binaires:
     source: https://github.com/search?q=dnsrecon
     licence: MIT
     taille_approx: 10M
+
+  dnstracer:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnstracer
+    licence: MIT
+    taille_approx: 10M
+
+  dork_cli:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dork_cli
+    licence: MIT
+    taille_approx: 10M
+
+  dorkbot:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dorkbot
+    licence: MIT
+    taille_approx: 10M
+
+  dorks:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dorks
+    licence: MIT
+    taille_approx: 10M
+
+  dotdotpwn:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dotdotpwn
+    licence: MIT
+    taille_approx: 10M
+
+  dvcs_ripper:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dvcs_ripper
+    licence: MIT
+    taille_approx: 10M
+
+  ettercap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=ettercap
+    licence: MIT
+    taille_approx: 10M
+
+  evilgrade:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=evilgrade
+    licence: MIT
+    taille_approx: 10M
+
+  eyewitness:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=eyewitness
+    licence: MIT
+    taille_approx: 10M
+
+  fast_recon:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fast_recon
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
