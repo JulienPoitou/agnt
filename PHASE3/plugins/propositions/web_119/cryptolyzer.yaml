@@ -1,0 +1,39 @@
+# Proposition Web — TLS — CryptoLyzer
+# Source: awesome-pentest enaqx/TLS
+# URL: https://gitlab.com/coroner/cryptolyzer
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: cryptolyzer
+capacites:
+  - WEB_TLS
+entrees:
+  - url
+  - hote
+binaire: cryptolyzer
+outillage: cryptolyzer
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  Analyse crypto — CryptoLyzer (https://gitlab.com/coroner/cryptolyzer). Proposition web AGNT V1.
+  Catégorie TLS → WEB_TLS. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/cryptolyzer"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true

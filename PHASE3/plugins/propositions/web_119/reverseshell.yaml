@@ -1,0 +1,39 @@
+# Proposition Web — Shells — Reverse Shell as a Service
+# Source: awesome-pentest enaqx/Shells
+# URL: https://github.com/lukechilds/reverse-shell
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: reverseshell
+capacites:
+  - WEB_SHELL
+entrees:
+  - url
+  - hote
+binaire: reverseshell
+outillage: reverseshell
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  Reverse shell — Reverse Shell as a Service (https://github.com/lukechilds/reverse-shell). Proposition web AGNT V1.
+  Catégorie Shells → WEB_SHELL. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/reverseshell"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true

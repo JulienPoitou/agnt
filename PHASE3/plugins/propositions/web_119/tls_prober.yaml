@@ -1,0 +1,39 @@
+# Proposition Web — TLS — tls_prober
+# Source: awesome-pentest enaqx/TLS
+# URL: https://github.com/WestpointLtd/tls_prober
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: tls_prober
+capacites:
+  - WEB_TLS
+entrees:
+  - url
+  - hote
+binaire: tls_prober
+outillage: tls_prober
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  Fingerprint SSL/TLS — tls_prober (https://github.com/WestpointLtd/tls_prober). Proposition web AGNT V1.
+  Catégorie TLS → WEB_TLS. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/tls_prober"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true
