@@ -575,6 +575,76 @@ binaires:
     source: https://github.com/search?q=commix
     licence: MIT
     taille_approx: 10M
+
+  crackpkcs12:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=crackpkcs12
+    licence: MIT
+    taille_approx: 10M
+
+  cryptolyzer:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=cryptolyzer
+    licence: MIT
+    taille_approx: 10M
+
+  dalfox:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dalfox
+    licence: MIT
+    taille_approx: 10M
+
+  daws:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=daws
+    licence: MIT
+    taille_approx: 10M
+
+  dirsearch:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dirsearch
+    licence: MIT
+    taille_approx: 10M
+
+  dnschef:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnschef
+    licence: MIT
+    taille_approx: 10M
+
+  dnsdumpster:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnsdumpster
+    licence: MIT
+    taille_approx: 10M
+
+  dnsenum:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnsenum
+    licence: MIT
+    taille_approx: 10M
+
+  dnsmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnsmap
+    licence: MIT
+    taille_approx: 10M
+
+  dnsrecon:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnsrecon
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
