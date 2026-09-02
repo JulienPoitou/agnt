@@ -434,6 +434,17 @@ binaires:
       Énumère Dockerfile et Dockerfile.* récursivement, --no-fail, validation JSON
       avant rc=0. Voir shellcheck_scan pour la convention d'empreinte du wrapper.
 
+  sigma:
+    package: sigma-cli
+    version: "1.0.0"
+    source: https://pypi.org/project/sigma-cli/
+    licence: LGPL-2.1
+    distribution: pip
+    sha256: null
+    role: outil
+    note: >
+      Installé par pip — régime note. Analyse et conversion de règles Sigma pour détection de logs/évènements.
+
 
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures

@@ -1,0 +1,20 @@
+{
+  "detections": [
+    {
+      "rule_id": "sigma_001_bruteforce",
+      "title": "Tentative de Brute Force SSH détectée",
+      "file": "system.log",
+      "line": 1,
+      "severity": "HIGH",
+      "description": "Plusieurs échecs d'authentification SSH observés depuis l'IP 192.168.1.100."
+    },
+    {
+      "rule_id": "sigma_002_privilege_escalation",
+      "title": "Privilege Escalation via sudo",
+      "file": "system.log",
+      "line": 3,
+      "severity": "CRITICAL",
+      "description": "Exécution de /bin/bash en tant que root par l'utilisateur user1 via sudo."
+    }
+  ]
+}

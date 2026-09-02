@@ -1,4 +1,0 @@
-{"seq": 1, "ts": "2026-08-29T15:51:14+00:00", "type": "ouverture", "requete": "Analyse la sécurité de mon dépôt", "cible": "/home/user/PHASE3/testrepo"}
-{"seq": 2, "ts": "2026-08-29T15:51:14+00:00", "type": "applicabilite", "ecartes": {"semgrep_go": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.go']", "kics": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.tf', '*.tfvars', '*.yaml', '*.yml', 'Dockerfile', '*docker-compose*']"}}
-{"seq": 3, "ts": "2026-08-29T15:51:14+00:00", "type": "plan", "plan_id": "517305d1205ae911", "providers": ["semgrep", "trivy", "grype", "gitleaks", "checkov"]}
-{"seq": 4, "ts": "2026-08-29T15:51:14+00:00", "type": "arret", "motif": "policy", "decision": ["memoire_non_bornee_cible_non_fiable"]}

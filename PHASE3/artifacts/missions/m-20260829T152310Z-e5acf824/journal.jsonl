@@ -1,3 +1,0 @@
-{"seq": 1, "ts": "2026-08-29T15:23:10+00:00", "type": "ouverture", "requete": "Analyse la sécurité de mon dépôt", "cible": "testrepo_sca"}
-{"seq": 2, "ts": "2026-08-29T15:23:10+00:00", "type": "applicabilite", "ecartes": {"semgrep_go": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.go']"}}
-{"seq": 3, "ts": "2026-08-29T15:23:10+00:00", "type": "plan", "plan_id": "15054c09f772c99c", "providers": ["semgrep", "trivy", "grype", "gitleaks", "checkov", "kics"]}

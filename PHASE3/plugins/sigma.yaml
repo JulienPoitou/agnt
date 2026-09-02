@@ -1,0 +1,47 @@
+# Plugin AGNT — Analyse de logs et détection Sigma pour SOC & DFIR
+id: sigma
+capacites:
+  - LOG_ANALYSIS
+entrees:
+  - repository
+  - filesystem
+binaire: sigma
+outillage: sigma
+version_min: "1.0.0"
+licence: LGPL-2.1
+priorite: 100
+cout: faible
+risque: PASSIVE
+description: >
+  Analyse et détection de sécurité sur les fichiers de logs (syslog, JSON, EVTX) via des règles Sigma.
+fichiers_requis:
+  - "*.log"
+  - "*.json"
+  - "*.evtx"
+execution:
+  args:
+    - "{BIN}"
+    - "scan"
+    - "--input"
+    - "{TARGET}"
+    - "--output"
+    - "{OUT}"
+  code_succes: [0, 1]
+sortie:
+  format: custom
+lecture:
+  parser: sigma
+requirements:
+  reseau: false
+  privileges: aucun
+  timeout_s: 300
+  sandbox: true
+capacite:
+  description: >
+    Analyse de journaux d'événements et détection d'intrusions à partir de règles Sigma et de motifs de logs.
+  domaines: [logs, soc, dfir]
+  entree: [files]
+  sortie: findings
+  mots_cles: [logs, log, sigma, journal, evtx, syslog, intrusion, soc, dfir, "analyse de logs", "fichiers de logs"]
+a_verifier:
+  - "vérifier que le fichier de sortie est valide JSON et parsé par le parser sigma."

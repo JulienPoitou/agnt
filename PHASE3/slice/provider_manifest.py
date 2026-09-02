@@ -63,7 +63,7 @@ BINAIRES_AUTORISES = ("semgrep", "trivy", "gitleaks", "bandit", "checkov",
                       # aucun réseau dans l'argv, limites consignées).
                       "shellcheck", "shellcheck_scan", "hadolint", "hadolint_scan",
                       # 01/09/2026 — Outils actifs Groupe B (nmap, nuclei, ffuf)
-                      "nmap", "nuclei", "ffuf")
+                      "nmap", "nuclei", "ffuf", "sigma")
 
 FORMATS_SORTIE = ("json", "jsonl", "sarif", "csv", "xml", "custom")
 

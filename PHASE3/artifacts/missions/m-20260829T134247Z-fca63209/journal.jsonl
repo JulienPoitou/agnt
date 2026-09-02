@@ -1,7 +1,0 @@
-{"seq": 1, "ts": "2026-08-29T13:42:47+00:00", "type": "ouverture", "requete": "Analyse la sécurité de mon dépôt", "cible": "/home/user/PHASE3/testrepo"}
-{"seq": 2, "ts": "2026-08-29T13:42:47+00:00", "type": "plan", "plan_id": "0d28a8dc41906487", "providers": ["semgrep", "trivy", "gitleaks"]}
-{"seq": 3, "ts": "2026-08-29T13:42:54+00:00", "type": "contexte", "run_id": "72c8d7c79b475cb2", "contexte_empreinte": "9f372672bfe60595", "input_digest": "b01ecd1ecf3f6f45", "input_commit": "7c72938f3c2e24dbaaa0ae7713a396bf1131d322", "working_tree_dirty": false}
-{"seq": 4, "ts": "2026-08-29T13:43:07+00:00", "type": "execution", "provider": "semgrep", "code_retour": 0, "timeout": false, "findings": 2}
-{"seq": 5, "ts": "2026-08-29T13:43:08+00:00", "type": "execution", "provider": "trivy", "code_retour": 0, "timeout": false, "findings": 62}
-{"seq": 6, "ts": "2026-08-29T13:43:08+00:00", "type": "execution", "provider": "gitleaks", "code_retour": 0, "timeout": false, "findings": 1}
-{"seq": 7, "ts": "2026-08-29T13:43:08+00:00", "type": "cloture", "findings": 65, "clusters": 8, "result_digest": "3a9199f4d9f58a50"}

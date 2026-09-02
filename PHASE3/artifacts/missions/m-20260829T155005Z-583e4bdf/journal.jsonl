@@ -1,6 +1,0 @@
-{"seq": 1, "ts": "2026-08-29T15:50:05+00:00", "type": "ouverture", "requete": "Vérifie les dépendances", "cible": "/home/user/PHASE3/testrepo"}
-{"seq": 2, "ts": "2026-08-29T15:50:05+00:00", "type": "plan", "plan_id": "80e4816f11e8f772", "providers": ["trivy", "grype"]}
-{"seq": 3, "ts": "2026-08-29T15:50:08+00:00", "type": "contexte", "run_id": "acba96c15e3ae28e", "contexte_empreinte": "8962959d86a1f676", "input_digest": "b01ecd1ecf3f6f45", "input_commit": "7c72938f3c2e24dbaaa0ae7713a396bf1131d322", "working_tree_dirty": false}
-{"seq": 4, "ts": "2026-08-29T15:50:08+00:00", "type": "execution", "provider": "trivy", "code_retour": 0, "timeout": false, "findings": 62}
-{"seq": 5, "ts": "2026-08-29T15:50:17+00:00", "type": "execution", "provider": "grype", "code_retour": 0, "timeout": false, "findings": 62}
-{"seq": 6, "ts": "2026-08-29T15:50:17+00:00", "type": "cloture", "findings": 124, "clusters": 6, "result_digest": "d58977b23950b425"}

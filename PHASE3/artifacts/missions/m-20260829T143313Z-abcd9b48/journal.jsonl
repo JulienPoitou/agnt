@@ -1,5 +1,0 @@
-{"seq": 1, "ts": "2026-08-29T14:33:13+00:00", "type": "ouverture", "requete": "Vérifie les dépendances", "cible": "/home/user/PHASE3/testrepo"}
-{"seq": 2, "ts": "2026-08-29T14:33:13+00:00", "type": "plan", "plan_id": "c179f840d0b06128", "providers": ["trivy"]}
-{"seq": 3, "ts": "2026-08-29T14:33:18+00:00", "type": "contexte", "run_id": "5bb26cbb5459b36d", "contexte_empreinte": "f3779fc4a56645fc", "input_digest": "b01ecd1ecf3f6f45", "input_commit": "7c72938f3c2e24dbaaa0ae7713a396bf1131d322", "working_tree_dirty": false}
-{"seq": 4, "ts": "2026-08-29T14:33:18+00:00", "type": "execution", "provider": "trivy", "code_retour": 0, "timeout": false, "findings": 62}
-{"seq": 5, "ts": "2026-08-29T14:33:18+00:00", "type": "cloture", "findings": 62, "clusters": 6, "result_digest": "36899782518bbb39"}

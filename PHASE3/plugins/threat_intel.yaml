@@ -1,0 +1,44 @@
+# Plugin AGNT — Renseignement sur les menaces (Threat Intel / CTI)
+id: sigma_cti
+capacites:
+  - THREAT_INTEL
+entrees:
+  - repository
+  - filesystem
+binaire: sigma
+outillage: sigma
+version_min: "1.0.0"
+licence: LGPL-2.1
+priorite: 110
+cout: faible
+risque: PASSIVE
+description: >
+  Enrichissement d'indicateurs de compromission (IoC : IP, hachages, domaines) et renseignements sur les menaces.
+fichiers_requis:
+  - "*.json"
+  - "*.log"
+execution:
+  args:
+    - "{BIN}"
+    - "scan"
+    - "--input"
+    - "{TARGET}"
+    - "--output"
+    - "{OUT}"
+  code_succes: [0, 1]
+sortie:
+  format: custom
+lecture:
+  parser: sigma
+requirements:
+  reseau: false
+  privileges: aucun
+  timeout_s: 300
+  sandbox: true
+capacite:
+  description: >
+    Enrichissement d'indicateurs de compromission (IoC) et renseignement sur les menaces (Threat Intelligence).
+  domaines: [threat-intel, cti]
+  entree: [files]
+  sortie: findings
+  mots_cles: [threat-intel, cti, ioc, mechant, menace, reputation, hash, ip, domaine]

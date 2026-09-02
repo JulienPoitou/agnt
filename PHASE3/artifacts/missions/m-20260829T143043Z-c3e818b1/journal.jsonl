@@ -1,4 +1,0 @@
-{"seq": 1, "ts": "2026-08-29T14:30:43+00:00", "type": "ouverture", "requete": "Analyse la sécurité de mon dépôt", "cible": "/home/user/PHASE3/testrepo"}
-{"seq": 2, "ts": "2026-08-29T14:30:43+00:00", "type": "applicabilite", "ecartes": {"semgrep_go": "non applicable à cette cible : aucun fichier ne correspond aux globs déclarés ['*.go']"}}
-{"seq": 3, "ts": "2026-08-29T14:30:43+00:00", "type": "plan", "plan_id": "33314d274b2d36da", "providers": ["semgrep", "trivy", "gitleaks", "checkov"]}
-{"seq": 4, "ts": "2026-08-29T14:30:43+00:00", "type": "arret", "motif": "policy", "decision": ["memoire_non_bornee_cible_non_fiable"]}
