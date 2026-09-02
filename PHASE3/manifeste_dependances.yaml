@@ -435,6 +435,76 @@ binaires:
       avant rc=0. Voir shellcheck_scan pour la convention d'empreinte du wrapper.
 
 
+
+  aclight:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/cyberark/ACLight
+    licence: MIT
+    taille_approx: 5M
+
+  acstis:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/tijme/angularjs-csti-scanner
+    licence: MIT
+    taille_approx: 5M
+
+  amass:
+    version: "4.2.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/OWASP/Amass
+    licence: Apache-2.0
+    taille_approx: 30M
+
+  aquatone:
+    version: "1.7.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/michenriksen/aquatone
+    licence: MIT
+    taille_approx: 10M
+
+  arachni:
+    version: "1.6.1.3"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: http://www.arachni-scanner.com/
+    licence: Apache-2.0
+    taille_approx: 50M
+
+  jcs:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/TheM4hd1/JCS
+    licence: MIT
+    taille_approx: 5M
+
+  nikto:
+    version: "2.5.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/sullo/nikto
+    licence: GPL-2.0
+    taille_approx: 10M
+
+  sqlmate:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/UltimateHackers/sqlmate
+    licence: MIT
+    taille_approx: 5M
+
+  secapps:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://secapps.com/
+    licence: Commercial
+    taille_approx: 5M
+
+  wpscan:
+    version: "3.8.26"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://wpscan.org/
+    licence: MIT
+    taille_approx: 20M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
@@ -475,4 +545,5 @@ cibles_de_test:
     commit: 0ae503e6b6b37f11ed1bed5e917e19cb631ed041
     role: test indépendant de généralisation
     note: clone épinglé, scan passif, aucun exploit exécuté
+
 
