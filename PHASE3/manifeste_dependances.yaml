@@ -925,6 +925,76 @@ binaires:
     source: https://github.com/search?q=morpheus
     licence: MIT
     taille_approx: 10M
+
+  naabu:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=naabu
+    licence: MIT
+    taille_approx: 10M
+
+  netdiscover:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=netdiscover
+    licence: MIT
+    taille_approx: 10M
+
+  nmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=nmap
+    licence: MIT
+    taille_approx: 10M
+
+  nosqlmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=nosqlmap
+    licence: MIT
+    taille_approx: 10M
+
+  nuclei:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=nuclei
+    licence: MIT
+    taille_approx: 10M
+
+  oregano:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=oregano
+    licence: MIT
+    taille_approx: 10M
+
+  owtf:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=owtf
+    licence: MIT
+    taille_approx: 10M
+
+  pagodo:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=pagodo
+    licence: MIT
+    taille_approx: 10M
+
+  passivedns:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=passivedns
+    licence: MIT
+    taille_approx: 10M
+
+  passivedns_client:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=passivedns_client
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
