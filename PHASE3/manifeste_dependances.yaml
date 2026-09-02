@@ -995,6 +995,76 @@ binaires:
     source: https://github.com/search?q=passivedns_client
     licence: MIT
     taille_approx: 10M
+
+  petep:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=petep
+    licence: MIT
+    taille_approx: 10M
+
+  phpsploit:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=phpsploit
+    licence: MIT
+    taille_approx: 10M
+
+  raccoon:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=raccoon
+    licence: MIT
+    taille_approx: 10M
+
+  recursebuster:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=recursebuster
+    licence: MIT
+    taille_approx: 10M
+
+  reverseshell:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=reverseshell
+    licence: MIT
+    taille_approx: 10M
+
+  rustscan:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=rustscan
+    licence: MIT
+    taille_approx: 10M
+
+  scancannon:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=scancannon
+    licence: MIT
+    taille_approx: 10M
+
+  scanless:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=scanless
+    licence: MIT
+    taille_approx: 10M
+
+  sharpyshell:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sharpyshell
+    licence: MIT
+    taille_approx: 10M
+
+  skipfish:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=skipfish
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
