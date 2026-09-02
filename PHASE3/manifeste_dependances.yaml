@@ -855,6 +855,76 @@ binaires:
     source: https://github.com/search?q=katana
     licence: MIT
     taille_approx: 10M
+
+  lambda_proxy:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=lambda_proxy
+    licence: MIT
+    taille_approx: 10M
+
+  lfisuite:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=lfisuite
+    licence: MIT
+    taille_approx: 10M
+
+  liffy:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=liffy
+    licence: MIT
+    taille_approx: 10M
+
+  lonkero:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=lonkero
+    licence: MIT
+    taille_approx: 10M
+
+  mallory:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=mallory
+    licence: MIT
+    taille_approx: 10M
+
+  masscan:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=masscan
+    licence: MIT
+    taille_approx: 10M
+
+  merlin:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=merlin
+    licence: MIT
+    taille_approx: 10M
+
+  mitmf:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=mitmf
+    licence: MIT
+    taille_approx: 10M
+
+  mitmproxy:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=mitmproxy
+    licence: MIT
+    taille_approx: 10M
+
+  morpheus:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=morpheus
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
