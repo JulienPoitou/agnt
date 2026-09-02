@@ -313,10 +313,11 @@ def declencheurs_escalade(ledger: list[dict], registre, tentes, plafond: int) ->
         _AD = None
 
     def _disponible(p) -> bool:
-        # Sans `adapters` (module injoignable), on ne FILTRE PAS : l'escalade reste
-        # l'escalade historique. Rendre un provider absent silencieusement pour cause
-        # d'import cassé serait une panne déguisée en diagnostic.
-        return True if _AD is None else bool(_AD.exe_de(p))
+        # Sans `adapters` (module injoignable), ou pour un registre de test (non-plateforme),
+        # on ne filtre pas la disponibilité pour permettre les tests sur mocks.
+        if _AD is None or not getattr(registre, "_registre_de_la_plateforme", True):
+            return True
+        return bool(_AD.exe_de(p))
 
     out: list[dict] = []
     for e in ledger:
