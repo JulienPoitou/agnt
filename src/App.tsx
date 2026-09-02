@@ -16,5 +16,9 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  return route.startsWith("/console") ? <Console /> : <Landing />;
+  return (
+    <div key={route} className="route-swap">
+      {route.startsWith("/console") ? <Console /> : <Landing />}
+    </div>
+  );
 }
