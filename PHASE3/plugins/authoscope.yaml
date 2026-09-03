@@ -1,0 +1,39 @@
+# Proposition Web — ExploitWeb — authoscope
+# Source: awesome-pentest enaqx/ExploitWeb
+# URL: https://github.com/kpcyrd/authoscope
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: authoscope
+capacites:
+  - WEB_EXPLOIT
+entrees:
+  - url
+  - hote
+binaire: authoscope
+outillage: authoscope
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  Cracker auth — authoscope (https://github.com/kpcyrd/authoscope). Proposition web AGNT V1.
+  Catégorie ExploitWeb → WEB_EXPLOIT. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/authoscope"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true

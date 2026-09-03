@@ -1,0 +1,39 @@
+# Proposition Web — Dorking — fast-recon
+# Source: awesome-pentest enaqx/Dorking
+# URL: https://github.com/DanMcInerney/fast-recon
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: fast_recon
+capacites:
+  - WEB_OSINT
+entrees:
+  - url
+  - hote
+binaire: fast_recon
+outillage: fast_recon
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  Dorks domaine — fast-recon (https://github.com/DanMcInerney/fast-recon). Proposition web AGNT V1.
+  Catégorie Dorking → WEB_OSINT. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/fast_recon"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true

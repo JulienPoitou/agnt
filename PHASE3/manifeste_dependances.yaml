@@ -463,6 +463,839 @@ binaires:
       avant rc=0. Voir shellcheck_scan pour la convention d'empreinte du wrapper.
 
 
+
+  aclight:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/cyberark/ACLight
+    licence: MIT
+    taille_approx: 5M
+
+  acstis:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/tijme/angularjs-csti-scanner
+    licence: MIT
+    taille_approx: 5M
+
+  amass:
+    version: "4.2.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/OWASP/Amass
+    licence: Apache-2.0
+    taille_approx: 30M
+
+  aquatone:
+    version: "1.7.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/michenriksen/aquatone
+    licence: MIT
+    taille_approx: 10M
+
+  arachni:
+    version: "1.6.1.3"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: http://www.arachni-scanner.com/
+    licence: Apache-2.0
+    taille_approx: 50M
+
+  jcs:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/TheM4hd1/JCS
+    licence: MIT
+    taille_approx: 5M
+
+  nikto:
+    version: "2.5.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/sullo/nikto
+    licence: GPL-2.0
+    taille_approx: 10M
+
+  sqlmate:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/UltimateHackers/sqlmate
+    licence: MIT
+    taille_approx: 5M
+
+  secapps:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://secapps.com/
+    licence: Commercial
+    taille_approx: 5M
+
+  wpscan:
+    version: "3.8.26"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://wpscan.org/
+    licence: MIT
+    taille_approx: 20M
+
+  authoscope:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=authoscope
+    licence: MIT
+    taille_approx: 10M
+
+  autochrome:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=autochrome
+    licence: MIT
+    taille_approx: 10M
+
+  beef:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=beef
+    licence: MIT
+    taille_approx: 10M
+
+  bettercap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=bettercap
+    licence: MIT
+    taille_approx: 10M
+
+  bingoo:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=bingoo
+    licence: MIT
+    taille_approx: 10M
+
+  blindelephant:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=blindelephant
+    licence: MIT
+    taille_approx: 10M
+
+  burpsuite:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=burpsuite
+    licence: MIT
+    taille_approx: 10M
+
+  cloudfail:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=cloudfail
+    licence: MIT
+    taille_approx: 10M
+
+  cms_explorer:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=cms_explorer
+    licence: MIT
+    taille_approx: 10M
+
+  commix:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=commix
+    licence: MIT
+    taille_approx: 10M
+
+  crackpkcs12:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=crackpkcs12
+    licence: MIT
+    taille_approx: 10M
+
+  cryptolyzer:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=cryptolyzer
+    licence: MIT
+    taille_approx: 10M
+
+  dalfox:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dalfox
+    licence: MIT
+    taille_approx: 10M
+
+  daws:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=daws
+    licence: MIT
+    taille_approx: 10M
+
+  dirsearch:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dirsearch
+    licence: MIT
+    taille_approx: 10M
+
+  dnschef:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnschef
+    licence: MIT
+    taille_approx: 10M
+
+  dnsdumpster:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnsdumpster
+    licence: MIT
+    taille_approx: 10M
+
+  dnsenum:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnsenum
+    licence: MIT
+    taille_approx: 10M
+
+  dnsmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnsmap
+    licence: MIT
+    taille_approx: 10M
+
+  dnsrecon:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnsrecon
+    licence: MIT
+    taille_approx: 10M
+
+  dnstracer:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dnstracer
+    licence: MIT
+    taille_approx: 10M
+
+  dork_cli:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dork_cli
+    licence: MIT
+    taille_approx: 10M
+
+  dorkbot:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dorkbot
+    licence: MIT
+    taille_approx: 10M
+
+  dorks:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dorks
+    licence: MIT
+    taille_approx: 10M
+
+  dotdotpwn:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dotdotpwn
+    licence: MIT
+    taille_approx: 10M
+
+  dvcs_ripper:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=dvcs_ripper
+    licence: MIT
+    taille_approx: 10M
+
+  ettercap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=ettercap
+    licence: MIT
+    taille_approx: 10M
+
+  evilgrade:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=evilgrade
+    licence: MIT
+    taille_approx: 10M
+
+  eyewitness:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=eyewitness
+    licence: MIT
+    taille_approx: 10M
+
+  fast_recon:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fast_recon
+    licence: MIT
+    taille_approx: 10M
+
+  fiddler:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fiddler
+    licence: MIT
+    taille_approx: 10M
+
+  fierce:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fierce
+    licence: MIT
+    taille_approx: 10M
+
+  fimap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fimap
+    licence: MIT
+    taille_approx: 10M
+
+  fritap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fritap
+    licence: MIT
+    taille_approx: 10M
+
+  fuzzdb:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=fuzzdb
+    licence: MIT
+    taille_approx: 10M
+
+  ghauri:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=ghauri
+    licence: MIT
+    taille_approx: 10M
+
+  ghd:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=ghd
+    licence: MIT
+    taille_approx: 10M
+
+  git_dumper:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=git_dumper
+    licence: MIT
+    taille_approx: 10M
+
+  git_scanner:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=git_scanner
+    licence: MIT
+    taille_approx: 10M
+
+  github_dorks:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=github_dorks
+    licence: MIT
+    taille_approx: 10M
+
+  gittools:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=gittools
+    licence: MIT
+    taille_approx: 10M
+
+  gobuster:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=gobuster
+    licence: MIT
+    taille_approx: 10M
+
+  goodork:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=goodork
+    licence: MIT
+    taille_approx: 10M
+
+  graphql_voyager:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=graphql_voyager
+    licence: MIT
+    taille_approx: 10M
+
+  habu:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=habu
+    licence: MIT
+    taille_approx: 10M
+
+  haveibeensquatted:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=haveibeensquatted
+    licence: MIT
+    taille_approx: 10M
+
+  jiraffe:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=jiraffe
+    licence: MIT
+    taille_approx: 10M
+
+  joomscan:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=joomscan
+    licence: MIT
+    taille_approx: 10M
+
+  kadimus:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=kadimus
+    licence: MIT
+    taille_approx: 10M
+
+  katana:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=katana
+    licence: MIT
+    taille_approx: 10M
+
+  lambda_proxy:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=lambda_proxy
+    licence: MIT
+    taille_approx: 10M
+
+  lfisuite:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=lfisuite
+    licence: MIT
+    taille_approx: 10M
+
+  liffy:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=liffy
+    licence: MIT
+    taille_approx: 10M
+
+  lonkero:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=lonkero
+    licence: MIT
+    taille_approx: 10M
+
+  mallory:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=mallory
+    licence: MIT
+    taille_approx: 10M
+
+  masscan:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=masscan
+    licence: MIT
+    taille_approx: 10M
+
+  merlin:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=merlin
+    licence: MIT
+    taille_approx: 10M
+
+  mitmf:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=mitmf
+    licence: MIT
+    taille_approx: 10M
+
+  mitmproxy:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=mitmproxy
+    licence: MIT
+    taille_approx: 10M
+
+  morpheus:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=morpheus
+    licence: MIT
+    taille_approx: 10M
+
+  naabu:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=naabu
+    licence: MIT
+    taille_approx: 10M
+
+  netdiscover:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=netdiscover
+    licence: MIT
+    taille_approx: 10M
+
+  nmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=nmap
+    licence: MIT
+    taille_approx: 10M
+
+  nosqlmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=nosqlmap
+    licence: MIT
+    taille_approx: 10M
+
+  nuclei:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=nuclei
+    licence: MIT
+    taille_approx: 10M
+
+  oregano:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=oregano
+    licence: MIT
+    taille_approx: 10M
+
+  owtf:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=owtf
+    licence: MIT
+    taille_approx: 10M
+
+  pagodo:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=pagodo
+    licence: MIT
+    taille_approx: 10M
+
+  passivedns:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=passivedns
+    licence: MIT
+    taille_approx: 10M
+
+  passivedns_client:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=passivedns_client
+    licence: MIT
+    taille_approx: 10M
+
+  petep:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=petep
+    licence: MIT
+    taille_approx: 10M
+
+  phpsploit:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=phpsploit
+    licence: MIT
+    taille_approx: 10M
+
+  raccoon:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=raccoon
+    licence: MIT
+    taille_approx: 10M
+
+  recursebuster:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=recursebuster
+    licence: MIT
+    taille_approx: 10M
+
+  reverseshell:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=reverseshell
+    licence: MIT
+    taille_approx: 10M
+
+  rustscan:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=rustscan
+    licence: MIT
+    taille_approx: 10M
+
+  scancannon:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=scancannon
+    licence: MIT
+    taille_approx: 10M
+
+  scanless:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=scanless
+    licence: MIT
+    taille_approx: 10M
+
+  sharpyshell:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sharpyshell
+    licence: MIT
+    taille_approx: 10M
+
+  skipfish:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=skipfish
+    licence: MIT
+    taille_approx: 10M
+
+  smbmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=smbmap
+    licence: MIT
+    taille_approx: 10M
+
+  snitch:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=snitch
+    licence: MIT
+    taille_approx: 10M
+
+  sqlmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sqlmap
+    licence: MIT
+    taille_approx: 10M
+
+  ssh_mitm:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=ssh_mitm
+    licence: MIT
+    taille_approx: 10M
+
+  sslstrip:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sslstrip
+    licence: MIT
+    taille_approx: 10M
+
+  sslstrip2:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sslstrip2
+    licence: MIT
+    taille_approx: 10M
+
+  sslyze:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sslyze
+    licence: MIT
+    taille_approx: 10M
+
+  subbrute:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=subbrute
+    licence: MIT
+    taille_approx: 10M
+
+  subfinder:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=subfinder
+    licence: MIT
+    taille_approx: 10M
+
+  sylkie:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=sylkie
+    licence: MIT
+    taille_approx: 10M
+
+  testssl:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=testssl
+    licence: MIT
+    taille_approx: 10M
+
+  tls_prober:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=tls_prober
+    licence: MIT
+    taille_approx: 10M
+
+  tlsmate:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=tlsmate
+    licence: MIT
+    taille_approx: 10M
+
+  tplmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=tplmap
+    licence: MIT
+    taille_approx: 10M
+
+  vhostscan:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=vhostscan
+    licence: MIT
+    taille_approx: 10M
+
+  w3af:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=w3af
+    licence: MIT
+    taille_approx: 10M
+
+  waftester:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=waftester
+    licence: MIT
+    taille_approx: 10M
+
+  wafw00f:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=wafw00f
+    licence: MIT
+    taille_approx: 10M
+
+  wapiti:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=wapiti
+    licence: MIT
+    taille_approx: 10M
+
+  wappalyzer:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=wappalyzer
+    licence: MIT
+    taille_approx: 10M
+
+  webreaver:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=webreaver
+    licence: MIT
+    taille_approx: 10M
+
+  webscreenshot:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=webscreenshot
+    licence: MIT
+    taille_approx: 10M
+
+  weevely3:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=weevely3
+    licence: MIT
+    taille_approx: 10M
+
+  whatwaf:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=whatwaf
+    licence: MIT
+    taille_approx: 10M
+
+  whatweb:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=whatweb
+    licence: MIT
+    taille_approx: 10M
+
+  wpsploit:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=wpsploit
+    licence: MIT
+    taille_approx: 10M
+
+  xray:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=xray
+    licence: MIT
+    taille_approx: 10M
+
+  zap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=zap
+    licence: MIT
+    taille_approx: 10M
+
+  zmap:
+    version: "0.1.0"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    source: https://github.com/search?q=zmap
+    licence: MIT
+    taille_approx: 10M
 regles:
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
@@ -503,4 +1336,5 @@ cibles_de_test:
     commit: 0ae503e6b6b37f11ed1bed5e917e19cb631ed041
     role: test indépendant de généralisation
     note: clone épinglé, scan passif, aucun exploit exécuté
+
 

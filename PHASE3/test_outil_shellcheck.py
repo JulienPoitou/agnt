@@ -54,7 +54,7 @@ def non_evalue(nom: str, raison: str) -> None:
 
 def sortie_reelle(cible: Path) -> subprocess.CompletedProcess:
     if not WRAPPER.is_file():
-        return types.CompletedProcess([], 127, "", "wrapper shellcheck_scan absent du cache")
+        return subprocess.CompletedProcess([], 127, "", "wrapper shellcheck_scan absent du cache")
     tmp = tempfile.NamedTemporaryFile(suffix=".json", delete=False)
     tmp.close()
     r = subprocess.run([str(WRAPPER), str(cible), tmp.name],

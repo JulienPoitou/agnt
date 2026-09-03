@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  python-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m py_compile PHASE3/slice/*.py
+
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_slice.py
+      - run: if command -v opa &> /dev/null; then python3 PHASE3/test_securite.py; else echo "OPA non disponible, test_securite ignoré"; fi
+
+  node-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: if [ -f package.json ]; then npm run build; fi
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: if command -v gitleaks &> /dev/null; then gitleaks detect --config .gitleaks.toml --no-git; else echo "Gitleaks non disponible, audit secrets ignoré"; fi

@@ -1,0 +1,39 @@
+# Proposition Web — Scanners — Dalfox
+# Source: awesome-pentest enaqx/Scanners
+# URL: https://github.com/hahwul/dalfox
+# Généré auto depuis docs/WEB_PROVIDERS_CATALOG.md — 119 outils
+# Statut: PROPOSITION (non chargé par plugins.py tant que dans propositions/)
+id: dalfox
+capacites:
+  - WEB_VULN_SCAN
+entrees:
+  - url
+  - hote
+binaire: dalfox
+outillage: dalfox
+version_min: "0.1.0"
+licence: MIT
+priorite: 300
+cout: moyen
+risque: PASSIVE
+description: >
+  XSS param — Dalfox (https://github.com/hahwul/dalfox). Proposition web AGNT V1.
+  Catégorie Scanners → WEB_VULN_SCAN. Voir WEB_PROVIDERS_CATALOG.md.
+fichiers_requis: []
+execution:
+  commande: ["{BIN}/dalfox"]
+  args: ["--help"]
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  champs:
+    regle: null
+    message: null
+requirements:
+  reseau: true
+  privileges: aucun
+  base_fichiers: []
+  timeout_s: 300
+  sandbox: true
