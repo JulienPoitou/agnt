@@ -201,7 +201,7 @@ class _ContexteVague:
     registre: object
     exec_: object
     sbx: object
-    cible: Path
+    cible: Path | None              # None = cible distante (aucune matérialisation locale)
     sortie: Path
     # Le contexte d'exécution (versions d'outils, empreintes) : la vague en a besoin pour
     # `source.version_outil`. Omis à l'extraction du corps, il donnait un `NameError` sur le
@@ -217,6 +217,13 @@ class _ContexteVague:
     # indexées par provider et non globales : une mission ne partage pas une session
     # MCP, des credentials ou un cache mutable avec une autre.
     transport_factories: dict = field(default_factory=dict)
+    # Descripteur CANONIQUE de la cible (`cible.Cible`) — la seule source du `Target` typé
+    # quand il n'y a pas de chemin. Construit à l'entrée du pipeline, jamais re-déduit en
+    # aval : c'est ce qui empêche une URL de redevenir un Path par confort.
+    descripteur: object = None
+    # La vague doit le SAVOIR, pas le deviner : `cible_distante` pilote la construction de
+    # la cible typée et l'absence de racines de normalisation.
+    cible_distante: bool = False
 
 
 def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
@@ -280,19 +287,37 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
             # au backend. Le transport ne reçoit jamais un chemin pour décider lui-même
             # de ce qu'est la cible ; il ne reçoit que cette donnée validée.
             types_cible = tuple(prov.target_types or ())
-            if "repository" in types_cible:
-                kind = "repository"
-            elif "filesystem" in types_cible:
-                kind = "filesystem"
+            if V.cible_distante:
+                # Cible distante : le `Target` vient du DESCRIPTEUR, pas d'une conversion.
+                # Le type doit avoir été déclaré applicable par le provider — la garantie
+                # est déjà prise au filtrage d'applicabilité ; ce contrôle est la garde
+                # contre un appel direct de la vague qui n'aurait pas passé par là.
+                desc = V.descripteur
+                genre = getattr(desc, "type", None)
+                if genre is None or genre not in types_cible:
+                    raise PipelineError(
+                        f"{prov.id}: cible distante {genre!r} hors des types déclarés "
+                        f"{list(types_cible)} — pas de conversion implicite")
+                cible_typed = Target(genre, desc.reference)
             else:
-                # Cette façade reçoit aujourd'hui une Path locale. Ne pas la
-                # convertir en faux URL/hôte/image : ces cibles attendent le
-                # descripteur canonique CORE et ne sont pas téléchargées ou montées
-                # implicitement dans Sandbox.
-                raise PipelineError(
-                    f"{prov.id}: cible {types_cible} non supportée par la façade Path "
-                    "— descripteur Cible CORE requis")
-            cible_typed = Target(kind, str(cible))
+                # Cible LOCALE : la façade reçoit une Path matérialisée. Deux types de
+                # dépôt seulement — ne jamais la convertir en faux URL/hôte/image : ces
+                # cibles attendent le descripteur canonique CORE et ne sont pas
+                # téléchargées ou montées implicitement dans Sandbox.
+                # (02/09/2026 — trouvé par test_dast : la construction ci-dessous était
+                # d'abord hors du `if`, donc un `UnboundLocalError` sur `kind` tuait la
+                # vague dès le premier provider distant, et même une conversion silencieuse
+                # de la cible distante en Path locale. La construction est désormais
+                # EXCLUSIVE : distante ou locale, jamais les deux.)
+                if "repository" in types_cible:
+                    kind = "repository"
+                elif "filesystem" in types_cible:
+                    kind = "filesystem"
+                else:
+                    raise PipelineError(
+                        f"{prov.id}: cible {types_cible} non supportée par la façade Path "
+                        "— descripteur Cible CORE requis")
+                cible_typed = Target(kind, str(cible))
             brut = adapters.executer(
                 prov, sbx, target=cible_typed,
                 transport_factory=V.transport_factories.get(prov.id),
@@ -364,7 +389,7 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
         # toutes ses formes) AVANT calcul des fingerprints : identité indépendante de
         # la machine (2026-08-28), élargie aux orthographes du dépôt (2026-08-30).
         norm = F.normaliser(prov.id, brut.donnees, mani=prov.manifest,
-                            racines=_racines_de(cible))
+                            racines=() if V.cible_distante else _racines_de(cible))
         # Trois champs qu'un finding ne peut pas connaître seul, dérivés ici parce que
         # c'est le pipeline qui détient le registre et le contexte :
         #   · `categorie` = premier domaine DÉCLARÉ de la capacité (pas un dictionnaire
@@ -373,9 +398,15 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
         #   · `version_outil` = la version LUE au démarrage, celle qui a produit ces octets.
         # Un outil muet sur un champ le laisse absent : `vue_unifiee` le déclare dans
         # `absents`, jamais le normaliseur qui le remplit.
+        _cor = getattr(brut, "correlation_id", "") or ""
+        _req = getattr(brut, "request_id", "") or ""
         for f_ in norm:
             f_.source["categorie"] = domaines_du_provider.get(prov.id)
             f_.source["horodatage"] = horodatage
+            # Identifiants d'appel DU PROVIDER, quand son transport en porte (MCP, ou un
+            # DAST externe de demain) : la trace du finding vers la requête exacte. Posés
+            # seulement s'ils existent — un provider local ne doit rien voir arriver ici
+            # (les octets des findings des missions locales sont un contrat de rejeu).
             # Un binaire local obtient sa version du contexte capturé ; un provider
             # externe n'a pas de binaire local et porte la version déclarée/rapportée
             # par son binding. L'absence reste None : elle n'est jamais devinée.
@@ -385,6 +416,10 @@ def _vague(steps_, V, plan_dict, decision_dict, horodatage, vague):
                 or getattr(prov, "tool_version", "")
                 or None)
             f_.source["vague"] = vague
+            if _cor:
+                f_.source["correlation_id"] = _cor
+            if _req:
+                f_.source["request_id"] = _req
         tous_findings.extend(norm)
         trouves[prov.id] = len(norm)
         MS.consigner(miss, "execution", provider=prov.id, vague=vague,
@@ -463,7 +498,11 @@ def executer(requete: str, cible, cible_autorisee: bool = False,
     # en sous-processus local.
     cib = CIB.normaliser(cible)
     chemin_cible = cib.chemin_local          # Path | None
-    reference_cible = cib.reference
+    # La référence PERSISTÉE est la référence sûre — la même que le digest d'exécution.
+    # La référence brute (avec credentials) reste dans l'objet vivant `cib`, seule source
+    # de l'argv de pilotage ; rien sur disque ne la recopie. (02/09/2026, revue adverse
+    # famille C : avant cette ligne, `mission.json` portait le userinfo recopié brut.)
+    reference_cible = cib.reference_sure()
 
     # ---------------------------------------------------------------- 0b. mission
     # Le dossier append-only s'ouvre AVANT toute décision : un arrêt (intent non
@@ -522,7 +561,8 @@ def executer(requete: str, cible, cible_autorisee: bool = False,
     if not it.executable():
         MS.consigner(miss, "arret", motif=f"intent_{it.statut}")
         return Execution(plan={}, decision={"allow": False, "motifs": [f"intent_{it.statut}"]},
-                         intent=it.to_dict(), arret=it.statut, mission=miss.id)
+                         intent=it.to_dict(), arret=it.statut, mission=miss.id,
+                         egress=egress_info)
 
     # --------------------------------------------- 1bis. disponibilité (D10, 31/08/2026)
     # Un slot de fan-out occupé par un outil ABSENT est pire qu'un slot vide : il est
@@ -646,7 +686,8 @@ def executer(requete: str, cible, cible_autorisee: bool = False,
                                                  "disponibilite": dict(exclus_dispo)}}, refus,
                      [], [], {})
         return Execution(plan={}, decision=refus, intent=it.to_dict(),
-                         arret="conditions", mission=miss.id, statuts=st)
+                         arret="conditions", mission=miss.id, statuts=st,
+                         egress=egress_info)
     if not provs:
         # Tous les providers sont inapplicables à cette cible : ce n'est pas un
         # échec, c'est une réponse honnête — rien à exécuter ici.
@@ -660,13 +701,14 @@ def executer(requete: str, cible, cible_autorisee: bool = False,
                      refus, [], [], {})
         return Execution(plan={}, decision=refus,
                          intent=it.to_dict(), arret="applicabilite", mission=miss.id,
-                         statuts=st)
+                         statuts=st, egress=egress_info)
 
     # ---------------------------------------------------------------- 2. plan typé
     plan = P.construire(requete, reference_cible, provs, registre, it.moteur,
                         exclus_applicabilite=exclus, exclus_conditions=exclus_cond,
                         exclus_disponibilite=exclus_dispo,
-                        cible_descr=cib.to_dict())
+                        cible_descr=cib.to_dict(),
+                        motifs_intent=it.motifs)
     # La SÉLECTION est consignée avec le plan : « pourquoi ce provider et pas l'autre »
     # se lit dans le journal (choisis, écartés, motif), pas seulement dans plan.json. Le
     # motif vient de `plan.construire` — priorité déclarée, fan_out, ou choix imposé — et
@@ -739,18 +781,25 @@ def executer(requete: str, cible, cible_autorisee: bool = False,
     # ---------------------------------------------------------------- 4. garde de chemin
     # OPA a autorisé la cible DEMANDÉE. Ici on vérifie ce qui est RÉELLEMENT accessible :
     # OPA ne peut pas savoir qu'un symlink sort du workspace.
-    # Barrière de défense (2026-08-30) : une cible NON LOCALE n'a pas de chemin. Elle ne
-    # peut pas arriver ici aujourd'hui (aucun provider compatible n'a survécu à
-    # l'applicabilité), mais si un futur transport distant en laissait passer une, elle
-    # ne doit jamais être traitée comme un pseudo-chemin local : refus explicite, pas
-    # de conversion, pas de montage.
-    if chemin_cible is None:
-        raise PipelineError(
-            f"cible non locale {cib.type!r} ({cib.reference_sure()}) sans chemin local : "
-            f"le transport sandbox_cli ne peut pas la prendre en charge — elle doit être "
-            f"routée par un transport distant enregistré, pas montée comme un Path")
+    # Barrière de défense (2026-08-30) : une cible NON LOCALE n'a pas de chemin. Elle
+    # n'arrive ici que si un provider a DÉCLARÉ le type du descripteur (applicabilité 1b) —
+    # la garde de chemin n'a alors rien à vérifier (rien n'est monté), mais la cohérence
+    # du plan, elle, est vérifiée : chaque étape doit déclarer un type applicable au
+    # descripteur, sinon ce serait un trou de politique qui n'attend qu'un chemin bidon.
+    distante = chemin_cible is None
+    rapport_chemin = None
     try:
-        rapport_chemin = GC.verifier_cible(chemin_cible, [chemin_cible])
+        if distante:
+            for step in plan.steps:
+                _prov = registre.provider(step.provider)
+                _decl = tuple((_prov.target_types if _prov is not None else ()) or ())
+                if cib.type not in _decl:
+                    raise PipelineError(
+                        f"cible distante {cib.type!r} et provider {step.provider} déclaré pour "
+                        f"{list(_decl) or ['repository']!r} : aucune exécution possible sans "
+                        "matérialisation locale")
+        else:
+            rapport_chemin = GC.verifier_cible(chemin_cible, [chemin_cible])
         for step in plan.steps:
             GC.verifier_args([*step.commande, *step.args])
     except Exception as exc:
@@ -777,10 +826,18 @@ def executer(requete: str, cible, cible_autorisee: bool = False,
         racine_db=CACHE_DB,
         sortie=sortie,
         gitconfig=RACINE / "gitconfig",
+        cible_distante=distante,
     )
 
     ctx = RUN.capturer(sbx, PO.POLICY_FILE, registre.empreinte())
-    ctx.input_digest, ctx.input_commit, ctx.working_tree_dirty = RUN.digest_cible(chemin_cible)
+    if distante:
+        # Un run sur cible distante n'a pas d'arbre de fichiers à hasher : l'empreinte
+        # d'entrée est le SHA de sa référence SÛRE (sans credentials) — déterministe,
+        # et jamais un faux digest d'un dépôt qui n'existe pas.
+        ctx.input_digest, ctx.input_commit, ctx.working_tree_dirty = \
+            RUN.digest_cible_distante(cib.reference_sure())
+    else:
+        ctx.input_digest, ctx.input_commit, ctx.working_tree_dirty = RUN.digest_cible(chemin_cible)
     exec_ = Execution(plan=plan.to_dict(),
                       decision={"allow": True, "motifs": list(decision.motifs)},
                       intent=it.to_dict(),
@@ -788,7 +845,10 @@ def executer(requete: str, cible, cible_autorisee: bool = False,
                       egress=egress_info,
                       run_id=RUN.nouveau_run_id(plan.plan_id, ctx, ctx.input_digest),
                       contexte=ctx.to_dict(),
-                      chemin=rapport_chemin.to_dict(),
+                      # La garde mémoire (chemin vérifié) ne s'applique qu'à ce qui est
+                      # sur le filesystem : une cible distante n'a pas de chemin, et un
+                      # `chemin: null` dans le run dit exactement cela.
+                      chemin=rapport_chemin.to_dict() if rapport_chemin is not None else None,
                       sortie=str(sortie))
     MS.consigner(miss, "contexte", run_id=exec_.run_id,
                  contexte_empreinte=ctx.contexte_empreinte,
@@ -809,7 +869,8 @@ def executer(requete: str, cible, cible_autorisee: bool = False,
     V = _ContexteVague(miss=miss, registre=registre, exec_=exec_, sbx=sbx, cible=chemin_cible,
                        sortie=sortie, ctx=ctx, trouves=trouves, tous_findings=tous_findings,
                        domaines=domaines_du_provider, binaires=binaire_de_provider,
-                       transport_factories=dict(transport_factories or {}))
+                       transport_factories=dict(transport_factories or {}),
+                       descripteur=cib, cible_distante=distante)
     _vague(plan.steps, V, plan.to_dict(), {"allow": True, "motifs": list(decision.motifs)},
            plan.cree_le, 1)
 

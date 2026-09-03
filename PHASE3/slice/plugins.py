@@ -31,7 +31,8 @@ sait réellement lire :
       format: xml                  # json | jsonl | sarif | csv | xml | custom
     lecture:
       modele: xml                  # plat | imbriqué | lignes_json | csv | xml
-      nested_from: nmaprun/host
+      nested_from: host          # chemin relatif à la RACINE parsée (la racine est
+                                 # <nmaprun> elle-même — cf. extraction._items_xml)
       nested_key: port
       contexte: {paquet_hote: "address@addr"}
       champs: {regle: "service@name", ligne: null}

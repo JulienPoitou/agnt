@@ -115,6 +115,25 @@ class Verdict:
         return d
 
 
+
+def nettoie_url(v: str) -> str:
+    """Masque le userinfo (`user:pass@`) d'une URL, préserve le reste.
+
+    Le masque général des secrets ne reconnaît pas cette forme parce qu'elle n'a pas
+    de nom de variable ; or c'est exactement la forme qu'un opérateur colle dans une
+    requête (`scan https://u:p@site`). Une autorité unique : `findings` l'utilise
+    pour les findings, `mission` pour l'en-tête et le journal — la promesse « les
+    artefacts ne stockent pas le login » est ainsi tenue AU POINT D'ÉCRITURE, pas à
+    chaque lecteur (02/09/2026, trouvé par la revue adverse famille C).
+    """
+    if "://" not in v:
+        return v
+    tete, _, reste = v.partition("://")
+    autorite, sep, suite = reste.partition("/")
+    if "@" in autorite:
+        autorite = "***@" + autorite.rsplit("@", 1)[1]
+    return tete + "://" + autorite + (sep + suite if sep else "")
+
 def masquer(texte: str) -> tuple[str, int]:
     """Masque les motifs de secret. Retourne (texte masqué, nombre de remplacements)."""
     if not texte:

@@ -258,6 +258,15 @@ class Registry:
             except ImportError:
                 pass
 
+        # Identité des providers : l'unicité est GLOBALE au catalogue, pas par capacité
+        # (02/09/2026, trouvé par la revue adverse — famille B/E). Un même id déclaré
+        # deux fois — dans deux capacités ou deux fois dans la même — faisait deux
+        # choses fausses : `par_id` du plan ne garde qu'une vérité (la dernière), et
+        # `choisir_providers` sur deux capacités sélectionnées pouvait ÉMETTRE L'ID
+        # DEUX FOIS, produisant deux steps du même provider, deux exécutions payées,
+        # et des findings aux identifiants identiques (`{outil}-{i:04d}`) que le
+        # clusterer fusionnait silencieusement. Un provider, une déclaration.
+        ids_vus: dict[str, str] = {}
         for c in bruts:
             manquants = [k for k in ("id", "description", "domaines", "entree", "sortie", "providers")
                          if k not in c]
@@ -267,6 +276,14 @@ class Registry:
             for p in c["providers"]:
                 if "id" not in p:
                     raise RegistryError(f"capacité {c['id']}: provider sans id")
+                _pid = str(p["id"])
+                if _pid in ids_vus:
+                    raise RegistryError(
+                        f"provider {_pid!r} déclaré deux fois (capacités "
+                        f"{ids_vus[_pid]!r} et {c['id']!r}) — l'identité d'un provider "
+                        "est globale au catalogue : la choisir deux fois, c'est payer "
+                        "deux exécutions et produire des findings d'identifiants identiques")
+                ids_vus[_pid] = str(c["id"])
                 transport = str(p.get("transport", transports.TRANSPORT_SANDBOX_CLI))
                 # Le transport DÉCLARÉ est validé ICI, avant toute construction — donc
                 # avant la perte d'information. Historiquement, cette clé n'était lue

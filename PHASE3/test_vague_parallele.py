@@ -39,6 +39,29 @@ import time
 from pathlib import Path
 
 RACINE = Path(__file__).parent
+
+# ──── Indépendance machine de la garde D1 (02/09/2026) ─────────────────────────────
+# Cette batterie joue la VRAIE vague avec les VRAIS adaptateurs sur un double de cage.
+# Or `generique_cli` refuse, à juste titre, un outil absent (règle D1 — c'est
+# `test_conditions_outils` qui l'exige nommément) : sur une machine non armée la vague
+# ne partait jamais, et la promesse « se piloter à vide sur des doubles » devenait
+# inexécutable. La sortie n'est pas de relâcher D1 dans le cœur — c'est d'armer CE
+# PROCESSUS d'un cache qui ne vit que pour lui : `ARENA_SECOPS_CACHE` (le crochet que
+# `sandbox.py` offre déjà) pointe vers un répertoire éphémère contenant le NOM exécutable
+# des outils ; le double de cage ne les lance jamais vraiment, donc aucun résultat ne
+# vient d'eux. Un outil réellement installé garde la préséance (le cache du test ne
+# change que le cas « absent »).
+_SCRATCH_CACHE = Path(tempfile.mkdtemp(prefix="agnt-vague-cache-"))
+(_SCRATCH_CACHE / "bin").mkdir()
+os.environ["ARENA_SECOPS_CACHE"] = str(_SCRATCH_CACHE)
+for _nom in ("bandit", "radon", "detect-secrets", "checkov", "semgrep", "trivy",
+             "gitleaks", "grype", "kics", "pip-audit", "ruff", "trufflehog3",
+             "eslint", "gosec", "npm", "nmap", "nuclei", "ffuf", "zap-baseline.py",
+             "hadolint", "shellcheck"):
+    _c = _SCRATCH_CACHE / "bin" / _nom
+    _c.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    _c.chmod(0o755)
+
 sys.path.insert(0, str(RACINE / "slice"))
 
 import mission as MS                                   # noqa: E402

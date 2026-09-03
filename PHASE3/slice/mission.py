@@ -38,7 +38,17 @@ def _ts() -> str:
 def ouvrir(requete: str, requete_canonique: str, cible, cible_descr: dict | None = None) -> Mission:
     MISSIONS.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc)
-    reference = str(cible)
+    # 02/09/2026 (revue adverse, famille C) — le masque du userinfo d'URL est posé ICI,
+    # à l'écriture, et pas seulement à l'affichage : une requête collée par l'opérateur
+    # (« scan https://u:p@site ») ne doit pas survivre en clair dans `mission.json`, le
+    # journal d'ouverture, ni le rapport. Les chemins locaux, eux, traversent intacts
+    # (`nettoie_url` ne touche que la forme `schéma://…@…`). `requete_canonique` est
+    # passé par l'appelant déjà dérivé de la requête — il est masqué pareil, sinon le
+    # champ canonique redeviendrait un canal de reconstitution.
+    from assainissement import nettoie_url
+    requete = nettoie_url(requete)
+    requete_canonique = nettoie_url(requete_canonique)
+    reference = nettoie_url(str(cible))
     graine = f"{reference}|{requete}|{ts.isoformat()}"
     mid = f"m-{ts.strftime('%Y%m%dT%H%M%SZ')}-{hashlib.sha256(graine.encode()).hexdigest()[:8]}"
     chemin = MISSIONS / mid

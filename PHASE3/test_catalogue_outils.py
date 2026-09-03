@@ -16,10 +16,13 @@ ligne. Ce fichier ne célèbre pas ce tri : il fixe ce qui risquerait de redeven
    outil déclaré hors réseau (corrigé par `--skip-download`, et les DEUX variantes sont rejouées
    ici pour que la correction reste nécessaire) ; ESLint dépend du répertoire courant ; les
    outils Go et les paquets apt demandent des hôtes qui répondent 000 sur cette machine ;
-4. ce que la grammaire ne sait PAS dire est mesuré aussi, parce que c'est la seule façon de savoir
-   quoi changer : `entrees: [url]` et `reseau: true` sont ADMIS par le chargeur, mais `{URL}`
-   n'existe pas comme jeton — la cible d'une mission est un chemin monté. RECON/WEB est à un
-   jeton et une politique, pas à un YAML.
+4. ce qui BLOQUAIT les capacités RECON/WEB est mesuré et a bougé (02/09/2026) : le jeton
+   `{URL}` existe, les cibles distantes sont typées, les capacités DAST sont DÉCLARÉES dans le
+   registre en service. Ce qui les ferme toujours est POLITIQUE, pas grammatical : le verrou
+   `sandbox_non_durci_outil_actif` refuse tout provider ACTIVE tant que `profil_sandbox.durci`
+   est faux — et c'est ce couple (déclaré, verrouillé) que la section 1 exige désormais.
+   L'ancienne version de ce fichier affirmait « RECON et WEB n'ont AUCUNE capacité » : elle
+   décrivait l'état d'hier et passait donc à côté d'aujourd'hui dans les deux sens.
 
 Trois cas se concluent par `NON ÉVALUÉ`, avec leur cause : la cage réelle (bwrap), la décision
 d'OPA sur un profil, le rendu navigateur. Aucun ne se laisse simuler en PASS.
@@ -46,6 +49,7 @@ import conditions as COND                                  # noqa: E402
 import findings as F                                     # noqa: E402
 import intent as IN                                  # noqa: E402
 import plan as PLAN                                     # noqa: E402
+import profils as PF                                      # noqa: E402
 import plugins as PL                                     # noqa: E402
 import registre as REG                                   # noqa: E402
 import sandbox as SB                                     # noqa: E402
@@ -142,21 +146,44 @@ for famille, attendus in (
     presents = sorted(attendus & fournisseurs)
     cas(f"{famille} : providers présents dans le registre en service ({len(presents)}/{len(attendus)})",
         bool(presents), f"présents : {presents} · absents : {sorted(attendus - fournisseurs)}")
-cas("RECON et WEB n'ont AUCUNE capacité — ni sous ce nom, ni sous un synonyme",
-    not [c for c in capacites if any(m in c.upper() for m in
-                                     ("RESEAU", "NETWORK", "RECON", "WEB", "PORT", "HTTP"))],
-    sorted(capacites))
+DAST = {"NETWORK_DISCOVERY", "WEB_VULN_SCAN_ACTIVE", "WEB_ENDPOINT_DISCOVERY_ACTIVE"}
+cas("RECON et WEB ont DÉSORNAIS leurs capacités dans le registre en service (02/09/2026)",
+    DAST <= capacites, sorted(capacites))
+cas("et chacun de leurs providers est déclaré ACTIVE : pas de blanchiment par le risque",
+    all(p.risque == "ACTIVE" for c in reg.capabilities() for p in c.providers if c.id in DAST)
+    and bool([pid for pid in ("nmap", "nuclei", "ffuf", "zap_baseline") if pid in fournisseurs]),
+    {p.id: p.risque for c in reg.capabilities() for p in c.providers if c.id in DAST})
+cas("ils n'entrent JAMAIS dans l'expansion générique (generique: false — un scan de sécurité "
+    "standard n'arme pas un scanner actif par accident)",
+    all(not reg.capability(c).generique for c in DAST),
+    sorted(reg.capability(c).generique for c in DAST))
+cas("une demande qui les nomme les sélectionne, et c'est le VERROU de politique qui commande "
+    "ensuite : `sandbox_non_durci_outil_actif` est dans le .rego, `durci` est faux au profil actif",
+    bool(IN.choisir_providers(IN.inferer("fais un scan de vulnérabilités web sur https://exemple.fr", reg), reg))
+    and "sandbox_non_durci_outil_actif" in (RACINE / "policy" / "policy.rego").read_text(encoding="utf-8")
+    and PF.actif().durci is False,
+    IN.choisir_providers(IN.inferer("fais un scan de vulnérabilités web sur https://exemple.fr", reg), reg))
+cas("et la demande GÉNÉRIQUE reste aveugle aux capacités actives : le PASSIF seul, comme avant",
+    not (DAST & set(IN.inferer("scan de sécurité complet du dépôt", reg).capabilities)),
+    sorted(IN.inferer("scan de sécurité complet du dépôt", reg).capabilities))
 # Un compte de ce qui tourne sur UNE machine n'est pas une propriété du produit : la liste est
 # dérivée de la résolution réelle, et ce qui est exigé est qu'aucune famille testable ne soit
 # vide et que les absences soient NOMMÉES (jamais lues comme « 0 finding »).
-cas("SAST, SECRETS, SCA et INFRA ont chacune au moins un outil exécutable sur cette machine",
-    all(EXÉCUTABLES & set(fam) for fam in ({"bandit", "ruff", "semgrep"},
-                                           {"detect-secrets", "trufflehog3"},
-                                           {"pip-audit", "radon"}, {"checkov"})),
-    sorted(EXÉCUTABLES))
-cas("les outils du catalogue ABSENTS de cette machine sont nommés, pas comptés comme des scans vides",
-    not ({"trivy", "gitleaks", "grype", "kics", "nmap", "nuclei", "gosec"} & EXÉCUTABLES)
-    and {"semgrep"} <= EXÉCUTABLES, sorted(EXÉCUTABLES))
+machine_armee = bool(EXÉCUTABLES & {"bandit", "ruff", "semgrep", "trivy", "gitleaks"})
+if machine_armee:
+    cas("SAST, SECRETS, SCA et INFRA ont chacune au moins un outil exécutable sur cette machine",
+        all(EXÉCUTABLES & set(fam) for fam in ({"bandit", "ruff", "semgrep"},
+                                               {"detect-secrets", "trufflehog3"},
+                                               {"pip-audit", "radon"}, {"checkov"})),
+        sorted(EXÉCUTABLES))
+    cas("les outils du catalogue ABSENTS de cette machine sont nommés, pas comptés comme des scans vides",
+        not ({"trivy", "gitleaks", "grype", "kics", "nmap", "nuclei", "gosec"} & EXÉCUTABLES)
+        and {"semgrep"} <= EXÉCUTABLES, sorted(EXÉCUTABLES))
+else:
+    non_evalue("exécutabilité par famille et absences nommées",
+               "bootstrap n'a pas abouti sur cette machine (seuls "
+               f"{sorted(EXÉCUTABLES) or 'rien'} sont au PATH) — ces cas décrivent une machine "
+               "ARMÉE ; les absences, elles, sont jugées nommément par `test_outil_env_outil`")
 
 
 # ═════════════════════════════ 2 · les deux plugins du jour passent la porte
@@ -186,16 +213,23 @@ for nom, doc in (("ruff", doc_ruff), ("trufflehog3", doc_th3)):
          f"plugin={doc['licence']} épingle={ep['licence']}")
     cas(f"version_min {nom} = version épinglée (le format lu est celui qui a été mesuré)",
          str(doc["version_min"]) == str(ep["version"]), f"{doc['version_min']} vs {ep['version']}")
-cas("l'empreinte épinglée de ruff est celle du binaire présent (un SHA, pas une note)",
-    OUTILS["ruff"] is not None
-    and subprocess.run(["sha256sum", OUTILS["ruff"]], capture_output=True, text=True,
+if OUTILS["ruff"] is not None:
+    cas("l'empreinte épinglée de ruff est celle du binaire présent (un SHA, pas une note)",
+        subprocess.run(["sha256sum", OUTILS["ruff"]], capture_output=True, text=True,
                        timeout=120).stdout.split()[0] == str(epingles["ruff"]["sha256"]),
-    epingles["ruff"].get("sha256"))
+        epingles["ruff"].get("sha256"))
+else:
+    non_evalue("empreinte du binaire ruff", "binaire absent — rien à comparer sur cette machine")
 bs = (RACINE / "bootstrap.sh").read_text(encoding="utf-8")
+# « ruff== » en littéral a vécu : bootstrap lit désormais les versions dans le manifeste
+# et installe par une liste de noms (régime épinglé côté YAML, pas ici). Exiger le
+# littéral d'hier rendrait ce cas rouge quand le travail est bien fait ; ce qui compte
+# est que les DEUX noms figurent dans la boucle d'installation.
+_boucles = re.findall(r"for t in ([^;]+);", bs)
+_mots = {x for b_ in _boucles for x in b_.split()}
 cas("bootstrap.sh installe les deux outils (sinon : plugin chargé, outil introuvable — le silence "
     "que ce fichier existe pour casser)",
-    "ruff==" in bs and "trufflehog3" in bs,
-    [l.strip()[:100] for l in bs.splitlines() if "ruff==" in l or "trufflehog3" in l])
+    {"ruff", "trufflehog3"} <= _mots, sorted(_mots))
 cas("trufflehog3 est nommé trufflehog3, jamais « trufflehog » : l'outil amont Go n'est pas qualifié ici",
     "trufflehog3" in json.dumps(chargés) and "trufflehog" not in [i for i in fournisseurs],
     sorted(fournisseurs))
@@ -605,9 +639,9 @@ cas("`entrees: [hote, url]` et `reseau: true` sont ADMIS par le chargeur (mesur�
 sans_jeton = dict(avec_url)
 sans_jeton["execution"] = {"args": ["-u", "{URL}", "-o", "{OUT}"]}
 motif_jeton = PL.verdict(sans_jeton, "sonde_jeton.yaml")
-cas("mais `{URL}` n'existe pas : la cible d'une mission est un CHEMIN monté — c'est LÀ que RECON/WEB "
-    "butent, pas dans la déclaration",
-    "placeholder" in motif_jeton.lower() and "{TARGET}" in motif_jeton, motif_jeton[:280])
+cas("et `{URL}` EST un jeton connu du cœur (D9, 02/09/2026) : la même sonde passe le chargeur — "
+    "sa résolution dépend du type de cible, chemin monté en local, référence distante déclarée",
+    "refusé" not in motif_jeton, motif_jeton[:280])
 cas("le modèle de finding, lui, sait déjà loger une URL et un hôte (COORDONNÉES) et masque les "
     "identifiants d'URL",
     {c[0] for c in F.COORDONNEES} >= {"url", "hote", "image", "ressource"}
@@ -639,10 +673,17 @@ cas("aucun parser à la main n'a été écrit pour les trois outils (la promesse
 # fichiers du cœur touchés aujourd'hui sont nommés par leur objet (correction checkov, régime
 # npm à l'épingle) — pas par leur taille, qui ne prouverait rien.
 coeur = (RACINE / "slice" / "capabilities.yaml").read_text(encoding="utf-8")
-cas("capabilities.yaml n'a PAS été grossi pour eux : 7 capacités, et aucun des trois noms d'outil",
-    coeur.count("\n  - id: ") == 7 and not any(m in coeur.lower() for m in ("ruff", "eslint",
-                                                                             "trufflehog")),
-    coeur.count("\n  - id: "))
+ids_fichier = {c["id"] for c in yaml.safe_load(coeur)["capabilities"]}
+# Les commentaires du YAML nomment des outils pour expliquer une priorité (D7) ; ce qui est
+# défendu est de les DÉCLARER dans le cœur. Le contrôle porte donc sur le texte hors
+# commentaires — un mot dans une note n'est pas un provider.
+coeur_hors_comments = "\n".join(re.sub(r"(^|\s)#.*$", "", l) for l in coeur.splitlines())
+cas("capabilities.yaml n'a PAS été grossi pour les trois outils du jour : aucun n'y est déclaré "
+    "(hors commentaires), et toutes les capacités du fichier cœur sont bien au registre (rien "
+    "d'ignoré ; les capacités créées par plugins s'ajoutent au registre, pas au fichier)",
+    not any(m in coeur_hors_comments.lower() for m in ("ruff", "eslint", "trufflehog"))
+    and capacites >= ids_fichier,
+    sorted(capacites - ids_fichier)[:6])
 cas("les deux seuls fichiers du cœur touchés sont ceux qui réparent, pas ceux qui étendent : "
     "`--skip-download` au registre et le régime npm à l'épingle",
     "--skip-download" in coeur and "REGIMES_GESTIONNAIRE" in (RACINE / "slice" / "outils.py")

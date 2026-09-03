@@ -227,7 +227,8 @@ def construire(requete: str, cible: str, providers: list[str], registre: Registr
                moteur_intent: str, exclus_applicabilite: dict | None = None,
                exclus_conditions: dict | None = None,
                exclus_disponibilite: dict | None = None,
-               cible_descr: dict | None = None) -> Plan:
+               cible_descr: dict | None = None,
+               motifs_intent: dict | None = None) -> Plan:
     """Construit le plan à partir du registre.
 
     Chaque étape refuse un provider qui n'appartient pas à la capacité demandée :
@@ -269,24 +270,35 @@ def construire(requete: str, cible: str, providers: list[str], registre: Registr
     selection = {}
     for cap_id in dict.fromkeys(s.capability for s in steps):
         cap = registre.capability(cap_id)
-        passifs = sorted([p for p in cap.providers if p.risque == "PASSIVE"],
+        # Éligibilité TRACÉE comme elle est décidée (02/09/2026) : `intent.choisir_providers`
+        # admet les providers ACTIVE quand la capacité a été demandée explicitement ; le
+        # motif de sélection doit dire le même pool que celui qui a réellement trié, sinon
+        # le plan raconte une sélection PASSIF que personne n'a faite. `motifs_intent=None`
+        # (appelants historiques, tests épinglés) = pool PASSIF, texte inchangé au mot.
+        _motif = (motifs_intent or {}).get(cap_id)
+        explicite = bool(_motif) and "générique" not in str(_motif) \
+            and "generique" not in str(_motif)
+        qualif = "PASSIF et ACTIVE" if explicite else "PASSIF"
+        passifs = sorted([p for p in cap.providers
+                          if p.risque == "PASSIVE" or explicite],
                          key=lambda p: p.priorite)
         choisis = [s.provider for s in steps if s.capability == cap_id]
         ecartes = [{"id": p.id, "priorite": p.priorite}
                    for p in passifs if p.id not in choisis]
         if len(passifs) <= 1:
-            motif = ("seul provider PASSIF déclaré pour cette capacité"
+            motif = (f"seul provider {'PASSIF' if not explicite else 'ACTIF'} déclaré "
+                     "pour cette capacité"
                      + (f" (priorité {passifs[0].priorite})" if passifs else ""))
         elif choisis == [passifs[0].id]:
             motif = (f"priorité déclarée la plus forte parmi {len(passifs)} providers "
-                     f"PASSIF (priorité {passifs[0].priorite}) ; écartés : "
+                     f"{qualif} (priorité {passifs[0].priorite}) ; écartés : "
                      + ", ".join(f"{e['id']} (priorité {e['priorite']})" for e in ecartes))
         elif (cap.mode_selection == "fan_out"
               and choisis == [p.id for p in passifs[:len(choisis)]]):
-            # Fan-out déclaré (étape 3) : les N premiers PASSIF dans l'ordre de
+            # Fan-out déclaré (étape 3) : les N premiers du pool éligible dans l'ordre de
             # priorité — pas un choix implicite, le mode est dans le registre.
             motif = (f"fan_out déclaré (max {cap.max_providers}) : les {len(choisis)} "
-                     f"premiers providers PASSIF dans l'ordre de priorité ; écartés : "
+                     f"premiers providers {qualif} dans l'ordre de priorité ; écartés : "
                      + (", ".join(f"{e['id']} (priorité {e['priorite']})" for e in ecartes)
                         or "aucun"))
         else:

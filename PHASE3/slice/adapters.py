@@ -229,10 +229,53 @@ class ManifestRefus(Exception):
     """Un manifest demande au cœur quelque chose qu'il ne sait pas lire."""
 
 
-def _lit_texte(chemin: Path) -> str:
+def _masquer_userinfo(valeur: str) -> str:
+    """Forme sans identifiants d'une URL de cible, pour ce qui est CONSERVÉ (couverture,
+    index, artefacts). Le pilotage reçoit l'URL réelle — un scan authentifié a besoin de
+    ses credentials ; un index n'en a jamais besoin."""
+    try:
+        from urllib.parse import urlsplit, urlunsplit
+        parts = urlsplit(str(valeur))
+        if parts.username or parts.password:
+            netloc = parts.hostname or ""
+            try:
+                if parts.port:
+                    netloc += f":{parts.port}"
+            except ValueError:
+                pass
+            return urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment))
+    except ValueError:
+        pass
+    return str(valeur)
+
+
+# Plafond de lecture d'une sortie d'outil. Variable de MODULE (pas un argument par
+# défaut figé à la définition) : ajustable par les batteries pour éprouver le chemin de
+# troncature sans écrire 64 Mio — et partagé avec `_lit_json`, qui refusera de LIRE
+# au-delà plutôt que d'exploser la mémoire sur un document hostile.
+PLAFOND_LECTURE = 64 * 1024 * 1024
+
+
+def _lecture_tronquee(chemin: Path) -> bool:
+    # La sortie dépasse-t-elle le plafond ? État à DIRE, pas à subir en silence.
+    try:
+        return chemin.exists() and chemin.stat().st_size > PLAFOND_LECTURE
+    except OSError:
+        return False
+
+
+def _lit_texte(chemin: Path, limite_octets: int | None = None) -> str:
+    if limite_octets is None:
+        limite_octets = PLAFOND_LECTURE
     if not chemin.exists():
         return ""
     try:
+        if chemin.stat().st_size > limite_octets:
+            # Un outil qui rend plus que le plafond ne doit pas faire exploser la mémoire du
+            # lecteur : on lit le début, et la lecture partielle se DIRA dans la couverture
+            # (JSON tronqué = illisible, lignes JSONL tronquées = dernière ligne sautée).
+            with chemin.open("r", encoding="utf-8", errors="replace") as fh:
+                return fh.read(limite_octets)
         return chemin.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return ""
@@ -241,9 +284,19 @@ def _lit_texte(chemin: Path) -> str:
 def _lit_json(chemin: Path):
     if not chemin.exists() or chemin.stat().st_size == 0:
         return None
+    if _lecture_tronquee(chemin):
+        # UN LECTEUR NE SE SACRIFIE PAS POUR UN DOCUMENT HOSTILE : au-dessus du plafond,
+        # on ne lit pas — on déclare « rien d'exploitable » (la couverture nommera la
+        # troncature, voir `generique_cli`). Avant cette ligne, un JSON de quelques Go
+        # partait en `read_text` plein et tuait le processus au lieu d'arrêter la
+        # mission proprement.
+        return None
     try:
         return json.loads(chemin.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, RecursionError):
+        # `RecursionError` : un document profondément imbriqué (10⁴ niveaux — pièce
+        # classique d'un rapport forgeronné) lève au PARSER, pas à la lecture. Rien
+        # n'est deviné : None = « illisible », et le cœur l'écrira comme tel.
         return None
 
 
@@ -446,15 +499,31 @@ def generique_cli(prov, sbx: Sandbox, target: Target | None = None) -> ResultatB
     # « not_scanned » en aval, mais l'artefact `raw_kics.json` (null) et la ligne de
     # journal, eux, racontaient une exécution. Un outil absent doit échouer ICI (D1),
     # pas produire un vide plus loin.
-    # Résolution de la cible (locale ou URL/distante)
-    racine_scan = getattr(sbx, "racine_scan", None)
-    val_url = target.value if target and target.kind in ("url", "host", "network") else (
-        str(racine_scan) if racine_scan else ""
-    )
+    #
+    # 02/09/2026 — l'ordre est aligné sur `_lance` : les CONDITIONS d'abord, l'exécutable
+    # ensuite. Un provider qui n'a pas le droit de sortir (egress refusé) doit rendre
+    # `ConditionRefusee` — un refus motivé — même sur une machine où l'outil n'est pas
+    # installé. Inverser ferait de l'absence du binaire la réponse à une question de
+    # politique : le motif réel serait perdu et le refus deviendrait un accident.
+    exe = None
+    try:
+        exe = _exe(prov)
+    except FileNotFoundError:
+        pass
+    # Résolution de la cible (locale ou distante). `getattr` et non accès direct : la cible
+    # distante n'a pas de répertoire de scan monté, et les doubles de test documentés
+    # (SbxDouble) n'ont pas d'attribut à remplacer par un défaut silencieux. Le pilotage
+    # reçoit l'URL RÉELLE (un scan authentifié a besoin de ses credentials) ; l'index de
+    # couverture reçoit la forme sans userinfo — un identifiant de connexion n'a rien à faire
+    # dans un artefact, mais a tout à faire dans la commande.
+    distante = bool(target and target.kind in ("url", "host", "network"))
+    val_cible = (str(target.value) if distante
+                 else str(getattr(sbx, "racine_scan", None) or ""))
+    index_cible = _masquer_userinfo(val_cible) if distante else sbx.M_SCAN
     _chemins = {
-        "BIN": _exe(prov),
-        "TARGET": sbx.M_SCAN,
-        "URL": val_url,
+        "BIN": exe or m.binaire,
+        "TARGET": val_cible if distante else sbx.M_SCAN,
+        "URL": val_cible if distante else "",
         "OUT": sortie_int,
         "OUT_DIR": sbx.M_OUT,
         "REGLES": sbx.M_REGLES,
@@ -467,12 +536,24 @@ def generique_cli(prov, sbx: Sandbox, target: Target | None = None) -> ResultatB
     motifs = COND.manquantes(prov, egress=COND.egress_de(sbx, argv), racine_db=sbx.racine_db)
     if motifs:
         raise ConditionRefusee(f"{m.id} : " + " ; ".join(motifs))
+    if exe is None:
+        # Le refus d'exécutable revient ICI, après la politique : même message qu'avant,
+        # mais seulement quand rien d'amont n'a déjà tranché.
+        raise FileNotFoundError(
+            f"outil introuvable : {m.binaire} (ni {str(m.binaire).replace('{BIN}', str(BIN_DIR))}, ni au PATH)")
+    _chemins["BIN"] = exe
+    argv = PM.resoudre_argv(m, _chemins)
     # Env déclaratif (étape 4) : grype configure son cache de DB par variable
     # d'environnement. Résolu par le cœur, exactement comme argv.
     env_resolu = PM.resoudre_env(m, _chemins)
     # Certains outils écrivent sur stdout plutôt que dans un fichier : on capture aussi.
     demande, note = COND.timeout_effectif(prov, sbx.timeout)
     r = sbx.exec(argv, env=env_resolu or None, timeout=sbx.delai_effectif(demande))
+    # La troncature est un ÉTAT DE LA LECTURE, connu avant de parser : « ce qui a été lu
+    # n'est pas tout ce qui a été écrit » doit se lire dans la couverture, quel que soit
+    # le sort du reste. (La promesse était dans le commentaire de `_lit_texte` depuis le
+    # 30/08 ; elle n'avait jamais de code — trouvé par la revue adverse du 02/09.)
+    _tronque = _lecture_tronquee(sbx.sortie / nom_sortie)
     if m.sortie_format in FORMATS_TEXTE:
         # Le cœur ne parse PAS : il remet le TEXTE, et c'est `extraction` qui lit selon le
         # modèle déclaré (lignes_json / csv / xml). Le fichier de l'outil fait foi, stdout
@@ -495,8 +576,7 @@ def generique_cli(prov, sbx: Sandbox, target: Target | None = None) -> ResultatB
         fn = parsers.obtenir(m.extraction.parser)
         if fn is None:
             raise KeyError(f"parser {m.extraction.parser!r} introuvable")
-        texte = (sbx.sortie / nom_sortie).read_text(encoding="utf-8", errors="replace") \
-            if (sbx.sortie / nom_sortie).exists() else (r.stdout or "")
+        texte = _lit_texte(sbx.sortie / nom_sortie) or (r.stdout or "")
         items = fn(texte)
         sortie_lue = bool((texte or "").strip())
         # 30/08/2026 — le parser déclaré EST l'autorité sur `items`. Avant cette ligne,
@@ -525,14 +605,27 @@ def generique_cli(prov, sbx: Sandbox, target: Target | None = None) -> ResultatB
         f = c.get("fichier")
         if f and f not in fichiers:
             fichiers.append(f)
+    echec_execution = r.timeout or r.code not in m.code_succes
     if m.declare_fichiers and fichiers:
         for f in fichiers:
             couv.cibles.append(Cible(f, "scanned_successfully"))
     elif fichiers:
-        couv.cibles.append(Cible(sbx.M_SCAN, "scanned_successfully"))
+        couv.cibles.append(Cible(index_cible, "scanned_successfully"))
+    elif echec_execution:
+        couv.cibles.append(Cible(
+            index_cible, "not_scanned",
+            f"aucun résultat produit par l'outil (code {r.code}"
+            + (", délai dépassé" if r.timeout else "") + ")"))
     else:
-        couv.cibles.append(Cible(sbx.M_SCAN, "not_scanned",
-                                 "aucun résultat produit par l'outil"))
+        # Code attendu, sortie lue, zéro item : c'est UN RÉSULTAT, pas un échec. Le cas
+        # dangereux était « aucun item et rien de lisible » — la garde ci-dessous le dit.
+        # Pour une cible distante, le fait s'écrit avec sa limite : un scanner qui n'a rien
+        # correspondent sur une URL ne prouve rien sur cette URL.
+        couv.cibles.append(Cible(index_cible, "scanned_successfully"))
+        if distante:
+            couv.limites_connues.append(
+                "aucune correspondance sur la cible distante : absence de correspondance "
+                "≠ absence de vulnérabilité")
     # Un outil absent ou en échec ne doit JAMAIS ressembler à « rien trouvé ».
     # C'est le mode d'échec le plus dangereux d'un scanner : le silence rassurant.
     # 30/08/2026 — la condition portait uniquement sur `donnees is None`. Elle ne se
@@ -541,7 +634,7 @@ def generique_cli(prov, sbx: Sandbox, target: Target | None = None) -> ResultatB
     # illisible. Juger sur ce qui a été LU et sur le code de retour, sinon « 0 finding »
     # reste ambigu exactement là où il l'est le plus.
     if not items and not sortie_lue:
-        couv.cibles = [Cible(sbx.M_SCAN, "not_scanned",
+        couv.cibles = [Cible(index_cible, "not_scanned",
                              f"outil {m.binaire!r} absent ou en échec "
                              f"(code {r.code}) — aucun résultat produit")]
         couv.limites_connues.append(
@@ -552,6 +645,26 @@ def generique_cli(prov, sbx: Sandbox, target: Target | None = None) -> ResultatB
             f"ÉCHEC D'EXÉCUTION de {m.binaire!r} (code {r.code}) : l'outil a rendu un code "
             "inespéré, ses résultats ne sont pas nécessairement complets — ce n'est pas une "
             "absence de problème.")
+    if _tronque:
+        # « Lu jusqu'au plafond » n'est JAMAIS « lu tout court ». Deux conséquences, dans
+        # l'ordre de gravité :
+        #   · zéro item sur un rapport tronqué ne peut pas se lire « scan propre et vide »
+        #     — c'est une lecture qui a échoué, et la couverture le dit ;
+        #   · des items trouvés dans le début restent des findings RÉELS (écrits par
+        #     l'outil avant la coupe) — mais le comptage n'est plus affirmé complet.
+        if not items:
+            couv.cibles = [Cible(
+                index_cible, "not_scanned",
+                "rapport tronqué au plafond de lecture : la fin n'a jamais été lue, "
+                "le vide constaté en tête ne prouve rien")]
+            couv.limites_connues.append(
+                f"ÉCHEC DE LECTURE : sortie de {m.binaire!r} au-delà du plafond "
+                f"({PLAFOND_LECTURE} octets) sans item lisible dans la partie retenue.")
+        else:
+            couv.limites_connues.append(
+                f"RAPPORT PARTIEL : {m.binaire!r} a rendu plus que le plafond de lecture "
+                f"({PLAFOND_LECTURE} octets) — seuls les findings de la partie lue sont "
+                "comptés ; aucun comptage complet n'est affirmé.")
     couv.scanners_actives = [f"{m.id}:{m.sortie_format}"]
     if m.limite:
         couv.limites_connues.append(m.limite)
