@@ -488,9 +488,18 @@ class Gestionnaire(BaseHTTPRequestHandler):
             # du POST est un identifiant de file TEMPORAIRE) et le lien vers son détail.
             # Absents = mission pas encore ouverte (ou pas d'archive) : `null`, pas d'invention.
             mission_id = _mission_id_du_run(etat)
-            return self._json({"id": rid, **etat,
-                               "mission_id": mission_id,
-                               "detail_href": f"/api/missions/{mission_id}" if mission_id else None})
+            reponse = {"id": rid, **etat,
+                       "mission_id": mission_id,
+                       "detail_href": f"/api/missions/{mission_id}" if mission_id else None}
+            if etat.get("type") == "web":
+                # Preuve portable scellée (slice/preuve.py) : additive, ne change
+                # rien aux runs classiques. En échec : erreur nommée, pas d'omission.
+                try:
+                    import preuve as PR
+                    reponse["preuve"] = PR.engagement_bundle(etat)
+                except Exception as e:
+                    reponse["preuve"] = {"erreur": f"preuve_non_construite : {type(e).__name__}"}
+            return self._json(reponse)
         return self.send_error(404)
 
     # ---- lecture de l'historique (délégation au lecteur canonique, rien n'est projeté ici)
@@ -696,6 +705,10 @@ class Gestionnaire(BaseHTTPRequestHandler):
                       "intensity": intensity,
                       "egress": egress, "cible_autorisee": True,
                       "providers_prevus": [p["id"] for p in plan_providers],
+                      "verification": {
+                          "oracle": "http_response",
+                          "replay": 5 if intensity == "aggressive" else 3,
+                          "temoin_controle": True},
                       "pose_le": time.time()}
         with VERROU:
             for pid, existant in ETATS.items():
@@ -710,7 +723,7 @@ class Gestionnaire(BaseHTTPRequestHandler):
                 ETATS[eid] = engagement
                 reponse = {"id": eid, **engagement}
         return self._json({**reponse,
-                           "verification": {
+                           "verification": reponse.get("verification") or {
                                "oracle": "http_response",
                                "replay": 5 if intensity == "aggressive" else 3,
                                "temoin_controle": True},

@@ -95,6 +95,12 @@ def main() -> int:
                     code == 200 and isinstance(lu, dict) and lu.get("statut") == "planifie"
                     and lu.get("mission_id") is None,
                     f"code={code} corps={json.dumps(lu, ensure_ascii=False)[:140]}")
+            import preuve as PR
+            preuve = (lu or {}).get("preuve") if isinstance(lu, dict) else None
+            verifie("GET joint la preuve scellée et vérifiable",
+                    isinstance(preuve, dict) and PR.verifier(preuve) == (True, "sceau_valide")
+                    and (preuve.get("objet") or {}).get("url_canonique") == "https://target.tld/",
+                    json.dumps(preuve, ensure_ascii=False)[:160] if preuve else "pas de preuve")
         # ---------------------------------------------------------- secrets
         code, eng = http(base, "/api/engagements/web",
                          {"url": "https://u:p@example.com/x", "cible_autorisee": True})
