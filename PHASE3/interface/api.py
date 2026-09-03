@@ -465,6 +465,10 @@ class Gestionnaire(BaseHTTPRequestHandler):
             return self._json({"cibles": cibles_admises()})
         if chemin == "/api/capacites":
             return self._json(_capacites())
+        if chemin == "/api/engagements":
+            return self._json({"engagements": _engagements()})
+        if chemin == "/api/providers":
+            return self._json(_fournisseurs())
         if chemin == "/api/missions":
             return self._missions(partie)
         if chemin.startswith("/api/missions/"):
@@ -556,6 +560,8 @@ class Gestionnaire(BaseHTTPRequestHandler):
         chemin = self.path.split("?", 1)[0]
         if chemin == "/api/engagements/web":
             return self._post_engagement_web()
+        if chemin == "/api/verification":
+            return self._post_verification()
         if chemin != "/api/runs":
             return self.send_error(404)
         try:
@@ -735,8 +741,99 @@ class Gestionnaire(BaseHTTPRequestHandler):
                            "detail_href": f"/api/runs/{reponse['id']}"},
                           200 if reponse.get("deduplique") else 202)
 
+    # ---- vérification oracle (jugement sur observations, sans exécution)
+    def _post_verification(self):
+        """POST /api/verification — juge des observations de rejeu (oracle_web).
+
+        Pur jugement, aucune exécution : le client apporte les observations
+        (digests, jamais de corps bruts). Rend verdict + événement cycle.
+        """
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            corps = json.loads(self.rfile.read(n).decode("utf-8") or "{}")
+        except (ValueError, UnicodeDecodeError):
+            return self._json({"erreur": "corps de requête : JSON attendu"}, 400)
+        if not isinstance(corps, dict):
+            return self._json({"erreur": "corps de requête : objet JSON attendu"}, 400)
+        try:
+            import oracle_web as OW
+            url = str(corps.get("url") or "").strip()
+            if not url:
+                return self._json({"erreur": "url vide"}, 400)
+            intensity = str(corps.get("intensity") or "normal")
+            if intensity not in ("normal", "aggressive"):
+                return self._json({"erreur": f"intensity inconnue : {intensity}"}, 400)
+            demandes = OW.DemandeVerification(
+                url=url, expect_status=int(corps.get("expect_status", 200)),
+                expect_body_contains=str(corps.get("expect_body_contains") or ""),
+                control_url=str(corps.get("control_url") or ""), intensity=intensity)
+            brutes = corps.get("observations")
+            if not isinstance(brutes, list) or not brutes:
+                return self._json({"erreur": "observations : liste non vide attendue"}, 400)
+            observations = []
+            for i, o in enumerate(brutes):
+                if not isinstance(o, dict):
+                    return self._json({"erreur": f"observations[{i}] : objet attendu"}, 400)
+                try:
+                    observations.append(OW.ObservationRejeu(
+                        status=o.get("status"), body_digest=str(o.get("body_digest") or ""),
+                        body_taille=int(o.get("body_taille", 0)),
+                        contient_extrait=bool(o.get("contient_extrait", False)),
+                        erreur=str(o.get("erreur") or "")))
+                except (TypeError, ValueError):
+                    return self._json({"erreur": f"observations[{i}] : forme invalide"}, 400)
+            temoin = None
+            if isinstance(corps.get("temoin"), dict):
+                t = corps["temoin"]
+                try:
+                    temoin = OW.ObservationRejeu(
+                        status=t.get("status"), body_digest=str(t.get("body_digest") or ""),
+                        body_taille=int(t.get("body_taille", 0)),
+                        contient_extrait=bool(t.get("contient_extrait", False)),
+                        erreur=str(t.get("erreur") or ""))
+                except (TypeError, ValueError):
+                    return self._json({"erreur": "temoin : forme invalide"}, 400)
+            jugement = OW.juger(demandes, observations, temoin)
+            return self._json({"runtime_verified": OW.RUNTIME_VERIFIED, **jugement.to_dict()})
+        except (TypeError, ValueError) as e:
+            return self._json({"erreur": f"demande invalide : {e}"}, 400)
+
     def log_message(self, format, *args):        # journal court, sans données d'utilisateur
         sys.stderr.write("[interface] %s\n" % (args[0] if args else ""))
+
+
+def _engagements() -> list[dict]:
+    """Engagements web planifiés (ETATS en mémoire). Champs sûrs uniquement :
+    `url_sure`/`url_canonique` (jamais de userinfo — voir web_scope)."""
+    with VERROU:
+        items = [(rid, dict(e)) for rid, e in ETATS.items() if e.get("type") == "web"]
+    out = []
+    for rid, e in items:
+        out.append({"id": rid, "statut": e.get("statut"), "type": "web",
+                    "url_sure": e.get("url_sure"), "url_canonique": e.get("url_canonique"),
+                    "hote": e.get("hote"), "intensity": e.get("intensity"),
+                    "providers_prevus": e.get("providers_prevus"),
+                    "deduplique": bool(e.get("deduplique", False)),
+                    "pose_le": e.get("pose_le")})
+    return out
+
+
+def _fournisseurs() -> dict:
+    """Providers déclarés du registre (public uniquement : id, binaire, risque,
+    cibles, timeout — ni argv ni chemins internes). Registre illisible =
+    `registre_erreur` (même contrat que /api/capacites)."""
+    try:
+        from registre import Registry
+        reg = Registry()
+        return {"providers": [{"id": p.id, "binaire": p.manifest.binaire,
+                               "risque": p.manifest.risque,
+                               "cibles": list(p.manifest.cibles),
+                               "timeout_s": int(p.manifest.timeout_s or 0)}
+                              for p in reg.providers() if p.manifest is not None],
+                "compte": sum(1 for p in reg.providers() if p.manifest is not None)}
+    except Exception as e:
+        return {"providers": [], "compte": 0,
+                "registre_erreur": f"{type(e).__name__}: {str(e)[:200]}"}
 
 
 def _capacites() -> dict:
