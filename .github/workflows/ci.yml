@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ audit/audit-2026-09-03 ]
+    branches: [ main ]
   pull_request:
-    branches: [ audit/audit-2026-09-03 ]
+    branches: [ main ]
 
 jobs:
   python-compile:
