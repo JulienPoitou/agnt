@@ -55,6 +55,10 @@ sys.path.insert(0, str(RACINE / "slice"))  # pour `import pipeline`, `profils`, 
 TAILLE_MAX_REQUETE = 4000   # garde d'entrée, pas le correctif F5 (la borne portante est
                             # la taille du corps sortant, côté fournisseur)
 
+# Chaîne web V1 (docs/WEB_PENTEST_V1_SPEC.md) : ordre d'exécution x débit max
+# déclaratif. DOCUMENTED ONLY : ces débits sont la spec, pas une mesure.
+WEB_PROVIDERS_ORDRE = {"httpx": 50, "katana": 20, "ffuf": 30, "nuclei": 30}
+
 # Cibles proposables. Règle : un dépôt DÉJÀ sur cette machine, sous le dépôt de travail ou
 # listé dans AGNT_CIBLES (séparateur « : »). Pas de clonage, pas de téléchargement : cela
 # ajouterait une écriture et un réseau sortant que rien ici n'a été conçu pour border.
@@ -461,6 +465,10 @@ class Gestionnaire(BaseHTTPRequestHandler):
             return self._json({"cibles": cibles_admises()})
         if chemin == "/api/capacites":
             return self._json(_capacites())
+        if chemin == "/api/engagements":
+            return self._json({"engagements": _engagements()})
+        if chemin == "/api/providers":
+            return self._json(_fournisseurs())
         if chemin == "/api/missions":
             return self._missions(partie)
         if chemin.startswith("/api/missions/"):
@@ -484,9 +492,18 @@ class Gestionnaire(BaseHTTPRequestHandler):
             # du POST est un identifiant de file TEMPORAIRE) et le lien vers son détail.
             # Absents = mission pas encore ouverte (ou pas d'archive) : `null`, pas d'invention.
             mission_id = _mission_id_du_run(etat)
-            return self._json({"id": rid, **etat,
-                               "mission_id": mission_id,
-                               "detail_href": f"/api/missions/{mission_id}" if mission_id else None})
+            reponse = {"id": rid, **etat,
+                       "mission_id": mission_id,
+                       "detail_href": f"/api/missions/{mission_id}" if mission_id else None}
+            if etat.get("type") == "web":
+                # Preuve portable scellée (slice/preuve.py) : additive, ne change
+                # rien aux runs classiques. En échec : erreur nommée, pas d'omission.
+                try:
+                    import preuve as PR
+                    reponse["preuve"] = PR.engagement_bundle(etat)
+                except Exception as e:
+                    reponse["preuve"] = {"erreur": f"preuve_non_construite : {type(e).__name__}"}
+            return self._json(reponse)
         return self.send_error(404)
 
     # ---- lecture de l'historique (délégation au lecteur canonique, rien n'est projeté ici)
@@ -540,7 +557,12 @@ class Gestionnaire(BaseHTTPRequestHandler):
 
     # ---- écriture
     def do_POST(self):  # noqa: N802
-        if self.path.split("?", 1)[0] != "/api/runs":
+        chemin = self.path.split("?", 1)[0]
+        if chemin == "/api/engagements/web":
+            return self._post_engagement_web()
+        if chemin == "/api/verification":
+            return self._post_verification()
+        if chemin != "/api/runs":
             return self.send_error(404)
         try:
             n = int(self.headers.get("Content-Length") or 0)
@@ -598,8 +620,220 @@ class Gestionnaire(BaseHTTPRequestHandler):
         return self._json({"id": rid, "statut": "en_file",
                            "position": FILE.qsize()}, 202)
 
+    # ---- engagements web (H1 — squelette : validation stricte, exécution NON câblée)
+    def _post_engagement_web(self):
+        """POST /api/engagements/web — déclare un engagement web app black-box.
+
+        Valide et PLANIFIE seulement : l'exécution (httpx→katana→ffuf→nuclei→Oracle)
+        arrive au milestone suivant. Un engagement planifié n'est jamais présenté
+        comme un résultat : `execution: "non_cablee"` et la limite sont rendues.
+        Conventions reprises de /api/runs : refus nommés, 400 chiffrés, 202 + id.
+        """
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            corps = json.loads(self.rfile.read(n).decode("utf-8") or "{}")
+        except (ValueError, UnicodeDecodeError):
+            return self._json({"erreur": "corps de requête : JSON attendu"}, 400)
+        if not isinstance(corps, dict):
+            return self._json({"erreur": "corps de requête : objet JSON attendu"}, 400)
+
+        url = corps.get("url")
+        if not isinstance(url, str) or not url.strip():
+            return self._json({"erreur": "url vide",
+                               "attendu": "https://cible.tld (schémas admis : http, https)"}, 400)
+        url = url.strip()
+        if len(url) > 2048:
+            return self._json({"erreur": f"url trop longue ({len(url)} > 2048)"}, 400)
+        try:
+            from cible import Cible, CibleError, TYPE_URL
+            cible = Cible(type=TYPE_URL, reference=url)
+        except CibleError as e:
+            return self._json({"erreur": f"cible refusée : {e}",
+                               "attendu": "https://cible.tld (schémas admis : http, https)"}, 400)
+        except Exception as e:                              # descripteur illisible = refus
+            return self._json({"erreur": f"cible illisible : {type(e).__name__}"}, 400)
+        from urllib.parse import urlsplit
+        try:
+            hote = urlsplit(url).hostname or ""
+        except ValueError:
+            hote = ""
+        if not hote:
+            return self._json({"erreur": "hôte manquant dans l'url",
+                               "attendu": "https://cible.tld (avec un nom d'hôte)"}, 400)
+        # Forme canonique (web_scope) : deux écritures du même endpoint donnent
+        # le même engagement — persistance et dédup s'y réfèrent, jamais au brut.
+        try:
+            from web_scope import canonicaliser_url, hote_de
+            url_canonique = canonicaliser_url(url)
+            hote = hote_de(url_canonique)
+        except Exception as e:
+            return self._json({"erreur": f"url non canonicalisable : {e}"}, 400)
+
+        # Autorisation EXPLICITE : sans `cible_autorisee: true`, pas d'engagement.
+        # `false` ou absent = 403 nommé (doctrine F2), jamais un plan silencieux.
+        if corps.get("cible_autorisee") is not True:
+            return self._json({"erreur": "cible_non_autorisee",
+                               "detail": "un engagement web exige cible_autorisee: true explicite",
+                               "url_sure": cible.reference_sure()}, 403)
+        egress = corps.get("egress")
+        if egress is not None and not isinstance(egress, bool):
+            return self._json({"erreur": "egress : attendu true, false, ou absent"}, 400)
+        intensity = str(corps.get("intensity") or "normal")
+        if intensity not in ("normal", "aggressive"):
+            return self._json({"erreur": f"intensity inconnue : {intensity}",
+                               "admises": ["normal", "aggressive"]}, 400)
+        demandes = corps.get("providers")
+        if demandes is None:
+            demandes = list(WEB_PROVIDERS_ORDRE)
+        if (not isinstance(demandes, list) or not demandes
+                or any(not isinstance(p, str) for p in demandes)):
+            return self._json({"erreur": "providers : liste non vide attendue",
+                               "admis": list(WEB_PROVIDERS_ORDRE)}, 400)
+        inconnus = [p for p in demandes if p not in WEB_PROVIDERS_ORDRE]
+        if inconnus:
+            return self._json({"erreur": "providers inconnus : " + ", ".join(inconnus),
+                               "admis": list(WEB_PROVIDERS_ORDRE)}, 400)
+        try:
+            from registre import Registry
+            declares = {p.id for p in Registry().providers()}
+            registre_ok = True
+        except Exception:
+            declares, registre_ok = set(), False
+        plan_providers = [{"id": p,
+                           "declare": (p in declares) if registre_ok else None,
+                           "debit_max_rps": WEB_PROVIDERS_ORDRE[p]}
+                          for p in WEB_PROVIDERS_ORDRE if p in demandes]
+
+        eid = uuid.uuid4().hex[:12]
+        engagement = {"statut": "planifie", "type": "web",
+                      "url_sure": cible.reference_sure(), "url_canonique": url_canonique,
+                      "hote": hote,
+                      "intensity": intensity,
+                      "egress": egress, "cible_autorisee": True,
+                      "providers_prevus": [p["id"] for p in plan_providers],
+                      "verification": {
+                          "oracle": "http_response",
+                          "replay": 5 if intensity == "aggressive" else 3,
+                          "temoin_controle": True},
+                      "pose_le": time.time()}
+        with VERROU:
+            for pid, existant in ETATS.items():
+                if (existant.get("type") == "web"
+                        and existant.get("url_canonique") == url_canonique
+                        and existant.get("statut") == "planifie"):
+                    reponse = dict(existant)
+                    reponse["id"] = pid
+                    reponse["deduplique"] = True
+                    break
+            else:
+                ETATS[eid] = engagement
+                reponse = {"id": eid, **engagement}
+        return self._json({**reponse,
+                           "verification": reponse.get("verification") or {
+                               "oracle": "http_response",
+                               "replay": 5 if intensity == "aggressive" else 3,
+                               "temoin_controle": True},
+                           "execution": "non_cablee",
+                           "limites_connues": [
+                               "engagement planifié : la chaîne "
+                               "httpx→katana→ffuf→nuclei→Oracle n'est pas encore câblée",
+                               "absence de correspondance ≠ absence de vulnérabilité"],
+                           "detail_href": f"/api/runs/{reponse['id']}"},
+                          200 if reponse.get("deduplique") else 202)
+
+    # ---- vérification oracle (jugement sur observations, sans exécution)
+    def _post_verification(self):
+        """POST /api/verification — juge des observations de rejeu (oracle_web).
+
+        Pur jugement, aucune exécution : le client apporte les observations
+        (digests, jamais de corps bruts). Rend verdict + événement cycle.
+        """
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            corps = json.loads(self.rfile.read(n).decode("utf-8") or "{}")
+        except (ValueError, UnicodeDecodeError):
+            return self._json({"erreur": "corps de requête : JSON attendu"}, 400)
+        if not isinstance(corps, dict):
+            return self._json({"erreur": "corps de requête : objet JSON attendu"}, 400)
+        try:
+            import oracle_web as OW
+            url = str(corps.get("url") or "").strip()
+            if not url:
+                return self._json({"erreur": "url vide"}, 400)
+            intensity = str(corps.get("intensity") or "normal")
+            if intensity not in ("normal", "aggressive"):
+                return self._json({"erreur": f"intensity inconnue : {intensity}"}, 400)
+            demandes = OW.DemandeVerification(
+                url=url, expect_status=int(corps.get("expect_status", 200)),
+                expect_body_contains=str(corps.get("expect_body_contains") or ""),
+                control_url=str(corps.get("control_url") or ""), intensity=intensity)
+            brutes = corps.get("observations")
+            if not isinstance(brutes, list) or not brutes:
+                return self._json({"erreur": "observations : liste non vide attendue"}, 400)
+            observations = []
+            for i, o in enumerate(brutes):
+                if not isinstance(o, dict):
+                    return self._json({"erreur": f"observations[{i}] : objet attendu"}, 400)
+                try:
+                    observations.append(OW.ObservationRejeu(
+                        status=o.get("status"), body_digest=str(o.get("body_digest") or ""),
+                        body_taille=int(o.get("body_taille", 0)),
+                        contient_extrait=bool(o.get("contient_extrait", False)),
+                        erreur=str(o.get("erreur") or "")))
+                except (TypeError, ValueError):
+                    return self._json({"erreur": f"observations[{i}] : forme invalide"}, 400)
+            temoin = None
+            if isinstance(corps.get("temoin"), dict):
+                t = corps["temoin"]
+                try:
+                    temoin = OW.ObservationRejeu(
+                        status=t.get("status"), body_digest=str(t.get("body_digest") or ""),
+                        body_taille=int(t.get("body_taille", 0)),
+                        contient_extrait=bool(t.get("contient_extrait", False)),
+                        erreur=str(t.get("erreur") or ""))
+                except (TypeError, ValueError):
+                    return self._json({"erreur": "temoin : forme invalide"}, 400)
+            jugement = OW.juger(demandes, observations, temoin)
+            return self._json({"runtime_verified": OW.RUNTIME_VERIFIED, **jugement.to_dict()})
+        except (TypeError, ValueError) as e:
+            return self._json({"erreur": f"demande invalide : {e}"}, 400)
+
     def log_message(self, format, *args):        # journal court, sans données d'utilisateur
         sys.stderr.write("[interface] %s\n" % (args[0] if args else ""))
+
+
+def _engagements() -> list[dict]:
+    """Engagements web planifiés (ETATS en mémoire). Champs sûrs uniquement :
+    `url_sure`/`url_canonique` (jamais de userinfo — voir web_scope)."""
+    with VERROU:
+        items = [(rid, dict(e)) for rid, e in ETATS.items() if e.get("type") == "web"]
+    out = []
+    for rid, e in items:
+        out.append({"id": rid, "statut": e.get("statut"), "type": "web",
+                    "url_sure": e.get("url_sure"), "url_canonique": e.get("url_canonique"),
+                    "hote": e.get("hote"), "intensity": e.get("intensity"),
+                    "providers_prevus": e.get("providers_prevus"),
+                    "deduplique": bool(e.get("deduplique", False)),
+                    "pose_le": e.get("pose_le")})
+    return out
+
+
+def _fournisseurs() -> dict:
+    """Providers déclarés du registre (public uniquement : id, binaire, risque,
+    cibles, timeout — ni argv ni chemins internes). Registre illisible =
+    `registre_erreur` (même contrat que /api/capacites)."""
+    try:
+        from registre import Registry
+        reg = Registry()
+        return {"providers": [{"id": p.id, "binaire": p.manifest.binaire,
+                               "risque": p.manifest.risque,
+                               "cibles": list(p.manifest.cibles),
+                               "timeout_s": int(p.manifest.timeout_s or 0)}
+                              for p in reg.providers() if p.manifest is not None],
+                "compte": sum(1 for p in reg.providers() if p.manifest is not None)}
+    except Exception as e:
+        return {"providers": [], "compte": 0,
+                "registre_erreur": f"{type(e).__name__}: {str(e)[:200]}"}
 
 
 def _capacites() -> dict:
