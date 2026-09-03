@@ -127,9 +127,22 @@ def main() -> int:
             verifie(nom, c == 403 and isinstance(refus, dict)
                     and refus.get("erreur") == "cible_non_autorisee",
                     f"code={c} corps={json.dumps(refus, ensure_ascii=False)[:120]}")
+        # ---------------------------------------------------------- canonique + dedup
+        code, eng = http(base, "/api/engagements/web",
+                         {"url": "HTTPS://DUP.TLD:443/a/", "cible_autorisee": True})
+        verifie("forme canonique persistée",
+                code == 202 and isinstance(eng, dict)
+                and eng.get("url_canonique") == "https://dup.tld/a",
+                f"code={code} corps={json.dumps(eng, ensure_ascii=False)[:160]}")
+        code, bis = http(base, "/api/engagements/web",
+                         {"url": "https://dup.tld/a", "cible_autorisee": True})
+        verifie("deuxième écriture du même endpoint → 200 dédupliqué, même id",
+                code == 200 and isinstance(bis, dict) and bis.get("deduplique") is True
+                and bis.get("id") == (eng.get("id") if isinstance(eng, dict) else None),
+                f"code={code} corps={json.dumps(bis, ensure_ascii=False)[:160]}")
         # ---------------------------------------------------------- sous-sélection
         code, eng = http(base, "/api/engagements/web",
-                         {"url": "https://target.tld", "cible_autorisee": True,
+                         {"url": "https://scope.tld/scan", "cible_autorisee": True,
                           "providers": ["httpx", "nuclei"], "intensity": "aggressive",
                           "egress": True})
         verifie("sous-sélection + aggressive → replay 5, egress conservé",

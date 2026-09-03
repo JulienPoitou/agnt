@@ -645,6 +645,14 @@ class Gestionnaire(BaseHTTPRequestHandler):
         if not hote:
             return self._json({"erreur": "hôte manquant dans l'url",
                                "attendu": "https://cible.tld (avec un nom d'hôte)"}, 400)
+        # Forme canonique (web_scope) : deux écritures du même endpoint donnent
+        # le même engagement — persistance et dédup s'y réfèrent, jamais au brut.
+        try:
+            from web_scope import canonicaliser_url, hote_de
+            url_canonique = canonicaliser_url(url)
+            hote = hote_de(url_canonique)
+        except Exception as e:
+            return self._json({"erreur": f"url non canonicalisable : {e}"}, 400)
 
         # Autorisation EXPLICITE : sans `cible_autorisee: true`, pas d'engagement.
         # `false` ou absent = 403 nommé (doctrine F2), jamais un plan silencieux.
@@ -683,14 +691,25 @@ class Gestionnaire(BaseHTTPRequestHandler):
 
         eid = uuid.uuid4().hex[:12]
         engagement = {"statut": "planifie", "type": "web",
-                      "url_sure": cible.reference_sure(), "hote": hote,
+                      "url_sure": cible.reference_sure(), "url_canonique": url_canonique,
+                      "hote": hote,
                       "intensity": intensity,
                       "egress": egress, "cible_autorisee": True,
                       "providers_prevus": [p["id"] for p in plan_providers],
                       "pose_le": time.time()}
         with VERROU:
-            ETATS[eid] = engagement
-        return self._json({"id": eid, **engagement,
+            for pid, existant in ETATS.items():
+                if (existant.get("type") == "web"
+                        and existant.get("url_canonique") == url_canonique
+                        and existant.get("statut") == "planifie"):
+                    reponse = dict(existant)
+                    reponse["id"] = pid
+                    reponse["deduplique"] = True
+                    break
+            else:
+                ETATS[eid] = engagement
+                reponse = {"id": eid, **engagement}
+        return self._json({**reponse,
                            "verification": {
                                "oracle": "http_response",
                                "replay": 5 if intensity == "aggressive" else 3,
@@ -700,7 +719,8 @@ class Gestionnaire(BaseHTTPRequestHandler):
                                "engagement planifié : la chaîne "
                                "httpx→katana→ffuf→nuclei→Oracle n'est pas encore câblée",
                                "absence de correspondance ≠ absence de vulnérabilité"],
-                           "detail_href": f"/api/runs/{eid}"}, 202)
+                           "detail_href": f"/api/runs/{reponse['id']}"},
+                          200 if reponse.get("deduplique") else 202)
 
     def log_message(self, format, *args):        # journal court, sans données d'utilisateur
         sys.stderr.write("[interface] %s\n" % (args[0] if args else ""))
