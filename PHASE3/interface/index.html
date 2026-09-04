@@ -49,6 +49,11 @@
                     "&mdash; l'absence vaut &laquo; le profil fait foi &raquo;, et c'est un fait diff&eacute;rent d'un refus.">
       <em id="egress-note">sortie r&eacute;seau autoris&eacute;e pour cette mission (le profil reste ferm&eacute;)</em>
     </label>
+    <label class="cage"><span>autorisation de la cible</span>
+      <input id="cible_autorisee" type="checkbox">
+      <em>je d&eacute;tiens l'autorisation d'analyser cette cible — sans elle, la politique
+        refuse (fail-closed, motif <code>cible_non_autorisee</code>)</em>
+    </label>
     <label><span>moteur d'intention</span>
       <select id="moteur" disabled><option>auto</option><option>llm</option><option>deterministe</option></select>
     </label>

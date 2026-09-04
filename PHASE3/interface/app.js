@@ -561,6 +561,12 @@ async function lancerUnRun() {
   // « non demandé » par « demandé et obtenu : non » &mdash  deux faits différents.
   const cage = document.getElementById("egress");
   if (cage && cage.checked) corps.egress = true;
+  // Le consentement suit la même règle que la cage : absent, RIEN n'est envoyé —
+  // `cible_autorisee: false` serait une décision, or ne pas répondre n'est pas décider.
+  // Sans lui, la politique refuse nommément (`cible_non_autorisee`) : c'est le fail-closed
+  // qui fait son travail, pas une panne.
+  const consentement = document.getElementById("cible_autorisee");
+  if (consentement && consentement.checked) corps.cible_autorisee = true;
   const envoi = await json("/api/runs", {method: "POST", headers: {"Content-Type": "application/json"},
                                          body: JSON.stringify(corps)});
   if (!envoi.ok) {
