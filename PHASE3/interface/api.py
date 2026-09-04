@@ -54,6 +54,8 @@ sys.path.insert(0, str(RACINE / "slice"))  # pour `import pipeline`, `profils`, 
 
 TAILLE_MAX_REQUETE = 4000   # garde d'entrée, pas le correctif F5 (la borne portante est
                             # la taille du corps sortant, côté fournisseur)
+PLAFOND_CORPS = 262_144     # plafond de lecture du corps AVANT rfile.read : Content-Length
+                            # est déclaré par le client et ne doit jamais piloter la RAM.
 
 # Chaîne web V1 (docs/WEB_PENTEST_V1_SPEC.md) : ordre d'exécution x débit max
 # déclaratif. DOCUMENTED ONLY : ces débits sont la spec, pas une mesure.
@@ -65,7 +67,8 @@ WEB_PROVIDERS_ORDRE = {"httpx": 50, "katana": 20, "ffuf": 30, "nuclei": 30}
 def cibles_admises() -> list[dict]:
     from registre import Registry          # import tardif : après sys.path
     hors = [Path(p) for p in os.environ.get("AGNT_CIBLES", "").split(":") if p.strip()]
-    candidats = [RACINE / "testrepo", RACINE / "cible_independante", RACINE / "labo_securite",
+    candidats = [RACINE / "testrepo", RACINE / "testrepo_vuln",
+                 RACINE / "cible_independante", RACINE / "labo_securite",
                  RACINE / "dogfooding"] + hors
     out = []
     for c in candidats:
@@ -75,13 +78,19 @@ def cibles_admises() -> list[dict]:
             continue
         if not c.is_dir():
             continue
-        sous_de = any(str(c).startswith(str(base)) for base in (RACINE, DEPOT)) or c in hors
+        sous_de = any(c.is_relative_to(base) for base in (RACINE, DEPOT)) or c in hors
         if not sous_de:
             continue
-        entrees = sorted(p.name for p in c.iterdir())[:6]
+        try:
+            entrees = sorted(p.name for p in c.iterdir())[:6]
+            langages = _devine_langages(c)
+        except OSError:
+            # Un candidat illisible (symlink cassé, droit refusé) ne doit pas tomber
+            # toute la route : la cible est comptée, ses détails restent vides.
+            entrees, langages = [], []
         out.append({"nom": c.name, "chemin": str(c),
                     "fichiers_vus": entrees,
-                    "langages": _devine_langages(c)})
+                    "langages": langages})
     return out
 
 
@@ -89,8 +98,16 @@ def _devine_langages(c: Path) -> list[str]:
     indices = {".py": "python", ".go": "go", ".js": "javascript", ".ts": "typescript",
                ".tf": "terraform", ".yaml": "iac", ".yml": "iac", ".java": "java"}
     vus: set[str] = set()
-    for p in list(c.rglob("*"))[:400]:
-        if p.is_file():
+    try:
+        candidats = list(c.rglob("*"))[:400]
+    except OSError:
+        return []                    # arbre partiellement illisible : aucun langage déclaré
+    for p in candidats:
+        try:
+            fichier = p.is_file()
+        except OSError:
+            continue                             # entrée inscanable (symlink, droit) : sautée
+        if fichier:
             v = indices.get(p.suffix.lower())
             if v:
                 vus.add(v)
@@ -439,7 +456,9 @@ class Gestionnaire(BaseHTTPRequestHandler):
         # sont refusés, sinon cette page deviendrait un lecteur de fichiers du serveur.
         f = (ICI / (nom or "index.html")).resolve()
         type_mime = type_mime or self.TYPES.get(f.suffix.lower(), "")
-        if not str(f).startswith(str(ICI)) or not type_mime or not f.is_file():
+        # is_relative_to, pas startswith : un voisin dont le nom partage le préfixe
+        # (ex. interfaceX/) passait autrement.
+        if not f.is_relative_to(ICI) or not type_mime or not f.is_file():
             self.send_error(404)
             return
         corps = f.read_bytes()
@@ -566,6 +585,9 @@ class Gestionnaire(BaseHTTPRequestHandler):
             return self.send_error(404)
         try:
             n = int(self.headers.get("Content-Length") or 0)
+            if n > PLAFOND_CORPS:
+                return self._json({"erreur": f"corps trop volumineux "
+                                             f"({n} > {PLAFOND_CORPS} octets)"}, 413)
             corps = json.loads(self.rfile.read(n).decode("utf-8") or "{}")
         except (ValueError, UnicodeDecodeError):
             return self._json({"erreur": "corps de requête : JSON attendu"}, 400)
@@ -631,6 +653,9 @@ class Gestionnaire(BaseHTTPRequestHandler):
         """
         try:
             n = int(self.headers.get("Content-Length") or 0)
+            if n > PLAFOND_CORPS:
+                return self._json({"erreur": f"corps trop volumineux "
+                                             f"({n} > {PLAFOND_CORPS} octets)"}, 413)
             corps = json.loads(self.rfile.read(n).decode("utf-8") or "{}")
         except (ValueError, UnicodeDecodeError):
             return self._json({"erreur": "corps de requête : JSON attendu"}, 400)
@@ -750,6 +775,9 @@ class Gestionnaire(BaseHTTPRequestHandler):
         """
         try:
             n = int(self.headers.get("Content-Length") or 0)
+            if n > PLAFOND_CORPS:
+                return self._json({"erreur": f"corps trop volumineux "
+                                             f"({n} > {PLAFOND_CORPS} octets)"}, 413)
             corps = json.loads(self.rfile.read(n).decode("utf-8") or "{}")
         except (ValueError, UnicodeDecodeError):
             return self._json({"erreur": "corps de requête : JSON attendu"}, 400)
@@ -902,7 +930,10 @@ def main(argv=None) -> int:
     import transports as CORE_TRANSPORTS
     MCP_BOOT.initialiser_mcp(CORE_TRANSPORTS)
     ap = argparse.ArgumentParser(description="API de l'interface AGNT (surcouche)")
-    ap.add_argument("--host", default="0.0.0.0")
+    # 127.0.0.1 par défaut : ce serveur n'a ni auth ni TLS — l'exposer au réseau est un
+    # accident, pas un déploiement. 0.0.0.0 reste possible explicitement (--host), en le
+    # sachant.
+    ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8141)
     ap.add_argument("--ouvert", action="store_true",
                     help="afficher les cibles admises et quitter (pour vérifier la liste)")
