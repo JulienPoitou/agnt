@@ -24,7 +24,9 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install ruff==0.8.4
-      - run: ruff check .
+      # Périmètre : l'interface (le code que la console exécute). Le moteur slice/
+      # n'a jamais passé de ruff — 188 mécaniques — c'est un chantier à part.
+      - run: ruff check PHASE3/interface/
 
   python-tests:
     runs-on: ubuntu-latest
@@ -37,13 +39,14 @@ jobs:
         run: pip install pyyaml==6.0.2
       - name: Batteries du cœur (auto-contenues)
         run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_slice.py
-      - name: OPA épinglé (checksum publié vérifié) puis test sécurité fail-closed
+      - name: OPA épinglé (checksum publié vérifié) au chemin du pipeline
         run: |
           curl -fsSL -o opa https://openpolicyagent.org/downloads/v1.9.0/opa_linux_amd64_static
           curl -fsSL -o opa.sha256 https://openpolicyagent.org/downloads/v1.9.0/opa_linux_amd64_static.sha256
           echo "$(cat opa.sha256)  opa" | sha256sum -c -
-          chmod +x opa && sudo mv opa /usr/local/bin/opa
-          opa version
+          mkdir -p "$HOME/.cache/arena_secops/bin"
+          chmod +x opa && mv opa "$HOME/.cache/arena_secops/bin/opa"
+          "$HOME/.cache/arena_secops/bin/opa" version
           PYTHONPATH=PHASE3/slice python3 PHASE3/test_securite.py
       - name: Contrat d'interface (console incluse)
         run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_interface.py

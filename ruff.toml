@@ -1,5 +1,5 @@
-[tool.ruff]
-select = ["F", "E9", "I"]
+# Configuration ruff autonome : les clés sont RACINES ici (le préfixe [tool.ruff]
+# n'existe que dans pyproject.toml — ruff 0.8 rejette le préfixe dans ce fichier).
 target-version = "py312"
 exclude = [
     "PHASE3/testrepo*",
@@ -7,5 +7,8 @@ exclude = [
     "archive",
 ]
 
-[tool.ruff.per-file-ignores]
-"PHASE3/interface/api.py" = ["F401"]  # import tardif volontaire (après sys.path)
+[lint]
+select = ["F", "E9", "I"]
+
+[lint.per-file-ignores]
+"PHASE3/interface/api.py" = ["F401", "I001"]  # imports tardifs volontaires (après sys.path)
