@@ -262,6 +262,44 @@ pre.rapport {
 .arbreet { margin: 4px 0 0; padding-left: 16px; }
 .arbreet li { font: 400 11px/1.6 var(--mono); color: var(--ph-dim); }
 
+/* ------------------------------------------------------------------- l'index des missions */
+.index {
+  max-width: 1180px; margin: 0 auto; padding: 18px 20px 0;
+  border: 0;
+}
+.index.cache { display: none; }
+.index .mtete {
+  font: 500 9.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ph-dim); padding-bottom: 8px; border-bottom: 1px solid var(--trait);
+}
+.mligne {
+  display: flex; gap: 12px; align-items: baseline; padding: 9px 2px;
+  border-bottom: 1px solid var(--trait); flex-wrap: wrap;
+}
+.mligne .mquand { color: var(--ph-dim); font-variant-numeric: tabular-nums; flex: none; }
+.mligne .mid { color: var(--ph); }
+.mligne .mcible { color: var(--ph-b); flex: 1; min-width: 120px; }
+.mligne .mfaits { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.mligne .mvoir {
+  cursor: pointer; background: none; border: 1px solid var(--trait); color: var(--ph);
+  font: 500 9.5px/1 var(--mono); letter-spacing: .12em; padding: 4px 9px;
+  text-transform: uppercase;
+}
+.mligne .mvoir:hover { background: var(--ph); color: var(--fond); }
+.index .mplus {
+  cursor: pointer; display: block; margin: 10px auto 0; background: none;
+  border: 1px solid var(--trait); color: var(--ph-dim);
+  font: 500 9.5px/1 var(--mono); letter-spacing: .14em; padding: 6px 14px;
+  text-transform: uppercase;
+}
+.index .mplus:hover { background: var(--ph); color: var(--fond); }
+.mretour {
+  cursor: pointer; margin-top: 10px; background: none; border: 1px solid var(--trait);
+  color: var(--ph-dim); font: 500 9.5px/1 var(--mono); letter-spacing: .12em;
+  padding: 5px 10px; text-transform: uppercase;
+}
+.mretour:hover { background: var(--ph); color: var(--fond); }
+
 /* --------------------------------------------------------------------- responsive */
 @media (max-width: 900px) {
   .brief { padding: 20px 18px; }

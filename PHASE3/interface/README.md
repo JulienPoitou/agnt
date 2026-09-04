@@ -29,6 +29,7 @@ pas celui qu'on veut offrir.
 | `style.css` | le langage « salle de contrôle analogique » — contrat dans `DESIGN.md` |
 | `app.js` | LE câblage : rendu, polling, refus nommés — `textContent` partout |
 | `console.js` | cosmétique pur (tube, allumage) : ne lit aucune API, n'invente rien |
+| `missions.js` | index + rejeu des missions passées (`/api/missions`) — se masque sans API |
 | `donnees_exemple.json` | la maquette, mêmes clés que le réel |
 
 ## Routes
