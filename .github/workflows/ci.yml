@@ -37,26 +37,15 @@ jobs:
           python-version: '3.12'
       - name: PyYAML (seule dépendance tierce du cœur)
         run: pip install pyyaml==6.0.2
-      - name: OPA épinglé (checksum publié vérifié) au chemin du pipeline
-        # Les batteries du cœur résolvent le binaire ICI (PolicyError sinon) —
-        # l'installation précède donc tout test.
-        run: |
-          curl -fsSL -O https://openpolicyagent.org/downloads/v1.9.0/opa_linux_amd64_static
-          curl -fsSL -O https://openpolicyagent.org/downloads/v1.9.0/opa_linux_amd64_static.sha256
-          sha256sum -c opa_linux_amd64_static.sha256
-          mkdir -p "$HOME/.cache/arena_secops/bin"
-          chmod +x opa_linux_amd64_static && mv opa_linux_amd64_static "$HOME/.cache/arena_secops/bin/opa"
-          "$HOME/.cache/arena_secops/bin/opa" version
-      - name: Test sécurité fail-closed
-        run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_securite.py
       - name: Bootstrap (0 réseau, 0 paquet — sourcing du code réel)
         run: bash PHASE3/test_bootstrap.sh
       - name: Contrat d'interface (console incluse)
         run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_interface.py
-      # test_slice.py (batterie machine de référence) n'est PAS ici : il exécute une
-      # vraie mission — semgrep/trivy/gitleaks sous bwrap, installés par
-      # bootstrap.sh (~3,7 Go). Il tourne sur la machine de référence via doctor.py,
-      # pas sur un runner éphémère. Le dire vaut mieux qu'un rouge mal compris.
+      # test_securite.py et test_slice.py sont les batteries MACHINE DE RÉFÉRENCE :
+      # elles exécutent le vrai sandbox bwrap et de vrais outils (semgrep/trivy/
+      # gitleaks, installés par bootstrap.sh ~3,7 Go). Sur un runner éphémère ce
+      # n'est pas reproductible — elles tournent sur la machine de référence via
+      # doctor.py. Le dire vaut mieux qu'un rouge mal compris.
 
   gitleaks:
     runs-on: ubuntu-latest
