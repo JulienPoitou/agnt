@@ -3,4 +3,4 @@
 # standard. Les gros scanners (semgrep, checkov, trivy, gitleaks…) sont épinglés
 # et installés par `bash PHASE3/bootstrap.sh` (~3,7 Go) — ils sont requis pour
 # produire de vrais constats ; sans eux, un run renvoie un REFUS NOMMÉ.
-PyYAML>=6.0  # Suggéré: PyYAML==6.0.2 (hash: sha256=...)
+PyYAML==6.0.2

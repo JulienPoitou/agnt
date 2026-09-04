@@ -1,55 +1,45 @@
-# Agent de sécurité polyvalent — dépôt privé (travail en cours)
+# AGNT — agent de sécurité autonome (dépôt privé, travail en cours)
 
 Moteur : mission en langage naturel + cible → capacités → sélection dans un pool
-d'outils open source qualifiés → exécution sandboxée → corrélation inter-outils →
-rapport. Architecture Source → Tool → Provider → Execution ; le runtime ne lit
-que `capabilities.yaml`, le pool est une vue dérivée.
+d'outils open source qualifiés → exécution sandboxée (bwrap, OPA fail-closed) →
+corrélation inter-outils → rapport. Architecture Source → Tool → Provider →
+Execution ; le runtime ne lit que `capabilities.yaml`, le pool est une vue dérivée.
 
-**État (2026-08-29)** : étapes 0-5 closes — registre/pool (309 dépôts catalogués),
-objet Tool, applicabilité + fan-out, harnais de qualification, 8 providers
-passifs intégrés (trivy, grype, semgrep×2, bandit×2, gitleaks, checkov, kics),
-dogfooding sur 4 dépôts réels. Journal : `PROJET_ETAT.md`.
+## Lancer la console opérationnelle
+
+```bash
+./lancer.sh        # venv + API moteur + console sur http://127.0.0.1:8141
+```
+
+La console vit dans `PHASE3/interface/` — servie **par l'API elle-même** (même
+origine, zéro build, zéro node). Le brief de mission est une page imprimée ; les
+résultats s'affichent sur un CRT monochrome (trois phosphores : ambre, verde,
+blanc). Le langage graphique est contractualisé dans [`DESIGN.md`](DESIGN.md).
+
+- Sans outils installés, un run renvoie un **refus nommé** — c'est le comportement
+  attendu, pas un bug. Pour de vrais constats : `bash PHASE3/bootstrap.sh` (~3,7 Go).
+- Sans API démarrée, la page reste lisible sous bandeau **MAQUETTE** (rejeu de
+  `donnees_exemple.json`, affiché comme tel — jamais comme un résultat réel).
 
 ## Structure
 
-- `PHASE1/` — le pool : catalogue, triage, fiches providers, backlog, comparaison stratégique.
 - `PHASE3/slice/` — le cœur (pipeline, registre, sandbox bwrap, policy OPA, extraction, clusterer, rapports).
+- `PHASE3/interface/` — **la console** (`api.py` : routes canoniques + page ; `app.js` :
+  câblage testé ; `console.js` : habillage sans données).
 - `PHASE3/` — batteries de tests (`test_*.py`), fixtures (`testrepo*`), harnais, dogfooding.
-- `PHASE3/dogfooding/` — cibles réelles épinglées, observations, utilisabilité.
-- `dashboard/` — **le tableau de bord** (UI web React/Vite, reprise du dashboard
-  Xalgoryx, Apache 2.0 — voir `dashboard/PROVENANCE.md`), branché sur le moteur
-  réel par `PHASE3/interface/dashboard_api.py` :
-  `python3 PHASE3/interface/dashboard_api.py` → http://127.0.0.1:8142
-  (builder d'abord la SPA : `cd dashboard/webui && npm install && npm run build`).
+- `PHASE1/` — le pool : catalogue, triage, fiches providers, backlog.
+- `docs/coordination/PROJECT_STATE.md` — **la source de vérité d'état et de coordination**.
+- `docs/archive/` — sédiment stratégique daté (état 30/08, concurrentiel, prompts de sessions).
+- `archive/` — produits tiers ou frontends retirés du tronc (Xalgorix dashboard, design-lab,
+  première console React), gardés par référence.
 
-## Lancer la belle interface (console web)
-
-Une console React/Vite branchée sur le **vrai moteur** (le même `analyser.lancer` que la CLI) :
+## Prérequis
 
 ```bash
-./lancer.sh            # installe ce qui manque, démarre l'API (8141) + la console (5173)
-# → ouvrir http://localhost:5173
-```
-
-- La console détecte l'API toute seule : bandeau **MOTEUR CONNECTÉ**, sélecteur de cible,
-  lancement d'un run, journal/observations/clusters/couverture réels.
-- Si l'API est éteinte, elle retombe sur le **rejeu** d'une exécution passée, affichée sous
-  bandeau MAQUETTE (jamais comme un résultat réel).
-- **Sans outils installés**, un run renvoie un **refus nommé** (ex. « binaire OPA introuvable »,
-  « aucun outil disponible ») — c'est le comportement attendu, pas un bug.
-- En production : `./lancer.sh --build` (build + `vite preview`).
-
-## Prérequis (machine de développement)
-
-```bash
-bash PHASE3/bootstrap.sh   # bwrap + OPA + outils épinglés, empreintes vérifiées (~3,7 Go hors workspace)
+python3-venv, node/npm (facultatifs)   # la console n'a plus besoin de node
+bash PHASE3/bootstrap.sh               # bwrap + OPA + outils épinglés, empreintes vérifiées (~3,7 Go)
 bash PHASE3/reconstruire_fixtures.sh   # recrée l'historique git des fixtures (gitleaks)
 ```
-
-Pré-requis système : `python3-venv` et `node`/`npm`. L'interface elle-même n'a besoin que de
-PyYAML côté Python (créé automatiquement dans `.venv` par `lancer.sh`). Les scanners réels
-(trivy, semgrep, checkov, gitleaks…) et la sandbox **bwrap** sont installés par `bootstrap.sh` :
-sans eux, la console tourne mais les runs aboutissent à un refus nommé.
 
 Machine de référence : 2 Go de RAM suffisent (contrainte mesurée et documentée).
 

@@ -8,14 +8,28 @@ mission.
 ## Lancer
 
 ```sh
-python3 PHASE3/interface/api.py --host 0.0.0.0 --port 8141
-# http://localhost:8141/
+./lancer.sh                        # venv + api.py + console sur http://127.0.0.1:8141
+# ou directement :
+python3 PHASE3/interface/api.py --host 127.0.0.1 --port 8141
+# http://127.0.0.1:8141/
 ```
 
-`--ouvert` ouvre le navigateur. Sans `api.py`, la page reste lisible : elle retombe sur
-`donnees_exemple.json` (mêmes clés, valeurs inventées) **en l'affichant** — un bandeau
-« MAQUETTE » se retire tout seul dès que l'API répond. Un écran de démo qui se prend pour un
-écran de résultat est le défaut qu'on veut éviter, pas celui qu'on veut offrir.
+`--ouvert` ouvre le navigateur. Le défaut d'écoute est **127.0.0.1** : ce serveur n'a
+ni auth ni TLS, l'exposer au réseau est un accident. Sans `api.py`, la page reste
+lisible : elle retombe sur `donnees_exemple.json` (mêmes clés, valeurs inventées) **en
+l'affichant** — un bandeau « MAQUETTE » se retire tout seul dès que l'API répond. Un
+écran de démo qui se prend pour un écran de résultat est le défaut qu'on veut éviter,
+pas celui qu'on veut offrir.
+
+## Les fichiers
+
+| | |
+|---|---|
+| `index.html` | la structure (brief papier + poste CRT), les ids consommés par app.js |
+| `style.css` | le langage « salle de contrôle analogique » — contrat dans `DESIGN.md` |
+| `app.js` | LE câblage : rendu, polling, refus nommés — `textContent` partout |
+| `console.js` | cosmétique pur (tube, allumage) : ne lit aucune API, n'invente rien |
+| `donnees_exemple.json` | la maquette, mêmes clés que le réel |
 
 ## Routes
 

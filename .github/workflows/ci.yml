@@ -14,7 +14,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m py_compile PHASE3/slice/*.py
+      - run: python -m py_compile PHASE3/slice/*.py PHASE3/interface/*.py
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ruff==0.8.4
+      - run: ruff check .
 
   python-tests:
     runs-on: ubuntu-latest
@@ -23,21 +33,27 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_slice.py
-      - run: if command -v opa &> /dev/null; then python3 PHASE3/test_securite.py; else echo "OPA non disponible, test_securite ignoré"; fi
-
-  node-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm ci
-      - run: if [ -f package.json ]; then npm run build; fi
+      - name: PyYAML (seule dépendance tierce du cœur)
+        run: pip install pyyaml==6.0.2
+      - name: Batteries du cœur (auto-contenues)
+        run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_slice.py
+      - name: OPA épinglé (checksum publié vérifié) puis test sécurité fail-closed
+        run: |
+          curl -fsSL -o opa https://openpolicyagent.org/downloads/v1.9.0/opa_linux_amd64_static
+          curl -fsSL -o opa.sha256 https://openpolicyagent.org/downloads/v1.9.0/opa_linux_amd64_static.sha256
+          echo "$(cat opa.sha256)  opa" | sha256sum -c -
+          chmod +x opa && sudo mv opa /usr/local/bin/opa
+          opa version
+          PYTHONPATH=PHASE3/slice python3 PHASE3/test_securite.py
+      - name: Contrat d'interface (console incluse)
+        run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_interface.py
 
   gitleaks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: if command -v gitleaks &> /dev/null; then gitleaks detect --config .gitleaks.toml --no-git; else echo "Gitleaks non disponible, audit secrets ignoré"; fi
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

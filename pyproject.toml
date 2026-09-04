@@ -4,6 +4,3 @@ requires-python = ">=3.12"
 dependencies = [
     "pyyaml==6.0.2"
 ]
-
-[tool.ruff]
-include = ["interface/"]
