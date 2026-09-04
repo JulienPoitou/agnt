@@ -57,6 +57,7 @@ import api as API                        # noqa: E402 — la surcouche canonique
 SPA_DIR = DEPOT / "dashboard" / "internal" / "web" / "static"
 
 TAILLE_PAGE_DEFAUT = 25
+PLAFOND_CORPS = 262_144   # lecture bornée : Content-Length est déclaré par le client.
 
 # Le contrat SPA connaît huit statuts de pill ; le moteur en connaît six. La table
 # est Totale : un statut moteur sans traduction serait rendu « undefined » par la
@@ -248,7 +249,8 @@ class GestionnaireDashboard(API.Gestionnaire):
                                             "`cd dashboard/webui && npm run build`"}, 404)
         rel = (chemin_url or "/").lstrip("/") or "index.html"
         f = (SPA_DIR / rel).resolve()
-        if not str(f).startswith(str(SPA_DIR)):
+        # is_relative_to, pas startswith : un voisin partageant le préfixe passait autrement.
+        if not f.is_relative_to(SPA_DIR):
             return self.send_error(404)
         if not f.is_file():
             # Route client (ex. /scans/m-…, /findings) → index.html, la SPA route.
@@ -574,6 +576,9 @@ class GestionnaireDashboard(API.Gestionnaire):
     def _lancer_scan(self):
         try:
             n = int(self.headers.get("Content-Length") or 0)
+            if n > PLAFOND_CORPS:
+                return self._spa_json({"error": f"corps trop volumineux "
+                                                f"({n} > {PLAFOND_CORPS} octets)"}, 413)
             corps = json.loads(self.rfile.read(n).decode("utf-8") or "{}")
         except (ValueError, UnicodeDecodeError):
             return self._spa_json({"error": "corps de requête : JSON attendu"}, 400)
