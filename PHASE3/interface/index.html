@@ -3,14 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AGNT — mission</title>
+<title>AGNT — console opérationnelle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="t-ambre">
+
+<!-- Bandeau de tête : l'état du canal, le choix du phosphore, rien d'autre -->
+<header class="strip">
+  <div class="marque">AGNT</div>
+  <div class="sous">console opérationnelle · mandat passif · diffusion restreinte</div>
+  <div class="canal" id="canal"><span class="dot"></span><span class="etat" id="etat">—</span></div>
+  <div class="tubes" id="tubes">
+    <button type="button" data-tube="ambre" class="on">P3 · ambre</button>
+    <button type="button" data-tube="verde">P1 · verde</button>
+    <button type="button" data-tube="blanc">P4 · blanc</button>
+  </div>
+</header>
+
 <div class="maquette" id="ruban">MAQUETTE — le moteur n'est pas branché (api.py non démarré)</div>
 
-<header class="barre">
-  <div class="marque">AGNT<span class="point">.</span></div>
+<!-- Le brief : une page imprimée. C'est ici que la mission se déclare. -->
+<section class="brief" aria-label="dossier de mission">
+  <div class="titre">
+    <h1>Dossier de mission <i>/</i></h1>
+    <p class="serif">Une question, une cible déjà sur cette machine. La cage décide du reste —
+      sous vos yeux, rien que le brut.</p>
+  </div>
   <form class="lancer" id="form" onsubmit="return false">
     <label><span>cible</span><select id="cible" disabled><option>—</option></select></label>
     <label class="q"><span>que veux-tu analyser&nbsp;?</span>
@@ -31,17 +52,24 @@
     <label><span>moteur d'intention</span>
       <select id="moteur" disabled><option>auto</option><option>llm</option><option>deterministe</option></select>
     </label>
-    <button id="run" disabled title="démarrer api.py pour activer">RUN</button>
+    <button id="run" disabled title="démarrer api.py pour activer">Ex&eacute;cuter<kbd>↵</kbd></button>
   </form>
-  <div class="etat" id="etat">—</div>
-  <!-- Ledger VIVANT : ce que le journal de mission a d&eacute;j&agrave; &eacute;crit, relu en cours
-       d'ex&eacute;cution. Rempli par app.js &agrave; partir de `/api/runs/<id>.vivante`, donc vide
-       et masqu&eacute; tant qu'aucune mission n'a consign&eacute; d'&eacute;tat. -->
-  <div class="etat vivante cache" id="vivante"></div>
-</header>
+  <p class="pied-brief">cible trait&eacute;e <b>untrusted</b> · egress coup&eacute; par d&eacute;faut · journal
+    append-only sign&eacute; · aucune valeur invent&eacute;e par cette page</p>
+</section>
+
+<!-- Ledger VIVANT : ce que le journal de mission a d&eacute;j&agrave; &eacute;crit, relu en cours
+     d'ex&eacute;cution. Rempli par app.js &agrave; partir de `/api/runs/<id>.vivante`, donc vide
+     et masqu&eacute; tant qu'aucune mission n'a consign&eacute; d'&eacute;tat. -->
+<div class="etat vivante cache" id="vivante"></div>
 
 <main id="poste" class="grille"></main>
 <footer class="pied" id="pied"></footer>
+
+<!-- Allumage du tube au lancement : cosmétique pur, aucun chiffre inventé. -->
+<div id="boot" aria-hidden="true"><div class="ligne"></div></div>
+
 <script src="app.js"></script>
+<script src="console.js" defer></script>
 </body>
 </html>
