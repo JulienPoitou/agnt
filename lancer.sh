@@ -16,6 +16,26 @@ cd "$(dirname "$0")"
 API_PORT="${API_PORT:-8141}"
 API_PID=""
 
+# --- 0. détection OS (F7 : multi-OS) ------------------------------------------
+# Linux/macOS : .venv/bin/python ; Windows sous Git Bash (MINGW/MSYS/CYGWIN) :
+# .venv/Scripts/python.exe. Sous Windows natif (cmd/PowerShell), relancer ce
+# script depuis Git Bash — le script reste bash-only, sans dépendance nouvelle.
+_SYS="$(uname -s 2>/dev/null || echo unknown)"
+case "$_SYS" in
+  MINGW*|MSYS*|CYGWIN*|Windows_NT|Windows*) OS="windows";;
+  Darwin*) OS="macos";;
+  *) OS="linux";;
+esac
+if [ "$OS" = "windows" ]; then
+  PYBIN=".venv/Scripts/python.exe"
+else
+  PYBIN=".venv/bin/python"
+fi
+# Création du venv : python3 quand il existe, sinon python (cas Windows).
+if command -v python3 >/dev/null 2>&1; then PY_CREATE="python3"; else PY_CREATE="python"; fi
+# /tmp n'existe pas hors Unix : TMPDIR (défini par l'OS) avec repli /tmp.
+LOG_FICHIER="${TMPDIR:-/tmp}/agnt-api.log"
+
 tout_arreter() {
   [ -n "$API_PID" ] && kill "$API_PID" 2>/dev/null || true
 }
@@ -23,13 +43,13 @@ trap tout_arreter EXIT INT TERM
 
 # --- 1. environnement Python (API moteur) ----------------------------------
 if [ ! -d .venv ]; then
-  echo ">> création du venv Python (.venv)…"
-  python3 -m venv .venv
-  .venv/bin/python -m pip install --quiet --upgrade pip
-  .venv/bin/python -m pip install --quiet -r requirements-interface.txt
+  echo ">> création du venv Python (.venv)… [$OS]"
+  "$PY_CREATE" -m venv .venv
+  "$PYBIN" -m pip install --quiet --upgrade pip
+  "$PYBIN" -m pip install --quiet -r requirements-interface.txt
 else
-  .venv/bin/python -c "import yaml" 2>/dev/null || \
-    .venv/bin/python -m pip install --quiet -r requirements-interface.txt
+  "$PYBIN" -c "import yaml" 2>/dev/null || \
+    "$PYBIN" -m pip install --quiet -r requirements-interface.txt
 fi
 
 # --- 2. API moteur ----------------------------------------------------------
@@ -37,8 +57,8 @@ fi
 # PATH pour que la résolution d'exécutables (adapters.resoudre_exe) les trouve.
 export PATH="${ARENA_SECOPS_CACHE:-$HOME/.cache/arena_secops}/bin:$PATH"
 echo ">> démarrage de l'API moteur sur 127.0.0.1:$API_PORT …"
-.venv/bin/python PHASE3/interface/api.py --host 127.0.0.1 --port "$API_PORT" \
-  > /tmp/agnt-api.log 2>&1 &
+"$PYBIN" PHASE3/interface/api.py --host 127.0.0.1 --port "$API_PORT" \
+  > "$LOG_FICHIER" 2>&1 &
 API_PID=$!
 
 # On attend que l'API réponde (max ~15 s).

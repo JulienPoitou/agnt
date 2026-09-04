@@ -30,7 +30,10 @@ import assainissement as ASS
 from assainissement import MASQUE
 from rapport_humain import sur as _sur
 
+import logging
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 # Correspondance raison → phrase lisible. Toute raison inconnue doit apparaître telle
 # quelle : mieux vaut un terme technique visible qu'une traduction inventée.
@@ -365,15 +368,24 @@ def generer(e, cible) -> str:
     A("> des suggestions générées de manière déterministe. Aucune modification n'est appliquée")
     A("> automatiquement sur le dépôt sans validation humaine préalable.")
     A("")
+    remediation_indisponible = False
+    remediation_erreur = ""
     try:
         from remediation import generer_remediations
         res_rem = generer_remediations(e.findings, r.get("clusters"))
         rems_findings = res_rem.get("findings") or {}
-    except Exception:
+    except Exception as e:  # noqa: BLE001 — un échec remediation ne doit pas casser le rapport
+        logger.warning("remédiations indisponibles : %s: %s", type(e).__name__, str(e)[:300])
         rems_findings = {}
+        remediation_indisponible = True
+        remediation_erreur = type(e).__name__
 
     if not rems_findings:
-        A("_Aucune suggestion de remédiation automatique disponible pour les observations retenues._")
+        if remediation_indisponible:
+            A(f"_Remédiations indisponibles : le calcul a échoué ({remediation_erreur}) — "
+              f"ce n'est pas l'absence de correctif, c'est une panne à investiguer._")
+        else:
+            A("_Aucune suggestion de remédiation automatique disponible pour les observations retenues._")
         A("")
     else:
         for fid, rem in rems_findings.items():

@@ -34,11 +34,18 @@ isolation par exécution.
 
 from __future__ import annotations
 
+import logging
 import os
-import resource
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+
+try:
+    import resource
+except ImportError:  # F1 : module Unix-only, absent sur Windows
+    resource = None  # type: ignore[assignment]
+
+LOG = logging.getLogger(__name__)
 
 import assainissement as ASS
 
@@ -203,7 +210,8 @@ def _python_user_site_hote() -> str | None:
     import site
     try:
         p = Path(site.getusersitepackages())
-    except Exception:
+    except Exception:  # F9 : ne jamais masquer sans trace
+        LOG.debug("site utilisateur illisible", exc_info=True)
         return None
     return str(p) if p.is_dir() else None
 
@@ -349,15 +357,20 @@ class Sandbox:
         une fuite de processus est aussi une fuite de ressources et d'information.
         """
         import signal
+        # F1 : SIGKILL absent sur Windows — repli sur SIGTERM (TerminateProcess via os.kill).
+        _sigkill = getattr(signal, "SIGKILL", signal.SIGTERM)
         for cible in (pid,):
+            # F1 : os.killpg/getpgid absents sur Windows — groupe non géré, repli sur kill.
+            if hasattr(os, "killpg") and hasattr(os, "getpgid"):
+                try:
+                    os.killpg(os.getpgid(cible), _sigkill)
+                except (ProcessLookupError, PermissionError, OSError):
+                    # F9 : cas normal (groupe déjà mort) — trace debug, pas de masquage muet
+                    LOG.debug("killpg(%s) sans effet", cible, exc_info=True)
             try:
-                os.killpg(os.getpgid(cible), signal.SIGKILL)
+                os.kill(cible, _sigkill)
             except (ProcessLookupError, PermissionError, OSError):
-                pass
-            try:
-                os.kill(cible, signal.SIGKILL)
-            except (ProcessLookupError, PermissionError, OSError):
-                pass
+                LOG.debug("kill(%s) sans effet", cible, exc_info=True)
 
     def _limites(self) -> None:
         """Applique les limites de ressources dans le processus fils, avant exec.
@@ -366,6 +379,11 @@ class Sandbox:
         limites sans cgroups. Les valeurs sont volontairement larges pour des scanners
         passifs ; elles existent pour borner un dérapage, pas pour calibrer un outil.
         """
+        if resource is None:
+            # F1 : Windows — pas de setrlimit, limites non applicables (bwrap absent aussi).
+            # Pas de log ici : preexec_fn s'exécute après fork, seul le code
+            # async-signal-safe est autorisé (pas de logging).
+            return
         # Pas de RLIMIT_AS : il casse Trivy (mmap boltdb) et Gitleaks (wazero).
         for res, val in ((resource.RLIMIT_NPROC, self.max_processus),
                          (resource.RLIMIT_CPU, self.max_cpu_secondes),
@@ -374,8 +392,8 @@ class Sandbox:
             try:
                 resource.setrlimit(res, (val, val))
             except (ValueError, OSError):
-                # Une limite non applicable ne doit pas empêcher l'exécution, mais
-                # ne doit pas non plus passer inaperçue.
+                # Une limite non applicable ne doit pas empêcher l'exécution.
+                # Pas de log ici : contexte preexec_fn (voir ci-dessus).
                 pass
 
     def limites_appliquees(self) -> dict:
@@ -450,16 +468,21 @@ class Sandbox:
         # Indispensable : subprocess.run ne tue que l'enfant DIRECT au timeout, et
         # --die-with-parent ne tue que l'enfant direct de bwrap. Vérifié pour de vrai :
         # `sleep 60 &` survivait au timeout avec un PID encore vivant.
+        # F1 : preexec_fn n'existe pas sur Windows (Popen le refuse) ; de plus
+        # start_new_session y devient creationflags — on ne le passe qu'en posix.
+        _posix = os.name == "posix" and resource is not None
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                text=True, env=e, preexec_fn=self._limites,
-                                start_new_session=True)
+                                 text=True, env=e,
+                                 preexec_fn=self._limites if _posix else None,
+                                 start_new_session=_posix)
         try:
             out, err = proc.communicate(timeout=delai)
         except subprocess.TimeoutExpired:
             self._tue_le_groupe(proc.pid)
             try:
                 out, err = proc.communicate(timeout=5)
-            except Exception:
+            except Exception:  # F9 : seconde attente interrompue — tracée, sortie vide
+                LOG.warning("récupération post-timeout impossible", exc_info=True)
                 out, err = "", ""
             # stdout et stderr sont masqués DÈS la capture : c'est le premier point de
             # sortie, donc le premier endroit où un secret peut s'échapper vers un log

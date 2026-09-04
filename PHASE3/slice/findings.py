@@ -25,12 +25,15 @@ elle n'entre jamais dans notre base.
 from __future__ import annotations
 
 import hashlib
+import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import transports
 import yaml
+
+logger = logging.getLogger(__name__)
 
 MAPPING_PATH = Path(__file__).parent / "mapping_regles.yaml"
 
@@ -45,17 +48,65 @@ def _charge_mapping() -> dict:
 MAPPING = _charge_mapping()
 
 _MAPPING_GENERE = None
+# Dernier échec de lecture du mapping généré, le cas échéant : None = pas
+# d'erreur (fichier absent = repli normal, ou lecture réussie). Distingue
+# « fichier absent » (repli silencieux, debug) de « fichier illisible »
+# (warning, à investiguer) — confondre les deux masquait des corruptions.
+_MAPPING_ERREUR: str | None = None
 
 
 def _mapping_genere() -> dict:
     """Mapping EXTRAIT des métadonnées Semgrep — fichier généré, ne pas éditer."""
-    global _MAPPING_GENERE
-    if _MAPPING_GENERE is None:
-        f = Path(__file__).parent / "mapping_regles_genere.yaml"
-        try:
-            _MAPPING_GENERE = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("regles") or {}
-        except Exception:
-            _MAPPING_GENERE = {}
+    global _MAPPING_GENERE, _MAPPING_ERREUR
+    if _MAPPING_GENERE is not None or _MAPPING_ERREUR is not None:
+        return _MAPPING_GENERE or {}
+    f = Path(__file__).parent / "mapping_regles_genere.yaml"
+    if not f.exists():
+        logger.debug("mapping généré absent (%s) : repli sur la table manuelle", f.name)
+        _MAPPING_GENERE = {}
+        return _MAPPING_GENERE
+    try:
+        contenu = yaml.safe_load(f.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        # Course entre exists() et read_text() : même repli que l'absence.
+        logger.debug("mapping généré disparu entre-temps (%s) : repli", f.name)
+        _MAPPING_GENERE = {}
+        return _MAPPING_GENERE
+    except yaml.YAMLError as e:
+        _MAPPING_ERREUR = f"YAML illisible ({type(e).__name__}): {e}"[:300]
+        logger.warning("mapping généré illisible (%s) : %s — repli sur table manuelle",
+                       f.name, _MAPPING_ERREUR)
+        _MAPPING_GENERE = {}
+        return _MAPPING_GENERE
+    except OSError as e:
+        _MAPPING_ERREUR = f"lecture impossible ({type(e).__name__}): {e}"[:300]
+        logger.warning("mapping généré illisible (%s) : %s — repli sur table manuelle",
+                       f.name, _MAPPING_ERREUR)
+        _MAPPING_GENERE = {}
+        return _MAPPING_GENERE
+    except Exception as e:  # noqa: BLE001 — tout échec = repli, jamais d'exception
+        _MAPPING_ERREUR = f"échec inattendu ({type(e).__name__}): {e}"[:300]
+        logger.warning("mapping généré illisible (%s) : %s — repli sur table manuelle",
+                       f.name, _MAPPING_ERREUR)
+        _MAPPING_GENERE = {}
+        return _MAPPING_GENERE
+    if not isinstance(contenu, dict):
+        _MAPPING_ERREUR = f"forme inattendue ({type(contenu).__name__}), dict attendu"
+        logger.warning("mapping généré illisible (%s) : %s — repli sur table manuelle",
+                       f.name, _MAPPING_ERREUR)
+        _MAPPING_GENERE = {}
+        return _MAPPING_GENERE
+    if not contenu.get("regles"):
+        _MAPPING_ERREUR = "clé 'regles' absente ou vide dans le mapping généré"
+        logger.warning("%s — repli sur table manuelle", _MAPPING_ERREUR)
+        _MAPPING_GENERE = {}
+        return _MAPPING_GENERE
+    _MAPPING_GENERE = contenu.get("regles") or {}
+    if not isinstance(_MAPPING_GENERE, dict):
+        _MAPPING_ERREUR = f"clé 'regles' de forme {type(_MAPPING_GENERE).__name__}, dict attendu"
+        logger.warning("mapping généré illisible (%s) : %s — repli sur table manuelle",
+                       f.name, _MAPPING_ERREUR)
+        _MAPPING_GENERE = {}
     return _MAPPING_GENERE
 
 SECRET = "<masqué>"

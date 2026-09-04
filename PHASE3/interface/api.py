@@ -65,7 +65,6 @@ WEB_PROVIDERS_ORDRE = {"httpx": 50, "katana": 20, "ffuf": 30, "nuclei": 30}
 # listé dans AGNT_CIBLES (séparateur « : »). Pas de clonage, pas de téléchargement : cela
 # ajouterait une écriture et un réseau sortant que rien ici n'a été conçu pour border.
 def cibles_admises() -> list[dict]:
-    from registre import Registry          # import tardif : après sys.path
     hors = [Path(p) for p in os.environ.get("AGNT_CIBLES", "").split(":") if p.strip()]
     candidats = [RACINE / "testrepo", RACINE / "testrepo_vuln",
                  RACINE / "cible_independante", RACINE / "labo_securite",
@@ -933,7 +932,9 @@ def main(argv=None) -> int:
     # 127.0.0.1 par défaut : ce serveur n'a ni auth ni TLS — l'exposer au réseau est un
     # accident, pas un déploiement. 0.0.0.0 reste possible explicitement (--host), en le
     # sachant.
-    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("--host", default="127.0.0.1",
+                    help="interface d'écoute (défaut: 127.0.0.1, local uniquement ; "
+                         "passer --host 0.0.0.0 pour exposer explicitement)")
     ap.add_argument("--port", type=int, default=8141)
     ap.add_argument("--ouvert", action="store_true",
                     help="afficher les cibles admises et quitter (pour vérifier la liste)")

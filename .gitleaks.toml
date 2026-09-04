@@ -1,4 +1,8 @@
 # Configuration gitleaks du dépôt — auto-scan avant push.
+# Version épinglée : gitleaks 8.30.1 (cf PHASE3/manifeste_dependances.yaml).
+# Utilisée en CI via gitleaks-action `config-path: .gitleaks.toml`
+# (voir .github/workflows/ci.yml, job `gitleaks`) — ne pas renommer ce
+# fichier sans mettre à jour la CI.
 # Étend la configuration par défaut (aucune règle retirée) : uniquement une
 # allowlist pour le FAUX secret des fixtures, documenté ci-dessous.
 

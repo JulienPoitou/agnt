@@ -827,7 +827,6 @@ def famille_g():
 
     # G5 — auto-découverte : est-ce qu'un fichier qui TRAÎNE devient un provider ou un parser ?
     import parsers as PS
-    import provider_manifest as PM
     glob_manifest = bool(re.search(r"glob\([^)]*(provider|manifest|\.yaml)",
                                    (RACINE / "slice/registre.py").read_text(encoding="utf-8")))
     faux_parser = PS.obtenir("os")                    # un nom qui existerait comme module
@@ -856,7 +855,6 @@ def famille_g():
              "dans le dépôt qu'on scanne, et notre couverture n'enregistre AUCUN jeu de règles")
 
     # G6b — même question sur semgrep, où la couverture DÉCLARE ce qui était actif.
-    import adapters as AD
     p = chaine("Analyse le code de ce dépôt", texte_modele=reponse(["CODE_STATIC_ANALYSIS"]))
     sg = [a for a in p.get("spawns", []) if "semgrep" in " ".join(a)]
     configs = [x for x in (sg[0] if sg else []) if x.startswith("--config=")]
