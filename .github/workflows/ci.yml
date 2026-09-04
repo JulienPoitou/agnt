@@ -41,11 +41,11 @@ jobs:
         # Les batteries du cœur résolvent le binaire ICI (PolicyError sinon) —
         # l'installation précède donc tout test.
         run: |
-          curl -fsSL -o opa https://openpolicyagent.org/downloads/v1.9.0/opa_linux_amd64_static
-          curl -fsSL -o opa.sha256 https://openpolicyagent.org/downloads/v1.9.0/opa_linux_amd64_static.sha256
-          echo "$(cat opa.sha256)  opa" | sha256sum -c -
+          curl -fsSL -O https://openpolicyagent.org/downloads/v1.9.0/opa_linux_amd64_static
+          curl -fsSL -O https://openpolicyagent.org/downloads/v1.9.0/opa_linux_amd64_static.sha256
+          sha256sum -c opa_linux_amd64_static.sha256
           mkdir -p "$HOME/.cache/arena_secops/bin"
-          chmod +x opa && mv opa "$HOME/.cache/arena_secops/bin/opa"
+          chmod +x opa_linux_amd64_static && mv opa_linux_amd64_static "$HOME/.cache/arena_secops/bin/opa"
           "$HOME/.cache/arena_secops/bin/opa" version
       - name: Batteries du cœur (auto-contenues)
         run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_slice.py
