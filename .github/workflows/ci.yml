@@ -47,12 +47,16 @@ jobs:
           mkdir -p "$HOME/.cache/arena_secops/bin"
           chmod +x opa_linux_amd64_static && mv opa_linux_amd64_static "$HOME/.cache/arena_secops/bin/opa"
           "$HOME/.cache/arena_secops/bin/opa" version
-      - name: Batteries du cœur (auto-contenues)
-        run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_slice.py
       - name: Test sécurité fail-closed
         run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_securite.py
+      - name: Bootstrap (0 réseau, 0 paquet — sourcing du code réel)
+        run: bash PHASE3/test_bootstrap.sh
       - name: Contrat d'interface (console incluse)
         run: PYTHONPATH=PHASE3/slice python3 PHASE3/test_interface.py
+      # test_slice.py (batterie machine de référence) n'est PAS ici : il exécute une
+      # vraie mission — semgrep/trivy/gitleaks sous bwrap, installés par
+      # bootstrap.sh (~3,7 Go). Il tourne sur la machine de référence via doctor.py,
+      # pas sur un runner éphémère. Le dire vaut mieux qu'un rouge mal compris.
 
   gitleaks:
     runs-on: ubuntu-latest
