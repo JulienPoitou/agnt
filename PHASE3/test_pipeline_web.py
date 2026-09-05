@@ -91,7 +91,7 @@ def main() -> int:
                             precedents={fp0: {"regle": "t1", "url": "https://target.tld/",
                                               "etat": "verified"}})
         cas("reprise : empreinte re-détectée → persistant, référence au précédent",
-            rap_r["reprise"]["persistants"] == 1 and rap_r["reprise"]["nouveaux"] == 0
+            rap_r["reprise"]["persistants"] == 1 and rap_r["reprise"]["nouveaux"] == 1
             and rap_r["reprise"]["non_releves"] == 0
             and rap_r["reprise"]["engagement_precedent"] == "e-avant",
             json.dumps(rap_r["reprise"], ensure_ascii=False)[:160])
@@ -103,7 +103,8 @@ def main() -> int:
                                                       "etat": "observed"}})
         cas("reprise : empreinte du précédent absente → « non relevé », un fait rendu "
             "(jamais un verdict corrigé)",
-            rap_r2["reprise"]["non_releves"] == 1 and rap_r2["reprise"]["persistants"] == 2
+            rap_r2["reprise"]["non_releves"] == 1 and rap_r2["reprise"]["nouveaux"] == 2
+            and rap_r2["reprise"]["persistants"] == 0
             and rap_r2["reprise"]["details_non_releves"][0]["regle"] == "ancienne-regle",
             json.dumps(rap_r2["reprise"], ensure_ascii=False)[:200])
         rap = PW.derouler(engagement(providers_prevus=["nuclei", "bandit"]),
