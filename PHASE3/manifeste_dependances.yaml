@@ -748,7 +748,7 @@ binaires:
     # dotdotpwn.pl exige un CWD = racine du dépôt (use lib qw(.), DotDotPwn/User-Agents.txt,
     # Reports/ en chemins relatifs). Le wrapper se place dans staging/dotdotpwn/repo avant
     # d'exécuter le script perl épinglé.
-    sha256: 0ef5d79f60e964b12d3e2a0f17712dc90b2a1558a23f7b3d9cfdab2427bb6665
+    sha256: 6ed9e564441f38eff2f7e815660786c1a278a7931915142ae5aa837c0ef33c6f
     source: https://github.com/wireghoul/dotdotpwn (dépôt cloné au commit 2e3a8217a5be31e50057b9df2e8d7aba344a6bd4, tag 3.0.2) + wrapper sh ci-dessus
     licence: GPL-3.0
     taille_approx: 1M (dépôt) ; wrapper 300 o
