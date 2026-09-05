@@ -28,8 +28,18 @@ les batteries de ce dépôt : on s'y réfère, on ne les refait pas.
       HUMAINE obligatoire (le clic est l'attestation cible_autorisee), explique
       les constats rendus par le moteur (jamais inventés) ; clé + consigne
       permanente éditables, localStorage navigateur — 2026-09-05
-- [ ] ①-b tranche **katana** : MANIFEST À ÉCRIRE d'abord (aucun au registre aujourd'hui) ;
-      qualif sandbox à produire, puis tranche cockpit
+- [x] **G2 vague-web/g2 — katana, gobuster, feroxbuster, dirsearch, hakrawler**
+      (2026-09-05) : 5/5 qualifiés (preuves qualif/, batteries test_plugins_g2
+      94/94 sans réseau, parsers gobuster/feroxbuster/hakrawler-wrapper) ;
+      intégration main : merge + promotion des binaires staging→bin/ avec
+      contrôle d'empreinte contre les épingles (c'est l'ÉTAPE D'INTÉGRATION
+      CENTRALISÉE : les agents installent en staging, seul l'intégrateur
+      expose au runtime) ; démo : chaîne httpx→katana→ffuf→nuclei = 8
+      constats, diff reprise 1 persistant/7 nouveaux puis 8/8 stationnaire
+- [ ] **G1 vague-web/g1 — whatweb, webanalyze, wafw00f, nikto, gowitness** (agent en vol)
+- [ ] **G3 vague-web/g3 — sqlmap, dalfox, commix, crlfuzz, arjun** (file d'attente)
+- [ ] **G4 vague-web/g4 — testssl.sh, sslyze, sslscan, tlsx, dotdotpwn** (agent en vol)
+- [ ] **G5 vague-web/g5 — wpscan, kiterunner, dirhunt, gospider, x8** (file d'attente)
 - [ ] ①-b tranche **git-dumper** : hors `WEB_PROVIDERS_ORDRE` (découverte ≠ sonde) —
       décider de son entrée dans la chaîne (provider d'appoint ? capacité à part ?)
 - [x] **corrélation — étude** : `docs/RECHERCHE_CORRELATION.md` (Burp, ZAP,
