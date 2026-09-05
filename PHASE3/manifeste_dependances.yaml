@@ -107,6 +107,21 @@ binaires:
       (format custom CSV, niveau 2). Si cette empreinte change, les deux doivent être
       re-testés.
 
+  git-dumper:
+    package: git-dumper
+    version: "1.0.9"
+    source: https://pypi.org/project/git-dumper/
+    licence: MIT
+    distribution: pip
+    distribution_hash: "98a287212195ac20734512661a7cb43d90038595087f3909931906775d40f608"
+    verification: >
+      Empreinte SHA-256 du fichier RECORD de la distribution installée (même
+      convention que bandit) — identifie le paquet Python réellement utilisé.
+    note: >
+      Provider WEB_VCS_DUMP (format custom, parser gitdumper). Épreuve du
+      2026-09-05 contre la cible THAUMAS-WEB : dépôt restauré, 22 fichiers
+      récupérés, marqueur relisible.
+
   checkov:
     package: checkov
     version: "3.3.15"
@@ -120,6 +135,17 @@ binaires:
       IAC_SCAN niveau 1, vérifié avec et sans réseau sur PHASE3/testrepo_iac
       (38 findings identiques, aucune fuite du faux secret).
 
+
+  httpx:
+    version: "1.6.9"
+    # Épreuve web du 2026-09-05, DEUX plateformes : le runtime (WSL/bwrap) exécute le
+    # binaire Linux — son empreinte est l'EMPREINTE FAITE FOI ci-dessous. Le binaire
+    # Windows a servi à l'épreuve exploratoire hors sandbox (bin_win/httpx.exe).
+    sha256: a78ac192c8d4e801c3e20aedda1db39f21e051e96fa3bac324152f248af40b09
+    sha256_windows: 8e6d1df4df12a2cd3a1a74e658a251963b6e191b6b24a047d565fe92947debb2
+    source: https://github.com/projectdiscovery/httpx/releases
+    licence: MIT
+    taille_approx: 37M
   grype:
     version: "0.118.0"
     # sha256 = empreinte du BINAIRE installé (vérifiée par verifier_binaire).
@@ -968,12 +994,6 @@ binaires:
     licence: MIT
     taille_approx: 10M
 
-  nmap:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=nmap
-    licence: MIT
-    taille_approx: 10M
 
   nosqlmap:
     version: "0.1.0"
@@ -982,12 +1002,6 @@ binaires:
     licence: MIT
     taille_approx: 10M
 
-  nuclei:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=nuclei
-    licence: MIT
-    taille_approx: 10M
 
   oregano:
     version: "0.1.0"
@@ -1297,6 +1311,9 @@ binaires:
     licence: MIT
     taille_approx: 10M
 regles:
+  # Web (2026-09-05) — épreuves sandbox harnais_web.py
+  dossiers-mini.txt: "59a2d4c919fa9845147c33eadd4dc79a87956cdf0cf6e260fcd500b5dc318097"
+  nuclei-epreuve.yaml: "7200ef717050e49b649ac0ac231269d0d60fae759778d194105ecded2366ae53"
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
   python.yaml:

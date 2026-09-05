@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
-"""Engagements web : contrat de `POST /api/engagements/web` (H1 — squelette).
+"""Engagements web : contrat de `POST /api/engagements/web` (plan + exécution).
 
 Ce que cette batterie prouve, par HTTP et rien d'autre :
-    ADMIS     un engagement valide est PLANIFIÉ (202 + id + plan), jamais exécuté
-              en silence : `execution: "non_cablee"` et les limites sont rendues.
-    REFUSÉ    url vide / schéma non-http(s) / hôte manquant / providers ou
-              intensity inconnus / egress non-booléen → 400 nommé ;
-              sans `cible_autorisee: true` explicite → 403 `cible_non_autorisee`.
+    ADMIS     un engagement valide est PLANIFIÉ (202 + id + plan) ; sans
+              `executer: true`, rien ne part : `execution: "non_demandee"`.
+    CÂBLÉ     `executer: true` → 202 + `en_file` + `execution: "file"` ; le run
+              atteint un état terminal et le rapport web est rendu — sur une
+              machine SANS binaires, l'échec est NOMMÉ dans le rapport
+              (`statut_run: arrete`), jamais un spinner ni un faux « 0 constat ».
+    REFUSÉ    url vide / schéma non-http(s) / hôte manquant / providers,
+              intensity, egress ou executer invalides → 400 nommé ;
+              sans `cible_autorisee: true` explicite → 403 `cible_non_autorisee`
+              (avec ou sans executer — le fail-closed ne se contourne pas).
     SÛR       userinfo masqué dans tout ce qui est persisté/rendu (`url_sure`).
-    HONNÊTE   `GET /api/runs/<id>` d'un engagement rend `planifie` + `mission_id`
-              null — aucune mission inventée.
+    HONNÊTE   `GET /api/runs/<id>` d'un engagement rend `mission_id` null —
+              aucune mission inventée ; le dédup ne s'applique qu'au PLAN SEUL.
     INTACT    les routes existantes (`/api/capacites`, `/api/runs`) répondent
               toujours (non-régression du dispatch).
 
-Ce qui N'EST PAS prouvé ici (milestone suivant) : l'exécution réelle
-httpx→katana→ffuf→nuclei→Oracle — `execution` le dit explicitement.
+L'exécution RÉELLE avec de vrais binaires est la batterie machine de référence
+`test_web_cable.py` (hors CI) — ici, l'exécution est prouvée jusqu'à la
+transcription honnête des échecs, pas jusqu'au finding.
 
 Usage : python PHASE3/test_engagements_web.py   (aucun réseau extérieur requis)
 """
@@ -23,6 +29,7 @@ from __future__ import annotations
 import json
 import sys
 import threading
+import time
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -70,13 +77,17 @@ def main() -> int:
     base = f"http://127.0.0.1:{serveur.server_address[1]}"
     fil = threading.Thread(target=serveur.serve_forever, daemon=True)
     fil.start()
+    # Le worker de file (`_travail`) n'est démarré que par `api.main()` : la
+    # batterie le lance elle-même pour prouver le chemin exécution de bout en bout.
+    travail = threading.Thread(target=api._travail, daemon=True)
+    travail.start()
     try:
         # ---------------------------------------------------------- chemin nominal
         code, eng = http(base, "/api/engagements/web",
                          {"url": "https://target.tld", "cible_autorisee": True})
         verifie("engagement valide → 202 + plan",
                 code == 202 and isinstance(eng, dict) and eng.get("statut") == "planifie"
-                and eng.get("id") and eng.get("execution") == "non_cablee",
+                and eng.get("id") and eng.get("execution") == "non_demandee",
                 f"code={code} corps={json.dumps(eng, ensure_ascii=False)[:160]}")
         if isinstance(eng, dict) and eng.get("id"):
             verifie("le plan liste la chaîne dans l'ordre",
@@ -86,9 +97,8 @@ def main() -> int:
                     (eng.get("verification") or {}).get("oracle") == "http_response"
                     and (eng.get("verification") or {}).get("replay") == 3,
                     json.dumps(eng.get("verification")))
-            verifie("limites honnêtes rendues",
-                    any("non_cable" in str(l) or "câblée" in str(l)
-                        for l in (eng.get("limites_connues") or [])),
+            verifie("limites honnêtes : le plan seul dit comment exécuter",
+                    any("executer" in str(l) for l in (eng.get("limites_connues") or [])),
                     json.dumps(eng.get("limites_connues"), ensure_ascii=False)[:140])
             code, lu = http(base, f"/api/runs/{eng['id']}")
             verifie("GET de l'engagement → planifie, mission_id null (rien d'inventé)",
@@ -119,6 +129,8 @@ def main() -> int:
                                           "intensity": "turbo"}, "intensity"),
             ("egress chaîne → 400", {"url": "https://target.tld", "cible_autorisee": True,
                                      "egress": "yes"}, "egress"),
+            ("executer chaîne → 400", {"url": "https://target.tld", "cible_autorisee": True,
+                                       "executer": "oui"}, "executer"),
         ]:
             c, refus = http(base, "/api/engagements/web", corps)
             verifie(nom, c == 400 and isinstance(refus, dict) and "erreur" in refus
@@ -157,6 +169,45 @@ def main() -> int:
                 and (eng.get("verification") or {}).get("replay") == 5
                 and eng.get("egress") is True,
                 f"code={code} corps={json.dumps(eng, ensure_ascii=False)[:160]}")
+        # ---------------------------------------------------------- exécution demandée
+        code, refus = http(base, "/api/engagements/web",
+                           {"url": "https://target.tld", "executer": True})
+        verifie("executer SANS autorisation → toujours 403 (fail-closed inchangé)",
+                code == 403 and isinstance(refus, dict)
+                and refus.get("erreur") == "cible_non_autorisee",
+                f"code={code} corps={json.dumps(refus, ensure_ascii=False)[:140]}")
+        # 127.0.0.1:9 (discard) : refus de connexion immédiat, zéro réseau sortant —
+        # le test prouve la TRANSCRIPTION d'exécution, pas un finding.
+        code, eng = http(base, "/api/engagements/web",
+                         {"url": "http://127.0.0.1:9/", "cible_autorisee": True,
+                          "executer": True})
+        verifie("executer: true → 202 + en_file + execution file",
+                code == 202 and isinstance(eng, dict) and eng.get("statut") == "en_file"
+                and eng.get("execution") == "file" and eng.get("id"),
+                f"code={code} corps={json.dumps(eng, ensure_ascii=False)[:160]}")
+        if isinstance(eng, dict) and eng.get("id"):
+            terminal, lu = None, None
+            for _ in range(120):
+                code, lu = http(base, f"/api/runs/{eng['id']}")
+                if isinstance(lu, dict) and lu.get("statut") in ("termine", "refuse", "erreur"):
+                    terminal = lu.get("statut")
+                    break
+                time.sleep(0.5)
+            verifie("engagement exécuté atteint un état terminal (binaire absent ou "
+                    "refusé → échec NOMMÉ dans le rapport, jamais un spinner)",
+                    terminal in ("termine", "refuse", "erreur"),
+                    f"terminal={terminal} dernier={json.dumps(lu, ensure_ascii=False)[:200]}")
+            if isinstance(lu, dict) and lu.get("rapport"):
+                verifie("rapport web rendu : type, statut_run honnête, détail par provider",
+                        lu["rapport"].get("type") == "rapport_web"
+                        and lu["rapport"].get("statut_run") in ("termine", "arrete", "refuse")
+                        and isinstance(lu["rapport"].get("details"), list),
+                        json.dumps(lu["rapport"], ensure_ascii=False)[:220])
+            verifie("l'engagement exécuté n'est pas dédupliqué avec un plan antérieur : "
+                    "un id de run de file est rendu",
+                    isinstance(lu, dict) and lu.get("id") == eng.get("id")
+                    and not lu.get("deduplique"),
+                    json.dumps(lu, ensure_ascii=False)[:140] if isinstance(lu, dict) else "lu")
         # ---------------------------------------------------------- non-régression
         code, caps = http(base, "/api/capacites")
         verifie("GET /api/capacites intact après le nouveau dispatch",

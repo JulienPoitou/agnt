@@ -50,3 +50,16 @@ PHASE3/testrepo_xtool/.git/
 node_modules/
 dist/
 tsconfig.tsbuildinfo
+
+# Cible d'épreuve web : dossiers GÉNÉRÉS à l'exécution (fixture git, dump) —
+# la source, c'est serveur.py ; les binaires de scratch ne sont jamais versionnés.
+PHASE3/cible_web/_git_fixture/
+PHASE3/cible_web/_git_dump/
+PHASE3/bin_linux/
+PHASE3/bin_win/
+# Sorties du runtime web (preuves disque, même convention que artifacts/missions)
+PHASE3/artifacts/engagements/
+
+# Dump git-dumper de référence : dépôt RESTAURÉ (avec son .git) — la preuve
+# documentée vit dans qualif/gitdumper/*.meta.yaml + DOSSIER_web.yaml.
+PHASE3/cible_web/qualif/gitdumper/dump_reference/

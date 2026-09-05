@@ -17,3 +17,12 @@ Valeur fictive créée pour le projet, liée à aucun compte. Sa présence dans 
 dépôt est intentionnelle — voir README.md.
 """
 regexes = ['''ghp_16C7e42F292c6912E7710c838347Ae178B4a''']
+
+[[allowlists]]
+description = """
+Secrets FACTICES de la cible d'épreuve web THAUMAS-WEB (PHASE3/cible_web/serveur.py
+: /.env ; fixture git). Valeurs inventées pour la qualification, liées à aucun
+compte — voir PHASE3/cible_web/README_ATTENDUS.md.
+"""
+paths = ['''PHASE3/cible_web/.*''']
+regexes = ['''AKIAFAUXQUALIFICATION''', '''faux-mot-de-passe-qualif-2026''', '''cible-epreuve-factice''']

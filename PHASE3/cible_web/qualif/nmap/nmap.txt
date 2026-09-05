@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.94SVN scan initiated Sat Sep  5 15:47:56 2026 as: nmap -p 8807 -oX /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out/nmap.json 127.0.0.1 -->
+<nmaprun scanner="nmap" args="nmap -p 8807 -oX /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out/nmap.json 127.0.0.1" start="1788616076" startstr="Sat Sep  5 15:47:56 2026" version="7.94SVN" xmloutputversion="1.05">
+<scaninfo type="connect" protocol="tcp" numservices="1" services="8807"/>
+<verbose level="0"/>
+<debugging level="0"/>
+<hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
+<address addr="127.0.0.1" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+</hosthint>
+<host starttime="1788616076" endtime="1788616076"><status state="up" reason="conn-refused" reason_ttl="0"/>
+<address addr="127.0.0.1" addrtype="ipv4"/>
+<hostnames>
+<hostname name="localhost" type="PTR"/>
+</hostnames>
+<ports><port protocol="tcp" portid="8807"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="hes-clip" method="table" conf="3"/></port>
+</ports>
+<times srtt="52" rttvar="3750" to="100000"/>
+</host>
+<runstats><finished time="1788616076" timestr="Sat Sep  5 15:47:56 2026" summary="Nmap done at Sat Sep  5 15:47:56 2026; 1 IP address (1 host up) scanned in 0.02 seconds" elapsed="0.02" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>

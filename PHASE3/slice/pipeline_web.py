@@ -7,8 +7,16 @@ cycle_vie, preuve) SANS en dupliquer la logique. L'exécuteur est injecté :
 
 Un finding interprété naît OBSERVED (transition `observer` depuis DISCOVERED,
 historique joint) : jamais CONFIRMED sans oracle (voir oracle_web).
+
+Sortie fichier : un tool écrivant `{OUT}` (nuclei, ffuf, httpx…) consigne là sa
+sortie déclarée. Le stdout, lui, peut être vide OU du bruit (ffuf -s imprime ses
+matches en clair). Règle, identique au harnais : si le fichier déclaré existe,
+son CONTENU est la sortie interprétée ; sinon, le stdout. Le fichier reste sur
+disque comme artefact brut : la lecture n'efface rien.
 """
 from __future__ import annotations
+
+from pathlib import Path
 
 import fournisseurs_web as FW
 import preuve as PR
@@ -27,7 +35,7 @@ class ErreurPipeline(Exception):
 
 
 def derouler(engagement: dict, executer_tache, registre=None,
-             out_dir: str = "/tmp/agnt-web") -> dict:
+             out_dir: str = "/tmp/agnt-web", regles: str = "") -> dict:
     """Déroule un engagement web planifié. Rend le rapport de mission (dict)."""
     if not isinstance(engagement, dict) or engagement.get("type") != "web":
         raise ErreurPipeline("engagement web attendu")
@@ -50,7 +58,8 @@ def derouler(engagement: dict, executer_tache, registre=None,
     for pid in demandes:
         try:
             plans.append({**FW.planifier(pid, canonique, out_dir,
-                                         egress=egress_accorde, registre=registre),
+                                         egress=egress_accorde, registre=registre,
+                                         regles=regles),
                           "provider_id": pid})
         except FW.ErreurPlanification as e:
             ecartes.append({"provider": pid, "motif": str(e)})
@@ -71,9 +80,25 @@ def derouler(engagement: dict, executer_tache, registre=None,
                             "motif": (res["resultat"] or {}).get("erreur", "")})
             continue
         r = res["resultat"] or {}
+        # Sortie fichier → stdout : voir docstring. Quand le manifest déclare une
+        # sortie fichier et qu'elle existe, le FICHIER fait foi — même doctrine que
+        # le harnais (fichier d'abord, stdout en repli). Le stdout n'y est pas toujours
+        # vide pour autant : ffuf -s y imprime ses matches en clair (du bruit qui
+        # n'est pas du JSON), et le prendre à la place du fichier serait interpréter
+        # autre chose que la sortie déclarée. Un fichier absent n'est PAS une erreur
+        # — l'outil avait le droit de tout dire sur stdout.
+        plan = next((p for p in plans if p["provider_id"] == res["provider"]), None)
+        stdout = r.get("stdout", "")
+        if plan:
+            brut = Path(out_dir) / plan.get("nom_sortie", "")
+            try:
+                if brut.is_file():
+                    stdout = brut.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                pass                                  # stdout fait foi, motif le dira
         try:
             interp = FW.interpreter(res["provider"], r.get("code", -1),
-                                    r.get("stdout", ""), registre=registre)
+                                    stdout, registre=registre)
         except FW.ErreurPlanification as e:
             details.append({"provider": res["provider"], "etat": "interpretation_impossible",
                             "motif": str(e)})

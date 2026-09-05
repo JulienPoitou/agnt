@@ -1,0 +1,30 @@
+genere_le: '2026-09-05'
+genere_par: harnais_web.py (httpx 1.6.9 · git-dumper 1.0.9 · nmap 7.94SVN · nuclei 3.3.9 · ffuf 2.1.0
+  — linux amd64)
+methode: EXTRAIT d'exécutions sandbox réelles (bwrap, egress autorisé). Régénérer, ne pas éditer.
+attendus:
+  httpx:
+    sonde: http://127.0.0.1:8807 répond 200
+    techno_attendue: Python:3.12
+    severite: null
+    note: 1 finding par URL vivante — pas de sévérité
+  gitdumper:
+    marqueur: GIT-DUMP-OK-THAUMAS-2026
+    restauration: secret_app.txt relisible après checkout
+    nb_recup: 5
+    checkout: true
+  nmap:
+    port_attendu: 8807/tcp open
+    severite: UNKNOWN
+    note: port ouvert = observation de surface, jamais une faille
+  nuclei:
+    template: epreuve-thaumas-info
+    severite: info
+    note: template local épinglé — armement officiel à venir
+  ffuf:
+    chemins_200:
+    - admin
+    - .env
+    - .git
+    severite: null
+    note: énumération de surface — pas de sévérité

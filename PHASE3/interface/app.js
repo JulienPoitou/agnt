@@ -637,6 +637,144 @@ async function lancerUnRun() {
   }
 }
 
+/* ------------------------------------------------ engagement web (chaîne sur URL) */
+function renduPlanWeb(o) {
+  // Le PLAN d'un engagement : ce qui est prévu, avant toute exécution. Rien ici
+  // ne ressemble à un résultat — l'écran ne doit jamais laisser croire qu'un
+  // plan est un scan.
+  const n = document.getElementById("web-zone");
+  if (!n) return;
+  n.className = "grille";
+  n.textContent = "";
+  const s = section(n, "Engagement web planifié", 1, o.id || "");
+  const tete = el("div", "entete");
+  const ou = el("div", "ou");
+  [["cible", o.url_sure], ["hôte", o.hote], ["intensity", o.intensity],
+   ["statut", o.statut],
+   ["egress", o.egress === undefined ? undefined : (o.egress ? "ouvert" : "fermé")]]
+    .forEach(([l, v]) => { if (existe(v)) ou.append(el("span", "pastille attention", l + " · " + v)); });
+  tete.append(ou);
+  s.append(tete);
+  const ch = el("div", "chaine");
+  const e1 = etape("1 · chaîne prévue");
+  e1.append(el("b", null, (o.providers_prevus || []).join(" → ")));
+  const e2 = etape("2 · vérification annoncée");
+  arbre(e2, o.verification);
+  const e3 = etape("3 · limites rendues");
+  (o.limites_connues || []).forEach((l) => e3.append(el("p", "note", "· " + l)));
+  const e4 = etape("4 · exécution");
+  e4.append(el("b", null, o.execution === "file" ? "mise en file (exécution demandée)"
+                                                 : "non demandée — rien ne part"));
+  if (o.deduplique) e4.append(el("p", "note", "plan déjà déclaré : même id rendu (dédup plan-seul)"));
+  [e1, e2, e3, e4].forEach((x) => ch.append(x));
+  s.append(ch);
+}
+
+function renduRapportWeb(st) {
+  // Le RAPPORT d'un engagement exécuté. Les constats passent par le même
+  // blocFindings que les missions dépôt (même modèle normalisé, même règle
+  // « un champ absent du moteur est absent de l'écran ») ; `statut_run` — ce que
+  // la CHAÎNE a fait — est affiché séparément du statut de file, parce qu'un run
+  // de file terminé peut avoir arrêté la chaîne au premier outil absent.
+  const n = document.getElementById("web-zone");
+  if (!n) return;
+  const rap = st.rapport || {};
+  n.className = "grille";
+  n.textContent = "";
+  const s = section(n, "Engagement web — rapport", 1,
+                    "run de file " + (st.id || "?") + " · " + (st.statut || "?"));
+  const tete = el("div", "entete");
+  const ou = el("div", "ou");
+  ou.append(el("span", "pastille " + (PASTILLE[st.statut] || "attention"), "file · " + (st.statut || "?")));
+  if (existe(rap.statut_run))
+    ou.append(el("span", "pastille " + (rap.statut_run === "termine" ? "ok" : "attention"),
+                 "chaîne · " + rap.statut_run));
+  if (existe(rap.url_canonique)) ou.append(el("span", "pastille", "cible · " + rap.url_canonique));
+  if (existe(rap.motif_run)) ou.append(el("span", "pastille erreur", rap.motif_run));
+  tete.append(ou);
+  s.append(tete);
+  if (Array.isArray(rap.providers_ecartes) && rap.providers_ecartes.length) {
+    const g = el("div", "cle");
+    rap.providers_ecartes.forEach((e) => cle(g, "écarté · " + (e.provider || "?"),
+                                             e.motif || "motif non consigné"));
+    s.append(el("p", "note", "providers écartés AVANT exécution (refus nommé, pas une panne) :"));
+    s.append(g);
+  }
+  const s2 = section(n, "Ce qui a tourné", 2, (rap.details || []).length + " tâche(s)");
+  const tab = el("table");
+  const t = el("tr");
+  ["provider", "état", "constats", "motif"].forEach((x) => t.append(el("th", null, x)));
+  tab.append(t);
+  (rap.details || []).forEach((d) => {
+    const l = el("tr");
+    const et = el("td");
+    et.append(el("span", "pastille " + (d.etat === "terminee" ? "ok"
+                        : (d.etat === "en_file" || d.etat === "en_cours" ? "attention" : "erreur")),
+                 d.etat || "?"));
+    l.append(el("td", "outil", d.provider || "?"), et,
+             el("td", null, existe(d.findings) ? String(d.findings) : "—"),
+             el("td", "raison", d.motif || ""));
+    tab.append(l);
+  });
+  s2.append(tab);
+  s2.append(el("p", "note", "L'état est dérivé du sous-processus réel ; un provider jamais démarré reste « en_file ». "
+    + "Un tool qui répond sans rien lire est consigné « sortie vide : échec d'exécution, pas un scan propre »."));
+  n.append(s2);
+  n.append(blocFindings(n, {findings: rap.findings}));
+  if (existe(rap.preuve)) {
+    const s3 = section(n, "Preuve scellée", 5, "empreinte vérifiable par slice/preuve.verifier");
+    arbre(s3, rap.preuve);
+    n.append(s3);
+  }
+  if (existe(st.sortie)) n.append(el("p", "note", "archive de l'engagement · " + st.sortie
+    + " (sorties brutes des outils + rapport_web.json + journal.jsonl)"));
+}
+
+async function lancerEngagementWeb() {
+  const url = (document.getElementById("web-url").value || "").trim();
+  if (!url) { etatLigne("engagement web · url vide", "erreur"); return; }
+  const corps = {url};
+  // Même règle que les runs dépôt : une case décochée n'envoie RIEN — absent
+  // n'est pas une décision explicite, et le refus fail-closed reste nommé.
+  if (document.getElementById("web-autorisee").checked) corps.cible_autorisee = true;
+  if (document.getElementById("web-egress").checked) corps.egress = true;
+  if (document.getElementById("web-executer").checked) corps.executer = true;
+  const envoi = await json("/api/engagements/web", {method: "POST",
+    headers: {"Content-Type": "application/json"}, body: JSON.stringify(corps)});
+  if (!envoi.ok) {
+    etatLigne("engagement refusé · " + JSON.stringify(envoi.objet.erreur || envoi.objet), "erreur");
+    return;
+  }
+  const o = envoi.objet;
+  renduPlanWeb(o);
+  etatLigne("engagement " + o.id + " · " + (o.execution === "file" ? "en file" : "planifié"),
+            o.execution === "file" ? "attention" : "ok");
+  if (o.execution !== "file") return;
+  let silences = 0;
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 1200));
+    const e = await json("/api/runs/" + o.id);
+    const st = e.objet || {};
+    if (e.status === 404) {
+      etatLigne("engagement " + o.id + " · inconnu du serveur (redémarrage ?) — "
+                + "l'archive disque reste", "erreur");
+      return;
+    }
+    if (!e.ok) {
+      silences += 1;
+      if (silences < 3) continue;
+      etatLigne("engagement " + o.id + " · plus de réponse du serveur (code " + e.status + ")", "erreur");
+      return;
+    }
+    silences = 0;
+    etatLigne("engagement " + o.id + " · " + (st.statut || "?"), PASTILLE[st.statut] || "attention");
+    if (st.statut === "termine" || st.statut === "refuse" || st.statut === "erreur") {
+      renduRapportWeb(st);
+      return;
+    }
+  }
+}
+
 async function brancher(capsConnu) {
   // `capsConnu` : la sonde déjà faite par `principal`. Sans ce paramètre, brancher une
   // page coûtait deux fois le même aller-retour — ou, à l'inverse, on peignait la
@@ -690,6 +828,23 @@ async function brancher(capsConnu) {
   sel.disabled = !sel.children.length;
   document.getElementById("run").disabled = false;
   document.getElementById("run").onclick = () => { etatLigne("envoi…", ""); lancerUnRun(); };
+  // Le cockpit web suit la même loi : un contrôle désactivé tant que le serveur
+  // ne répond pas — une case active avant démarrage n'agirait sur rien.
+  {
+    const wurl = document.getElementById("web-url");
+    if (wurl) {
+      wurl.disabled = false;
+      ["web-autorisee", "web-egress", "web-executer"].forEach((id) => {
+        const n = document.getElementById(id);
+        if (n) n.disabled = false;
+      });
+      const wgo = document.getElementById("web-go");
+      if (wgo) {
+        wgo.disabled = false;
+        wgo.onclick = () => { etatLigne("engagement…", ""); lancerEngagementWeb(); };
+      }
+    }
+  }
   document.getElementById("ruban").className = "maquette cache";
   etatLigne("moteur branché · " + sel.children.length + " cible(s)", "ok");
   const p = document.getElementById("pied");

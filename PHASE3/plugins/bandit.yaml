@@ -1,0 +1,66 @@
+# Plugin AGNT — bandit, second lecteur SAST Python historique (A2, 2026-09-03).
+#
+# HISTORIQUE : bandit figurait au registre initial (commit 2b89977), en a été retiré
+# quand CODE_STATIC_ANALYSIS est passée en « un_seul » (un seul lecteur retenu :
+# semgrep) — il est resté « integrated » au pool sans être planifiable. D7 a rouvert
+# la capacité en fan_out ; la proposition disait : « si les trois comptent, c'est 3
+# qu'il faut écrire ». max_providers passe à 3 (décision de registre, même dossier) :
+# semgrep (100) + ruff_lint (100) + bandit (110).
+#
+# APPORT MESURÉ : B608 (injection SQL par formatage) et B310 (yaml.load) — des
+# familles que les packs semgrep épinglés ne couvrent plus (mesuré 2026-09-03 :
+# yaml.load nu non matché, % SQL non matché).
+id: bandit_lint
+capacites:
+  - CODE_STATIC_ANALYSIS
+entrees:
+  - repository
+binaire: bandit
+outillage: bandit              # entrée épinglée dans manifeste_dependances.yaml
+version_min: "1.8.6"
+licence: Apache-2.0
+priorite: 110                  # après semgrep (100) et ruff (100) : le troisième lecteur
+cout: faible
+risque: PASSIVE
+description: >
+  Analyse statique de sécurité Python dédiée (bandit) : injection shell et SQL,
+  désérialisation (pickle, yaml), assertions en production, exec/eval. Troisième
+  lecteur sur le même fichier — les désaccords entre lecteurs sont une information
+  que la couverture sait distinguer, pas un doublon.
+fichiers_requis:
+  - "*.py"
+execution:
+  args:
+    - --quiet
+    - --format
+    - json
+    - -r
+    - "{TARGET}"
+  # 0 = rien, 1 = findings (convention bandit documentée). 2 = erreur d'usage.
+  code_succes: [0, 1]
+sortie:
+  format: json
+lecture:
+  # bandit -f json rend {"results": [...]} — items sous la clé "results".
+  modele: plat
+  items_from: "$.results"
+  champs:
+    regle: test_id            # B608, B310… — l'identifiant de règle bandit
+    nom_regle: test_name
+    fichier: filename
+    ligne: line_number
+    message: issue_text
+    severite: issue_severity  # LOW/MEDIUM/HIGH — le mot de bandit, non traduit
+    reference: more_info      # lien vers la page de la règle
+  masquer_large:
+    - message
+requirements:
+  reseau: false
+  privileges: aucun
+  timeout_s: 600
+  sandbox: true
+a_verifier:
+  - "filename est rendu en chemin ABSOLU par bandit (mesuré) : la plateforme
+    relativise à l'affichage — même règle que ruff (a_verifier de ruff.yaml)."
+  - "bandit n'a pas de règle par CVE : sa sévérité est LOW/MEDIUM/HIGH par famille,
+    jamais un CVSS — ne jamais l'afficher comme tel."

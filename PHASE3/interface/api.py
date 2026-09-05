@@ -61,6 +61,12 @@ PLAFOND_CORPS = 262_144     # plafond de lecture du corps AVANT rfile.read : Con
 # déclaratif. DOCUMENTED ONLY : ces débits sont la spec, pas une mesure.
 WEB_PROVIDERS_ORDRE = {"httpx": 50, "katana": 20, "ffuf": 30, "nuclei": 30}
 
+# Règles épinglées montées à {REGLES} pour les providers web (template nuclei
+# d'épreuve, wordlist ffuf) — empreintes dans manifeste_dependances.yaml, preuves
+# d'exécution dans cible_web/qualif/. Absent → {REGLES} reste vide : les providers
+# qui l'exigent échoueront NOMMÉMENT à l'exécution, pas au plan.
+REGLES_WEB = RACINE / "regles_web"
+
 # Cibles proposables. Règle : un dépôt DÉJÀ sur cette machine, sous le dépôt de travail ou
 # listé dans AGNT_CIBLES (séparateur « : »). Pas de clonage, pas de téléchargement : cela
 # ajouterait une écriture et un réseau sortant que rien ici n'a été conçu pour border.
@@ -286,10 +292,63 @@ def _marquer(rid: str, **champs) -> None:
         ETATS.setdefault(rid, {}).update(champs)
 
 
+def _travail_web(rid: str, engagement: dict) -> None:
+    """Exécute un engagement web mis en file (câblage ①-b, 2026-09-05).
+
+    Toute la logique vit dans `pipeline_web.derouler` (scope → plans par manifest
+    → orchestration séquencée → interprétation → cycle de vie → preuve scellée) :
+    ce bloc ne fournit que le dossier d'archive, l'exécuteur local, et la
+    retranscription HONNÊTE du résultat dans l'état de file — mêmes statuts que
+    les runs dépôt, jamais un 200 muet. Les sorties brutes des outils et le
+    rapport restent sur disque (artifacts/engagements/<id>/) : l'engagement ne
+    survit pas au processus, ses PREUVES oui (loi 1).
+    """
+    _marquer(rid, statut="en_cours")
+    dossier = RACINE / "artifacts" / "engagements" / rid
+    try:
+        import pipeline_web as PW
+        from taches import ExecuteurLocal
+    except Exception as e:                              # noqa: BLE001
+        _marquer(rid, statut="erreur",
+                 erreur={"type": type(e).__name__, "message": str(e)[:600],
+                         "trace": traceback.format_exc(limit=6)},
+                 resume={"motif": f"{type(e).__name__} : {str(e)[:280]}"})
+        return
+    try:
+        exe = ExecuteurLocal(dossier)
+        rapport = PW.derouler(engagement, exe.executer,
+                              regles=str(REGLES_WEB) if REGLES_WEB.is_dir() else "",
+                              out_dir=str(dossier))
+        (dossier / "rapport_web.json").write_text(
+            json.dumps(rapport, ensure_ascii=False, indent=2, default=str),
+            encoding="utf-8")
+        # `statut_run` est porté PAR le rapport (termine/arrete/refuse/…) : l'état
+        # de file dit « le run d'engagement s'est terminé », le rapport dit ce qui
+        # a vraiment tourné. Les confondre recacherait un échec d'outil derrière
+        # un vert de file.
+        _marquer(rid, statut="termine", rapport=rapport, sortie=str(dossier),
+                 statut_run=rapport.get("statut_run"),
+                 findings=rapport.get("findings"))
+    except PW.ErreurPipeline as e:
+        _marquer(rid, statut="refuse",
+                 resume={"motif": f"ErreurPipeline : {str(e)[:280]}"})
+    except Exception as e:                              # noqa: BLE001
+        _marquer(rid, statut="erreur",
+                 erreur={"type": type(e).__name__, "message": str(e)[:600],
+                         "trace": traceback.format_exc(limit=6)},
+                 resume={"motif": f"{type(e).__name__} : {str(e)[:280]}"})
+
+
 def _travail() -> None:
     """Un seul consommateur : c'est ce qui sérialise les runs (voir loi 1)."""
     while True:
         rid, question, cible, options = FILE.get()
+        if options.get("genre") == "web":
+            try:
+                _travail_web(rid, options.get("engagement") or {})
+            finally:
+                FILE.task_done()
+            continue
         _marquer(rid, statut="en_cours")
         try:
             import analyser
@@ -641,14 +700,16 @@ class Gestionnaire(BaseHTTPRequestHandler):
         return self._json({"id": rid, "statut": "en_file",
                            "position": FILE.qsize()}, 202)
 
-    # ---- engagements web (H1 — squelette : validation stricte, exécution NON câblée)
+    # ---- engagements web (H1 : planification ; exécution câblée sur demande explicite)
     def _post_engagement_web(self):
         """POST /api/engagements/web — déclare un engagement web app black-box.
 
-        Valide et PLANIFIE seulement : l'exécution (httpx→katana→ffuf→nuclei→Oracle)
-        arrive au milestone suivant. Un engagement planifié n'est jamais présenté
-        comme un résultat : `execution: "non_cablee"` et la limite sont rendues.
-        Conventions reprises de /api/runs : refus nommés, 400 chiffrés, 202 + id.
+        Valide et PLANIFIE toujours. `executer: true` (câblage 2026-09-05) met
+        l'engagement EN FILE : le worker exécute la chaîne prévue via
+        `pipeline_web.derouler` — même file à un consommateur que les missions
+        dépôt (loi 1). Sans `executer`, le plan seul est rendu
+        (`execution: "non_demandee"`) et rien ne part. Conventions reprises de
+        /api/runs : refus nommés, 400 chiffrés, 202 + id.
         """
         try:
             n = int(self.headers.get("Content-Length") or 0)
@@ -702,6 +763,9 @@ class Gestionnaire(BaseHTTPRequestHandler):
         egress = corps.get("egress")
         if egress is not None and not isinstance(egress, bool):
             return self._json({"erreur": "egress : attendu true, false, ou absent"}, 400)
+        executer = corps.get("executer")
+        if executer is not None and not isinstance(executer, bool):
+            return self._json({"erreur": "executer : attendu true, false, ou absent"}, 400)
         intensity = str(corps.get("intensity") or "normal")
         if intensity not in ("normal", "aggressive"):
             return self._json({"erreur": f"intensity inconnue : {intensity}",
@@ -729,11 +793,12 @@ class Gestionnaire(BaseHTTPRequestHandler):
                           for p in WEB_PROVIDERS_ORDRE if p in demandes]
 
         eid = uuid.uuid4().hex[:12]
-        engagement = {"statut": "planifie", "type": "web",
+        engagement = {"statut": "en_file" if executer else "planifie", "type": "web",
                       "url_sure": cible.reference_sure(), "url_canonique": url_canonique,
                       "hote": hote,
                       "intensity": intensity,
                       "egress": egress, "cible_autorisee": True,
+                      "executer": executer is True,
                       "providers_prevus": [p["id"] for p in plan_providers],
                       "verification": {
                           "oracle": "http_response",
@@ -741,27 +806,44 @@ class Gestionnaire(BaseHTTPRequestHandler):
                           "temoin_controle": True},
                       "pose_le": time.time()}
         with VERROU:
-            for pid, existant in ETATS.items():
-                if (existant.get("type") == "web"
-                        and existant.get("url_canonique") == url_canonique
-                        and existant.get("statut") == "planifie"):
-                    reponse = dict(existant)
-                    reponse["id"] = pid
-                    reponse["deduplique"] = True
-                    break
-            else:
+            # Dédup PLAN SEUL uniquement : deux déclarations du même endpoint sans
+            # exécution rendent le même plan. Une exécution, elle, est toujours un
+            # NOUVEAU run — dédupliquer un engagement en cours masquerait une
+            # exécution réelle derrière l'id d'un plan antérieur.
+            deduplique = False
+            if not executer:
+                for pid, existant in ETATS.items():
+                    if (existant.get("type") == "web"
+                            and existant.get("url_canonique") == url_canonique
+                            and existant.get("statut") == "planifie"):
+                        reponse = dict(existant)
+                        reponse["id"] = pid
+                        reponse["deduplique"] = True
+                        deduplique = True
+                        break
+            if not deduplique:
                 ETATS[eid] = engagement
                 reponse = {"id": eid, **engagement}
+                if executer:
+                    # Même file que les missions dépôt (loi 1 : une exécution à la
+                    # fois) — c'est un choix d'ordonnancement, pas un garde-fou.
+                    FILE.put((eid, None, None,
+                              {"genre": "web", "engagement": engagement}))
+        limites = (["exécution réelle demandée : binaires résolus dans le PATH du "
+                    "service, hors cage bwrap à ce stade (limite du runtime web, "
+                    "qualifications sous cage : cible_web/qualif/)",
+                    "absence de correspondance ≠ absence de vulnérabilité"]
+                   if executer else
+                   ["plan seul : demander executer: true pour lancer la chaîne "
+                    "httpx→katana→ffuf→nuclei (cible_autorisee reste exigée)",
+                    "absence de correspondance ≠ absence de vulnérabilité"])
         return self._json({**reponse,
                            "verification": reponse.get("verification") or {
                                "oracle": "http_response",
                                "replay": 5 if intensity == "aggressive" else 3,
                                "temoin_controle": True},
-                           "execution": "non_cablee",
-                           "limites_connues": [
-                               "engagement planifié : la chaîne "
-                               "httpx→katana→ffuf→nuclei→Oracle n'est pas encore câblée",
-                               "absence de correspondance ≠ absence de vulnérabilité"],
+                           "execution": "file" if executer else "non_demandee",
+                           "limites_connues": limites,
                            "detail_href": f"/api/runs/{reponse['id']}"},
                           200 if reponse.get("deduplique") else 202)
 

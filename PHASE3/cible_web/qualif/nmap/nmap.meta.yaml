@@ -1,0 +1,24 @@
+tool: nmap
+binaire: nmap
+version_binaire_sha256: binaire hors cache
+argv:
+- nmap
+- -p
+- '8807'
+- -oX
+- /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out/nmap.json
+- 127.0.0.1
+env: {}
+code_retour: 0
+timeout: false
+duree_ms: 144
+sortie_origine: fichier:nmap.json
+cible: /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/cible_web
+sandbox_limites:
+  max_processus: 256
+  max_cpu_secondes: 300
+  max_fichier_octets: 536870912
+  timeout_secondes: 180
+  memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+  reseau: AUTORISÉ (`--unshare-net` retiré de la commande)
+stderr_extrait: ''

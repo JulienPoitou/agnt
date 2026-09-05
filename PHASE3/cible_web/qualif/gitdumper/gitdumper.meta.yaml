@@ -1,0 +1,35 @@
+tool: gitdumper
+binaire: git-dumper
+version_binaire_sha256: fe1443f342d85aeabd48c8746fb649f2e2e12f3359a5a3a1f8a3d373eea00721
+argv:
+- /home/julie/.cache/arena_secops/bin/git-dumper
+- -t
+- '10'
+- http://127.0.0.1:8807/.git/
+- /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out
+env: {}
+code_retour: 0
+timeout: false
+duree_ms: 608
+sortie_origine: stdout:texte
+cible: /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/cible_web
+sandbox_limites:
+  max_processus: 256
+  max_cpu_secondes: 300
+  max_fichier_octets: 536870912
+  timeout_secondes: 300
+  memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+  reseau: AUTORISÉ (`--unshare-net` retiré de la commande)
+stderr_extrait: 'p://127.0.0.1:8807/.git/refs/wip/index/refs/heads/staging responded
+  with status code 404
+
+  [-] http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/development responded with
+  status code 404
+
+  [-] http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/production responded with
+  status code 404
+
+  [-] http://127.0.0.1:8807/.git/objects/00/00000000000000000000000000000000000000
+  responded with status code 404
+
+  '

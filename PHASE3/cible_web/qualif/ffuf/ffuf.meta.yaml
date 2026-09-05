@@ -1,0 +1,28 @@
+tool: ffuf
+binaire: ffuf
+version_binaire_sha256: 6325a181abcdf3488ea321b1dc6cf420090cc7908ed19deae857fdc2796e4196
+argv:
+- /home/julie/.cache/arena_secops/bin/ffuf
+- -w
+- /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-regles/dossiers-mini.txt
+- -u
+- http://127.0.0.1:8807/FUZZ
+- -of
+- json
+- -o
+- /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out/ffuf.json
+- -s
+env: {}
+code_retour: 0
+timeout: false
+duree_ms: 1128
+sortie_origine: fichier:ffuf.json
+cible: /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/cible_web
+sandbox_limites:
+  max_processus: 256
+  max_cpu_secondes: 300
+  max_fichier_octets: 536870912
+  timeout_secondes: 180
+  memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+  reseau: AUTORISÉ (`--unshare-net` retiré de la commande)
+stderr_extrait: ''

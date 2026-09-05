@@ -1,0 +1,14 @@
+id: epreuve-thaumas-info
+info:
+  name: THAUMAS-WEB surface épreuve
+  author: qualification
+  severity: info
+  description: Détection de la cible d'épreuve (T-SRV-001) — qualification sandbox.
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+    matchers:
+      - type: word
+        words:
+          - "THAUMAS-WEB"

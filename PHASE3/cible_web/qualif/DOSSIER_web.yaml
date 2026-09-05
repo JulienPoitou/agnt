@@ -1,0 +1,194 @@
+outils:
+- httpx
+- gitdumper
+- nmap
+- nuclei
+- ffuf
+cible: http://127.0.0.1:8807
+capacites:
+- WEB_HTTP_PROBE
+- WEB_VCS_DUMP
+- NETWORK_DISCOVERY
+- WEB_VULN_SCAN_ACTIVE
+- WEB_ENDPOINT_DISCOVERY_ACTIVE
+sandbox: bwrap 0.9.0 — egress autorisé (--unshare-net retiré), montages réels, read-only sur la cible
+preuve_marqueur: true
+httpx:
+  meta:
+    tool: httpx
+    binaire: httpx
+    version_binaire_sha256: a78ac192c8d4e801c3e20aedda1db39f21e051e96fa3bac324152f248af40b09
+    argv:
+    - /home/julie/.cache/arena_secops/bin/httpx
+    - -u
+    - http://127.0.0.1:8807
+    - -json
+    - -o
+    - /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out/httpx.json
+    - -status-code
+    - -title
+    - -tech-detect
+    - -no-color
+    - -silent
+    env: {}
+    code_retour: 0
+    timeout: false
+    duree_ms: 536
+    sortie_origine: fichier:httpx.json
+    cible: /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/cible_web
+    sandbox_limites:
+      max_processus: 256
+      max_cpu_secondes: 300
+      max_fichier_octets: 536870912
+      timeout_secondes: 120
+      memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+      reseau: AUTORISÉ (`--unshare-net` retiré de la commande)
+    stderr_extrait: ''
+  stabilite:
+    identique_octet_pour_octet: false
+    taille_1: 601
+    taille_2: 601
+    identique_contenu_normalise: true
+gitdumper:
+  meta:
+    tool: gitdumper
+    binaire: git-dumper
+    version_binaire_sha256: fe1443f342d85aeabd48c8746fb649f2e2e12f3359a5a3a1f8a3d373eea00721
+    argv:
+    - /home/julie/.cache/arena_secops/bin/git-dumper
+    - -t
+    - '10'
+    - http://127.0.0.1:8807/.git/
+    - /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out
+    env: {}
+    code_retour: 0
+    timeout: false
+    duree_ms: 608
+    sortie_origine: stdout:texte
+    cible: /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/cible_web
+    sandbox_limites:
+      max_processus: 256
+      max_cpu_secondes: 300
+      max_fichier_octets: 536870912
+      timeout_secondes: 300
+      memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+      reseau: AUTORISÉ (`--unshare-net` retiré de la commande)
+    stderr_extrait: 'p://127.0.0.1:8807/.git/refs/wip/index/refs/heads/staging responded with status code
+      404
+
+      [-] http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/development responded with status code
+      404
+
+      [-] http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/production responded with status code 404
+
+      [-] http://127.0.0.1:8807/.git/objects/00/00000000000000000000000000000000000000 responded with
+      status code 404
+
+      '
+  stabilite:
+    identique_octet_pour_octet: false
+    taille_1: 4890
+    taille_2: 4890
+    identique_contenu_normalise: true
+nmap:
+  meta:
+    tool: nmap
+    binaire: nmap
+    version_binaire_sha256: binaire hors cache
+    argv:
+    - nmap
+    - -p
+    - '8807'
+    - -oX
+    - /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out/nmap.json
+    - 127.0.0.1
+    env: {}
+    code_retour: 0
+    timeout: false
+    duree_ms: 144
+    sortie_origine: fichier:nmap.json
+    cible: /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/cible_web
+    sandbox_limites:
+      max_processus: 256
+      max_cpu_secondes: 300
+      max_fichier_octets: 536870912
+      timeout_secondes: 180
+      memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+      reseau: AUTORISÉ (`--unshare-net` retiré de la commande)
+    stderr_extrait: ''
+  stabilite:
+    identique_octet_pour_octet: false
+    taille_1: 1497
+    taille_2: 1497
+    identique_contenu_normalise: true
+nuclei:
+  meta:
+    tool: nuclei
+    binaire: nuclei
+    version_binaire_sha256: c49588140f357cbdddd5436dec11201953a4c5390faeec90777f9ee2cfd70251
+    argv:
+    - /home/julie/.cache/arena_secops/bin/nuclei
+    - -target
+    - http://127.0.0.1:8807
+    - -t
+    - /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-regles/nuclei-epreuve.yaml
+    - -duc
+    - -jsonl
+    - -o
+    - /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out/nuclei.json
+    - -silent
+    env: {}
+    code_retour: 0
+    timeout: false
+    duree_ms: 203
+    sortie_origine: fichier:nuclei.json
+    cible: /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/cible_web
+    sandbox_limites:
+      max_processus: 256
+      max_cpu_secondes: 300
+      max_fichier_octets: 536870912
+      timeout_secondes: 180
+      memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+      reseau: AUTORISÉ (`--unshare-net` retiré de la commande)
+    stderr_extrait: ''
+  stabilite:
+    identique_octet_pour_octet: false
+    taille_1: 2260
+    taille_2: 2376
+    identique_contenu_normalise: true
+ffuf:
+  meta:
+    tool: ffuf
+    binaire: ffuf
+    version_binaire_sha256: 6325a181abcdf3488ea321b1dc6cf420090cc7908ed19deae857fdc2796e4196
+    argv:
+    - /home/julie/.cache/arena_secops/bin/ffuf
+    - -w
+    - /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-regles/dossiers-mini.txt
+    - -u
+    - http://127.0.0.1:8807/FUZZ
+    - -of
+    - json
+    - -o
+    - /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out/ffuf.json
+    - -s
+    env: {}
+    code_retour: 0
+    timeout: false
+    duree_ms: 1128
+    sortie_origine: fichier:ffuf.json
+    cible: /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/cible_web
+    sandbox_limites:
+      max_processus: 256
+      max_cpu_secondes: 300
+      max_fichier_octets: 536870912
+      timeout_secondes: 180
+      memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+      reseau: AUTORISÉ (`--unshare-net` retiré de la commande)
+    stderr_extrait: ''
+  stabilite:
+    identique_octet_pour_octet: false
+    taille_1: 2674
+    taille_2: 2674
+    identique_contenu_normalise: true
+note: PREUVES de qualification — l'approbation reste humaine.

@@ -1,0 +1,29 @@
+tool: httpx
+binaire: httpx
+version_binaire_sha256: a78ac192c8d4e801c3e20aedda1db39f21e051e96fa3bac324152f248af40b09
+argv:
+- /home/julie/.cache/arena_secops/bin/httpx
+- -u
+- http://127.0.0.1:8807
+- -json
+- -o
+- /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/mt-out/httpx.json
+- -status-code
+- -title
+- -tech-detect
+- -no-color
+- -silent
+env: {}
+code_retour: 0
+timeout: false
+duree_ms: 536
+sortie_origine: fichier:httpx.json
+cible: /mnt/c/Users/julie/.zcode/workspace/default/agnt/PHASE3/cible_web
+sandbox_limites:
+  max_processus: 256
+  max_cpu_secondes: 300
+  max_fichier_octets: 536870912
+  timeout_secondes: 120
+  memoire: NON limitée (RLIMIT_AS casse Trivy et Gitleaks) — nécessite cgroups
+  reseau: AUTORISÉ (`--unshare-net` retiré de la commande)
+stderr_extrait: ''

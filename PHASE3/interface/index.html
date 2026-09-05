@@ -63,6 +63,41 @@
     append-only sign&eacute; · aucune valeur invent&eacute;e par cette page</p>
 </section>
 
+<!-- Engagement web : une URL autorisée. Le plan s'affiche toujours ; l'exécution
+     réelle est un choix explicite (executer: true), orchestrée par le même moteur
+     que les missions dépôt (pipeline_web → ExecuteurLocal, file à un consommateur). -->
+<section class="brief" aria-label="engagement web">
+  <div class="titre">
+    <h1>Engagement web <i>/</i></h1>
+    <p class="serif">Une URL que vous êtes autorisé à sonder. Le plan s'affiche ;
+      l'exécution réelle reste un choix explicite.</p>
+  </div>
+  <form class="lancer" id="webform" onsubmit="return false">
+    <label class="q"><span>cible web (URL)</span>
+      <input id="web-url" placeholder="http://127.0.0.1:8807" disabled>
+    </label>
+    <label class="cage"><span>autorisation de la cible</span>
+      <input id="web-autorisee" type="checkbox" disabled>
+      <em>je d&eacute;tiens l'autorisation d'analyser cette cible — sans elle, refus
+        nomm&eacute; <code>cible_non_autorisee</code></em>
+    </label>
+    <label class="cage"><span>cage r&eacute;seau</span>
+      <input id="web-egress" type="checkbox" disabled>
+      <em>sortie r&eacute;seau pour cet engagement — les providers web sont tous
+        <code>reseau: true</code> : sans elle, ils sont &eacute;cart&eacute;s nomm&eacute;ment</em>
+    </label>
+    <label class="cage"><span>ex&eacute;cution r&eacute;elle</span>
+      <input id="web-executer" type="checkbox" disabled>
+      <em>coch&eacute;e : la cha&icirc;ne pr&eacute;vue tourne (binaires du service) ;
+        d&eacute;coch&eacute;e : plan seul, rien ne part</em>
+    </label>
+    <button id="web-go" disabled title="démarrer api.py pour activer">Engager<kbd>↵</kbd></button>
+  </form>
+  <p class="pied-brief">scope verrouill&eacute; sur l'h&ocirc;te de l'URL · cha&icirc;ne
+    httpx&rarr;katana&rarr;ffuf&rarr;nuclei · preuve scell&eacute;e par engagement</p>
+</section>
+<div id="web-zone" class="cache" aria-label="résultat de l'engagement web"></div>
+
 <!-- Ledger VIVANT : ce que le journal de mission a d&eacute;j&agrave; &eacute;crit, relu en cours
      d'ex&eacute;cution. Rempli par app.js &agrave; partir de `/api/runs/<id>.vivante`, donc vide
      et masqu&eacute; tant qu'aucune mission n'a consign&eacute; d'&eacute;tat. -->

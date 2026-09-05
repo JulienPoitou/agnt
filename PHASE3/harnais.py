@@ -43,7 +43,8 @@ CACHE_REGLES = Path.home() / ".cache" / "arena_secops" / "rules"
 CACHE_DB = Path.home() / ".cache" / "arena_secops" / "trivy-cache"
 
 
-def _sandbox(cible: Path, sortie: Path, timeout: int = 600) -> Sandbox:
+def _sandbox(cible: Path, sortie: Path, timeout: int = 600,
+             egress_autorise: bool = False) -> Sandbox:
     return Sandbox(
         bwrap="bwrap",
         racine_scan=cible,
@@ -52,6 +53,7 @@ def _sandbox(cible: Path, sortie: Path, timeout: int = 600) -> Sandbox:
         sortie=sortie,
         gitconfig=RACINE / "gitconfig",
         timeout=timeout,
+        egress_autorise=egress_autorise,
     )
 
 
@@ -64,15 +66,23 @@ def _resoudre(argv: list[str], binaire: str) -> list[str]:
 
 def capturer(tool_id: str, binaire: str, argv: list[str], cible: Path,
              repertoire_captures: Path, timeout: int = 600,
-             env: dict | None = None) -> dict:
-    """Exécute dans la sandbox, enregistre artefact brut + méta. Retourne le méta."""
+             env: dict | None = None, egress_autorise: bool = False,
+             exiger_json: bool = True) -> dict:
+    """Exécute dans la sandbox, enregistre artefact brut + méta. Retourne le méta.
+
+    `egress_autorise` : True pour les providers ACTIVE (conditions reseau: true du
+    registre) — la sandbox retire --unshare-net, le harnais exécute comme le
+    runtime exécutera. `exiger_json` : False pour les outils web qui sortent du
+    TEXTE (git-dumper) — le stdout brut devient l'artefact (fichier .txt), le
+    parser nommé du registre reste l'autorité sur les items.
+    """
     repertoire_captures.mkdir(parents=True, exist_ok=True)
     sortie = RACINE / "run"
     sortie.mkdir(parents=True, exist_ok=True)
     for f in sortie.iterdir():          # le harnais possède ce répertoire : on le vide
         if f.is_file():
             f.unlink()
-    sbx = _sandbox(cible, sortie, timeout=timeout)
+    sbx = _sandbox(cible, sortie, timeout=timeout, egress_autorise=egress_autorise)
     problemes = sbx.verifie()
     if problemes:
         raise RuntimeError(f"sandbox invalide : {problemes}")
@@ -92,11 +102,19 @@ def capturer(tool_id: str, binaire: str, argv: list[str], cible: Path,
     duree_ms = int((time.monotonic() - t0) * 1000)
 
     # Sortie : fichier écrit dans le montage de sortie, sinon stdout.
+    # `exiger_json=False` (outils web en sortie texte : nmap -oX, git-dumper, …) :
+    # l'ARTEFACT BRUT du fichier (ou du stdout) est capturé tel quel — le parser
+    # du registre reste l'autorité sur les items.
     donnees, origine = None, ""
     candidats = sorted(sortie.glob(f"*{tool_id}*")) + sorted(sortie.glob("*.json"))
     for f in candidats:
+        texte_f = f.read_text(encoding="utf-8", errors="replace")
+        if not exiger_json:
+            donnees = texte_f
+            origine = f"fichier:{f.name}"
+            break
         try:
-            donnees = json.loads(f.read_text(encoding="utf-8"))
+            donnees = json.loads(texte_f)
             origine = f"fichier:{f.name}"
             break
         except Exception:
@@ -107,6 +125,9 @@ def capturer(tool_id: str, binaire: str, argv: list[str], cible: Path,
             origine = "stdout"
         except Exception:
             donnees = None
+    if donnees is None and not exiger_json and (r.stdout or "").strip():
+        donnees = r.stdout
+        origine = "stdout:texte"
     if donnees is None:
         raise RuntimeError(
             f"{tool_id} : aucune sortie JSON exploitable (code={r.code}, "
@@ -128,8 +149,11 @@ def capturer(tool_id: str, binaire: str, argv: list[str], cible: Path,
         "sandbox_limites": sbx.limites_appliquees(),
         "stderr_extrait": (r.stderr or "")[-400:],
     }
-    (repertoire_captures / f"{tool_id}.json").write_text(
-        json.dumps(donnees, ensure_ascii=False, indent=2), encoding="utf-8")
+    if isinstance(donnees, str):
+        (repertoire_captures / f"{tool_id}.txt").write_text(donnees, encoding="utf-8")
+    else:
+        (repertoire_captures / f"{tool_id}.json").write_text(
+            json.dumps(donnees, ensure_ascii=False, indent=2), encoding="utf-8")
     (repertoire_captures / f"{tool_id}.meta.yaml").write_text(
         yaml.safe_dump(meta, allow_unicode=True, sort_keys=False), encoding="utf-8")
     meta["_donnees"] = donnees
@@ -138,7 +162,8 @@ def capturer(tool_id: str, binaire: str, argv: list[str], cible: Path,
 
 def stabilite(tool_id: str, binaire: str, argv: list[str], cible: Path,
               repertoire_captures: Path, env: dict | None = None,
-              normaliser=None) -> dict:
+              normaliser=None, timeout: int = 600, egress_autorise: bool = False,
+              exiger_json: bool = True) -> dict:
     """Deuxième exécution : la sortie est-elle octet pour octet identique ?
     Réponse honnête dans le dossier (les horodatages rendent souvent la réponse
     « non » — c'est une information pour l'extraction, pas un échec).
@@ -148,19 +173,38 @@ def stabilite(tool_id: str, binaire: str, argv: list[str], cible: Path,
     clé), qui est ce qui compte pour les ATTENDUS. Mesuré sur kics 2.1.20 : les
     horodatages et l'ordre d'énumération (maps Go) varient entre deux exécutions ;
     l'ensemble des détections, non."""
-    avant = (repertoire_captures / f"{tool_id}.json").read_bytes()
+    # Le fichier d'artefact suit le FORMAT de l'appelant : .txt d'abord quand
+    # l'outil sort du texte (un .json résiduel d'un ancien run ne doit pas être
+    # relu — il contient du texte et casse le json.loads de la normalisation).
+    candidats_avant = ([repertoire_captures / f"{tool_id}.txt",
+                        repertoire_captures / f"{tool_id}.json"]
+                       if not exiger_json else
+                       [repertoire_captures / f"{tool_id}.json",
+                        repertoire_captures / f"{tool_id}.txt"])
+    avant_f = next(f for f in candidats_avant if f.exists())
+    avant = avant_f.read_bytes()
     seconde = capturer(tool_id, binaire, argv, cible,
-                       repertoire_captures.parent / "_stabilite", env=env)
-    apres = (repertoire_captures.parent / "_stabilite" / f"{tool_id}.json").read_bytes()
+                       repertoire_captures.parent / "_stabilite", env=env,
+                       timeout=timeout, egress_autorise=egress_autorise,
+                       exiger_json=exiger_json)
+    apres_f = (repertoire_captures.parent / "_stabilite" / f"{tool_id}.json")
+    if not apres_f.exists():
+        apres_f = (repertoire_captures.parent / "_stabilite" / f"{tool_id}.txt")
+    apres = apres_f.read_bytes()
     stable = avant == apres
     resultat = {"identique_octet_pour_octet": stable,
                 "taille_1": len(avant), "taille_2": len(apres)}
     if normaliser is not None:
         import json as _json
-        resultat["identique_contenu_normalise"] = (
-            normaliser(_json.loads(avant)) == normaliser(_json.loads(apres)))
+        if avant_f.suffix == ".txt":
+            # artefact TEXTE (outil web sans JSON) : le normaliser reçoit le texte brut
+            resultat["identique_contenu_normalise"] = (
+                normaliser(avant.decode("utf-8")) == normaliser(apres.decode("utf-8")))
+        else:
+            resultat["identique_contenu_normalise"] = (
+                normaliser(_json.loads(avant)) == normaliser(_json.loads(apres)))
     # Restaure l'artefact de référence (la 2e exécution ne doit pas l'écraser).
-    (repertoire_captures / f"{tool_id}.json").write_bytes(avant)
+    avant_f.write_bytes(avant)
     return resultat
 
 

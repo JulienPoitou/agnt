@@ -39,12 +39,15 @@ def charger_manifest(provider_id: str, registre=None):
 
 
 def planifier(provider_id: str, url_canonique: str, out_dir: str,
-              egress: bool = False, registre=None) -> dict:
+              egress: bool = False, registre=None, regles: str = "") -> dict:
     """Plan d'exécution d'un provider web sur une URL canonique.
 
     Refus nommés : provider inconnu (registre), cible non-`url` au manifest,
     egress requis mais non accordé. L'argv garde `{BIN}` sous le nom du
-    binaire déclaré — résolu à l'exécution seulement.
+    binaire déclaré — résolu à l'exécution seulement. `regles` alimente
+    `{REGLES}` (données d'entrée épinglées : template nuclei d'épreuve,
+    wordlist ffuf) ; vide, les providers qui l'exigent échoueront NOMMÉMENT
+    à l'exécution — jamais silencieusement.
     """
     try:
         mani = charger_manifest(provider_id, registre)
@@ -63,7 +66,7 @@ def planifier(provider_id: str, url_canonique: str, out_dir: str,
     nom_sortie = f"{mani.id}.{mani.sortie_format}"
     chemins = {"BIN": mani.binaire, "URL": url_canonique, "TARGET": url_canonique,
                "OUT": f"{out_dir}/{nom_sortie}", "OUT_DIR": out_dir,
-               "REGLES": "", "DB": ""}
+               "REGLES": str(regles or ""), "DB": ""}
     try:
         argv = resoudre_argv(mani, chemins)
     except Exception as e:
@@ -99,6 +102,7 @@ def interpreter(provider_id: str, code: int, stdout_texte: str = "",
     if sur_mesure:
         import parsers  # noqa: F401 (enregistre les parsers nommés)
         import parsers_zap  # noqa: F401 (enregistre "zap_baseline")
+        import parsers_gitdumper  # noqa: F401 (enregistre "gitdumper")
         from parsers import obtenir
         fn = obtenir(getattr(ex, "parser", ""))
         if fn is None:

@@ -826,6 +826,10 @@ capabilities:
           code_succes: [0]
           conditions:
             reseau: true
+          # 2026-09-05, épreuve sandbox : nmap NE PARSE PAS les URLs http:// — la cible
+          # lui est passée comme HÔT nu (127.0.0.1), target_types inclut host. Et son
+          # top-1000 ports par défaut IGNORE les ports hauts (8807 non scanné) : le
+          # planning doit décomposer l'URL ET passer -p <port> à l'outil.
           limite: >
             nmap ne classe pas : la sévérité reste UNKNOWN (jamais une traduction
             inventée par le cœur). Un port ouvert n'est pas une vulnérabilité ; ce
@@ -863,10 +867,17 @@ capabilities:
             - "{BIN}"
             - "-target"
             - "{URL}"
+            - "-t"
+            - "{REGLES}/nuclei-epreuve.yaml"
+            - "-duc"
             - "-jsonl"
             - "-o"
             - "{OUT}"
             - "-silent"
+          # 2026-09-05, épreuve sandbox : templates officielles non téléchargées à ce
+          # stade (armement) — l'épreuve tourne sur UN template local épinglé
+          # (regles_web/nuclei-epreuve.yaml, empreinte au manifeste) qui prouve la
+          # chaîne complète target→template→finding. -duc coupe le check de màj.
           output:
             format: jsonl
           extraction:
@@ -986,6 +997,8 @@ capabilities:
           tool_id: ffuf
           argv:
             - "{BIN}"
+            - "-w"
+            - "{REGLES}/dossiers-mini.txt"
             - "-u"
             - "{URL}/FUZZ"
             - "-of"
@@ -993,6 +1006,10 @@ capabilities:
             - "-o"
             - "{OUT}"
             - "-s"
+          # 2026-09-05, première exécution réelle : ffuf REFUSE de tourner sans -w —
+          # le manifeste initial était inutilisable (jamais exécuté). La wordlist
+          # d'épreuve est épinglée dans manifeste_dependances.yaml (section regles,
+          # empreinte) et montée à {REGLES} comme toute donnée d'entrée vérifiée.
           output:
             format: json
           extraction:
@@ -1020,3 +1037,131 @@ capabilities:
             l'énumération de surface d'attaque, pas une vulnérabilité. La « confiance »
             portée est le verdict du MATCHER de ffuf (matcherstatus), pas une évaluation
             du contenu ; un 200 générique (soft-404) reste un finding ici.
+
+  # === Étape web (2026-09-05) : première sonde de surface HTTP ===
+  # Pourquoi une capacité et pas un provider de plus sur WEB_ENDPOINT_DISCOVERY_ACTIVE :
+  # la sonde httpx VÉRIFIE une URL (vie, statut, titre, technologies), ffuf DÉCOUVRE des
+  # chemins par fuzzing. Deux lectures différentes du même périmètre — les fusionner
+  # confondrait « ce qui répond » et « ce qui existe sans être lié ». Sortie épreuve :
+  # cible_web/epreuve_httpx.jsonl (cible THAUMAS-WEB, 2026-09-05) ; l'extraction a été
+  # prouvée par le cœur (extraction.py, modèle lignes_json — format déjà prévu pour
+  # nuclei/httpx). La preuve sandbox bwrap reste à produire (WSL arrêté au moment de
+  # l'épreuve : VM VMware monopolise 7 Go — la qualification complète suit).
+  - id: WEB_HTTP_PROBE
+    description: >
+      Sonde HTTP de surface : vérifie la vie d'une URL, code de statut, titre de page,
+      serveur et technologies détectées — ACTIVE.
+    domaines: [webapp, offensive]
+    entree: [cible]
+    sortie: finding/web-endpoint
+    generique: false
+    mots_cles: ["sonde http", "surface http", "vérification d'endpoints",
+                "httpx", "technologies web", "serveur web exposé"]
+    providers:
+      - id: httpx
+        kind: tool
+        mode: CLI
+        risque: ACTIVE
+        cout: faible
+        priorite: 130
+        commande: ["httpx"]
+        manifest:
+          id: httpx
+          kind: tool
+          mode: cli
+          binaire: httpx
+          tool_id: httpx
+          argv:
+            - "{BIN}"
+            - "-u"
+            - "{URL}"
+            - "-json"
+            - "-o"
+            - "{OUT}"
+            - "-status-code"
+            - "-title"
+            - "-tech-detect"
+            - "-no-color"
+            - "-silent"
+          output:
+            format: jsonl
+          extraction:
+            modele: lignes_json
+            champs:
+              url: url
+              regle: status_code
+              nom_regle: title
+              message: webserver
+              preuve: input
+          risk: ACTIVE
+          target_types: [url]
+          code_succes: [0]
+          conditions:
+            reseau: true
+          limite: >
+            une sonde httpx est une URL vivante avec son statut, son titre et ses
+            technologies : de la cartographie de surface, pas une vulnérabilité. La
+            sévérité n'existe pas chez cet outil — elle reste absente, jamais inventée.
+
+  # === Étape web (2026-09-05) : exploitation d'un dépôt VCS exposé ===
+  # git-dumper complète la sonde : httpx dit « /.git/config répond », git-dumper
+  # PROUVE l'impact (le dépôt est restauré, le contenu récupéré). Épreuve du
+  # 2026-09-05 : fixture git complet servi par THAUMAS-WEB (T-GIT-002), 22 fichiers
+  # récupérés, checkout restauré, marqueur GIT-DUMP-OK-THAUMAS-2026 relisible dans
+  # le dump (cible_web/_gitdump_log.txt). Parser nommé `gitdumper`
+  # (parsers_gitdumper.py) : l'outil ne rend pas de JSON, le constat vient du
+  # journal de récupération.
+  - id: WEB_VCS_DUMP
+    description: >
+      Dump et restauration d'un dépôt git exposé par le serveur web — ACTIVE.
+    domaines: [webapp, offensive]
+    entree: [cible]
+    sortie: finding/web-vcs-dump
+    generique: false
+    mots_cles: ["dépôt git exposé", "dump git", "fuite de code source",
+                "git-dumper", "métadonnées VCS", "restauration de dépôt"]
+    providers:
+      - id: git-dumper
+        kind: tool
+        mode: CLI
+        risque: ACTIVE
+        cout: faible
+        priorite: 125
+        commande: ["git-dumper"]
+        manifest:
+          id: git-dumper
+          kind: tool
+          mode: cli
+          binaire: git-dumper
+          tool_id: git-dumper
+          argv:
+            - "{BIN}"
+            - "-t"
+            - "10"
+            - "{URL}/.git/"
+            - "{OUT_DIR}"
+          output:
+            format: custom
+          extraction:
+            parser: gitdumper
+            items_from: items
+            champs:
+              regle: regle
+              nom_regle: nom_regle
+              message: message
+              confiance: confiance
+              remediation: remediation
+              reference: reference
+              cwe: cwe
+              preuve: preuve
+          risk: ACTIVE
+          target_types: [url]
+          code_succes: [0]
+          conditions:
+            reseau: true
+            timeout_s: 300
+          limite: >
+            le constat porte sur l'ACCESSIBILITÉ du dépôt, pas sur son contenu : le
+            moteur ne lit pas les secrets dumpés (aucune donnée de la cible ne
+            traverse le registre). La restauration « git checkout » par l'OUTIL se
+            fait dans {OUT_DIR}, jamais hors sandbox.

@@ -1,0 +1,112 @@
+[-] Testing http://127.0.0.1:8807/.git/HEAD [200]
+[-] Testing http://127.0.0.1:8807/.git/ [404]
+[-] Fetching common files
+[-] Fetching http://127.0.0.1:8807/.gitignore [404]
+[-] http://127.0.0.1:8807/.gitignore responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/COMMIT_EDITMSG [200]
+[-] Fetching http://127.0.0.1:8807/.git/description [200]
+[-] Fetching http://127.0.0.1:8807/.git/hooks/applypatch-msg.sample [200]
+[-] Fetching http://127.0.0.1:8807/.git/hooks/commit-msg.sample [200]
+[-] Fetching http://127.0.0.1:8807/.git/hooks/post-commit.sample [404]
+[-] http://127.0.0.1:8807/.git/hooks/post-commit.sample responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/hooks/post-update.sample [200]
+[-] Fetching http://127.0.0.1:8807/.git/hooks/post-receive.sample [404]
+[-] http://127.0.0.1:8807/.git/hooks/post-receive.sample responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/hooks/pre-commit.sample [200]
+[-] Fetching http://127.0.0.1:8807/.git/hooks/pre-rebase.sample [200]
+[-] Fetching http://127.0.0.1:8807/.git/hooks/pre-push.sample [200]
+[-] Fetching http://127.0.0.1:8807/.git/hooks/pre-receive.sample [200]
+[-] Fetching http://127.0.0.1:8807/.git/hooks/prepare-commit-msg.sample [200]
+[-] Fetching http://127.0.0.1:8807/.git/index [200]
+[-] Fetching http://127.0.0.1:8807/.git/objects/info/packs [404]
+[-] http://127.0.0.1:8807/.git/objects/info/packs responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/hooks/pre-applypatch.sample [200]
+[-] Fetching http://127.0.0.1:8807/.git/info/exclude [200]
+[-] Fetching http://127.0.0.1:8807/.git/hooks/update.sample [200]
+[-] Finding refs/
+[-] Fetching http://127.0.0.1:8807/.git/FETCH_HEAD [404]
+[-] http://127.0.0.1:8807/.git/FETCH_HEAD responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/HEAD [200]
+[-] Fetching http://127.0.0.1:8807/.git/ORIG_HEAD [404]
+[-] http://127.0.0.1:8807/.git/ORIG_HEAD responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/info/refs [404]
+[-] http://127.0.0.1:8807/.git/info/refs responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/config [200]
+[-] Fetching http://127.0.0.1:8807/.git/logs/HEAD [200]
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/heads/main [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/heads/main responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/heads/staging [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/heads/staging responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/heads/master [200]
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/heads/production [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/heads/production responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/heads/development [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/heads/development responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/remotes/origin/HEAD [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/remotes/origin/HEAD responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/remotes/origin/main [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/remotes/origin/main responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/remotes/origin/staging [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/remotes/origin/staging responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/remotes/origin/master [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/remotes/origin/master responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/remotes/origin/production [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/remotes/origin/production responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/remotes/origin/development [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/remotes/origin/development responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/logs/refs/stash [404]
+[-] http://127.0.0.1:8807/.git/logs/refs/stash responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/packed-refs [404]
+[-] http://127.0.0.1:8807/.git/packed-refs responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/heads/main [404]
+[-] http://127.0.0.1:8807/.git/refs/heads/main responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/heads/production [404]
+[-] http://127.0.0.1:8807/.git/refs/heads/production responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/heads/staging [404]
+[-] http://127.0.0.1:8807/.git/refs/heads/staging responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/remotes/origin/HEAD [404]
+[-] http://127.0.0.1:8807/.git/refs/remotes/origin/HEAD responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/heads/master [200]
+[-] Fetching http://127.0.0.1:8807/.git/refs/remotes/origin/master [404]
+[-] http://127.0.0.1:8807/.git/refs/remotes/origin/master responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/remotes/origin/staging [404]
+[-] http://127.0.0.1:8807/.git/refs/remotes/origin/staging responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/remotes/origin/production [404]
+[-] http://127.0.0.1:8807/.git/refs/remotes/origin/production responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/remotes/origin/development [404]
+[-] http://127.0.0.1:8807/.git/refs/remotes/origin/development responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/heads/development [404]
+[-] http://127.0.0.1:8807/.git/refs/heads/development responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/stash [404]
+[-] http://127.0.0.1:8807/.git/refs/stash responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/wip/wtree/refs/heads/main [404]
+[-] http://127.0.0.1:8807/.git/refs/wip/wtree/refs/heads/main responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/wip/wtree/refs/heads/master [404]
+[-] http://127.0.0.1:8807/.git/refs/wip/wtree/refs/heads/master responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/wip/wtree/refs/heads/staging [404]
+[-] http://127.0.0.1:8807/.git/refs/wip/wtree/refs/heads/staging responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/wip/wtree/refs/heads/production [404]
+[-] http://127.0.0.1:8807/.git/refs/wip/wtree/refs/heads/production responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/wip/wtree/refs/heads/development [404]
+[-] http://127.0.0.1:8807/.git/refs/wip/wtree/refs/heads/development responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/main [404]
+[-] http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/main responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/remotes/origin/main [404]
+[-] http://127.0.0.1:8807/.git/refs/remotes/origin/main responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/production [404]
+[-] http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/production responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/development [404]
+[-] http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/development responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/staging [404]
+[-] http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/staging responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/master [404]
+[-] http://127.0.0.1:8807/.git/refs/wip/index/refs/heads/master responded with status code 404
+[-] Finding packs
+[-] Finding objects
+[-] Fetching objects
+[-] Fetching http://127.0.0.1:8807/.git/objects/00/00000000000000000000000000000000000000 [404]
+[-] http://127.0.0.1:8807/.git/objects/00/00000000000000000000000000000000000000 responded with status code 404
+[-] Fetching http://127.0.0.1:8807/.git/objects/ab/e92575e84d8776026000e2b91032771397eddf [200]
+[-] Fetching http://127.0.0.1:8807/.git/objects/bd/3337d7a0b99a3b482a6f2cffe297be7be7a23c [200]
+[-] Fetching http://127.0.0.1:8807/.git/objects/1c/ab9c3b2c870def932191f9b6f87e61b56520d4 [200]
+[-] Running git checkout .
