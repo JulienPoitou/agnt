@@ -67,7 +67,9 @@ WEB_PROVIDERS_ORDRE = {"httpx": 50, "katana": 20, "ffuf": 30, "nuclei": 30,
                        "dotdotpwn": 20, "testssl_sh": 30, "sslyze": 30,
                        "sslscan": 30, "tlsx": 30,
                        "sqlmap": 130, "dalfox": 131, "commix": 132,
-                       "crlfuzz": 133, "arjun": 134}
+                       "crlfuzz": 133, "arjun": 134,
+                       "whatweb": 40, "webanalyze": 40, "wafw00f": 20,
+                       "nikto_scan": 30}
 
 # Règles épinglées montées à {REGLES} pour les providers web (template nuclei
 # d'épreuve, wordlist ffuf) — empreintes dans manifeste_dependances.yaml, preuves

@@ -50,11 +50,12 @@ RUNTIME_VERIFIED = False
 # détails du rapport ; le run continue avec les suivants. Les outils hors phases
 # (engagements plus anciens, extensions) partent en queue d'ordre.
 PHASES = {
-    "surface":   ["httpx", "whatweb", "webanalyze", "wafw00f", "gowitness"],
+    "surface":   ["httpx", "whatweb", "webanalyze", "wafw00f"],
     "endpoints": ["katana", "ffuf", "gobuster", "feroxbuster", "dirsearch",
                   "hakrawler", "arjun", "x8"],
     "vuln":      ["nuclei", "sqlmap", "dalfox", "commix", "crlfuzz",
-                  "dotdotpwn", "wpscan", "testssl.sh", "sslyze", "sslscan"],
+                  "dotdotpwn", "wpscan", "testssl.sh", "sslyze", "sslscan",
+                  "nikto_scan"],
 }
 ORDRE_CHAINE = [pid for outils in PHASES.values() for pid in outils]
 

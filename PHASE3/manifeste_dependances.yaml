@@ -585,7 +585,7 @@ binaires:
 
   nikto_scan:
     version: "2.6.1"
-    sha256: 22c13d5d262463e5c92e8a1c167e2b9a04e06c74e3c1661d2b0b1995bb9790d9
+    sha256: 0af1a39f8fbd14e71992fbce694ef62b3af41f125388aebf22a600210927ec7d
     source: composant vague-web/g1 — contenu VERSIONNÉ reproduit ci-dessous (convention
       shellcheck_scan/hadolint_scan/hakrawler_scan), installé à côté du dépôt nikto
     licence: GPL-3.0 (le wrapper suit le dépôt ; il appelle nikto GPL-3.0)
