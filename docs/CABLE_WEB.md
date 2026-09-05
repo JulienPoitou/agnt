@@ -71,7 +71,18 @@ les batteries de ce dépôt : on s'y réfère, on ne les refait pas.
       T-TRAVERSAL-001 (dotdotpwn) · T-SQLI-001/002 (sqlmap) · T-XSS-001
       (dalfox) — le tout SOUS CAGE bwrap, preuve scellée par engagement,
       reprise diff stable.
-- [ ] **G5 vague-web/g5 — wpscan, kiterunner, dirhunt, gospider, x8** (file d'attente)
+- [x] **G5 vague-web/g5 — kiterunner, gospider, dirhunt, x8, cmseek**
+      (2026-09-05, commit b9f8900) : 5/5 — wpscan REFUSÉ nommément (ruby-dev
+      absent, mesuré) et REMPLACÉ par cmseek pour la capacité audit CMS ;
+      kiterunner trouve /.env et /admin (chemins NON liés — complément exact
+      des crawlers) ; dirhunt : 3 limites d'outil mesurées et nommées ; x8 :
+      vide motivé (chasse les paramètres cachés, q est visible) ; intégration :
+      merge + promotion + 27/27 providers dans le détail, 0 écarté, 0 hors
+      cage, 43 constats, 36 VERIFIED par 18 outils ; reprise 32 persistants /
+      10 nouveaux / 1 non relevé
+- [x] **★ VAGUE COMPLÈTE — 27 providers qualifiés et actifs dans la chaîne en
+      phases** (surface 4 · endpoints 11 · vuln 12), tous SOUS CAGE bwrap,
+      épinglés, promus, testés (batteries g1-g5 : 101+94+58+50+57 cas)
 - [ ] ①-b tranche **git-dumper** : hors `WEB_PROVIDERS_ORDRE` (découverte ≠ sonde) —
       décider de son entrée dans la chaîne (provider d'appoint ? capacité à part ?)
 - [x] **corrélation — étude** : `docs/RECHERCHE_CORRELATION.md` (Burp, ZAP,
