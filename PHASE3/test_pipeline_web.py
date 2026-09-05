@@ -92,6 +92,23 @@ def main() -> int:
             "demandée en dernier",
             [d["provider"] for d in rap_o["details"]] == ["httpx", "nuclei"],
             json.dumps([d["provider"] for d in rap_o["details"]]))
+        # --- plafond SYSTEMIC (leçon ZAP 2.17) : vue agrégée, findings intacts
+        def faux_finding(n):
+            return {"id": "x-%04d" % n,
+                    "source": {"tool": "ffuf", "canonical_rule_id": "ffuf:x"},
+                    "location": {"url": "https://target.tld/p%d" % n}}
+        fakes = [faux_finding(i) for i in range(7)] + [
+            {"id": "y-0001", "source": {"tool": "ffuf", "canonical_rule_id": "ffuf:y"},
+             "location": {"url": "https://target.tld/un"}}]
+        sysv = PW._systemique(fakes)
+        cas("systemique : règle sur 7 URLs → UN agrégat, tronqué à 5 affichées",
+            len(sysv) == 1 and sysv[0]["occurrences"] == 7
+            and sysv[0]["urls_distinctes"] == 7 and len(sysv[0]["urls"]) == 5
+            and sysv[0]["tronque"] is True,
+            json.dumps(sysv, ensure_ascii=False)[:180])
+        cas("systemique : règle sous le seuil → pas d'agrégat",
+            all(s["regle"] != "ffuf:y" for s in sysv),
+            json.dumps(sysv, ensure_ascii=False)[:120])
         fp0 = rap["findings"][0]["identity"]["fingerprint"]
         rap_r = PW.derouler(engagement(), faux_ok({"nuclei": (0, NUCLEI_OK),
                                                   "zap_baseline": (1, ZAP_OK)}),

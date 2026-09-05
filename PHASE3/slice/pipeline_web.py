@@ -221,6 +221,35 @@ def _diff_reprise(findings: list[dict], precedents: dict) -> dict:
                 for fp in non_releves]}
 
 
+def _systemique(findings: list[dict], seuil: int = 5) -> list[dict]:
+    """Plafond SYSTEMIC (leçon ZAP 2.17, docs/RECHERCHE_CORRELATION.md) : une même
+    règle d'un même outil qui touche PLUS de `seuil` URLs distinctes est un motif
+    SYSTÉMIQUE — agrégé ici POUR LA LECTURE (une ligne au lieu de N doublons),
+    troncature AFFICHÉE. Les findings restent intacts : chaque URL garde son
+    empreinte (le diff de re-scan en dépend) — l'agrégat est une VUE, pas une
+    suppression. C'est la différence entre lire un rapport et masquer un résultat.
+    """
+    groupes: dict[tuple, set] = {}
+    total: dict[tuple, int] = {}
+    for f in findings:
+        src = f.get("source") or {}
+        cle = (str(src.get("tool") or ""), str(src.get("canonical_rule_id") or ""))
+        total[cle] = total.get(cle, 0) + 1
+        loc = str((f.get("location") or {}).get("url") or "")
+        if loc:
+            groupes.setdefault(cle, set()).add(loc)
+    out = []
+    for (outil, regle), urls in sorted(groupes.items()):
+        if len(urls) > seuil:
+            tries = sorted(urls)
+            out.append({"outil": outil, "regle": regle,
+                        "occurrences": total[(outil, regle)],
+                        "urls_distinctes": len(urls),
+                        "urls": tries[:seuil],
+                        "tronque": True})
+    return out
+
+
 def derouler(engagement: dict, executer_tache, registre=None,
              out_dir: str = "/tmp/agnt-web", regles: str = "",
              verifier_oracle: bool = True,
@@ -324,6 +353,9 @@ def derouler(engagement: dict, executer_tache, registre=None,
         rapport["reprise"] = _diff_reprise(findings, precedents)
         if precedent_id:
             rapport["reprise"]["engagement_precedent"] = precedent_id
+    systemique = _systemique(findings)
+    if systemique:
+        rapport["systemique"] = systemique
     if not plans:
         rapport["statut_run"] = "refuse"
         rapport["motif_run"] = "; ".join(e["motif"] for e in ecartes) or "aucun plan"

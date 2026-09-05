@@ -729,6 +729,35 @@ function renduRapportWeb(st) {
     + "Un tool qui répond sans rien lire est consigné « sortie vide : échec d'exécution, pas un scan propre »."));
   n.append(s2);
   n.append(blocFindings(n, {findings: rap.findings}));
+  if (Array.isArray(rap.systemique) && rap.systemique.length) {
+    // Plafond SYSTEMIC (leçon ZAP 2.17) : une règle répétée au-delà du seuil est
+    // un motif systémique — agrégé POUR LA LECTURE, troncature affichée. Les
+    // findings individuels restent ci-dessus, intacts (le diff en dépend).
+    const ss = section(n, "Motifs systémiques", 6,
+      rap.systemique.length + " motif(s) au-delà de 5 URLs distinctes");
+    const tab = el("table");
+    const t = el("tr");
+    ["outil", "règle", "occurrences", "URLs distinctes", "échantillon"].forEach(
+      (x) => t.append(el("th", null, x)));
+    tab.append(t);
+    rap.systemique.forEach((s) => {
+      const l = el("tr");
+      const ech = el("td", "raison");
+      (s.urls || []).forEach((u) => ech.append(el("div", null, u)));
+      if (s.tronque) ech.append(el("span", "pastille attention",
+        "… tronqué à " + (s.urls || []).length + " URLs affichées"));
+      l.append(el("td", "outil", s.outil || "?"),
+               el("td", null, s.regle || "?"),
+               el("td", null, String(s.occurrences)),
+               el("td", null, String(s.urls_distinctes)),
+               ech);
+      tab.append(l);
+    });
+    ss.append(tab);
+    ss.append(el("p", "note", "Vue de lecture : les constats individuels ci-dessus restent "
+      + "porteurs de leur empreinte et passent par l'oracle un à un."));
+    n.append(ss);
+  }
   if (existe(rap.preuve)) {
     const s3 = section(n, "Preuve scellée", 5, "empreinte vérifiable par slice/preuve.verifier");
     arbre(s3, rap.preuve);
