@@ -6,12 +6,21 @@
 <title>AGNT — console opérationnelle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="t-ambre">
 
-<!-- Bandeau de tête : l'état du canal, le choix du phosphore, rien d'autre -->
+<!-- La lumière derrière le verre : grille fine, deux orbes lentes, vignette.
+     Purement décoratif (aria-hidden) : les données restent le seul sujet. -->
+<div class="bg-layer" aria-hidden="true">
+  <div class="grille"></div>
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="vignette"></div>
+</div>
+
+<!-- Bandeau de tête : l'état du canal, la teinte d'accent du verre, rien d'autre -->
 <header class="strip">
   <div class="marque">AGNT</div>
   <div class="sous">console opérationnelle · mandat passif · diffusion restreinte</div>
@@ -145,7 +154,7 @@
 <main id="poste" class="grille"></main>
 <footer class="pied" id="pied"></footer>
 
-<!-- Allumage du tube au lancement : cosmétique pur, aucun chiffre inventé. -->
+<!-- Allumage au lancement d'un run : cosmétique pur, aucun chiffre inventé. -->
 <div id="boot" aria-hidden="true"><div class="ligne"></div></div>
 
 <script src="app.js"></script>
