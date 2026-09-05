@@ -32,9 +32,20 @@ les batteries de ce dépôt : on s'y réfère, on ne les refait pas.
       qualif sandbox à produire, puis tranche cockpit
 - [ ] ①-b tranche **git-dumper** : hors `WEB_PROVIDERS_ORDRE` (découverte ≠ sonde) —
       décider de son entrée dans la chaîne (provider d'appoint ? capacité à part ?)
-- [ ] **corrélation** : étude des pratiques concurrentes (DefectDojo dedup-hash,
-      Burp consolidation, ZAP…) → recommandations vers `clusterer.py`
-      (doc : `docs/RECHERCHE_CORRELATION.md` quand validée)
+- [x] **corrélation — étude** : `docs/RECHERCHE_CORRELATION.md` (Burp, ZAP,
+      DefectDojo, Faraday, GitLab, Nuclei, Semgrep, PentestGPT/PentAGI/XBOW,
+      SSVC/EPSS — mécanismes exacts + 10 patterns transposables + 10
+      recommandations impact/effort) — 2026-09-05
+- [ ] **corrélation — implantation v1** (dans l'ordre de la priorisation) :
+      empreinte de finding (champs déclarés dans capabilities.yaml, stable
+      inter-runs, modèle DefectDojo et de ses bugs documentés) → diff de
+      re-scan (événement `no_longer_detected` dans cycle_vie — `rouvrir`/
+      `regresser` existent déjà) → identifiant primaire CVE/GHSA > règle
+      canonique > empreinte (leçon GitLab) → confiance à deux étages
+      (déclarée au manifest × verdict oracle, leçon Burp) → seconde recette
+      indépendante pour VERIFIED (piloter `contient_extrait`, leçon XBOW :
+      validation par exploitation, jamais auto-évaluation) → plafond
+      SYSTEMIC affiché (conventions ZAP 2.17) → vers `clusterer.py`
 - [ ] **cage** : exécution web sous bwrap au runtime (aujourd'hui `ExecuteurLocal`
       exécute hors cage — les qualifications sous cage existent, le runtime pas encore)
 
