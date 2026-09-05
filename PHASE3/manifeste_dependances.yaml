@@ -729,11 +729,25 @@ binaires:
     taille_approx: 10M
 
   dotdotpwn:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=dotdotpwn
-    licence: MIT
-    taille_approx: 10M
+    version: "3.0.2"
+    # L'exécutable est un wrapper sh (convention shellcheck_scan/hadolint_scan) :
+    # dotdotpwn.pl exige un CWD = racine du dépôt (use lib qw(.), DotDotPwn/User-Agents.txt,
+    # Reports/ en chemins relatifs). Le wrapper se place dans staging/dotdotpwn/repo avant
+    # d'exécuter le script perl épinglé.
+    sha256: 0ef5d79f60e964b12d3e2a0f17712dc90b2a1558a23f7b3d9cfdab2427bb6665
+    source: https://github.com/wireghoul/dotdotpwn (dépôt cloné au commit 2e3a8217a5be31e50057b9df2e8d7aba344a6bd4, tag 3.0.2) + wrapper sh ci-dessus
+    licence: GPL-3.0
+    taille_approx: 1M (dépôt) ; wrapper 300 o
+    verification: >
+      Le dépôt cloné est vérifiable par son commit épinglé (tag 3.0.2) ; l'empreinte sha256
+      est celle du WRAPPER exécuté — le contenu du dépôt est un état de commit, pas un
+      artefact hashable. Mesurées le 2026-09-05.
+    note: >
+      Qualifié le 2026-09-05 (vague web G4) — remplace le placeholder « pool » (0.1.0,
+      licence MIT erronée : le dépôt est GPLv3). Perl 5.38 : modules requis présents
+      (LWP::UserAgent, HTTP::Request, IO::Socket::SSL, Net::FTP, Time::HiRes) SAUF Net::TFTP
+      — absent, donc le mode -m tftp est inutilisable ; le mode http-url qualifié ici ne le
+      requiert pas. `use Switch` est commenté dans dotdotpwn.pl 3.0.2 (aucune dépendance).
 
   dvcs_ripper:
     version: "0.1.0"
@@ -1136,6 +1150,24 @@ binaires:
     licence: MIT
     taille_approx: 10M
 
+  sslscan:
+    version: "2.1.5"
+    # La branche 2.2.x exige OpenSSL >= 3.5 au build (mesuré : « #error "OpenSSL 3.5 or
+    # later is required!" ») ; la machine porte OpenSSL 3.0.13 → dernière release
+    # buildable ici : 2.1.5.
+    sha256: 0c53988fdbe4ee94e9b6ae3315de4d0c91f54b70ba3cc615f9a2196691101de6
+    tarball_sha256: b36616b1d59f3276af6ff9495ab8178ec6812393582fb3c094c56cc873efe956
+    source: https://github.com/rbsec/sslscan/releases/tag/2.1.5
+    licence: GPL-3.0
+    taille_approx: 1M (binaire) ; tarball 131K
+    note: >
+      Aucun binaire Linux publié par la release : construit LOCALEMENT depuis le tarball
+      source épinglé (make ; gcc 13, OpenSSL système). Le sha256 fait foi pour le BINAIRE
+      CONSTRUIT — il dépend de la chaîne de build, comme toute compilation locale ; le
+      tarball_sha256 atteste le canal d'amont. Build lié à l'OpenSSL système : protocoles
+      legacy (SSLv2/SSLv3) et tests de compression non disponibles — limite du build,
+      consignée. Mesuré le 2026-09-05.
+
   sslstrip:
     version: "0.1.0"
     sha256: "0000000000000000000000000000000000000000000000000000000000000000"
@@ -1151,11 +1183,23 @@ binaires:
     taille_approx: 10M
 
   sslyze:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=sslyze
-    licence: MIT
-    taille_approx: 10M
+    package: sslyze
+    version: "6.3.1"
+    source: https://pypi.org/project/sslyze/
+    licence: AGPL-3.0
+    distribution: pip
+    distribution_hash: "caf13b5a3c4148c625dfb561423ffde1e7c43cc5f61598b01ae96b793bd77b4d"
+    verification: >
+      Empreinte SHA-256 du fichier RECORD de la distribution installée (convention
+      bandit/git-dumper/checkov) — venv DÉDIÉ staging/sslyze/venv (python 3.12), mesurée
+      le 2026-09-05.
+    note: >
+      Qualifié le 2026-09-05 (vague web G4) — remplace le placeholder « pool » (0.1.0,
+      empreinte nulle) qui occupait ce nom. Dépendances installées par pip : nassl 5.4.0
+      (binaires OpenSSL précompilés), cryptography 46.0.7, pydantic 2.13.5,
+      tls_parser 2.0.2. sslyze exige hôte:port : une URL est refusée nommément DANS le
+      JSON (invalid_server_strings[].error_message « Not a valid host:port », code 0 —
+      mesuré contre THAUMAS-WEB).
 
   subbrute:
     version: "0.1.0"
@@ -1185,6 +1229,27 @@ binaires:
     licence: MIT
     taille_approx: 10M
 
+  testssl.sh:
+    version: "3.2.4"
+    # Dépôt git cloné à la release v3.2.4, commit épinglé :
+    # 97763a411c525720a5f9bd9d2cded416b10f210a (clone --depth 1 --branch v3.2.4).
+    # L'exécutable est le SCRIPT bash du dépôt : l'empreinte portée par sha256 est celle
+    # de testssl.sh à ce commit.
+    sha256: 9a42b203edaf8cfdd19cdca7c3cf16c78668bdc88cd656cf2cae0ec6e43129e4
+    source: https://github.com/testssl/testssl.sh (clone épinglé au commit 97763a411c525720a5f9bd9d2cded416b10f210a, tag v3.2.4)
+    licence: GPL-2.0
+    taille_approx: 60M (dépôt, bin/openssl multi-plateforme inclus) ; script 1M
+    note: >
+      Qualifié le 2026-09-05 (vague web G4), installé dans staging/testssl.sh/repo. Le
+      dépôt embarque bin/openssl.* ; sur cette machine testssl.sh a utilisé /usr/bin/openssl
+      (OpenSSL 3.0.13) — les vérifications dépendantes de la build d'openssl (compression,
+      renégociation) peuvent différer d'un openssl statique dédié. Une entrée « pool »
+      testssl (0.1.0, empreinte nulle) figure à côté dans ce manifeste : placeholder
+      d'inventaire non référencé par aucun provider ; l'entrée réelle est celle-ci, nommée
+      d'après le binaire exécuté (convention tool_id == binaire). testssl.sh refuse une
+      cible http:// au sens usage (code 254, JSON d'état FATAL — mesuré contre
+      THAUMAS-WEB) : il exige https:// ou hôte:port.
+
   tls_prober:
     version: "0.1.0"
     sha256: "0000000000000000000000000000000000000000000000000000000000000000"
@@ -1198,6 +1263,20 @@ binaires:
     source: https://github.com/search?q=tlsmate
     licence: MIT
     taille_approx: 10M
+
+  tlsx:
+    version: "1.3.0"
+    sha256: 6d1e79ca0c18fc7d29bc5c92b8f0b4c1f5ed64298bbbdb6855f2c31efa324594
+    tarball_sha256: d982c55da676d7f6bfe588550ed19946e3c73234b4a3a11caf105f3ab98564bf
+    source: https://github.com/projectdiscovery/tlsx/releases/download/v1.3.0/tlsx_1.3.0_linux_amd64.zip
+    licence: MIT
+    taille_approx: 31M (binaire) ; zip 10.5M
+    note: >
+      Binaire statique Go de la release officielle, empreinte mesurée localement le
+      2026-09-05. tlsx ignore SILENCIEUSEMENT une cible http:// (0 connexion, sortie vide,
+      code 0 — mesuré contre THAUMAS-WEB) ; la forme hôte:port nomme l'échec de négociation
+      sur stderr (« could not connect to host … first record does not look like a TLS
+      handshake » — mesuré).
 
   tplmap:
     version: "0.1.0"

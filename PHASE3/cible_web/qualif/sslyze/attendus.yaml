@@ -1,0 +1,20 @@
+# ATTENDUS — sslyze contre THAUMAS-WEB (http://127.0.0.1:8807, 2026-09-05)
+cible: http://127.0.0.1:8807
+resultat_attendu: >
+  REFUS NOMMÉ PORTÉ PAR LE JSON. Aucun TLS à sonder (cible HTTP pur) et sslyze refuse
+  l'URL elle-même (« Not a valid host:port »). L'épreuve prouve l'exécution du paquet
+  épinglé (sslyze_version 6.3.1 dans le JSON) et la lecture du refus par le parser nommé.
+code_retour: 0              # mesuré : sslyze rend 0 même quand la cible est refusée
+code_succes_plugin: [0]
+constats:
+  - regle: sslyze-cible-refusee
+    nom_regle: cible refusée par l'outil
+    message: Not a valid host:port
+    url: http://127.0.0.1:8807
+items_attendus: 1
+echec_attendu: false        # code 0 ∈ code_succes ; le refus est un constat de l'OUTIL
+verification_honnete: >
+  AUCUNE sévérité déclarée : sslyze n'en porte pas (consigné dans le plugin). Le constat
+  est celui de l'OUTIL (cible refusée), mot pour mot (« Not a valid host:port ») — rien
+  n'est déduit sur la cible elle-même. server_scan_results est vide : aucun scan TLS
+  tenté, aucune invention de constat TLS.

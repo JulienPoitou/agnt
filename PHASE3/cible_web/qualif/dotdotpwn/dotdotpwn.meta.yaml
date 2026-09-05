@@ -1,0 +1,37 @@
+# Meta d'épreuve — dotdotpwn contre THAUMAS-WEB (2026-09-05, vague web G4)
+tool: dotdotpwn
+binaire: dotdotpwn
+version_binaire_sha256: 0ef5d79f60e964b12d3e2a0f17712dc90b2a1558a23f7b3d9cfdab2427bb6665
+argv:
+- dotdotpwn
+- -m
+- http-url
+- -u
+- http://127.0.0.1:8807/download?file=TRAVERSAL
+- -f
+- cible_web_secret/sauvegarde.txt
+- -k
+- SAUVEGARDE-CONFIDENTIELLE-QUALIF
+- -d
+- '1'
+- -t
+- '100'
+env: {}
+code_retour: 105
+timeout: false
+duree_ms: 98748
+sortie_origine: stdout:dotdotpwn.txt (106 745 o ; stderr vide)
+cible: http://127.0.0.1:8807
+sandbox: exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre
+stderr_extrait: ''
+notes: >
+  SEUL outil G4 qui doit TROUVER la faille plantée — il la trouve. 14 traversals
+  VULNERABLE loggés par l'outil (13 URL distinctes après dédoublonnage du parser),
+  dont la séquence plantée T-TRAVERSAL-001 (file=../cible_web_secret/
+  sauvegarde.txt) et ses variantes encodées (%2f, %2e…). Code 105 lu dans la SOURCE
+  épinglée : dotdotpwn.pl se termine par `exit 31337` (ligne 298), tronqué à 105 par le
+  shell (31337 & 0xFF) — c'est le code d'un run MENÉ À SON TERME. stdin fermé requis :
+  dotdotpwn attend « Press Enter to start » (<STDIN>) — /dev/null fait avancer.
+  Bornes : -d 1 (au lieu de 6) et -t 100 ms → ~900 requêtes, 98 s, une seule cible
+  127.0.0.1. Le -f/-k vise le fixture d'épreuve (marqueur public du README), convention
+  du template nuclei local. Report écrit par l'outil dans Reports/ du dépôt épinglé.

@@ -1,0 +1,25 @@
+# ATTENDUS — testssl.sh contre THAUMAS-WEB (http://127.0.0.1:8807, 2026-09-05)
+cible: http://127.0.0.1:8807
+resultat_attendu: >
+  REFUS NOMMÉ, pas un constat TLS. THAUMAS-WEB est HTTP pur : il n'y a rien à auditer en
+  TLS et testssl.sh refuse une cible http:// au sens usage (fatal 254). L'épreuve prouve
+  l'EXÉCUTION de l'outil épinglé et la lisibilité de son refus — jamais un finding TLS.
+code_retour: 254            # fatal d'usage (mesuré aussi 253 sur le chemin « jsonfile non vide »)
+code_succes_plugin: [0]     # 254 hors succès → échec nommé par le cœur
+constats:
+  - id: engine_problem
+    severity: WARN          # état du MOTEUR local (openssl sans moteur/GOST), pas la cible
+    finding: No engine or GOST support via engine with your /usr/bin/openssl
+  - id: scanProblem
+    severity: FATAL         # état du SCAN : cible http:// refusée
+    finding: "'http' is not what you meant probably"
+  - id: scanTime
+    severity: WARN
+    finding: Scan interrupted
+items_attendus: 3           # les trois entrées d'état du JSON, relues par le cœur (items_from "$")
+echec_attendu: true
+motif_echec_attendu: code 254 hors succès [0]
+verification_honnete: >
+  AUCUNE sévérité de vulnérabilité ici : WARN/FATAL sont les états de scan de testssl.sh
+  (consigné dans le plugin a_verifier). Le finding « TLS absent sur la cible » n'est PAS
+  fabriqué : la lecture honnête est l'échec nommé du scan.

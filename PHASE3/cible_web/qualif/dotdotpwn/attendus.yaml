@@ -1,0 +1,25 @@
+# ATTENDUS — dotdotpwn contre THAUMAS-WEB (http://127.0.0.1:8807, 2026-09-05)
+cible: http://127.0.0.1:8807
+resultat_attendu: >
+  FAILLE TROUVÉE — T-TRAVERSAL-001 prouvé. Le module http-url substitue des séquences
+  ../ encodées dans le paramètre marqué TRAVERSAL et matche la réponse contre le
+  marqueur du fixture : 14 URL vulnérables mesurées, dont la séquence plantée
+  file=../cible_web_secret/sauvegarde.txt (la réponse sert la sauvegarde hors racine,
+  marqueur SAUVEGARDE-CONFIDENTIELLE-QUALIF — vérifié par curl avant l'épreuve).
+code_retour: 105           # exit 31337 (source, ligne 298) tronqué 31337 & 0xFF = 105
+code_succes_plugin: [105]
+constats:
+  - regle: path-traversal
+    nom_regle: path traversal HTTP confirmé
+    confiance: confirmée
+    cwe: CWE-22
+    url_attendue_dans_preuve: http://127.0.0.1:8807/download?file=../cible_web_secret/sauvegarde.txt
+    traversals_vulnerables_logges: 14   # lignes VULNERABLE du journal de l'outil
+    url_distinctes_agregees: 13         # dédoublonnées par le parser (1 encodage répété)
+items_attendus: 1           # URL agrégées en UN constat (preuve = liste, tronquée à 12)
+echec_attendu: false
+verification_honnete: >
+  La sévérité n'est PAS inventée (dotdotpwn n'en porte pas). La preuve est la liste des
+  URL VULNERABLE mesurées — l'impact (contenu servi hors racine) a été vérifié
+  indépendamment par curl avant l'épreuve. Aucune sévérité, aucun CVSS : le constat
+  porte le CWE-22 (classification) et les URL de preuve, rien de plus.

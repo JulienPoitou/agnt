@@ -1,0 +1,20 @@
+# ATTENDUS — sslscan contre THAUMAS-WEB (http://127.0.0.1:8807, 2026-09-05)
+cible: http://127.0.0.1:8807
+resultat_attendu: >
+  REFUS NOMMÉ. sslscan n'accepte qu'une cible hôte:port : l'URL canonique est refusée
+  (« ERROR: Invalid target specified. », code 1) avant toute connexion. Aucun constat
+  TLS n'est fabriqué.
+code_retour: 1              # hors code_succes [0] → échec nommé par le cœur
+code_succes_plugin: [0]
+constats: []                # stdout vide : 0 item
+items_attendus: 0
+echec_attendu: true
+motif_echec_attendu: code 1 hors succès [0]
+verification_honnete: >
+  Deux mesures séparées, non confondues : (1) l'épreuve du MANIFESTE (argv {URL}) refuse
+  nommément l'URL — code 1, zéro item ; (2) la STRUCTURE XML de sslscan sur une cible
+  non-TLS (hôte:port, hors manifeste) a été relevée en référence : tous les protocoles
+  enabled=0, aucun élément cipher, certificats vides — le parser n'y retient AUCUNE
+  surface (zéro item : « résultat vide, pas une preuve d'absence »). Le chemin « surface
+  présente » (protocol enabled=1, cipher accepted) est exercé par la batterie sur un
+  FIXTURE à la structure mesurée, valeurs synthétiques — étiqueté comme tel.

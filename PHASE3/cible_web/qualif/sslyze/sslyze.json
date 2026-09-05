@@ -1,0 +1,13 @@
+{
+  "invalid_server_strings": [
+    {
+      "server_string": "http://127.0.0.1:8807",
+      "error_message": "Not a valid host:port"
+    }
+  ],
+  "server_scan_results": [],
+  "date_scans_started": "2026-09-05T16:41:26.735075Z",
+  "date_scans_completed": "2026-09-05T16:41:26.736772Z",
+  "sslyze_version": "6.3.1",
+  "sslyze_url": "https://github.com/nabla-c0d3/sslyze"
+}

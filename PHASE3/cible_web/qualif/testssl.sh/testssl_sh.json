@@ -1,0 +1,23 @@
+[
+         {
+              "id"           : "engine_problem",
+              "ip"           : "/",
+              "port"         : "443",
+              "severity"     : "WARN",
+              "finding"      : "No engine or GOST support via engine with your /usr/bin/openssl"
+          }
+,         {
+              "id"           : "scanProblem",
+              "ip"           : "http:/",
+              "port"         : "443",
+              "severity"     : "FATAL",
+              "finding"      : "'http' is not what you meant probably"
+          }
+,         {
+              "id"           : "scanTime",
+              "ip"           : "http:/",
+              "port"         : "443",
+              "severity"     : "WARN",
+              "finding"      : "Scan interrupted"
+          }
+]

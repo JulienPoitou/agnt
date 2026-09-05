@@ -1,0 +1,24 @@
+# Meta d'épreuve — sslyze contre THAUMAS-WEB (2026-09-05, vague web G4)
+tool: sslyze
+binaire: sslyze
+version_binaire_sha256: 19528e00608a24e4f9c177b0169b995e028ece347f41bc4c471ce9ed6a2c6b73
+distribution_hash: caf13b5a3c4148c625dfb561423ffde1e7c43cc5f61598b01ae96b793bd77b4d
+argv:
+- sslyze
+- http://127.0.0.1:8807
+- --json_out
+- '-'
+env: {}
+code_retour: 0
+timeout: false
+duree_ms: 241
+sortie_origine: stdout (redirigé vers sslyze.json, 370 o ; stderr vide)
+cible: http://127.0.0.1:8807
+sandbox: exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre
+stderr_extrait: ''
+notes: >
+  Épreuve du REFUS NOMMÉ (cible HTTP pur). sslyze exige hôte:port : l'URL est refusée
+  nommément DANS le JSON (invalid_server_strings[0].error_message « Not a valid
+  host:port »), code 0 — le refus est porté par le CONTENU, lu par le parser nommé
+  sslyze. Avec --json_out <fichier>, le fichier reste VIDE quand toutes les cibles sont
+  invalides (mesuré) : « - » (JSON sur stdout) est la seule forme lisible partout.

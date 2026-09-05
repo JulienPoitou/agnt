@@ -1,0 +1,70 @@
+# Plugin AGNT — testssl.sh, audit de configuration TLS (vague web G4, 2026-09-05).
+#
+# LIMITATION HONNÊTE DE LA CIBLE D'ÉPREUVE : THAUMAS-WEB est HTTP pur (aucun TLS). Les
+# outils TLS ne peuvent pas y produire un constat TLS : l'épreuve prouve l'EXÉCUTION et
+# le REFUS NOMMÉ, pas un constat de configuration. testssl.sh refuse en outre une cible
+# http:// au sens usage (il exige https:// ou hôte:port) : code 254 + JSON d'état FATAL —
+# mesuré le 2026-09-05.
+id: testssl_sh
+capacites:
+  - WEB_VULN_SCAN_ACTIVE
+entrees:
+  - url
+binaire: testssl.sh
+version_min: "3.2.4"
+licence: GPL-2.0
+priorite: 140
+cout: faible
+risque: ACTIVE
+description: >
+  Audit de configuration TLS (testssl.sh) : protocoles proposés (SSLv2…TLS 1.3), suites
+  de chiffrement, certificats, renégociation, failles historiques (Heartbleed, ROBOT…).
+  Audit de CONFIGURATION : une observation testssl.sh n'est pas en soi une vulnérabilité
+  exploitée — la limite est portée par le manifeste, jamais gommée.
+execution:
+  args:
+    # Ordre naturel du CLI (`testssl.sh [options] <URI>`) : les options AVANT la cible.
+    # Mesuré : avec la cible en premier, le fatal d'usage (http://) survient AVANT
+    # l'ouverture du --jsonfile et le JSON d'état n'est pas écrit ; options en premier,
+    # il l'est (mesuré 2026-09-05) — le refus reste lisible dans l'artefact.
+    - "--jsonfile"
+    - "{OUT}"
+    - "--color"
+    - "0"
+    - "--quiet"
+    - "--warnings"
+    - "off"
+    - "{URL}"
+  # 0 = scan rendu ; 254 = erreur d'usage (cible http:// refusée — mesuré) : échec nommé,
+  # jamais un « rien trouvé ».
+  code_succes: [0]
+sortie:
+  format: json
+lecture:
+  # --jsonfile écrit un TABLEAU JSON d'objets {id, ip, port, severity, finding}
+  # (mesuré sur testssl.sh 3.2.4) : la racine EST la liste, d'où items_from "$".
+  modele: plat
+  items_from: "$"
+  champs:
+    regle: id
+    nom_regle: id
+    message: finding
+    severite: severity
+    url: ip
+  masquer_large:
+    - message
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 600
+a_verifier:
+  - "testssl.sh n'accepte pas http:// (exige https:// ou hôte:port) : sur une URL
+     canonique http:// l'outil répond par l'erreur d'usage 254 et un JSON d'état (FATAL)
+     — mesuré le 2026-09-05 contre THAUMAS-WEB. Sur une cible https, {URL} passe tel quel."
+  - "le champ url est mappé sur ip : testssl 3.2.4 y met la cible (valeurs mesurées sur un
+     refus d'usage : '/', 'http:/') — à relire sur une cible TLS réelle."
+  - "severity WARN/FATAL portent des états de scan (moteur, interruption), pas des
+     vulnérabilités : ne jamais les afficher comme des sévérités de constat."
+  - "mapping relevé sur une sortie mesurée de refus d'usage ; les champs d'un scan TLS
+     complet (cve, suites de chiffrement) ne sont pas mesurés ici — aucune cible TLS
+     autorisée dans cette qualification."
