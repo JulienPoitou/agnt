@@ -1,0 +1,8 @@
+urls:         http://127.0.0.1:8807/search?q=THAUMAS
+methods:      GET
+wordlist len: 30
+
+GET http://127.0.0.1:8807/search?q=THAUMAS&%s (200) [194] {0}
+[info] Amount of parameters per request - 256
+
+[{"method":"GET","url":"http://127.0.0.1:8807/search?q=THAUMAS","status":200,"size":194,"found_params":[],"injection_place":"Path"}]

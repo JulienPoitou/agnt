@@ -1,0 +1,24 @@
+# ATTENDUS — cmseek sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g5)
+#
+# cmseek est un AUDITEUR CMS : il sonde robots.txt, les chemins caractéristiques
+# et les entêtes, puis déclare le CMS détecté — ou son échec de détection.
+# ÉPREUVE HONNÊTEMENT VIDE (mesuré 1.1.3) : « CMS Detection failed » — THAUMAS
+# n'est PAS un CMS (README_ATTENDUS). C'est l'épreuve attendue pour un
+# détecteur : un outil qui « trouverait » un CMS partout serait un menteur.
+# Remplace wpscan (installation Ruby impossible ici, mesurée — voir l'épingle
+# wpscan du manifeste et le plugin cmseek).
+cible: http://127.0.0.1:8807
+mode: détection CMS (--random-agent --batch, sans deep scan faute de CMS)
+attendus:
+  - detection: echouee
+    preuve_outil: "[x] CMS Detection failed"
+    url: http://127.0.0.1:8807
+    raison: >-
+      THAUMAS-WEB est un serveur d'épreuve stdlib Python, pas un CMS ; cmseek
+      rend son échec nommé et le parser rend 0 item — résultat vide NOMMÉ
+      (code 0, non un échec d'exécution)
+non_attendus:
+  - "wordpress/joomla/drupal/… : aucun CMS planté sur THAUMAS — la preuve
+     POSITIVE (CMS planté) reste à produire sur une cible dédiée, jamais ici."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "0 item, code 0 (qualif/cmseek/cmseek.txt : « CMS Detection failed ») — vide motivé"

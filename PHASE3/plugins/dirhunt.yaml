@@ -1,0 +1,78 @@
+# Plugin AGNT — dirhunt, crawler de répertoires web (vague web G5, 2026-09-05).
+#
+# Septième lecteur de WEB_ENDPOINT_DISCOVERY_ACTIVE. dirhunt crawl les liens ET
+# analyse les index de répertoires (« Index of », fake-404) — une lecture du
+# périmètre que katana/gobuster n'ont pas.
+#
+# MESURÉ 1.0.0 — trois faits d'outil qui bornent la lecture :
+#  · les sources tierces (wayback, commoncrawl, virustotal…) interrogent des
+#    services externes SUR LE DOMAINE CIBLE : contre 127.0.0.1 elles rendent des
+#    milliers d'URLs d'archives, rejouées contre le port 80/443 — HORS cible.
+#    L'argv exclut TOUTES les sources (--exclude-sources complets) : le crawl
+#    reste borné au domaine fourni.
+#  · dirhunt NORMALISE les URLs sans leur query (CrawlerUrl.__init__ :
+#    url.query = '') : /users?id=1 est visité comme /users. La surface rendue est
+#    le chemin, pas le paramètre — le paramètre est le travail d'arjun/x8.
+#  · le rapport JSON (--to-file) ne garde que les réponses < 300 (processed[] :
+#    processor_data) — un 404/500 crawlé n'y figure PAS. La lecture honnête :
+#    ce que dirhunt rend, pas ce qu'il a touché.
+id: dirhunt
+capacites:
+  - WEB_ENDPOINT_DISCOVERY_ACTIVE
+entrees:
+  - url
+binaire: dirhunt
+version_min: "1.0.0"
+licence: MIT
+priorite: 127                  # septième lecteur de WEB_ENDPOINT_DISCOVERY_ACTIVE
+cout: faible
+risque: ACTIVE
+description: >
+  Crawler de répertoires web (dirhunt 1.0.0) : suit les liens de la page
+  d'entrée, détecte les listages de répertoires et les faux 404, et rend chaque
+  URL < 300 avec son code et son type (directory, document, asset). Ce que
+  l'outil détecte réellement : les chemins LIÉS qui répondent avec un contenu
+  analysable — pas les chemins non liés (fuzzer), pas des vulnérabilités.
+execution:
+  args:
+    - "{URL}"
+    - "--threads"
+    - "4"
+    - "--timeout"
+    - "8"
+    - "--exclude-sources"
+    - "robots,virustotal,google,commoncrawl,crtsh,certificatessl,wayback"
+    - "--progress-disabled"
+    - "--not-follow-subdomains"
+    - "--to-file"
+    - "{OUT}"
+  # Mesuré 1.0.0 : code 0 avec résultats ET code 0 sans aucun (« No interesting
+  # files detected ») — le résultat vide reste « pas une preuve d'absence ».
+  code_succes: [0]
+sortie:
+  format: json
+lecture:
+  # Rapport JSON (--to-file) : {"version", "current_processed_count", "domains",
+  # "processed": [{status_code, crawler_url: {depth, flags, type, url: {address,
+  # domain}}, "processor_class", …}], "urls_infos": […]}. Modèle plat, items sous
+  # `processed` — le fichier fait foi (doctrine sortie fichier du pipeline_web).
+  modele: plat
+  items_from: processed
+  champs:
+    regle: status_code              # le code HTTP observé (200)
+    nom_regle: crawler_url.type     # directory / document / asset / null
+    url: crawler_url.url.address    # URL complète → location.url (oracle)
+    message: processor_class        # le processeur dirhunt qui a lu la page
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300
+a_verifier:
+  - "processed[] ne liste que les réponses < 300 : un 500/404 crawlé n'est pas un
+     item — l'absence d'item n'est jamais une preuve que la route n'existe pas."
+  - "la normalisation sans query est une LIMITATION DE L'OUTIL (mesurée) : ne pas
+     conclure « /users sans paramètre répond 500 » d'un run dirhunt — le 500 ne
+     figure de toute façon pas dans le rapport."
+  - "dirhunt analyse les contenus (« interesting files ») : sur une cible où les
+     mots-clés par défaut matchent, urls_infos peut porter des URLs sensibles —
+     l'épreuve THAUMAS en rend zéro (mesuré)."

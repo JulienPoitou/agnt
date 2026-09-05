@@ -1,0 +1,24 @@
+# ATTENDUS — kiterunner sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g5)
+#
+# kr brute est un FUZZER : il teste la wordlist épinglée (dossiers-mini.txt)
+# contre la cible et rend les chemins qui répondent. La page d'accueil de
+# THAUMAS-WEB lie /search, /users, /download — kr ne les « découvre » pas parce
+# qu'ils sont liés mais s'ils sont dans la wordlist (ils n'y sont pas en tant
+# que tels) ; en revanche les chemins NON liés /.env et /admin y sont.
+cible: http://127.0.0.1:8807
+mode: fuzz (kr brute, wordlist épinglée, 10 routes + préchecks = 120 requêtes mesurées)
+attendus:
+  - url: http://127.0.0.1:8807/.env
+    statut: 200
+    route_epreuve: T-ENV-001 (secrets factices exposés — chemin NON lié depuis l'accueil)
+  - url: http://127.0.0.1:8807/admin
+    statut: 200
+    route_epreuve: T-ADMIN-001 (panneau sans authentification — chemin NON lié)
+non_attendus:
+  - "/search, /users, /download : hors wordlist épinglée — le crawl (katana,
+     gospider, dirhunt) est le lecteur qui les trouve ; comparaison inter-outils
+     voulue."
+  - "/.git : présent dans la cible (T-GIT-001) mais PAS dans dossiers-mini.txt —
+     un résultat vide n'est jamais une preuve d'absence."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "2 résultats (qualif/kiterunner/kiterunner.jsonl) — attendus COINCIDENTS"

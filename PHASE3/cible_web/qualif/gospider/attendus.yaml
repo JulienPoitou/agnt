@@ -1,0 +1,28 @@
+# ATTENDUS — gospider sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g5)
+#
+# gospider est un CRAWLER : il trouve les chemins LIÉS depuis la page d'entrée.
+# La page d'accueil de THAUMAS-WEB porte exactement 3 liens. Mesuré --json :
+# la graine (200), les 3 liens extraits du corps (« type: form », statut 0 —
+# extraits sans être récupérés), puis /search?q=THAUMAS et /users?id=1
+# récupérés (200). /download?file=notes.txt n'a PAS de ligne « url » : sa
+# récupération rend 404 (réponse non-2xx non rapportée en ligne « url »).
+cible: http://127.0.0.1:8807
+mode: crawl (-d 2, sans wordlist, sources tierces désactivées par défaut)
+attendus:
+  - url: http://127.0.0.1:8807
+    statut: 200
+    note: graine du crawl (input == output)
+  - url: http://127.0.0.1:8807/search?q=THAUMAS
+    statut: 200
+    route_epreuve: T-XSS-001 (lien vers la route XSS réfléchie) — deux lignes : « form » (statut 0) puis « url » (200)
+  - url: http://127.0.0.1:8807/users?id=1
+    statut: 200
+    route_epreuve: T-SQLI-001 (lien vers la route SQLi) — deux lignes : « form » (statut 0) puis « url » (200)
+  - url: http://127.0.0.1:8807/download?file=notes.txt
+    statut: 0
+    note: extrait du corps (« form »), jamais récupéré avec un 2xx — la ROUTE existe (404 sur notes.txt)
+non_attendus:
+  - "/.env, /.git, /admin : NON liés depuis la page d'accueil — hors portée d'un
+     crawler ; les trouver relève du fuzzer (kr les trouve, mesuré)."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "6 lignes JSON (qualif/gospider/gospider.jsonl) — attendus COINCIDENTS"

@@ -1,0 +1,6 @@
+{"input":"http://127.0.0.1:8807","source":"body","type":"url","output":"http://127.0.0.1:8807","status":200,"length":3}
+{"input":"http://127.0.0.1:8807","source":"body","type":"form","output":"http://127.0.0.1:8807/search?q=THAUMAS","status":0,"length":0}
+{"input":"http://127.0.0.1:8807","source":"body","type":"form","output":"http://127.0.0.1:8807/users?id=1","status":0,"length":0}
+{"input":"http://127.0.0.1:8807","source":"body","type":"form","output":"http://127.0.0.1:8807/download?file=notes.txt","status":0,"length":0}
+{"input":"http://127.0.0.1:8807","source":"body","type":"url","output":"http://127.0.0.1:8807/search?q=THAUMAS","status":200,"length":0}
+{"input":"http://127.0.0.1:8807","source":"body","type":"url","output":"http://127.0.0.1:8807/users?id=1","status":200,"length":0}

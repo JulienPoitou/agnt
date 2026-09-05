@@ -582,6 +582,14 @@ binaires:
     source: https://wpscan.org/
     licence: MIT
     taille_approx: 20M
+    note: >
+      REMPLACEMENT MESURÉ (2026-09-05, vague-web/g5) : l'installation de wpscan
+      4.1.0 (gem, ruby 3.2.3 présent) échoue NOMMÉMENT sur cette machine —
+      « mkmf.rb can't find header files for ruby at /usr/lib/ruby/include/ruby.h »
+      (extensions natives yajl-ruby/ffi exigent ruby-dev ; pas de sudo disponible).
+      La capacité audit CMS est portée par cmseek (épingle REMPLACANTE, cet
+      inventaire). Le placeholder reste en l'état : jamais d'empreinte inventée,
+      jamais de binaire non exécuté déclaré exécutable.
 
   authoscope:
     version: "0.1.0"
@@ -645,6 +653,29 @@ binaires:
     source: https://github.com/search?q=cms_explorer
     licence: MIT
     taille_approx: 10M
+
+  cmseek:
+    version: "1.1.3"
+    # L'exécutable est un wrapper sh (convention sqlmap/commix/dotdotpwn) : CMSeeK
+    # est une application Python distribuée comme source ; le wrapper (SYMLINK-SAFE)
+    # lance repo/cmseek.py du dépôt épinglé (tag v.1.1.3) avec le venv dédié.
+    sha256: 966edaf617c3c0e20c89abadef2c7ba0cff535cf766ffb944080bdb6b083280c
+    tarball_sha256: 2e7562c7d9e131cc0a3623922df92fbfd98dd8e8e6b0321002c4fd5e06531249
+    source: https://github.com/Tuhinshubhra/CMSeeK (archive du tag v.1.1.3)
+    licence: GPL-3.0
+    taille_approx: 1,5 Mo (dépôt) ; tarball 500 Ko
+    role: outil
+    note: >
+      Épingle REMPLACANTE de wpscan pour la capacité audit CMS (2026-09-05,
+      vague-web/g5) — décision nommée : wpscan 4.1.0 (gem) exige des extensions
+      natives Ruby et ruby-dev est absent de cette machine (tentative mesurée :
+      « mkmf.rb can't find header files for ruby », pas de sudo — voir l'entrée
+      wpscan). CMSeeK détecte 400+ CMS (dont WordPress/Joomla/Drupal), leur
+      version, et porte des scans dédiés. tarball_sha256 : audit du canal de
+      distribution, mesuré au téléchargement, le tag v.1.1.3 étant l'ancre. Le
+      sha256 fait foi pour le WRAPPER exécuté. Version auto-déclarée
+      « CMSeeK Version 1.1.3 » (mesuré). stdout = autorité de lecture (le
+      rapport Result/<hôte>/cms.json n'est pas paramétrable).
 
   commix:
     version: "4.1"
@@ -727,6 +758,29 @@ binaires:
     source: https://github.com/search?q=daws
     licence: MIT
     taille_approx: 10M
+
+  dirhunt:
+    package: dirhunt
+    version: "1.0.0"
+    # Crawler de répertoires — installation pip en venv dédié (convention
+    # dirsearch/bandit). L'exécutable au PATH est un wrapper sh SYMLINK-SAFE
+    # (staging/dirhunt/dirhunt) qui lance venv/bin/dirhunt : le sha256 fait foi
+    # pour le WRAPPER exécuté, le distribution_hash pour la distribution pip.
+    sha256: 28cd0efee605e4d0a8f0e3e9dc2c1bab4bbea99be1d4a561c11ccd4f638da953
+    distribution: pip
+    distribution_hash: "f8735b72f152bb90cf0f9ab3d5cef29ef790015414f22f781c32bc8a3ada84c6"
+    source: https://pypi.org/project/dirhunt/ (identique à la release GitHub Nekmo/dirhunt v1.0.0, 2023-08-14)
+    licence: MIT
+    verification: >
+      distribution_hash = SHA-256 du fichier RECORD de la distribution installée
+      (convention bandit/git-dumper/dirsearch) ; sha256 = empreinte du wrapper
+      exécuté (convention sqlmap). Les deux mesurés le 2026-09-05.
+    note: >
+      Épingle NOUVELLE (2026-09-05, vague-web/g5). v1.0.0 est la version courante AMONT (PyPI et
+      GitHub coïncident). Limitations MESURÉES consignées au plugin : sources
+      tierces exclues (contre 127.0.0.1 elles rejouent des archives wayback sur
+      les ports 80/443), normalisation sans query, rapport --to-file limité aux
+      réponses < 300. Empreinte RECORD mesurée le 2026-09-05.
 
   dirsearch:
     package: dirsearch
@@ -991,6 +1045,26 @@ binaires:
     licence: MIT
     taille_approx: 10M
 
+  gospider:
+    version: "1.1.6"
+    # L'exécutable au PATH est un wrapper sh SYMLINK-SAFE (staging/gospider/gospider)
+    # qui lance le binaire du release zip : le sha256 fait foi pour le WRAPPER,
+    # l'empreinte du binaire réel est portée par la note.
+    sha256: 313887f4a6fd36500934c2916cf93fdeaa9527a0803d80d05d0e76e3bf836ebe
+    sha256_binaire: 42434f5e94528fe3124f482a2903bda7f648c05ac11c19cc7d50cf3eaa04d8af
+    tarball_sha256: 41bdd76aff8d063655dc473f035ca7659f8549fbf264be5185f50d288666f93d
+    source: https://github.com/jaeles-project/gospider/releases/download/v1.1.6/gospider_v1.1.6_linux_x86_64.zip
+    licence: MIT
+    taille_approx: 16 Mo (zip 8 Mo)
+    role: outil
+    note: >
+      Épingle NOUVELLE (2026-09-05, vague-web/g5). Empreintes mesurées le 2026-09-05 (zip, binaire,
+      wrapper) — le projet ne publie pas de checksums (GitHub n'offre que
+      l'archive auto-générée) : tarball_sha256 est l'audit du canal, la release
+      v1.1.6 l'ancre. Le wrapper FERME stdin : mesuré, gospider lit stdin quand
+      il n'est pas un TTY et consommerait le script harnais comme liste de
+      sites — usage déclaré -s {URL} uniquement.
+
   graphql_voyager:
     version: "0.1.0"
     sha256: "0000000000000000000000000000000000000000000000000000000000000000"
@@ -1083,6 +1157,23 @@ binaires:
       request/response (-jsonl) — url = request.endpoint, pas de sévérité déclarée
       chez l'outil (jamais inventée). Aucune wordlist : son entrée est la page
       elle-même.
+
+  kr:
+    version: "1.0.2"
+    sha256: 93e3f9ebfc9a2400a345961bf8e8e0c937d32c473db1e620e277622bdb33f6e7
+    tarball_sha256: 6f0b70aabf747de592445a690281897eebbc45927e9264185d34ffb11637613b
+    source: https://github.com/assetnote/kiterunner/releases/download/v1.0.2/kiterunner_1.0.2_linux_amd64.tar.gz
+    licence: Apache-2.0
+    taille_approx: 15 Mo (tarball 6,4 Mo)
+    role: outil
+    note: >
+      Épingle NOUVELLE (2026-09-05, vague-web/g5). Fuzzer de chemins/routes d'API. Clé = NOM DE
+      L'EXÉCUTABLE publié (`kr`), convention testssl.sh/zap-baseline.py — le
+      projet est assetnote/kiterunner ; le knowledgebuilder est un
+      SOUS-COMMANDEMENT `kr kb`, pas un binaire séparé dans ce release. Empreintes mesurées le 2026-09-05 — le projet ne publie
+      pas de checksums : tarball_sha256 est l'audit du canal, la release v1.0.2
+      l'ancre. Dernière release amont (2021) : outil STABLE mais non maintenu,
+      consigné — un fork actif demanderait un ré-épinglage nommé.
 
   lambda_proxy:
     version: "0.1.0"
@@ -1545,6 +1636,21 @@ binaires:
     source: https://github.com/search?q=wpsploit
     licence: MIT
     taille_approx: 10M
+
+  x8:
+    version: "4.3.0"
+    sha256: 6204625bb47ad073c8eabe75fd69763f812dbd0b77ac8e05632adfcf559b4815
+    tarball_sha256: b3e54da4c0cc62163a3485addea6671368ee69342ea5740e56d6d6112196bd0e
+    source: https://github.com/Sh1Yo/x8/releases/download/v4.3.0/x86_64-linux-x8.gz
+    licence: MIT
+    taille_approx: 16 Mo (gz 7,6 Mo)
+    role: outil
+    note: >
+      Épingle NOUVELLE (2026-09-05, vague-web/g5). Fuzzer de paramètres cachés. Empreintes
+      mesurées le 2026-09-05 — le projet ne publie pas de checksums :
+      tarball_sha256 est l'audit du canal, la release v4.3.0 l'ancre. Version
+      auto-déclarée « x8 4.3.0-main » (mesuré). Piège d'usage consigné : -t est
+      --data-type (PAS un timeout) — un -t numérique est refusé (code 1).
 
   xray:
     version: "0.1.0"

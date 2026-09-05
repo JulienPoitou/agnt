@@ -1,0 +1,48 @@
+{
+    "current_processed_count": 6,
+    "domains": [
+        "127.0.0.1"
+    ],
+    "index_of_processors": [],
+    "processed": [
+        {
+            "crawler_url": {
+                "depth": 3,
+                "exists": null,
+                "flags": [
+                    "200",
+                    "html"
+                ],
+                "type": null,
+                "url": {
+                    "address": "http://127.0.0.1:8807/",
+                    "domain": "127.0.0.1"
+                }
+            },
+            "line": "\u001b[92m[200]\u001b[39m\u001b[49m http://127.0.0.1:8807/search \u001b[93m (HTML document)\u001b[39m\u001b[49m",
+            "processor_class": "ProcessHtmlRequest",
+            "status_code": 200
+        },
+        {
+            "crawler_url": {
+                "depth": 3,
+                "exists": null,
+                "flags": [
+                    "200",
+                    "html"
+                ],
+                "type": "directory",
+                "url": {
+                    "address": "http://127.0.0.1:8807",
+                    "domain": "127.0.0.1"
+                }
+            },
+            "line": "\u001b[92m[200]\u001b[39m\u001b[49m http://127.0.0.1:8807/ \u001b[93m (HTML document)\u001b[39m\u001b[49m",
+            "processor_class": "ProcessHtmlRequest",
+            "status_code": 200
+        }
+    ],
+    "processing": [],
+    "urls_infos": [],
+    "version": "1.0.0"
+}

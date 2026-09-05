@@ -1,0 +1,26 @@
+# ATTENDUS — dirhunt sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g5)
+#
+# dirhunt est un CRAWLER de répertoires, borné ici aux sources locales
+# (--exclude-sources complets : contre 127.0.0.1, wayback/commoncrawl rendent
+# des archives re-jouées hors cible — mesuré). MESURÉ 1.0.0 : dirhunt normalise
+# les URLs SANS leur query (url.query='') et le rapport --to-file ne garde que
+# les réponses < 300. Sur THAUMAS : la graine et /search (seul lien dont la
+# version sans query répond < 300) — /users (500) et /download (404) sont
+# visités mais absents du rapport.
+cible: http://127.0.0.1:8807
+mode: crawl (--threads 4, sources tierces exclues, --to-file JSON)
+attendus:
+  - url: http://127.0.0.1:8807
+    statut: 200
+    note: graine (type directory)
+  - url: http://127.0.0.1:8807/search
+    statut: 200
+    note: lien /search?q=THAUMAS normalisé SANS query (limitation de l'outil, mesurée) ; route_epreuve T-XSS-001
+non_attendus:
+  - "/users?id=1 et /download?file=notes.txt : visités par dirhunt mais leurs
+     réponses (500 / 404) ne rentrent PAS dans processed[] du rapport — le vide
+     n'est jamais une preuve d'absence."
+  - "/.env, /.git, /admin : NON liés depuis l'accueil — hors portée d'un crawler
+     (kr les trouve, mesuré)."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "2 items (qualif/dirhunt/dirhunt.json, processed[]) — attendus COINCIDENTS"

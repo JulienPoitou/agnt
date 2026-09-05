@@ -1,0 +1,2 @@
+{"method":"GET","target":"http://127.0.0.1:8807","path":"/admin","responses":[{"uri":"","sc":200,"len":62}],"time":"2026-09-05T21:04:59+02:00"}
+{"method":"GET","target":"http://127.0.0.1:8807","path":"/.env","responses":[{"uri":"","sc":200,"len":115}],"time":"2026-09-05T21:04:59+02:00"}

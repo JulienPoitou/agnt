@@ -1,0 +1,78 @@
+# Plugin AGNT — x8, découverte de paramètres cachés (vague web G5, 2026-09-05).
+#
+# Second lecteur paramètres de WEB_ENDPOINT_DISCOVERY_ACTIVE (après arjun 134) :
+# arjun détecte les paramètres qui CHANGENT la réponse en les ajoutant seuls ;
+# x8 compare la page entière en injectant des lots de paramètres — les deux
+# heuristiques se recouvrent sans se substituer.
+#
+# ÉPREUVE HONNÊTEMENT VIDE (mesuré 4.3.0 sur THAUMAS /search?q=) : x8 rend
+# found_params: [] — aucun paramètre CACHÉ trouvé. C'est cohérent avec la cible :
+# q est un paramètre VISIBLE (réfléchi, lié), pas un paramètre fantôme que le
+# serveur ignorerait. Un résultat vide reste « pas une preuve d'absence ».
+#
+# PARSER NOMMÉ (mesuré) : avec -O json, le stdout mélange l'en-tête texte de x8
+# (« urls: », « methods: », « GET … (200) », « [info] … ») et l'array JSON —
+# json.loads(stdout) échoue. Le parser extrait l'array (du fichier -o qui fait
+# foi, doctrine sortie fichier) et rend UN item PAR paramètre trouvé — 0 item si
+# found_params est vide, jamais un item « vide » déguisé en découverte.
+id: x8
+capacites:
+  - WEB_ENDPOINT_DISCOVERY_ACTIVE
+entrees:
+  - url
+binaire: x8
+version_min: "4.3.0"
+licence: MIT
+priorite: 136                  # second lecteur paramètres (après arjun 134)
+cout: faible
+risque: ACTIVE
+description: >
+  Découverte de paramètres web cachés (x8 4.3.0) : envoie les noms de la wordlist
+  épinglée en lots dans l'URL (placeholder %s de l'outil) et compare les réponses
+  à la page de référence — un paramètre est rendu quand il modifie la réponse
+  (taille, contenu). Un paramètre découvert est de la SURFACE (entrée candidate
+  pour les lecteurs actifs), pas une vulnérabilité : pas de sévérité, jamais
+  inventée.
+execution:
+  args:
+    - "-u"
+    - "{URL}/search?q=THAUMAS"
+    - "-w"
+    - "{REGLES}/parametres-mini.txt"
+    - "-c"
+    - "2"
+    - "--timeout"
+    - "10"
+    - "--disable-progress-bar"
+    - "--disable-colors"
+    - "-O"
+    - "json"
+    - "-o"
+    - "{OUT}"
+  # Mesuré 4.3.0 : code 0 avec et sans paramètres trouvés ; code 1 sur erreur
+  # d'usage (mesuré : « Incorrect --data-type specified » avec -t invalide).
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  # Fichier -o (doctrine sortie fichier) : array JSON
+  # [{"method", "url", "status", "size", "found_params": [...], "injection_place"}].
+  # Le parser rend un item PAR paramètre trouvé ; found_params vide → 0 item.
+  parser: x8
+  champs:
+    regle: regle              # la méthode de la requête porteuse (GET)
+    nom_regle: nom_regle      # le nom du paramètre caché découvert
+    url: url                  # l'URL sonnée → location.url (oracle)
+    message: message          # le point d'injection déclaré par l'outil
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300
+a_verifier:
+  - "{REGLES} doit pointer sur le répertoire des règles épinglées (parametres-mini.txt,
+     30 noms, empreinte en section regles) — la wordlist par défaut de x8 est vide,
+     l'outil lit stdin sans -w : les deux seraient un échec nommé, jamais un scan."
+  - "-t est --data-type chez x8 (PAS un timeout) : un timeout numérique y est un
+     usage erroné refusé (code 1, mesuré). Le timeout s'écrit --timeout."
+  - "le suffixe /search?q=THAUMAS suit la convention arjun (paramètre planté) :
+     sur une cible générique, {URL} sans suffixe peut ne porter aucun paramètre."
