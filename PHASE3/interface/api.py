@@ -64,7 +64,7 @@ PLAFOND_CORPS = 262_144     # plafond de lecture du corps AVANT rfile.read : Con
 WEB_PROVIDERS_ORDRE = {"httpx": 50, "katana": 20, "ffuf": 30, "nuclei": 30,
                        "gobuster": 30, "feroxbuster": 30, "dirsearch": 30,
                        "hakrawler": 20,
-                       "dotdotpwn": 20, "testssl.sh": 30, "sslyze": 30,
+                       "dotdotpwn": 20, "testssl_sh": 30, "sslyze": 30,
                        "sslscan": 30, "tlsx": 30}
 
 # Règles épinglées montées à {REGLES} pour les providers web (template nuclei
