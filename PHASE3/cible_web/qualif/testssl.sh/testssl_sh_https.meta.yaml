@@ -1,0 +1,20 @@
+# Meta d'épreuve TLS POSITIVE — testssl_sh contre https://127.0.0.1:8443/ (2026-09-05)
+tool: testssl_sh
+argv:
+- 'testssl.sh'
+- '--jsonfile'
+- '/tmp/agnt-qualif-tls/testssl_sh.json'
+- '--color'
+- '0'
+- '--quiet'
+- '--warnings'
+- 'off'
+- 'https://127.0.0.1:8443/'
+code_retour: 0
+binaire_resolu: /home/julie/.cache/arena_secops/bin/testssl.sh
+duree_ms: 58149
+cible: https://127.0.0.1:8443/
+certificat_cible: auto-signé CN=thaumas-web-epreuve (serveur.py --tls)
+sandbox: exécution DIRECTE hors cage (staging) — même convention que G1-G5
+stdout_octets: 12713
+sortie_brute: testssl_sh_https.json

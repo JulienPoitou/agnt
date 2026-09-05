@@ -1,0 +1,31 @@
+# ATTENDUS TLS POSITIF — sslscan contre THAUMAS-WEB en HTTPS (https://127.0.0.1:8443/, 2026-09-05)
+#
+# La face REFUS NOMMÉ (cible HTTP pur, URL refusée) vit dans attendus.yaml, à côté — elle
+# reste une preuve. Ici : le chemin « surface présente », MESURÉ par executer_qualif_tls.py
+# (binaire épinglé /home/julie/.cache/arena_secops/bin/sslscan, code 0) et archivé dans
+# sslscan_https.xml + .stderr + .meta.yaml — relu SANS réseau par test_plugins_g4.py.
+cible: https://127.0.0.1:8443/
+resultat_attendu: >
+  SURFACE TLS OFFERTE, PORTÉE PAR LE XML (lecture DÉCLARÉE, pas un verdict). La cible en
+  mode --tls négocie TLS 1.2 et TLS 1.3 (2 protocoles enabled=1) et offre 16 suites de
+  chiffrement (2 preferred + 14 accepted) — 18 items : sslscan-protocol ×2 (« tls 1.2 »,
+  « tls 1.3 ») + sslscan-cipher ×16 (TLS_AES_256_GCM_SHA384 preferred en tête). La
+  renégociation (supported=0, secure=0) ne fait PAS d'item. Le certificat auto-signé
+  CN=thaumas-web-epreuve (subject == issuer, self-signed=true, SAN IP:127.0.0.1 /
+  DNS:localhost) reste dans l'artefact brut : le parser n'en extrait rien (convention
+  sslyze/git-dumper — les données de la cible ne traversent pas le registre).
+  AUCUNE sévérité : sslscan n'en porte pas — absente, jamais inventée.
+code_retour: 0              # mesuré (meta.yaml) — dans code_succes [0]
+code_succes_plugin: [0]
+constats: []                # items = 18 observations nommées ci-dessus ; rien d'ajouté au XML
+items_attendus: 18          # 2 protocoles enabled=1 + 16 suites accepted/preferred (comptées dans l'archive)
+echec_attendu: false
+verification_honnete: >
+  Recomptage direct de l'archive : <protocol> en enabled="1" = 2 ; <cipher> en status
+  accepted/preferred = 16 (aucune suite rejected ici — celles des fixtures n'existent pas
+  sur une vraie négociation réussie). L'interpréteur (FW.interpreter("sslscan", 0, …))
+  rend exactement ces 18 items : regles ⊆ {sslscan-protocol, sslscan-cipher}, url =
+  127.0.0.1:8443 (attributs host/port du XML), « tls 1.3 » et TLS_AES_256_GCM_SHA384
+  présents, AUCUNE clé severite dans les items. Le chemin était auparavant exercé sur un
+  FIXTURE étiqueté (valeurs synthétiques) : il l'est maintenant sur la sortie RÉELLE — le
+  fixture reste en batterie pour la tolérance du parser, toujours étiqueté comme tel.

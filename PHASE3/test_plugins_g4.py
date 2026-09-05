@@ -2,15 +2,25 @@
 """Plugins G4 (TLS & path traversal) : registre + planification + interprétation.
 
 Aucun réseau : les sorties sont celles ARCHIVÉES dans cible_web/qualif/<outil>/
-(épreuve réelle du 2026-09-05 contre THAUMAS-WEB) et deux FIXTURES étiquetés
+(épreuves réelles du 2026-09-05 contre THAUMAS-WEB) et deux FIXTURES étiquetés
 (structure mesurée, valeurs synthétiques — sslscan « surface présente », tlsx JSONL).
 
 Ce que la batterie prouve :
   1. les 5 épingles G4 se lisent (outils.registre) et les 5 plugins se chargent ;
-  2. `planifier` résout l'argv (URL substituée, codes de succès déclarés) ;
+  2. `planifier` résout l'argv (URL substituée, codes de succès déclarés ; forme
+     hôte:port {HOSTPORT} pour sslscan/sslyze — port par défaut du schéma restauré) ;
   3. l'interpréteur retrouve les items depuis les sorties RÉELLES archivées —
      y compris les refus nommés (TLS sur cible HTTP pur : échec nommé, jamais un
-     « scan propre ») et la faille trouvée (dotdotpwn, T-TRAVERSAL-001).
+     « scan propre ») et la faille trouvée (dotdotpwn, T-TRAVERSAL-001) ;
+  4. le chemin TLS POSITIF est MESURÉ (2026-09-05, mode --tls de serveur.py sur
+     127.0.0.1:8443, cert auto-signé CN=thaumas-web-epreuve) : les 4 outils TLS
+     rendent des items depuis les archives *_https — sslscan_https.xml (2 protocoles
+     enabled=1 + 16 suites offertes), sslyze_https.json (18 commandes, scan
+     COMPLETED), testssl_sh_https.json (166 entrées, sévérités DÉCLARÉES portées
+     telles quelles), tlsx_https.txt (1 enregistrement, probe_status booléen).
+     Sorties produites par executer_qualif_tls.py (binaires épinglés à
+     /home/julie/.cache/arena_secops/bin), documentées par les attendus_tls.yaml
+     de chaque dossier — le chemin « surface présente » n'est plus un simple fixture.
 
 Usage : python PHASE3/test_plugins_g4.py   (exit 0/1)
 """
@@ -41,7 +51,9 @@ def _lire(*parties: str) -> str:
 
 
 # FIXTURE sslscan — structure MESURÉE (qualif/sslscan/sslscan_xml_hostport_reference.txt,
-# refus de négociation), valeurs synthétiques pour exercer le chemin « surface présente ».
+# refus de négociation), valeurs synthétiques. Le chemin « surface présente » est AUSSI
+# mesuré sur la sortie réelle (sslscan_https.xml — section 4) ; le fixture reste pour la
+# tolérance du parser (renégociation insécurisée, suite rejetée ignorée), étiqueté comme tel.
 SSLSCAN_XML_SURFACE = """<?xml version="1.0" encoding="UTF-8"?>
 <document title="SSLScan Results" version="2.1.5" web="http://github.com/rbsec/sslscan">
  <ssltest host="exemple.test" sniname="exemple.test" port="443">
@@ -57,10 +69,14 @@ SSLSCAN_XML_SURFACE = """<?xml version="1.0" encoding="UTF-8"?>
  </ssltest>
 </document>"""
 
-# FIXTURE tlsx — tags json extraits du binaire épinglé (strings), valeurs synthétiques.
-TLSX_JSONL = json.dumps({"host": "exemple.test", "port": 443, "probe_status": "tls-open",
-                         "tls_version": "TLSv1.3", "cipher_suite": "TLS_AES_256_GCM_SHA384",
-                         "issuer_cn": "Exemple CA"}) + "\n"
+# FIXTURE tlsx — structure MESURÉE du binaire épinglé (qualif/tlsx/tlsx_https.txt :
+# probe_status booléen, tls_version, cipher, subject_cn/issuer_cn, self_signed — PAS
+# cipher_suite ni « tls-open », jamais mesurés sur le binaire), VALEURS SYNTHÉTIQUES,
+# étiqueté comme tel.
+TLSX_JSONL = json.dumps({"host": "exemple.test", "port": "443", "probe_status": True,
+                         "tls_version": "tls13", "cipher": "TLS_AES_256_GCM_SHA384",
+                         "subject_cn": "exemple.test", "issuer_cn": "exemple.test",
+                         "self_signed": True}) + "\n"
 
 
 def main() -> int:
@@ -115,14 +131,23 @@ def main() -> int:
             "tlsx": ("-j", "-o {OUT}"),
             "dotdotpwn": ("TRAVERSAL", "-u {URL}/download?file=TRAVERSAL"),
         }
+        # sslscan et sslyze refusent une URL (mesuré) : leur cible passe en forme
+        # hôte:port — le jeton {HOSTPORT} du cœur (port par défaut du schéma restauré),
+        # PAS l'URL ; les trois autres gardent {URL}.
+        forme_hostport = {"sslscan", "sslyze"}
         for pid, (fragment, _) in attendus_argv.items():
             try:
                 plan = FW.planifier(pid, URL_CIBLE, "/tmp/agnt-g4-test", egress=True,
                                     registre=reg)
                 argv_str = json.dumps(plan["argv"], ensure_ascii=False)
+                if pid in forme_hostport:
+                    cible_ok = "127.0.0.1:8807" in argv_str and URL_CIBLE not in argv_str
+                else:
+                    cible_ok = URL_CIBLE in argv_str
                 cas(f"plan {pid} : argv résolu avec {fragment}",
-                    URL_CIBLE in argv_str and fragment in argv_str
+                    cible_ok and fragment in argv_str
                     and "{URL}" not in argv_str and "{OUT}" not in argv_str
+                    and "{HOSTPORT}" not in argv_str
                     and plan["binaire_resolu"] is False,
                     argv_str[:110])
                 cas(f"plan {pid} : code de succès déclaré",
@@ -217,6 +242,115 @@ def main() -> int:
         r = FW.interpreter("dotdotpwn", 0, _lire("dotdotpwn", "dotdotpwn.txt"), registre=reg)
         cas("dotdotpwn : code 0 (abort) hors succès [105] → échec nommé",
             r["echec"] is True and "code 0" in r["motif"], r["motif"])
+
+        # ─────── 4. preuve TLS POSITIVE — archives *_https MESURÉES (2026-09-05, sans réseau)
+        # Mode --tls de serveur.py sur 127.0.0.1:8443 (cert auto-signé CN=thaumas-web-epreuve)
+        # : le chemin « surface présente » n'est plus un simple fixture à structure mesurée.
+        # Archives produites par executer_qualif_tls.py (binaires épinglés au répertoire
+        # des binaires promus), documentées par les attendus_tls.yaml de chaque dossier.
+
+        # — planification sur la cible https : sslscan/sslyze en hôte:port, les autres
+        #   gardent l'URL (formes mesurées des manifests)
+        for pid, garde_url in (("sslscan", False), ("sslyze", False),
+                               ("testssl_sh", True), ("tlsx", True)):
+            plan_tls = FW.planifier(pid, "https://127.0.0.1:8443/", "/tmp/agnt-g4-test",
+                                    egress=True, registre=reg)
+            argv_tls = json.dumps(plan_tls["argv"], ensure_ascii=False)
+            if garde_url:
+                cas(f"plan TLS {pid} : l'URL https passe telle quelle",
+                    "https://127.0.0.1:8443/" in argv_tls, argv_tls[:110])
+            else:
+                cas(f"plan TLS {pid} : forme hôte:port (127.0.0.1:8443), PAS l'URL",
+                    "127.0.0.1:8443" in argv_tls
+                    and "https://127.0.0.1:8443/" not in argv_tls, argv_tls[:110])
+
+        # — _hote_port : le jeton {HOSTPORT}, port par défaut du schéma RESTAURÉ
+        cas("_hote_port https://127.0.0.1:8443/ → 127.0.0.1:8443",
+            FW._hote_port("https://127.0.0.1:8443/") == "127.0.0.1:8443", "")
+        cas("_hote_port https://hote.tld/ → hote.tld:443 (port par défaut RESTAURÉ)",
+            FW._hote_port("https://hote.tld/") == "hote.tld:443", "")
+        cas("_hote_port http://127.0.0.1:8807/ → 127.0.0.1:8807",
+            FW._hote_port("http://127.0.0.1:8807/") == "127.0.0.1:8807", "")
+
+        # — sslscan MESURÉ : surface TLS offerte portée par le XML, AUCUNE sévérité
+        r = FW.interpreter("sslscan", 0, _lire("sslscan", "sslscan_https.xml"), registre=reg)
+        regles_tls = {str(i.get("regle")) for i in r["items"]}
+        noms_tls = {str(i.get("nom_regle")) for i in r["items"]}
+        cas("sslscan *_https MESURÉ : 18 items (2 protocoles enabled=1 + 16 suites offertes), échec False",
+            len(r["items"]) == 18 and r["echec"] is False,
+            f"items={len(r['items'])} echec={r['echec']} {r['motif']}")
+        cas("sslscan *_https : regles ⊆ {sslscan-protocol, sslscan-cipher}, « tls 1.3 » nommée",
+            regles_tls <= {"sslscan-protocol", "sslscan-cipher"} and "tls 1.3" in noms_tls,
+            f"regles={sorted(regles_tls)}")
+        cas("sslscan *_https : TLS_AES_256_GCM_SHA384 présente, AUCUNE clé severite",
+            any("TLS_AES_256_GCM_SHA384" in json.dumps(i, ensure_ascii=False)
+                for i in r["items"])
+            and all("severite" not in i and "severity" not in i for i in r["items"]), "")
+
+        # — sslyze MESURÉ (manifest runtime, scans de sélection SANS --certinfo) :
+        #   6 commandes exécutées → 6 items ; les commandes non demandées viennent à
+        #   result: None et le parser n'en fait PAS de constat (mesuré). --certinfo est
+        #   volontairement hors manifeste : le PEM du certificat déclenche le masquage
+        #   des blobs base64 (≥ 40) et le JSON capturé devient illisible (mesuré) — le
+        #   certificat est couvert par testssl.sh et tlsx.
+        r = FW.interpreter("sslyze", 0, _lire("sslyze", "sslyze_https.json"), registre=reg)
+        regles_tls = {str(i.get("regle")) for i in r["items"]}
+        cas("sslyze *_https MESURÉ : 6 items (commandes exécutées du manifest), url=127.0.0.1:8443, échec False",
+            len(r["items"]) == 6 and r["echec"] is False
+            and {str(i.get("url")) for i in r["items"]} == {"127.0.0.1:8443"},
+            f"items={len(r['items'])} echec={r['echec']} {r['motif']}")
+        cas("sslyze *_https : les 6 commandes demandées, PAS certificate_info (hors manifeste)",
+            {"sslyze-tls_1_2_cipher_suites", "sslyze-tls_1_3_cipher_suites",
+             "sslyze-session_renegotiation", "sslyze-tls_compression",
+             "sslyze-heartbleed", "sslyze-openssl_ccs_injection"} == regles_tls,
+            f"regles={sorted(regles_tls)}")
+        # Épreuve DIRECTE complète (hors manifeste, archivée) : 18 commandes dont 3 à
+        # result: None (http_headers, session_resumption, tls_1_3_early_data) → 15
+        # constats réels : le parser ne compte que ce qui a été exécuté (mesuré).
+        r = FW.interpreter("sslyze", 0, _lire("sslyze", "sslyze_complet.json"), registre=reg)
+        cas("sslyze épreuve complète (capacité, hors manifeste) : 15 constats réels sur 18 commandes — les result: None sont écartés",
+            len(r["items"]) == 15
+            and not any(str(i.get("regle")) in ("sslyze-http_headers",
+                            "sslyze-session_resumption", "sslyze-tls_1_3_early_data")
+                        for i in r["items"]),
+            f"items={len(r['items'])} echec={r['echec']} {r['motif']}")
+
+        # — testssl.sh MESURÉ : 166 entrées, sévérités DÉCLARÉES portées telles quelles
+        r = FW.interpreter("testssl_sh", 0, _lire("testssl.sh", "testssl_sh_https.json"),
+                           registre=reg)
+        severites_tls = {f.severity.get("value") for f in r["findings"]}
+        ids_tls = {str(i.get("id")) for i in r["items"]}
+        cas("testssl_sh *_https MESURÉ : 166 entrées relues, échec False (code 0 ∈ succès)",
+            len(r["items"]) == 166 and r["echec"] is False,
+            f"items={len(r['items'])} echec={r['echec']} {r['motif']}")
+        cas("testssl_sh *_https : sévérités DÉCLARÉES portées telles quelles (CRITICAL et OK)",
+            {"CRITICAL", "OK"} <= severites_tls, f"severites={sorted(severites_tls)}")
+        cas("testssl_sh *_https : l'auto-signature est lue par l'OUTIL (cert_chain_of_trust, cert_commonName)",
+            "cert_chain_of_trust" in ids_tls and "cert_commonName" in ids_tls,
+            f"ids cert_* : {sorted(i for i in ids_tls if i.startswith('cert_'))}")
+
+        # — tlsx MESURÉ : 1 enregistrement, auto-signature par RAPPROCHEMENT (artefact brut)
+        r = FW.interpreter("tlsx", 0, _lire("tlsx", "tlsx_https.txt"), registre=reg)
+        item_tls = r["items"][0] if r["items"] else {}
+        finding_tls = r["findings"][0].to_dict() if r["findings"] else {}
+        source_tls = finding_tls.get("source") or {}
+        preuve_tls = finding_tls.get("evidence") or {}
+        cas("tlsx *_https MESURÉ : 1 enregistrement JSONL → 1 item, échec False",
+            len(r["items"]) == 1 and r["echec"] is False,
+            f"items={len(r['items'])} echec={r['echec']} {r['motif']}")
+        cas("tlsx *_https : mapping mesuré (regle tls13, subject_cn/issuer_cn, preuve cipher)",
+            source_tls.get("original_rule_id") == "tls13"
+            and source_tls.get("nom_regle") == "thaumas-web-epreuve"
+            and preuve_tls.get("message") == "thaumas-web-epreuve"
+            and preuve_tls.get("preuve") == "TLS_AES_256_GCM_SHA384",
+            json.dumps({"regle": source_tls.get("original_rule_id"),
+                        "nom_regle": source_tls.get("nom_regle"),
+                        "message": preuve_tls.get("message"),
+                        "preuve": preuve_tls.get("preuve")}, ensure_ascii=False))
+        cas("tlsx *_https : auto-signature lue par RAPPROCHEMENT (subject_cn == issuer_cn + self_signed)",
+            item_tls.get("subject_cn") == item_tls.get("issuer_cn") == "thaumas-web-epreuve"
+            and item_tls.get("self_signed") is True
+            and item_tls.get("probe_status") is True, "")
 
     print(f"\n{'=' * 50}\n  {len(CAS) - len([c for c in CAS if c[1] is False]) - len([c for c in CAS if c[1] is None])}/{len(CAS)} passent"
           + (f" (+{len([c for c in CAS if c[1] is None])} NON ÉVALUÉS)" if any(c[1] is None for c in CAS) else "")

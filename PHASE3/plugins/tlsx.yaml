@@ -1,8 +1,10 @@
 # Plugin AGNT — tlsx, recensement TLS (projectdiscovery) (vague web G4, 2026-09-05).
 #
-# Cible d'épreuve HTTP pur : tlsx ignore silencieusement une cible http:// (0 connexion,
-# sortie vide, code 0 — mesuré). Le cœur nomme ce vide (« sortie vide : échec d'exécution,
-# pas un scan propre ») : c'est le refus honnête, pas un scan sans constat.
+# 2026-09-05 (cible TLS d'épreuve, serveur.py --tls) : le chemin POSITIF est mesuré —
+# 1 enregistrement JSONL sur https://127.0.0.1:8443/ avec la structure RÉELLE du binaire
+# épinglé (probe_status booléen, cipher, subject_cn/issuer_cn…) : le mapping ci-dessous
+# est relu sur cette mesure (qualif/tlsx/tlsx_https.txt). Auparavant qualifié sur VIDE
+# NOMMÉ (cible http:// ignorée silencieusement : 0 connexion, fichiers vides, code 0).
 id: tlsx
 capacites:
   - WEB_VULN_SCAN_ACTIVE
@@ -34,19 +36,26 @@ lecture:
   modele: lignes_json
   champs:
     url: host
-    regle: cipher_suite
-    nom_regle: tls_version
+    regle: tls_version
+    nom_regle: subject_cn
     message: issuer_cn
-    preuve: probe_status
+    preuve: cipher
 requirements:
   reseau: true
   privileges: aucun
   timeout_s: 300
 a_verifier:
+  - "MESURÉ SUR CIBLE TLS RÉELLE (2026-09-05, https://127.0.0.1:8443/, cert auto-signé) :
+     code 0, 1 enregistrement — probe_status=true (booléen), tls_version=tls13,
+     cipher=TLS_AES_256_GCM_SHA384, subject_cn == issuer_cn == thaumas-web-epreuve.
+     L'auto-signature est portée par le RAPPROCHEMENT issuer/subject (l'émetteur EST le
+     sujet) + self_signed=true dans l'artefact brut — rien n'est déduit au-delà."
+  - "mapping corrigé sur la mesure réelle : le tag json du binaire est `cipher` (PAS
+     cipher_suite comme supposé sur la structure du refus) ; probe_status est un booléen
+     (PAS la chaîne tls-open). -vc (vérification de chaîne) EXISTE et reste HORS argv :
+     tlsx recense, il ne certifie pas."
   - "tlsx ignore silencieusement une cible http:// (0 connexion, fichiers vides, code 0 —
-     mesuré le 2026-09-05 contre THAUMAS-WEB) : le cœur lit « sortie vide : échec
-     d'exécution », le nommage correct de ce vide. La forme hôte:port nomme l'échec de
-     négociation sur stderr — hors manifeste (aucun jeton hôte:port au cœur)."
-  - "mapping dérivé des tags json du binaire épinglé (host, port, tls_version,
-     cipher_suite, probe_status — extraits du binaire par strings) : non mesuré sur une
-     cible TLS — aucune cible TLS autorisée dans cette qualification."
+     mesuré) : le cœur nomme ce vide (« sortie vide : échec d'exécution, pas un scan
+     propre »). La forme {URL} https:// passe telle quelle (mesuré, / final compris)."
+  - "url mappé sur host : 127.0.0.1 sans port ni schéma (le port vit dans l'artefact
+     brut) — côté oracle, le constat reste non rejouable, raison nommée."

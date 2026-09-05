@@ -1,0 +1,19 @@
+# Meta d'épreuve TLS POSITIVE — tlsx contre https://127.0.0.1:8443/ (2026-09-05)
+tool: tlsx
+argv:
+- 'tlsx'
+- '-u'
+- 'https://127.0.0.1:8443/'
+- '-j'
+- '-o'
+- '/tmp/agnt-qualif-tls/tlsx.jsonl'
+- '-nc'
+- '-duc'
+code_retour: 0
+binaire_resolu: /home/julie/.cache/arena_secops/bin/tlsx
+duree_ms: 14547
+cible: https://127.0.0.1:8443/
+certificat_cible: auto-signé CN=thaumas-web-epreuve (serveur.py --tls)
+sandbox: exécution DIRECTE hors cage (staging) — même convention que G1-G5
+stdout_octets: 782
+sortie_brute: tlsx_https.txt

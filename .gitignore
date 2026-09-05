@@ -55,6 +55,8 @@ tsconfig.tsbuildinfo
 # la source, c'est serveur.py ; les binaires de scratch ne sont jamais versionnés.
 PHASE3/cible_web/_git_fixture/
 PHASE3/cible_web/_git_dump/
+# Mode --tls : certificat auto-signé GÉNÉRÉ AU BOOT (clé privée, jamais versionnée)
+PHASE3/cible_web/certs/
 PHASE3/bin_linux/
 PHASE3/bin_win/
 # Sorties du runtime web (preuves disque, même convention que artifacts/missions)

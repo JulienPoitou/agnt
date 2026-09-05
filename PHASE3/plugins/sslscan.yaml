@@ -1,8 +1,10 @@
 # Plugin AGNT — sslscan, sondage TLS rapide (vague web G4, 2026-09-05).
 #
-# Cible d'épreuve HTTP pur : sslscan rend son XML avec tous les protocoles enabled=0 et
-# aucun cipher — le parser ne retient RIEN comme surface (zéro item, nommé) : c'est la
-# lecture honnête d'une cible sans TLS, pas un « scan propre » déguisé.
+# 2026-09-05 (cible TLS d'épreuve, serveur.py --tls) : la surface POSITIVE est mesurée —
+# TLS 1.2/1.3 offerts, 16 suites acceptées, 18 items (qualif/sslscan/sslscan_https.xml).
+# Auparavant qualifié sur REFUS NOMMÉ (cible HTTP pur : URL refusée, sslscan n'accepte
+# que hôte:port — le jeton {HOSTPORT}, résolu par le cœur, contourne ce refus SANS
+# dénaturer la cible : c'est la même cible, nommée dans la forme que l'outil exige).
 id: sslscan
 capacites:
   - WEB_VULN_SCAN_ACTIVE
@@ -21,11 +23,11 @@ description: >
   Observations de configuration — sslscan ne porte aucune sévérité, jamais inventée.
 execution:
   args:
-    # Ordre mesuré : les options AVANT la cible. Avec la cible http:// en premier,
-    # sslscan imprime son help en code 0 (usage ambigu) ; avec les options d'abord,
-    # il refuse la cible nommément (« ERROR: Invalid target specified. », code 1).
+    # Ordre mesuré : les options AVANT la cible (cible en premier → help + code 0,
+    # usage ambigu — mesuré). La cible passe en forme hôte:port ({HOSTPORT}) : une URL
+    # est refusée (« ERROR: Invalid target specified. », code 1 — mesuré).
     - "--xml=-"
-    - "{URL}"
+    - "{HOSTPORT}"
   # sslscan rend son XML sur stdout (« - ») : l'artefact est stdout, comme git-dumper
   # (aucun fichier {OUT} — le repli stdout du cœur lit la même source).
   code_succes: [0]
@@ -47,11 +49,13 @@ requirements:
   privileges: aucun
   timeout_s: 300
 a_verifier:
-  - "sslscan n'accepte pas d'URL (hôte:port uniquement) : {URL} http:// répond « ERROR:
-     Invalid target specified. » code 1 — mesuré le 2026-09-05 contre THAUMAS-WEB ; la
-     limite est nommée, non contournée."
+  - "MESURÉ SUR CIBLE TLS RÉELLE (2026-09-05, https://127.0.0.1:8443, cert auto-signé
+     CN=thaumas-web-epreuve) : code 0, TLS 1.2 + 1.3 enabled=1, 16 suites accepted,
+     renégociation supported=0 (pas d'item — correct) → 18 items rendus par le parser.
+     Le certificat reste dans l'artefact brut : le parser n'en extrait rien (convention
+     sslyze/git-dumper — les données de la cible ne traversent pas le registre)."
+  - "la forme {HOSTPORT} est résolue par le cœur (fournisseurs_web._hote_port) : le port
+     par défaut du schéma y est RESTAURÉ (https://hote.tld/ → hote.tld:443)."
   - "binaire construit localement contre l'OpenSSL système (3.0.13) : protocoles legacy
-     (SSLv2/SSLv3) et compression non testables — limite du build, consignée au manifeste."
-  - "le chemin « surface TLS présente » (protocols enabled=1, ciphers accepted) n'est pas
-     mesuré sur une cible TLS réelle — aucune cible TLS autorisée ; il lit les attributs
-     du XML produit par sslscan 2.1.5 (structure mesurée sur cible HTTP pur)."
+     (SSLv2/SSLv3) et compression non testables — limite du build, consignée au
+     manifeste."

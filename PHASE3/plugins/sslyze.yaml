@@ -1,7 +1,9 @@
 # Plugin AGNT — sslyze, audit TLS par bibliothèque nassl (vague web G4, 2026-09-05).
 #
-# Cible d'épreuve HTTP pur : l'épreuve prouve l'exécution et le refus nommé de l'outil
-# (cible refusée DANS le JSON), pas un constat TLS.
+# 2026-09-05 (cible TLS d'épreuve, serveur.py --tls) : le chemin POSITIF est mesuré SOUS
+# CAGE — code 0, commandes exécutées rendues (qualif/sslyze/sslyze_https.json). L'épreuve
+# DIRECTE complète (scan par défaut, 18 commandes dont certificate_info avec le PEM) est
+# archivée à côté (sslyze_complet.json) : elle prouve la capacité, PAS le manifeste.
 id: sslyze
 capacites:
   - WEB_VULN_SCAN_ACTIVE
@@ -15,18 +17,29 @@ cout: faible
 risque: ACTIVE
 description: >
   Audit de configuration TLS (sslyze) : versions TLS supportées, suites de chiffrement,
-  certificat et chaîne de confiance, renégociation, compression, Heartbleed, en-têtes
-  HTTP de sécurité. sslyze ne déclare AUCUNE sévérité : il décrit la configuration
-  mesurée — les constats restent des observations, jamais un exploit prouvé.
+  renégociation, compression, Heartbleed, injection CCS. sslyze ne déclare AUCUNE
+  sévérité : il décrit la configuration mesurée — les constats restent des observations,
+  jamais un exploit prouvé.
 execution:
   args:
-    # « - » = JSON sur stdout (mesuré) : uniforme quelle que soit la cible. Avec
-    # --json_out <fichier>, le fichier reste VIDE quand toutes les cibles sont
-    # invalides (mesuré) — le JSON sur stdout est la seule forme lisible partout.
-    - "{URL}"
+    # Cible hôte:port ({HOSTPORT}) : une URL est refusée DANS le JSON (« Not a valid
+    # host:port », code 0 — mesuré). « - » = JSON sur stdout (mesuré).
+    # Scans de sélection EXPLICITES, --certinfo VOLONTAIREMENT HORS argv (mesuré le
+    # 2026-09-05) : le PEM du certificat dans la sortie déclenche l'assainissement des
+    # captures (masquage des blobs base64 ≥ 40 caractères, jeu LARGE) et le JSON capturé
+    # devient ILLISIBLE (0 item nommé). Le certificat est couvert par testssl.sh
+    # (cert_commonName) et tlsx (subject_cn/issuer_cn) ; l'épreuve directe complète avec
+    # certificate_info vit dans qualif/sslyze/sslyze_complet.json.
+    - "{HOSTPORT}"
+    - "--tlsv1_2"
+    - "--tlsv1_3"
+    - "--reneg"
+    - "--compression"
+    - "--heartbleed"
+    - "--openssl_ccs"
     - "--json_out"
     - "-"
-  # Mesuré : sslyze rend 0 en mode --json_out, même quand la cible est refusée — le refus
+  # Mesuré : sslyze rend 0 dans les deux cas (succès comme refus) — un refus de cible
   # est porté par le CONTENU JSON (invalid_server_strings), lu par le parser nommé.
   code_succes: [0]
 sortie:
@@ -51,10 +64,15 @@ requirements:
   privileges: aucun
   timeout_s: 600
 a_verifier:
-  - "sslyze exige hôte:port : une URL http(s):// est refusée nommément DANS le JSON
-     (invalid_server_strings[0].error_message = 'Not a valid host:port', code 0 — mesuré
-     le 2026-09-05 contre THAUMAS-WEB). La plateforme devrait passer une cible hôte:port ;
-     la limite est nommée, non contournée."
-  - "le mapping des scan_result (certificate_info, tls_versions…) est dérivé du schéma du
-     paquet épinglé (sslyze/json/json_output.py, ServerScanResultAsJson) : il n'est PAS
-     mesuré sur une cible TLS — aucune cible TLS autorisée dans cette qualification."
+  - "MESURÉ SUR CIBLE TLS RÉELLE SOUS CAGE (2026-09-05, https://127.0.0.1:8443 via
+     {HOSTPORT}, cert auto-signé CN=thaumas-web-epreuve) : code 0, les 6 commandes
+     demandées exécutées (tls_1_2/tls_1_3_cipher_suites, session_renegotiation,
+     tls_compression, heartbleed, openssl_ccs_injection) → 6 items ; les commandes NON
+     demandées viennent à result: None et le parser n'en fait PAS de constat."
+  - "avec les scans PAR DÉFAUT (sans ces flags), certificate_info inclut le PEM du
+     certificat : la capture sous cage est assainie (blobs base64 ≥ 40 masqués) et le
+     JSON devient illisible → 0 item. Mesuré, assumé : --certinfo reste hors manifeste."
+  - "aucun flag --cert requis : sslyze scanne une cible auto-signée et RAPORTE, il ne
+     bloque pas."
+  - "la forme {HOSTPORT} est résolue par le cœur (fournisseurs_web._hote_port) : le port
+     par défaut du schéma y est RESTAURÉ (https://hote.tld/ → hote.tld:443)."

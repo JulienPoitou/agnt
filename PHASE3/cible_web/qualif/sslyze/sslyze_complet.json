@@ -1,0 +1,4716 @@
+{
+  "invalid_server_strings": [],
+  "server_scan_results": [
+    {
+      "uuid": "310773d2-7a3e-4a2e-9505-c94f37a6cf8f",
+      "server_location": {
+        "hostname": "127.0.0.1",
+        "port": 8443,
+        "connection_type": "DIRECT",
+        "ip_address": "127.0.0.1",
+        "http_proxy_settings": null
+      },
+      "network_configuration": {
+        "tls_server_name_indication": "127.0.0.1",
+        "tls_opportunistic_encryption": null,
+        "tls_client_auth_credentials": null,
+        "xmpp_to_hostname": null,
+        "network_timeout": 5,
+        "network_max_retries": 3
+      },
+      "connectivity_status": "COMPLETED",
+      "connectivity_error_trace": null,
+      "connectivity_result": {
+        "highest_tls_version_supported": "TLS_1_3",
+        "cipher_suite_supported": "TLS_AES_256_GCM_SHA384",
+        "client_auth_requirement": "DISABLED",
+        "supports_ecdh_key_exchange": true
+      },
+      "scan_status": "COMPLETED",
+      "scan_result": {
+        "certificate_info": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "hostname_used_for_server_name_indication": "127.0.0.1",
+            "certificate_deployments": [
+              {
+                "received_certificate_chain": [
+                  {
+                    "as_pem": "-----BEGIN CERTIFICATE-----\nMIIDOTCCAiGgAwIBAgIUQ/pawSCA6mjJ47vUwnQwmqlq0WYwDQYJKoZIhvcNAQEL\nBQAwHjEcMBoGA1UEAwwTdGhhdW1hcy13ZWItZXByZXV2ZTAeFw0yNjA5MDUyMDI4\nNTNaFw0yNzA5MDUyMDI4NTNaMB4xHDAaBgNVBAMME3RoYXVtYXMtd2ViLWVwcmV1\ndmUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDepMT1o06HALCP7i+N\niSoJypU/h0YgklwR8dEZadwb41Ldk7O/zApYb3ypdpp5tdSE6AI5Re3TBNqaUCqW\n1iXW8zHJCRxANrkXKn8D6EJYXSBXGE2e6Eg0z6QFwy2Cud0+pRXmsRFoFIweJXVA\n5ifTkYBfcgZ3RUonFnp6dPqOJs3QVn50mRLPKhN0bb3wcXp1cAPeggphf7JqcEsq\nD6wD/nzz4WLU7GfKcaVXYeuZQJULb9+r/reiI1tRPemICZnWgt9xSz+Z9tPNznIS\n4Z4E9+jh4G0a8R+9KbkAexXtYD06UdCATPRe0YZLIiB28iUIWk+JJzQnEM/CdRMX\nHIofAgMBAAGjbzBtMB0GA1UdDgQWBBR5qT2UZ4YBpJriOZiH8pVhfo/OVDAfBgNV\nHSMEGDAWgBR5qT2UZ4YBpJriOZiH8pVhfo/OVDAPBgNVHRMBAf8EBTADAQH/MBoG\nA1UdEQQTMBGHBH8AAAGCCWxvY2FsaG9zdDANBgkqhkiG9w0BAQsFAAOCAQEAEW+J\nt6iBYJX7IB3v/Jia5WjYHph9SXb7/hJwwGpnCU7S8ZLg/11Z/94mYxRLof16ilBd\nL06wlvFduLlUyTzUVzvFt14WczrBL+weJsw6Cx8E1HEY+0/LPviF/QqrFopYcSL8\nmMPWZWhqOBFY+s0i756yjHdjm2I/2WGv4RH3u4+j0UHDBe8wC8qMczV/FjVExJTq\nZ4WjuatNPds2Yd7iyTLS8lpoZ+dYYMraoLue5CV7qcCIl5MvaT29DgJzenxteXfP\nNLCSXMST7X2eUEmX8cGsU5BEuQJGlDR/KK2NY8cUc32pAFZA6O57cTQ3uNa2NXNA\nJ0A9hr20Kdd4gdtmgg==\n-----END CERTIFICATE-----\n",
+                    "hpkp_pin": "oGBKe4TbStwvD6bJE93KcX55G5+gA6nENm3xc8Gyipg=",
+                    "fingerprint_sha1": "ImedOaaCe5uf8sSdxsvnip/yZW8=",
+                    "fingerprint_sha256": "5XiGJ7kTZwDu4E9mVvM59/3Z68vsfVV40K6mAXo2WyQ=",
+                    "serial_number": 388085473768265242321393935949022089710312018278,
+                    "not_valid_before": "2026-09-05T20:28:53Z",
+                    "not_valid_after": "2027-09-05T20:28:53Z",
+                    "subject_alternative_name": {
+                      "dns_names": [
+                        "localhost"
+                      ],
+                      "ip_addresses": [
+                        "127.0.0.1"
+                      ]
+                    },
+                    "signature_hash_algorithm": {
+                      "name": "sha256",
+                      "digest_size": 32
+                    },
+                    "signature_algorithm_oid": {
+                      "name": "sha256WithRSAEncryption",
+                      "dotted_string": "1.2.840.113549.1.1.11"
+                    },
+                    "subject": {
+                      "rfc4514_string": "CN=thaumas-web-epreuve",
+                      "attributes": [
+                        {
+                          "oid": {
+                            "name": "commonName",
+                            "dotted_string": "2.5.4.3"
+                          },
+                          "value": "thaumas-web-epreuve",
+                          "rfc4514_string": "CN=thaumas-web-epreuve"
+                        }
+                      ]
+                    },
+                    "issuer": {
+                      "rfc4514_string": "CN=thaumas-web-epreuve",
+                      "attributes": [
+                        {
+                          "oid": {
+                            "name": "commonName",
+                            "dotted_string": "2.5.4.3"
+                          },
+                          "value": "thaumas-web-epreuve",
+                          "rfc4514_string": "CN=thaumas-web-epreuve"
+                        }
+                      ]
+                    },
+                    "public_key": {
+                      "algorithm": "RSAPublicKey",
+                      "key_size": 2048,
+                      "rsa_e": 65537,
+                      "rsa_n": 28106154508617964283306577797826722244579188862960806006060380068882289090594360346762971319497385660330080936947041149539496682433260197343601751533897335141941354854194098694469199458909981338732325963317123114022872856158350590228486051746791451406821459153389031826482340620907407270192670199546009871369529432793801630166368049926895369246577021378227028632346947846079961318525002016035190360959941429508064215638481688877721183946130366869340436436168741159931140877328951549901864002549298554775504017412901927538569388189070922202421829006877521355788353991281037584047947629192529697075886012842900482460191,
+                      "ec_curve_name": null,
+                      "ec_x": null,
+                      "ec_y": null
+                    }
+                  }
+                ],
+                "leaf_certificate_has_must_staple_extension": false,
+                "leaf_certificate_is_ev": false,
+                "leaf_certificate_signed_certificate_timestamps_count": 0,
+                "received_chain_contains_anchor_certificate": null,
+                "received_chain_has_valid_order": true,
+                "path_validation_results": [
+                  {
+                    "trust_store": {
+                      "path": "/home/julie/.cache/arena_secops/staging/sslyze/venv/lib/python3.12/site-packages/sslyze/plugins/certificate_info/trust_stores/pem_files/google_aosp.pem",
+                      "name": "Android",
+                      "version": "16.0.0_r4",
+                      "ev_oids": null
+                    },
+                    "verified_certificate_chain": null,
+                    "validation_error": "validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(CN=thaumas-web-epreuve)>, ...)>)",
+                    "was_validation_successful": false
+                  },
+                  {
+                    "trust_store": {
+                      "path": "/home/julie/.cache/arena_secops/staging/sslyze/venv/lib/python3.12/site-packages/sslyze/plugins/certificate_info/trust_stores/pem_files/apple.pem",
+                      "name": "Apple",
+                      "version": "iOS 26, iPadOS 26, macOS 26, tvOS 26, visionOS 26 and watchOS 26",
+                      "ev_oids": null
+                    },
+                    "verified_certificate_chain": null,
+                    "validation_error": "validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(CN=thaumas-web-epreuve)>, ...)>)",
+                    "was_validation_successful": false
+                  },
+                  {
+                    "trust_store": {
+                      "path": "/home/julie/.cache/arena_secops/staging/sslyze/venv/lib/python3.12/site-packages/sslyze/plugins/certificate_info/trust_stores/pem_files/oracle_java.pem",
+                      "name": "Java",
+                      "version": "jdk-13.0.2",
+                      "ev_oids": null
+                    },
+                    "verified_certificate_chain": null,
+                    "validation_error": "validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(CN=thaumas-web-epreuve)>, ...)>)",
+                    "was_validation_successful": false
+                  },
+                  {
+                    "trust_store": {
+                      "path": "/home/julie/.cache/arena_secops/staging/sslyze/venv/lib/python3.12/site-packages/sslyze/plugins/certificate_info/trust_stores/pem_files/mozilla_nss.pem",
+                      "name": "Mozilla",
+                      "version": "2026-03-28",
+                      "ev_oids": [
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.2.276.0.44.1.1.1.4"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.2.392.200091.100.721.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.2.40.0.17.1.22"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.2.616.1.113527.2.5.1.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.159.1.17.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.13177.10.1.3.10"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.14370.1.6"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.14777.6.1.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.14777.6.1.2"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.17326.10.14.2.1.2"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.17326.10.14.2.2.2"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.17326.10.8.12.1.2"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.17326.10.8.12.2.2"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.22234.2.5.2.3.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.23223.1.1.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.29836.1.10"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.34697.2.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.34697.2.2"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.34697.2.3"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.34697.2.4"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.36305.2"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.40869.1.1.22.3"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.4146.1.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.4788.2.202.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.6334.1.100.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.6449.1.2.1.5.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.782.1.2.1.8.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.7879.13.24.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "1.3.6.1.4.1.8024.0.2.100.1.2"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.156.112554.3"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.528.1.1003.1.2.7"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.578.1.26.1.3.3"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.756.1.83.21.0"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.756.1.89.1.2.1.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.792.3.0.3.1.1.5"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.792.3.0.4.1.1.4"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.840.1.113733.1.7.23.6"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.840.1.113733.1.7.48.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.840.1.114028.10.1.2"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.840.1.114171.500.9"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.840.1.114404.1.1.2.4.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.840.1.114412.2.1"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.840.1.114413.1.7.23.3"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.840.1.114414.1.7.23.3"
+                        },
+                        {
+                          "name": "Unknown OID",
+                          "dotted_string": "2.16.840.1.114414.1.7.24.3"
+                        }
+                      ]
+                    },
+                    "verified_certificate_chain": null,
+                    "validation_error": "validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(CN=thaumas-web-epreuve)>, ...)>)",
+                    "was_validation_successful": false
+                  },
+                  {
+                    "trust_store": {
+                      "path": "/home/julie/.cache/arena_secops/staging/sslyze/venv/lib/python3.12/site-packages/sslyze/plugins/certificate_info/trust_stores/pem_files/microsoft_windows.pem",
+                      "name": "Windows",
+                      "version": "2026-03-28",
+                      "ev_oids": null
+                    },
+                    "verified_certificate_chain": null,
+                    "validation_error": "validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(CN=thaumas-web-epreuve)>, ...)>)",
+                    "was_validation_successful": false
+                  }
+                ],
+                "verified_chain_has_sha1_signature": null,
+                "verified_chain_has_legacy_symantec_anchor": null,
+                "ocsp_response": null,
+                "ocsp_response_is_trusted": null,
+                "verified_certificate_chain": null
+              }
+            ],
+            "certificate_deployment_with_sni_disabled": {
+              "received_certificate_chain": [
+                {
+                  "as_pem": "-----BEGIN CERTIFICATE-----\nMIIDOTCCAiGgAwIBAgIUQ/pawSCA6mjJ47vUwnQwmqlq0WYwDQYJKoZIhvcNAQEL\nBQAwHjEcMBoGA1UEAwwTdGhhdW1hcy13ZWItZXByZXV2ZTAeFw0yNjA5MDUyMDI4\nNTNaFw0yNzA5MDUyMDI4NTNaMB4xHDAaBgNVBAMME3RoYXVtYXMtd2ViLWVwcmV1\ndmUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDepMT1o06HALCP7i+N\niSoJypU/h0YgklwR8dEZadwb41Ldk7O/zApYb3ypdpp5tdSE6AI5Re3TBNqaUCqW\n1iXW8zHJCRxANrkXKn8D6EJYXSBXGE2e6Eg0z6QFwy2Cud0+pRXmsRFoFIweJXVA\n5ifTkYBfcgZ3RUonFnp6dPqOJs3QVn50mRLPKhN0bb3wcXp1cAPeggphf7JqcEsq\nD6wD/nzz4WLU7GfKcaVXYeuZQJULb9+r/reiI1tRPemICZnWgt9xSz+Z9tPNznIS\n4Z4E9+jh4G0a8R+9KbkAexXtYD06UdCATPRe0YZLIiB28iUIWk+JJzQnEM/CdRMX\nHIofAgMBAAGjbzBtMB0GA1UdDgQWBBR5qT2UZ4YBpJriOZiH8pVhfo/OVDAfBgNV\nHSMEGDAWgBR5qT2UZ4YBpJriOZiH8pVhfo/OVDAPBgNVHRMBAf8EBTADAQH/MBoG\nA1UdEQQTMBGHBH8AAAGCCWxvY2FsaG9zdDANBgkqhkiG9w0BAQsFAAOCAQEAEW+J\nt6iBYJX7IB3v/Jia5WjYHph9SXb7/hJwwGpnCU7S8ZLg/11Z/94mYxRLof16ilBd\nL06wlvFduLlUyTzUVzvFt14WczrBL+weJsw6Cx8E1HEY+0/LPviF/QqrFopYcSL8\nmMPWZWhqOBFY+s0i756yjHdjm2I/2WGv4RH3u4+j0UHDBe8wC8qMczV/FjVExJTq\nZ4WjuatNPds2Yd7iyTLS8lpoZ+dYYMraoLue5CV7qcCIl5MvaT29DgJzenxteXfP\nNLCSXMST7X2eUEmX8cGsU5BEuQJGlDR/KK2NY8cUc32pAFZA6O57cTQ3uNa2NXNA\nJ0A9hr20Kdd4gdtmgg==\n-----END CERTIFICATE-----\n",
+                  "hpkp_pin": "oGBKe4TbStwvD6bJE93KcX55G5+gA6nENm3xc8Gyipg=",
+                  "fingerprint_sha1": "ImedOaaCe5uf8sSdxsvnip/yZW8=",
+                  "fingerprint_sha256": "5XiGJ7kTZwDu4E9mVvM59/3Z68vsfVV40K6mAXo2WyQ=",
+                  "serial_number": 388085473768265242321393935949022089710312018278,
+                  "not_valid_before": "2026-09-05T20:28:53Z",
+                  "not_valid_after": "2027-09-05T20:28:53Z",
+                  "subject_alternative_name": {
+                    "dns_names": [
+                      "localhost"
+                    ],
+                    "ip_addresses": [
+                      "127.0.0.1"
+                    ]
+                  },
+                  "signature_hash_algorithm": {
+                    "name": "sha256",
+                    "digest_size": 32
+                  },
+                  "signature_algorithm_oid": {
+                    "name": "sha256WithRSAEncryption",
+                    "dotted_string": "1.2.840.113549.1.1.11"
+                  },
+                  "subject": {
+                    "rfc4514_string": "CN=thaumas-web-epreuve",
+                    "attributes": [
+                      {
+                        "oid": {
+                          "name": "commonName",
+                          "dotted_string": "2.5.4.3"
+                        },
+                        "value": "thaumas-web-epreuve",
+                        "rfc4514_string": "CN=thaumas-web-epreuve"
+                      }
+                    ]
+                  },
+                  "issuer": {
+                    "rfc4514_string": "CN=thaumas-web-epreuve",
+                    "attributes": [
+                      {
+                        "oid": {
+                          "name": "commonName",
+                          "dotted_string": "2.5.4.3"
+                        },
+                        "value": "thaumas-web-epreuve",
+                        "rfc4514_string": "CN=thaumas-web-epreuve"
+                      }
+                    ]
+                  },
+                  "public_key": {
+                    "algorithm": "RSAPublicKey",
+                    "key_size": 2048,
+                    "rsa_e": 65537,
+                    "rsa_n": 28106154508617964283306577797826722244579188862960806006060380068882289090594360346762971319497385660330080936947041149539496682433260197343601751533897335141941354854194098694469199458909981338732325963317123114022872856158350590228486051746791451406821459153389031826482340620907407270192670199546009871369529432793801630166368049926895369246577021378227028632346947846079961318525002016035190360959941429508064215638481688877721183946130366869340436436168741159931140877328951549901864002549298554775504017412901927538569388189070922202421829006877521355788353991281037584047947629192529697075886012842900482460191,
+                    "ec_curve_name": null,
+                    "ec_x": null,
+                    "ec_y": null
+                  }
+                }
+              ],
+              "leaf_certificate_has_must_staple_extension": false,
+              "leaf_certificate_is_ev": false,
+              "leaf_certificate_signed_certificate_timestamps_count": 0,
+              "received_chain_contains_anchor_certificate": null,
+              "received_chain_has_valid_order": true,
+              "path_validation_results": [
+                {
+                  "trust_store": {
+                    "path": "/home/julie/.cache/arena_secops/staging/sslyze/venv/lib/python3.12/site-packages/sslyze/plugins/certificate_info/trust_stores/pem_files/google_aosp.pem",
+                    "name": "Android",
+                    "version": "16.0.0_r4",
+                    "ev_oids": null
+                  },
+                  "verified_certificate_chain": null,
+                  "validation_error": "validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(CN=thaumas-web-epreuve)>, ...)>)",
+                  "was_validation_successful": false
+                },
+                {
+                  "trust_store": {
+                    "path": "/home/julie/.cache/arena_secops/staging/sslyze/venv/lib/python3.12/site-packages/sslyze/plugins/certificate_info/trust_stores/pem_files/apple.pem",
+                    "name": "Apple",
+                    "version": "iOS 26, iPadOS 26, macOS 26, tvOS 26, visionOS 26 and watchOS 26",
+                    "ev_oids": null
+                  },
+                  "verified_certificate_chain": null,
+                  "validation_error": "validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(CN=thaumas-web-epreuve)>, ...)>)",
+                  "was_validation_successful": false
+                },
+                {
+                  "trust_store": {
+                    "path": "/home/julie/.cache/arena_secops/staging/sslyze/venv/lib/python3.12/site-packages/sslyze/plugins/certificate_info/trust_stores/pem_files/oracle_java.pem",
+                    "name": "Java",
+                    "version": "jdk-13.0.2",
+                    "ev_oids": null
+                  },
+                  "verified_certificate_chain": null,
+                  "validation_error": "validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(CN=thaumas-web-epreuve)>, ...)>)",
+                  "was_validation_successful": false
+                },
+                {
+                  "trust_store": {
+                    "path": "/home/julie/.cache/arena_secops/staging/sslyze/venv/lib/python3.12/site-packages/sslyze/plugins/certificate_info/trust_stores/pem_files/mozilla_nss.pem",
+                    "name": "Mozilla",
+                    "version": "2026-03-28",
+                    "ev_oids": [
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.2.276.0.44.1.1.1.4"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.2.392.200091.100.721.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.2.40.0.17.1.22"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.2.616.1.113527.2.5.1.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.159.1.17.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.13177.10.1.3.10"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.14370.1.6"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.14777.6.1.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.14777.6.1.2"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.17326.10.14.2.1.2"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.17326.10.14.2.2.2"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.17326.10.8.12.1.2"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.17326.10.8.12.2.2"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.22234.2.5.2.3.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.23223.1.1.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.29836.1.10"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.34697.2.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.34697.2.2"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.34697.2.3"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.34697.2.4"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.36305.2"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.40869.1.1.22.3"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.4146.1.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.4788.2.202.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.6334.1.100.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.6449.1.2.1.5.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.782.1.2.1.8.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.7879.13.24.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "1.3.6.1.4.1.8024.0.2.100.1.2"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.156.112554.3"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.528.1.1003.1.2.7"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.578.1.26.1.3.3"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.756.1.83.21.0"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.756.1.89.1.2.1.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.792.3.0.3.1.1.5"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.792.3.0.4.1.1.4"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.840.1.113733.1.7.23.6"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.840.1.113733.1.7.48.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.840.1.114028.10.1.2"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.840.1.114171.500.9"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.840.1.114404.1.1.2.4.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.840.1.114412.2.1"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.840.1.114413.1.7.23.3"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.840.1.114414.1.7.23.3"
+                      },
+                      {
+                        "name": "Unknown OID",
+                        "dotted_string": "2.16.840.1.114414.1.7.24.3"
+                      }
+                    ]
+                  },
+                  "verified_certificate_chain": null,
+                  "validation_error": "validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(CN=thaumas-web-epreuve)>, ...)>)",
+                  "was_validation_successful": false
+                },
+                {
+                  "trust_store": {
+                    "path": "/home/julie/.cache/arena_secops/staging/sslyze/venv/lib/python3.12/site-packages/sslyze/plugins/certificate_info/trust_stores/pem_files/microsoft_windows.pem",
+                    "name": "Windows",
+                    "version": "2026-03-28",
+                    "ev_oids": null
+                  },
+                  "verified_certificate_chain": null,
+                  "validation_error": "validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(CN=thaumas-web-epreuve)>, ...)>)",
+                  "was_validation_successful": false
+                }
+              ],
+              "verified_chain_has_sha1_signature": null,
+              "verified_chain_has_legacy_symantec_anchor": null,
+              "ocsp_response": null,
+              "ocsp_response_is_trusted": null,
+              "verified_certificate_chain": null
+            }
+          }
+        },
+        "ssl_2_0_cipher_suites": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "tls_version_used": "SSL_2_0",
+            "is_tls_version_supported": false,
+            "accepted_cipher_suites": [],
+            "rejected_cipher_suites": [
+              {
+                "cipher_suite": {
+                  "name": "SSL_CK_RC4_128_WITH_MD5",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "RC4-MD5"
+                },
+                "error_message": "Server interrupted the TLS handshake"
+              },
+              {
+                "cipher_suite": {
+                  "name": "SSL_CK_RC4_128_EXPORT40_WITH_MD5",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-RC4-MD5"
+                },
+                "error_message": "Server interrupted the TLS handshake"
+              },
+              {
+                "cipher_suite": {
+                  "name": "SSL_CK_RC2_128_CBC_WITH_MD5",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "RC2-CBC-MD5"
+                },
+                "error_message": "Server interrupted the TLS handshake"
+              },
+              {
+                "cipher_suite": {
+                  "name": "SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-RC2-CBC-MD5"
+                },
+                "error_message": "Server interrupted the TLS handshake"
+              },
+              {
+                "cipher_suite": {
+                  "name": "SSL_CK_IDEA_128_CBC_WITH_MD5",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "IDEA-CBC-MD5"
+                },
+                "error_message": "Server interrupted the TLS handshake"
+              },
+              {
+                "cipher_suite": {
+                  "name": "SSL_CK_DES_64_CBC_WITH_MD5",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DES-CBC-MD5"
+                },
+                "error_message": "Server interrupted the TLS handshake"
+              },
+              {
+                "cipher_suite": {
+                  "name": "SSL_CK_DES_192_EDE3_CBC_WITH_MD5",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DES-CBC3-MD5"
+                },
+                "error_message": "Server interrupted the TLS handshake"
+              }
+            ]
+          }
+        },
+        "ssl_3_0_cipher_suites": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "tls_version_used": "SSL_3_0",
+            "is_tls_version_supported": false,
+            "accepted_cipher_suites": [],
+            "rejected_cipher_suites": [
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_RC4_128_MD5",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "RC4-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_NULL_MD5",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "NULL-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_IDEA_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "IDEA-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_RC4_40_MD5",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-RC4-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-RC2-CBC-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_RC4_128_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "AECDH-RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_NULL_SHA",
+                  "is_anonymous": true,
+                  "key_size": 0,
+                  "openssl_name": "AECDH-NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "AECDH-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "AECDH-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 168,
+                  "openssl_name": "AECDH-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-RSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDH-RSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-ECDSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDH-ECDSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-ECDSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-ECDSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDH-ECDSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDHE-RSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDHE-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDHE-ECDSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDHE-ECDSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_SEED_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_RC4_128_MD5",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-RC4-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_DES_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 56,
+                  "openssl_name": "ADH-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "ADH-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "ADH-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 168,
+                  "openssl_name": "ADH-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_EXPORT_WITH_RC4_40_MD5",
+                  "is_anonymous": true,
+                  "key_size": 40,
+                  "openssl_name": "EXP-ADH-RC4-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 40,
+                  "openssl_name": "EXP-ADH-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-RSA-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-DSS-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-DSS-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DH-DSS-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "EDH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "EDH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-EDH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "EDH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "EDH-DSS-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-EDH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              }
+            ]
+          }
+        },
+        "tls_1_0_cipher_suites": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "tls_version_used": "TLS_1_0",
+            "is_tls_version_supported": false,
+            "accepted_cipher_suites": [],
+            "rejected_cipher_suites": [
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_RC4_128_MD5",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "RC4-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_NULL_MD5",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "NULL-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_IDEA_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "IDEA-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_RC4_40_MD5",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-RC4-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-RC2-CBC-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_RC4_128_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "AECDH-RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_NULL_SHA",
+                  "is_anonymous": true,
+                  "key_size": 0,
+                  "openssl_name": "AECDH-NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "AECDH-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "AECDH-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 168,
+                  "openssl_name": "AECDH-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-RSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDH-RSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-ECDSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDH-ECDSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-ECDSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-ECDSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDH-ECDSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDHE-RSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDHE-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDHE-ECDSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDHE-ECDSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_SEED_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_RC4_128_MD5",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-RC4-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_DES_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 56,
+                  "openssl_name": "ADH-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "ADH-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "ADH-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 168,
+                  "openssl_name": "ADH-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_EXPORT_WITH_RC4_40_MD5",
+                  "is_anonymous": true,
+                  "key_size": 40,
+                  "openssl_name": "EXP-ADH-RC4-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 40,
+                  "openssl_name": "EXP-ADH-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-RSA-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-DSS-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-DSS-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DH-DSS-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "EDH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "EDH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-EDH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "EDH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "EDH-DSS-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-EDH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              }
+            ]
+          }
+        },
+        "tls_1_1_cipher_suites": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "tls_version_used": "TLS_1_1",
+            "is_tls_version_supported": false,
+            "accepted_cipher_suites": [],
+            "rejected_cipher_suites": [
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_RC4_128_MD5",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "RC4-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_NULL_MD5",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "NULL-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_IDEA_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "IDEA-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_RC4_40_MD5",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-RC4-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-RC2-CBC-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_RC4_128_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "AECDH-RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_NULL_SHA",
+                  "is_anonymous": true,
+                  "key_size": 0,
+                  "openssl_name": "AECDH-NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "AECDH-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "AECDH-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 168,
+                  "openssl_name": "AECDH-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-RSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDH-RSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-ECDSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDH-ECDSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-ECDSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-ECDSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDH-ECDSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDHE-RSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDHE-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDHE-ECDSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDHE-ECDSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_SEED_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_RC4_128_MD5",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-RC4-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_DES_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 56,
+                  "openssl_name": "ADH-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "ADH-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "ADH-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 168,
+                  "openssl_name": "ADH-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_EXPORT_WITH_RC4_40_MD5",
+                  "is_anonymous": true,
+                  "key_size": 40,
+                  "openssl_name": "EXP-ADH-RC4-MD5"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 40,
+                  "openssl_name": "EXP-ADH-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-RSA-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-DSS-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-DSS-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DH-DSS-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "EDH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "EDH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-EDH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-SEED-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "EDH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-AES256-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-AES128-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "EDH-DSS-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-EDH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: protocol version "
+              }
+            ]
+          }
+        },
+        "tls_1_2_cipher_suites": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "tls_version_used": "TLS_1_2",
+            "is_tls_version_supported": true,
+            "accepted_cipher_suites": [
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "AES256-GCM-SHA384"
+                },
+                "ephemeral_key": null
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_256_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "AES256-SHA256"
+                },
+                "ephemeral_key": null
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "AES256-SHA"
+                },
+                "ephemeral_key": null
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "AES128-GCM-SHA256"
+                },
+                "ephemeral_key": null
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "AES128-SHA256"
+                },
+                "ephemeral_key": null
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "AES128-SHA"
+                },
+                "ephemeral_key": null
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-RSA-CHACHA20-POLY1305"
+                },
+                "ephemeral_key": {
+                  "type_name": "ECDH",
+                  "size": 253,
+                  "public_bytes": "E2sgLApcyoP94xqEmWtpzTcOpIKlI07/I24XOqYEaQg=",
+                  "curve_name": "X25519",
+                  "x": null,
+                  "y": null,
+                  "prime": null,
+                  "generator": null
+                }
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-RSA-AES256-GCM-SHA384"
+                },
+                "ephemeral_key": {
+                  "type_name": "ECDH",
+                  "size": 256,
+                  "public_bytes": "BIe+wNLOqgObrAgDvTYvf3RJaLkZ2kd310r+NsHwt9z7ZKfXe6M0sc9kVPSkwt1cbHwH872vBr4TdzNV6/C00Sc=",
+                  "curve_name": "secp256r1",
+                  "x": "h77A0s6qA5usCAO9Ni9/dElouRnaR3fXSv42wfC33Ps=",
+                  "y": "ZKfXe6M0sc9kVPSkwt1cbHwH872vBr4TdzNV6/C00Sc=",
+                  "prime": null,
+                  "generator": null
+                }
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-RSA-AES256-SHA384"
+                },
+                "ephemeral_key": {
+                  "type_name": "ECDH",
+                  "size": 256,
+                  "public_bytes": "BJq/HAU/bWX679HSOLeljPYmj2zsOGvEcOvWeFcf2Phn2O6qIZCNh8/8Pd8iMr4+NUjEUa6QDcEd3Q3P5w3qyBg=",
+                  "curve_name": "secp256r1",
+                  "x": "mr8cBT9tZfrv0dI4t6WM9iaPbOw4a8Rw69Z4Vx/Y+Gc=",
+                  "y": "2O6qIZCNh8/8Pd8iMr4+NUjEUa6QDcEd3Q3P5w3qyBg=",
+                  "prime": null,
+                  "generator": null
+                }
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-RSA-AES256-SHA"
+                },
+                "ephemeral_key": {
+                  "type_name": "ECDH",
+                  "size": 256,
+                  "public_bytes": "BKtKe4C73D4zrUO/Xg6nhlqh5uud/vUNgCcX2/55lSOUqxPBd6LpVbDtmaN1pKdiViX/QzpaXCAb+72JKR6stIk=",
+                  "curve_name": "secp256r1",
+                  "x": "q0p7gLvcPjOtQ79eDqeGWqHm653+9Q2AJxfb/nmVI5Q=",
+                  "y": "qxPBd6LpVbDtmaN1pKdiViX/QzpaXCAb+72JKR6stIk=",
+                  "prime": null,
+                  "generator": null
+                }
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-AES128-GCM-SHA256"
+                },
+                "ephemeral_key": {
+                  "type_name": "ECDH",
+                  "size": 256,
+                  "public_bytes": "BLxUcI6Z6GMxe1C9V7rdLndQTUnJX7j2Rp0wECwAHUrfHAlp/pjzwRrYpdDJ0xGI3hzHNTjQglaBSdTG+fNR6Nc=",
+                  "curve_name": "secp256r1",
+                  "x": "vFRwjpnoYzF7UL1Xut0ud1BNSclfuPZGnTAQLAAdSt8=",
+                  "y": "HAlp/pjzwRrYpdDJ0xGI3hzHNTjQglaBSdTG+fNR6Nc=",
+                  "prime": null,
+                  "generator": null
+                }
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-AES128-SHA256"
+                },
+                "ephemeral_key": {
+                  "type_name": "ECDH",
+                  "size": 256,
+                  "public_bytes": "BHwI8CYRApDVKGPKtRoDnM7XnIYQ1GN85xJW/ALOpHqem3sfkXabMIJXiywUYSBOVcLit/LEwI0wWkH0gWMFKng=",
+                  "curve_name": "secp256r1",
+                  "x": "fAjwJhECkNUoY8q1GgOcztechhDUY3znElb8As6kep4=",
+                  "y": "m3sfkXabMIJXiywUYSBOVcLit/LEwI0wWkH0gWMFKng=",
+                  "prime": null,
+                  "generator": null
+                }
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-AES128-SHA"
+                },
+                "ephemeral_key": {
+                  "type_name": "ECDH",
+                  "size": 256,
+                  "public_bytes": "BN+H9uBAliYxfwRHaRzSEkYfPlqwfPMM36BuqXXyhU6hTNNl62GFEgW5rhH4lG8JNVcAxkqdtZLGQaEDSLquSYE=",
+                  "curve_name": "secp256r1",
+                  "x": "34f24ECWJjF/BEdpHNISRh8+WrB88wzfoG6pdfKFTqE=",
+                  "y": "TNNl62GFEgW5rhH4lG8JNVcAxkqdtZLGQaEDSLquSYE=",
+                  "prime": null,
+                  "generator": null
+                }
+              }
+            ],
+            "rejected_cipher_suites": [
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_RC4_128_MD5",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "RC4-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_NULL_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "NULL-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_NULL_MD5",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "NULL-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_IDEA_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "IDEA-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "CAMELLIA256-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "CAMELLIA128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_ARIA_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ARIA256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_ARIA_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ARIA128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_256_CCM_8",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "AES256-CCM8"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_256_CCM",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "AES256-CCM"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_128_CCM_8",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "AES128-CCM8"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_AES_128_CCM",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "AES128-CCM"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_RC4_40_MD5",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-RC4-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-RC2-CBC-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_RC4_128_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "AECDH-RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_NULL_SHA",
+                  "is_anonymous": true,
+                  "key_size": 0,
+                  "openssl_name": "AECDH-NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "AECDH-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "AECDH-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 168,
+                  "openssl_name": "AECDH-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-RSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDH-RSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-RSA-AES256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-RSA-AES256-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-RSA-AES128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-RSA-AES128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-ECDSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDH-ECDSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-ECDSA-AES256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-ECDSA-AES256-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDH-ECDSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-ECDSA-AES128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-ECDSA-AES128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDH-ECDSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDH-ECDSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDHE-RSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-RSA-CAMELLIA256-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-RSA-CAMELLIA128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ARIA256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ARIA128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDHE-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-RC4-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_NULL_SHA",
+                  "is_anonymous": false,
+                  "key_size": 0,
+                  "openssl_name": "ECDHE-ECDSA-NULL-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-CHACHA20-POLY1305"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-CAMELLIA256-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-CAMELLIA128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-ARIA256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-ARIA128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-AES256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-AES256-CCM8"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_256_CCM",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-AES256-CCM"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-AES256-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "ECDHE-ECDSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-AES128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-AES128-CCM8"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_128_CCM",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-AES128-CCM"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-AES128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "ECDHE-ECDSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "ECDHE-ECDSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_SEED_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_RC4_128_MD5",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-RC4-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_DES_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 56,
+                  "openssl_name": "ADH-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "ADH-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_256_GCM_SHA384",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "ADH-AES256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_256_CBC_SHA256",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "ADH-AES256-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 256,
+                  "openssl_name": "ADH-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_128_GCM_SHA256",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-AES128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_128_CBC_SHA256",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-AES128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 128,
+                  "openssl_name": "ADH-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 168,
+                  "openssl_name": "ADH-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_EXPORT_WITH_RC4_40_MD5",
+                  "is_anonymous": true,
+                  "key_size": 40,
+                  "openssl_name": "EXP-ADH-RC4-MD5"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": true,
+                  "key_size": 40,
+                  "openssl_name": "EXP-ADH-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-RSA-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-RSA-AES256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_256_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-RSA-AES256-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-AES128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-AES128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DH-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "DH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-DSS-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-DSS-AES256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_256_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-DSS-AES256-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DH-DSS-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-AES128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-AES128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DH-DSS-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DH-DSS-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "EDH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-CHACHA20-POLY1305"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-CAMELLIA256-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-CAMELLIA128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-ARIA256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-ARIA128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-AES256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_256_CCM_8",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-AES256-CCM8"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_256_CCM",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-AES256-CCM"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-AES256-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-RSA-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-AES128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_128_CCM_8",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-AES128-CCM8"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_128_CCM",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-AES128-CCM"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-AES128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-RSA-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "DHE-RSA-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-EDH-RSA-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_SEED_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-SEED-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_DES_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 56,
+                  "openssl_name": "EDH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-CAMELLIA256-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-CAMELLIA256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-CAMELLIA128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-CAMELLIA128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_ARIA_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-ARIA256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_ARIA_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-ARIA128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-AES256-GCM-SHA384"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-AES256-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_256_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "DHE-DSS-AES256-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-AES128-GCM-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-AES128-SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "DHE-DSS-AES128-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 168,
+                  "openssl_name": "EDH-DSS-DES-CBC3-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA",
+                  "is_anonymous": false,
+                  "key_size": 40,
+                  "openssl_name": "EXP-EDH-DSS-DES-CBC-SHA"
+                },
+                "error_message": "TLS alert: handshake failure"
+              }
+            ]
+          }
+        },
+        "tls_1_3_cipher_suites": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "tls_version_used": "TLS_1_3",
+            "is_tls_version_supported": true,
+            "accepted_cipher_suites": [
+              {
+                "cipher_suite": {
+                  "name": "TLS_CHACHA20_POLY1305_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "TLS_CHACHA20_POLY1305_SHA256"
+                },
+                "ephemeral_key": {
+                  "type_name": "ECDH",
+                  "size": 253,
+                  "public_bytes": "vGOO2G756L5pAOdioYcCNd7Eb8eKiDa17lcnGkwCkjw=",
+                  "curve_name": "X25519",
+                  "x": null,
+                  "y": null,
+                  "prime": null,
+                  "generator": null
+                }
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_AES_256_GCM_SHA384",
+                  "is_anonymous": false,
+                  "key_size": 256,
+                  "openssl_name": "TLS_AES_256_GCM_SHA384"
+                },
+                "ephemeral_key": {
+                  "type_name": "ECDH",
+                  "size": 253,
+                  "public_bytes": "PD8TFGOKzv9vJTM2ijdSG297BdPVAkcu9AkUD6/j1HY=",
+                  "curve_name": "X25519",
+                  "x": null,
+                  "y": null,
+                  "prime": null,
+                  "generator": null
+                }
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_AES_128_GCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "TLS_AES_128_GCM_SHA256"
+                },
+                "ephemeral_key": {
+                  "type_name": "ECDH",
+                  "size": 253,
+                  "public_bytes": "Igaw31rklA6iBX/8xroQYlRP4gbyA79Wkn163aWtCgI=",
+                  "curve_name": "X25519",
+                  "x": null,
+                  "y": null,
+                  "prime": null,
+                  "generator": null
+                }
+              }
+            ],
+            "rejected_cipher_suites": [
+              {
+                "cipher_suite": {
+                  "name": "TLS_AES_128_CCM_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "TLS_AES_128_CCM_SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              },
+              {
+                "cipher_suite": {
+                  "name": "TLS_AES_128_CCM_8_SHA256",
+                  "is_anonymous": false,
+                  "key_size": 128,
+                  "openssl_name": "TLS_AES_128_CCM_8_SHA256"
+                },
+                "error_message": "TLS alert: handshake failure"
+              }
+            ]
+          }
+        },
+        "tls_compression": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "supports_compression": false
+          }
+        },
+        "tls_1_3_early_data": {
+          "status": "NOT_SCHEDULED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": null
+        },
+        "openssl_ccs_injection": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "is_vulnerable_to_ccs_injection": false
+          }
+        },
+        "tls_fallback_scsv": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "supports_fallback_scsv": true
+          }
+        },
+        "heartbleed": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "is_vulnerable_to_heartbleed": false
+          }
+        },
+        "robot": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "robot_result": "NOT_VULNERABLE_NO_ORACLE"
+          }
+        },
+        "session_renegotiation": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "supports_secure_renegotiation": true,
+            "is_vulnerable_to_client_renegotiation_dos": false,
+            "client_renegotiations_success_count": 0
+          }
+        },
+        "session_resumption": {
+          "status": "NOT_SCHEDULED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": null
+        },
+        "elliptic_curves": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "supports_ecdh_key_exchange": true,
+            "supported_curves": [
+              {
+                "name": "X25519",
+                "openssl_nid": 1034
+              },
+              {
+                "name": "X448",
+                "openssl_nid": 1035
+              },
+              {
+                "name": "secp256r1",
+                "openssl_nid": 415
+              },
+              {
+                "name": "secp384r1",
+                "openssl_nid": 715
+              },
+              {
+                "name": "secp521r1",
+                "openssl_nid": 716
+              }
+            ],
+            "rejected_curves": [
+              {
+                "name": "brainpoolP256r1",
+                "openssl_nid": 927
+              },
+              {
+                "name": "brainpoolP384r1",
+                "openssl_nid": 931
+              },
+              {
+                "name": "brainpoolP512r1",
+                "openssl_nid": 933
+              },
+              {
+                "name": "secp160k1",
+                "openssl_nid": 708
+              },
+              {
+                "name": "secp160r1",
+                "openssl_nid": 709
+              },
+              {
+                "name": "secp160r2",
+                "openssl_nid": 710
+              },
+              {
+                "name": "secp192k1",
+                "openssl_nid": 711
+              },
+              {
+                "name": "secp192r1",
+                "openssl_nid": 409
+              },
+              {
+                "name": "secp224k1",
+                "openssl_nid": 712
+              },
+              {
+                "name": "secp224r1",
+                "openssl_nid": 713
+              },
+              {
+                "name": "secp256k1",
+                "openssl_nid": 714
+              },
+              {
+                "name": "sect163k1",
+                "openssl_nid": 721
+              },
+              {
+                "name": "sect163r1",
+                "openssl_nid": 722
+              },
+              {
+                "name": "sect163r2",
+                "openssl_nid": 723
+              },
+              {
+                "name": "sect193r1",
+                "openssl_nid": 724
+              },
+              {
+                "name": "sect193r2",
+                "openssl_nid": 725
+              },
+              {
+                "name": "sect233k1",
+                "openssl_nid": 726
+              },
+              {
+                "name": "sect233r1",
+                "openssl_nid": 727
+              },
+              {
+                "name": "sect239k1",
+                "openssl_nid": 728
+              },
+              {
+                "name": "sect283k1",
+                "openssl_nid": 729
+              },
+              {
+                "name": "sect283r1",
+                "openssl_nid": 730
+              },
+              {
+                "name": "sect409k1",
+                "openssl_nid": 731
+              },
+              {
+                "name": "sect409r1",
+                "openssl_nid": 732
+              },
+              {
+                "name": "sect571k1",
+                "openssl_nid": 733
+              },
+              {
+                "name": "sect571r1",
+                "openssl_nid": 734
+              }
+            ]
+          }
+        },
+        "http_headers": {
+          "status": "NOT_SCHEDULED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": null
+        },
+        "tls_extended_master_secret": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "supports_ems_extension": true
+          }
+        }
+      }
+    }
+  ],
+  "date_scans_started": "2026-09-05T21:06:40.280258Z",
+  "date_scans_completed": "2026-09-05T21:06:40.925656Z",
+  "sslyze_version": "6.3.1",
+  "sslyze_url": "https://github.com/nabla-c0d3/sslyze"
+}

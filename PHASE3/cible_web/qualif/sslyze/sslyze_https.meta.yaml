@@ -1,0 +1,21 @@
+# Meta d'épreuve TLS POSITIVE — sslyze contre https://127.0.0.1:8443/ (2026-09-05)
+tool: sslyze
+argv:
+- 'sslyze'
+- '127.0.0.1:8443'
+- '--tlsv1_2'
+- '--tlsv1_3'
+- '--reneg'
+- '--compression'
+- '--heartbleed'
+- '--openssl_ccs'
+- '--json_out'
+- '-'
+code_retour: 0
+binaire_resolu: /home/julie/.cache/arena_secops/bin/sslyze
+duree_ms: 461
+cible: https://127.0.0.1:8443/
+certificat_cible: auto-signé CN=thaumas-web-epreuve (serveur.py --tls)
+sandbox: exécution DIRECTE hors cage (staging) — même convention que G1-G5
+stdout_octets: 64326
+sortie_brute: sslyze_https.json

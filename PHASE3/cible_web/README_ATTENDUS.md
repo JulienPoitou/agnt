@@ -16,8 +16,59 @@ Lancement : `python PHASE3/cible_web/serveur.py 8807`
 | T-SQLI-001 | `/users?id=1 OR 1=1` | SQLi SQLite par concaténation | les 3 utilisateurs sont renvoyés |
 | T-SQLI-002 | `/users?id='` | Erreur SQL brute exposée | 500 avec `erreur SQL : …` |
 | T-ADMIN-001 | `/admin` | Panneau d'admin sans authentification | 200 « Aucune authentification requise » |
+| T-AUTH-001 | `/login` (POST) puis `/admin/secret-session` | Session factice : jeton généré UNE FOIS au boot, émis en `Set-Cookie` par `/login`, exigé par la zone protégée | `curl -si -X POST -d 'user=alice&pass=x' http://127.0.0.1:8807/login` → 200 + `Set-Cookie: SESSION=…` ; sans cookie `curl -si http://127.0.0.1:8807/admin/secret-session` → 302 `Location: /login` ; avec `-b "SESSION=<token>"` → 200 « espace admin authentifié » + `RAPPORT-INTERNE-SESSION-THAUMAS-2026` |
+| T-AUTH-002 | `/admin/secret-session?user=oscar` | IDOR : fiche d'un autre utilisateur servie sans contrôle de propriétaire | avec le cookie de session : `curl -si -b "SESSION=<token>" "http://127.0.0.1:8807/admin/secret-session?user=oscar"` → 200 + `DOSSIER-AUDIT-OSCAR-FACTICE` (fiche d'oscar) ; `?user=inconnu` → 404 |
 | T-SRV-001 | (réponse) | Bannière serveur explicite | `Server: THAUMAS-WEB/1.0 Python/x.y` |
 | T-GIT-002 | `/.git/*` | Dépôt git COMPLET servi (HEAD, objects, refs) | épreuve git-dumper : dump + checkout restaurés |
+
+## Failles authentifiées
+
+T-AUTH-001 et T-AUTH-002 ne sont visibles QU'AVEC le cookie de session obtenu via
+`POST /login` : le jeton `SESSION` est généré une fois au boot et exigé partout —
+sans lui, `/admin/secret-session` répond 302 vers `/login` et la route s'arrête là.
+Un scan NON authentifié ne peut donc ni voir le secret ni sonder l'IDOR (`?user=`) ;
+c'est l'épreuve du scan authentifié à venir : seul un provider qui présente le
+cookie atteint les deux constats. Batterie : `python PHASE3/test_cible_auth.py`
+(serveur éphémère sur 8809, repli 8819).
+
+## Mode HTTPS (`--tls`) — épreuve des outils TLS
+
+`python serveur.py 8443 --tls` : les MÊMES failles, servies en TLS. Le certificat
+auto-signé est GÉNÉRÉ AU BOOT (`openssl req -x509`, clé 2048, dans `certs/` —
+gitignoré, une clé privée ne se versionne jamais, même factice) :
+
+| ID | Route | Faille | Vérification manuelle |
+|---|---|---|---|
+| T-TLS-001 | (mode --tls) | Certificat auto-signé CN=thaumas-web-epreuve (SAN IP:127.0.0.1, DNS:localhost) | `openssl x509 -in certs/cert.pem -noout -subject` ; les outils TLS relisent ce CN |
+
+Comportements mesurés du mode TLS : le handshake est PAR CONNEXION (une sonde HTTP pur
+au port TLS tue SA connexion, pas le serveur) ; les multi-slash sont normalisés
+(`//admin/...` ≡ `/admin/...` — les scanners émettent la forme `{canonique}/FUZZ`,
+l'oracle rejoue la forme brute du constat : sans normalisation, il réfuterait ce que
+l'outil a réellement vu).
+
+ATTENDUS TLS mesurés le 2026-09-05 (archives `qualif/<outil>/*_https.*` +
+`attendus_tls.yaml`, relus par `test_plugins_g4.py` SANS réseau) :
+
+- **sslscan** — 18 items : TLS 1.2 + TLS 1.3 enabled=1, 16 suites accepted
+  (TLS_AES_256_GCM_SHA384 en tête), renégociation supported=0 (pas d'item). Cible en
+  forme hôte:port (`{HOSTPORT}` — le manifest refuse l'URL, mesuré).
+- **sslyze** — manifest runtime (scans de sélection, SANS `--certinfo`) : 6 commandes
+  exécutées → 6 items (tls_1_2/tls_1_3_cipher_suites, session_renegotiation,
+  tls_compression, heartbleed, openssl_ccs_injection). `--certinfo` est VOLONTAIREMENT
+  hors manifeste : le PEM du certificat déclenche le masquage des blobs base64 (≥ 40
+  caractères, jeu LARGE) qui rend le JSON capturé illisible → 0 item (mesuré, assumé) ;
+  le certificat est couvert par testssl.sh et tlsx. La capacité COMPLÈTE (18 commandes
+  dont certificate_info) est prouvée hors manifeste : `sslyze_complet.json`.
+- **testssl.sh** — 166 entrées, code 0, sévérités DÉCLARÉES portées telles quelles :
+  CRITICAL = cert_chain_of_trust (« failed (self signed) », note T), OK =
+  TLS1_2/TLS1_3/cert_commonName, WARN = engine_problem (état de scan, jamais affiché
+  comme une vulnérabilité).
+- **tlsx** — 1 enregistrement JSONL : tls_version tls13, cipher
+  TLS_AES_256_GCM_SHA384, subject_cn == issuer_cn == thaumas-web-epreuve
+  (l'auto-signature se lit en rapprochant les deux champs), self_signed=true dans
+  l'artefact brut. Mapping corrigé sur structure réelle (`cipher`, PAS `cipher_suite` ;
+  `probe_status` booléen).
 
 ## ATTENDUS par provider
 
@@ -55,7 +106,6 @@ Dump du dépôt git complet servi sous `/.git/` (T-GIT-002).
 | Outil | Raison du report | Pré-requis |
 |---|---|---|
 | wapiti | build wheel échoue sans toolchain C Windows | WSL (VM VMware à fermer) |
-| tlsx | cible HTTP pur, pas de TLS à sonder | serveur HTTPS sur la cible |
 | graphql-cop | pas d'endpoint GraphQL sur la cible | route GraphQL de test |
 
 ### Providers à venir (vagues web)

@@ -1,0 +1,32 @@
+# ATTENDUS TLS POSITIF — tlsx contre THAUMAS-WEB en HTTPS (https://127.0.0.1:8443/, 2026-09-05)
+#
+# La face VIDE NOMMÉ (cible http:// ignorée silencieusement : 0 connexion, fichiers vides,
+# code 0) vit dans attendus.yaml. Ici : le recensement REND — MESURÉ par
+# executer_qualif_tls.py (binaire épinglé /home/julie/.cache/arena_secops/bin/tlsx,
+# code 0) et archivé dans tlsx_https.txt + .stderr + .meta.yaml — relu SANS réseau par
+# test_plugins_g4.py. Le mapping du manifest est relu sur CETTE structure mesurée.
+cible: https://127.0.0.1:8443/
+resultat_attendu: >
+  RECENSEMENT RENDU : 1 enregistrement JSONL, probe_status TRUE (booléen — PAS la chaîne
+  « tls-open » supposée avant mesure). Mapping déclaré relu sur l'archive : url ← host
+  (127.0.0.1, sans port ni schéma), regle ← tls_version (« tls13 »), nom_regle ←
+  subject_cn (« thaumas-web-epreuve »), message ← issuer_cn (« thaumas-web-epreuve »),
+  preuve ← cipher (« TLS_AES_256_GCM_SHA384 »). L'AUTO-SIGNATURE se lit par RAPPROCHEMENT
+  dans l'artefact brut : subject_cn == issuer_cn (l'émetteur EST le sujet) et
+  self_signed=true — rien n'est déduit au-delà. tlsx ne déclare pas de sévérité :
+  absente, jamais inventée.
+code_retour: 0              # mesuré (meta.yaml) — dans code_succes [0]
+code_succes_plugin: [0]
+constats: []                # 1 enregistrement ; mapping nommé ci-dessus, rien d'ajouté au JSONL
+items_attendus: 1           # 1 ligne JSONL (comptée dans l'archive)
+echec_attendu: false
+verification_honnete: >
+  L'archive corrige l'ANCIENNE structure supposée (cipher_suite, probe_status
+  « tls-open ») qui n'avait jamais été mesurée sur une cible TLS : les tags json du
+  binaire épinglé sont `cipher` et un probe_status BOOLÉEN — le mapping du manifest a été
+  corrigé sur CETTE mesure, et le fixture de la batterie suit la structure mesurée
+  (valeurs synthétiques, étiqueté comme tel). -vc (vérification de chaîne) EXISTE et
+  reste HORS argv : tlsx recense, il ne certifie pas — l'auto-signature n'est pas un
+  « verdict » du cœur, c'est un rapprochement lisible dans l'artefact brut. Le stderr
+  archivé porte la bannière de l'outil et « Connections made using crypto/tls: 1 » :
+  la connexion est réelle, le vide nommé d'avant (0 connexion) n'est plus.

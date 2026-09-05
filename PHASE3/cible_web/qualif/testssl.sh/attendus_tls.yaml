@@ -1,0 +1,32 @@
+# ATTENDUS TLS POSITIF — testssl.sh contre THAUMAS-WEB en HTTPS (https://127.0.0.1:8443/, 2026-09-05)
+#
+# La face REFUS NOMMÉ (cible http:// refusée, fatal 254 + JSON d'état) vit dans
+# attendus.yaml. Ici : le scan TOURNE — MESURÉ par executer_qualif_tls.py (binaire épinglé
+# /home/julie/.cache/arena_secops/bin/testssl.sh, code 0) et archivé dans
+# testssl_sh_https.json + .stderr + .meta.yaml — relu SANS réseau par test_plugins_g4.py.
+cible: https://127.0.0.1:8443/
+resultat_attendu: >
+  AUDIT DE CONFIGURATION RENDU — SÉVÉRITÉS DÉCLARÉES PAR L'OUTIL, PORTÉES TELLES QUELLES.
+  Le tableau JSON (166 entrées, items_from "$") décrit la cible en mode --tls : TLS1_2 OK
+  (« offered »), TLS1_3 OK (« offered with final »), cert_commonName OK
+  (« thaumas-web-epreuve ») — et le verdict de l'AUTO-SIGNATURE est celui de l'OUTIL :
+  cert_chain_of_trust CRITICAL (« failed (self signed). ») + overall_grade CRITICAL.
+  CRITICAL / HIGH / MEDIUM / LOW / WARN / INFO / OK sont DÉCLARÉS par testssl.sh et portés
+  SANS TRADUCTION, jamais inventés. Le WARN restant (engine_problem : openssl sans
+  moteur/GOST) est un état du MOTEUR LOCAL, pas un constat sur la cible — relire l'id
+  avant d'afficher.
+code_retour: 0              # mesuré (meta.yaml) — dans code_succes [0]
+code_succes_plugin: [0]
+constats: []                # 166 entrées d'outil ; exemples nommés ci-dessus, rien de retraduit
+items_attendus: 166         # longueur du tableau JSON (comptée dans l'archive)
+echec_attendu: false
+verification_honnete: >
+  Recomptage direct de l'archive : 166 entrées, sévérités déclarées = OK 49, INFO 99,
+  LOW 13, CRITICAL 2 (cert_chain_of_trust, overall_grade), WARN 1 (engine_problem),
+  HIGH 1, MEDIUM 1. Le code de sortie de testssl.sh est une ACCUMULATION des codes de
+  sous-vérifications (exit $RET) : un run antérieur a mesuré 1 avec un JSON identique —
+  sensible au timing, il ne porte pas le verdict ; c'est l'ARTEFACT qui le porte, et le
+  code archivé ici est 0 (∈ code_succes [0]). Le champ url est mappé sur ip (127.0.0.1,
+  sans port ni schéma — mesuré) : le constat reste hors de l'hôte engagé avec port côté
+  oracle — non rejoué, raison nommée. Le certificat (CN, SAN IP:127.0.0.1/DNS:localhost)
+  est porté par les ids cert_* du JSON : rien n'est déduit au-delà de ce que l'outil déclare.

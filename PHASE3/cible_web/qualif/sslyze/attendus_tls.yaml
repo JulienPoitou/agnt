@@ -1,0 +1,25 @@
+# ATTENDUS — sslyze contre la cible TLS d'épreuve (https://127.0.0.1:8443, 2026-09-05)
+cible: https://127.0.0.1:8443
+resultat_attendu: >
+  SURFACE TLS POSITIVE, SOUS LES FLAGS DU MANIFESTE. L'argv runtime (scans de sélection :
+  --tlsv1_2 --tlsv1_3 --reneg --compression --heartbleed --openssl_ccs, SANS --certinfo)
+  exécute 6 commandes → 6 items (tls_1_2/tls_1_3_cipher_suites, session_renegotiation,
+  tls_compression, heartbleed, openssl_ccs_injection), url = 127.0.0.1:8443, code 0.
+  --certinfo est VOLONTAIREMENT hors manifeste : le PEM du certificat dans la sortie
+  déclenche le masquage des blobs base64 (≥ 40 caractères, jeu LARGE de l'assainissement)
+  et le JSON capturé devient illisible → 0 item (mesuré, assumé). Le certificat est
+  couvert par testssl.sh (cert_commonName) et tlsx (subject_cn/issuer_cn).
+code_retour: 0
+code_succes_plugin: [0]
+items_attendus: 6
+echec_attendu: false
+verification_honnete: >
+  DEUX ÉPREUVES, NON CONFONDUES. (1) Manifeste runtime : sslyze_https.json (produit par
+  executer_qualif_tls.py avec l'argv de planifier) — 6 commandes exécutées, les commandes
+  NON demandées viennent à result: None et le parser n'en fait PAS de constat. (2)
+  Capacité complète HORS manifeste : sslyze_complet.json (scan par défaut, exécution
+  directe) — 18 commandes dont 3 à result None (http_headers, session_resumption,
+  tls_1_3_early_data) → 15 constats réels : la preuve que l'OUTIL voit toute la surface
+  (certificate_info inclus) vit là, jamais dans l'argv du runtime. Le JSON survit à
+  l'assainissement dans les deux épreuves (aucun blob ≥ 40 hors PEM ; mesuré : 21-22
+  masques, JSON valide, parser intacts).

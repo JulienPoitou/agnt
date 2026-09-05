@@ -1,0 +1,14 @@
+# Meta d'épreuve TLS POSITIVE — sslscan contre https://127.0.0.1:8443/ (2026-09-05)
+tool: sslscan
+argv:
+- 'sslscan'
+- '--xml=-'
+- '127.0.0.1:8443'
+code_retour: 0
+binaire_resolu: /home/julie/.cache/arena_secops/bin/sslscan
+duree_ms: 318
+cible: https://127.0.0.1:8443/
+certificat_cible: auto-signé CN=thaumas-web-epreuve (serveur.py --tls)
+sandbox: exécution DIRECTE hors cage (staging) — même convention que G1-G5
+stdout_octets: 4771
+sortie_brute: sslscan_https.xml

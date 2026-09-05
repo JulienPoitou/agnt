@@ -1,10 +1,10 @@
 # Plugin AGNT — testssl.sh, audit de configuration TLS (vague web G4, 2026-09-05).
 #
-# LIMITATION HONNÊTE DE LA CIBLE D'ÉPREUVE : THAUMAS-WEB est HTTP pur (aucun TLS). Les
-# outils TLS ne peuvent pas y produire un constat TLS : l'épreuve prouve l'EXÉCUTION et
-# le REFUS NOMMÉ, pas un constat de configuration. testssl.sh refuse en outre une cible
-# http:// au sens usage (il exige https:// ou hôte:port) : code 254 + JSON d'état FATAL —
-# mesuré le 2026-09-05.
+# 2026-09-05 (cible TLS d'épreuve, serveur.py --tls) : le chemin POSITIF est mesuré —
+# code 0 sur https://127.0.0.1:8443/, 166 entrées, sévérités DÉCLARÉES relues telles
+# quelles (cert_chain_of_trust CRITICAL sur auto-signé, TLS1_2/TLS1_3 OK, cert_commonName
+# OK — qualif/testssl.sh/testssl_sh_https.json). Le REFUS NOMMÉ sur cible http:// reste
+# mesuré et nommé : testssl.sh exige https:// ou hôte:port (code 254 + JSON d'état FATAL).
 id: testssl_sh
 capacites:
   - WEB_VULN_SCAN_ACTIVE
@@ -58,13 +58,18 @@ requirements:
   privileges: aucun
   timeout_s: 600
 a_verifier:
+  - "MESURÉ SUR CIBLE TLS RÉELLE (2026-09-05, https://127.0.0.1:8443/, cert auto-signé
+     CN=thaumas-web-epreuve) : code 0, 166 entrées ; sévérités DÉCLARÉES portées telles
+     quelles (aucune traduction, aucune invention) — CRITICAL = cert_chain_of_trust
+     (chaîne auto-signée non certifiée), OK = TLS1_2/TLS1_3/cert_commonName. WARN peut
+     porter un état de scan (engine_problem) : relire l'id avant d'afficher."
   - "testssl.sh n'accepte pas http:// (exige https:// ou hôte:port) : sur une URL
      canonique http:// l'outil répond par l'erreur d'usage 254 et un JSON d'état (FATAL)
-     — mesuré le 2026-09-05 contre THAUMAS-WEB. Sur une cible https, {URL} passe tel quel."
-  - "le champ url est mappé sur ip : testssl 3.2.4 y met la cible (valeurs mesurées sur un
-     refus d'usage : '/', 'http:/') — à relire sur une cible TLS réelle."
-  - "severity WARN/FATAL portent des états de scan (moteur, interruption), pas des
-     vulnérabilités : ne jamais les afficher comme des sévérités de constat."
-  - "mapping relevé sur une sortie mesurée de refus d'usage ; les champs d'un scan TLS
-     complet (cve, suites de chiffrement) ne sont pas mesurés ici — aucune cible TLS
-     autorisée dans cette qualification."
+     — mesuré le 2026-09-05 contre THAUMAS-WEB. Sur une cible https, {URL} passe tel quel
+     (la forme canonique avec / final est acceptée — mesuré)."
+  - "le champ url est mappé sur ip : MESURÉ sur cible TLS réelle, ip = 127.0.0.1 (sans
+     port ni schéma) — le constat reste hors de l'hôte engagé avec port côté oracle :
+     non rejoué, raison nommée."
+  - "le certificat auto-signé (CN, SAN IP:127.0.0.1/DNS:localhost) est porté par les ids
+     cert_* du JSON (cert_commonName OK, cert_subjectAltName INFO) : rien n'est déduit
+     au-delà de ce que l'outil déclare."
