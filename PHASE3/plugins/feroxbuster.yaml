@@ -1,0 +1,61 @@
+# Plugin AGNT — feroxbuster, fuzzer de chemins web (G2, vague-web/g2, 2026-09-05).
+#
+# Épreuve THAUMAS-WEB (qualif/feroxbuster/) : /admin et /.env (200) via la
+# wordlist épinglée ; PLUS /search (200), /users (500), /download (404) et /
+# (200) — la collecte de mots est ACTIVE par défaut et inabordable en CLI
+# (mesuré : --no-collect-words → « unexpected argument ») : des mots tirés des
+# réponses de la cible s'ajoutent à la liste épinglée. Comportement documenté
+# de l'outil (note de l'épingle), pas un écart : il est DIT, pas caché.
+#
+# Format MESURÉ sur v2.13.1 (--json -o) : JSONL d'événements TYPÉS
+# configuration / response / statistics. Seuls type=="response" sont des
+# constats — lire chaque ligne comme un item produirait des findings vides,
+# le mode de défaillance nommé dans capabilities.yaml. D'où le parser nommé
+# `feroxbuster` (parsers_feroxbuster.py). --no-state coupe le fichier .state.
+id: feroxbuster
+capacites:
+  - WEB_ENDPOINT_DISCOVERY_ACTIVE
+entrees:
+  - url
+binaire: feroxbuster
+version_min: "2.13.1"
+licence: MIT
+priorite: 123                  # troisième lecteur de WEB_ENDPOINT_DISCOVERY_ACTIVE
+cout: faible
+risque: ACTIVE
+description: >
+  Fuzzer de chemins web (feroxbuster) : teste la liste de mots épinglée contre
+  la cible avec calibration automatique (les réponses « wildcard » type 404
+  uniformes sont filtrées par l'outil lui-même). Ce que l'outil détecte
+  réellement : des chemins HTTP qui répondent — de la surface d'attaque, pas
+  des vulnérabilités ; la sévérité n'existe pas chez l'outil.
+execution:
+  args:
+    - "-u"
+    - "{URL}"
+    - "-w"
+    - "{REGLES}/dossiers-mini.txt"
+    - "-t"
+    - "4"
+    - "--rate-limit"
+    - "40"
+    - "-q"
+    - "--json"
+    - "-o"
+    - "{OUT}"
+    - "--no-state"
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  modele: plat
+  parser: feroxbuster
+  items_from: items
+  champs:
+    regle: regle               # le chemin trouvé (ex. /.env) → original_rule_id
+    url: url                   # URL complète → location.url (oracle)
+    message: message           # statut HTTP observé
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300

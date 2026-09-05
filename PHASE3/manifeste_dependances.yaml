@@ -659,11 +659,25 @@ binaires:
     taille_approx: 10M
 
   dirsearch:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=dirsearch
-    licence: MIT
-    taille_approx: 10M
+    package: dirsearch
+    version: "0.5.0"
+    source: https://pypi.org/project/dirsearch/
+    licence: GPL-2.0-only
+    distribution: pip
+    distribution_hash: "f1b74f5ad931ab2daf43e9ca5a9def31ba741ac30620a7858aa00a985beb8dbc"
+    verification: >
+      Empreinte SHA-256 du fichier RECORD de la distribution installée (même convention
+      que bandit/git-dumper) — identifie le paquet Python réellement utilisé, en venv
+      dédié (~/.cache/arena_secops/staging/dirsearch/venv, binaire au PATH : venv/bin).
+    note: >
+      Épingle remplacée (placeholder 0.1.0/000…, 2026-09-05, vague-web/g2). Faits
+      d'approvisionnement mesurés : PyPI ne portait que des versions fossiles (0.4.x)
+      jusqu'à la republication de la réécriture v0.5.0 (tag GitHub v0.5.0 du
+      2026-08-14) ; métadonnées du paquet installé : License-Expression GPL-2.0-only
+      (setup.py amont : GPL-2.0-or-later — l'épingle porte l'expression du paquet
+      installé). Sortie JSON -O json : {"results": [{url, status, contentType,
+      contentLength, redirect}]} — modèle plat, items sous results. Wordlist épinglée
+      regles_web/dossiers-mini.txt (empreinte en section regles) montée à {REGLES}.
 
   dnschef:
     version: "0.1.0"
@@ -770,6 +784,27 @@ binaires:
     licence: MIT
     taille_approx: 10M
 
+  feroxbuster:
+    version: "2.13.1"
+    sha256: 24e7f3dfefc96b5bde3043b1c0e1016e4f947eb28275def1ec2ea59fddeb9b40
+    tarball_sha256: 7985c00e6803b0f25d5e9139f7472279f3f4d891429627a5cedc629e53992d80
+    source: https://github.com/epi052/feroxbuster/releases/download/v2.13.1/x86_64-linux-feroxbuster.tar.gz
+    licence: MIT
+    taille_approx: 5M (tarball)
+    role: outil
+    note: >
+      Ajouté le 2026-09-05 (vague-web/g2). Empreinte du BINAIRE installé relevée
+      localement ; la release ne publie PAS de fichier de checksums (assets listés via
+      API GitHub le 2026-09-05) — tarball_sha256 est l'audit du canal de distribution,
+      mesuré au téléchargement, SANS double attestation possible. Wordlist épinglée
+      regles_web/dossiers-mini.txt (empreinte en section regles) montée à {REGLES}.
+      --json : événements JSONL typés (configuration/response/statistics) — le parser
+      nommé `feroxbuster` ne retient que type=="response" (mesuré). Calibration et
+      collecte de mots ACTIVES par défaut et INABORDABLES en CLI (mesuré :
+      --no-collect-words → « unexpected argument ») : des mots tirés des réponses de
+      la cible s'ajoutent à la wordlist épinglée — comportement documenté de l'outil,
+      pas un écart de l'épingle.
+
   fiddler:
     version: "0.1.0"
     sha256: "0000000000000000000000000000000000000000000000000000000000000000"
@@ -848,11 +883,22 @@ binaires:
     taille_approx: 10M
 
   gobuster:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=gobuster
-    licence: MIT
-    taille_approx: 10M
+    version: "3.8.2"
+    sha256: bef069c4233495d8b83b1fa7bc856cdd3a5bcf0cb40056f806d7698002fc8bbf
+    tarball_sha256: c8a8c6a966eeb011d682a0ef2305a3e3a86b8b3fabe744350c00a766cc0f8021
+    source: https://github.com/OJ/gobuster/releases/download/v3.8.2/gobuster_Linux_x86_64.tar.gz
+    licence: Apache-2.0
+    taille_approx: 4M (tarball)
+    role: outil
+    note: >
+      Épingle remplacée (placeholder 0.1.0/000…, 2026-09-05, vague-web/g2). Empreinte
+      du tarball mesurée localement ET publiée par le projet
+      (gobuster_3.8.2_checksums.txt) — coïncidence vérifiée. Fuzzer dir : wordlist
+      épinglée regles_web/dossiers-mini.txt (empreinte en section regles) montée à
+      {REGLES}. PAS de sortie JSON (mesuré 3.8.2 : aucune option) — texte
+      « <url> (Status: N) [Size: M] », URL complète seulement avec -e ; lu par le
+      parser nommé `gobuster`. La sévérité n'existe pas chez l'outil — absente,
+      jamais inventée.
 
   goodork:
     version: "0.1.0"
@@ -874,6 +920,40 @@ binaires:
     source: https://github.com/search?q=habu
     licence: MIT
     taille_approx: 10M
+
+  hakrawler:
+    version: "2.1"
+    sha256: a1aeba2a3ce5d3d49809ab9682eebc16a10b41c70e1a91191fafd946b7e1e548
+    source: https://github.com/hakluke/hakrawler (tag 2.1, commit 61905593d82e8bac87ff7a7cca32b2adde42bb60)
+    licence: GPL-3.0
+    taille_approx: 16M (binaire)
+    role: outil
+    note: >
+      Ajouté le 2026-09-05 (vague-web/g2). FAIT D'APPROVISIONNEMENT MESURÉ : les trois
+      releases du dépôt (2.1, 2.0, v1.0) ne portent AUCUN asset (API GitHub, mesuré le
+      2026-09-05) — le binaire est construit depuis la source officielle du tag 2.1
+      (go 1.22.2, `go build`) et son empreinte est épinglée. Crawler : hakrawler ne lit
+      ses cibles QUE sur stdin — l'exécution passe par le wrapper hakrawler_scan
+      (épinglé séparément). Sortie JSONL {"Source": href, "URL": …} (drapeaux du
+      wrapper : -json -s -u). Pas de sévérité déclarée chez l'outil — absente, jamais
+      inventée.
+
+  hakrawler_scan:
+    version: "2.1"
+    sha256: 210578c1a0cd7974276fad54f5a0bfbe1ca44342a8be4dfda47dcd21dd6da5ad
+    source: composant vague-web/g2 — contenu VERSIONNÉ reproduit ci-dessous (convention
+      shellcheck_scan/hadolint_scan), installé à côté du binaire hakrawler
+    licence: GPL-3.0 (le wrapper suit le dépôt ; il appelle le binaire GPL-3.0)
+    taille_approx: 762 o (script)
+    role: outil
+    note: >
+      hakrawler ne prend pas d'URL en argument (mesuré) : le wrapper reçoit {URL} et
+      {OUT}, écrit l'URL dans le stdin de hakrawler (-json -s -u -d 2 -t 4 -timeout 15)
+      et redirige la sortie vers le fichier ; le code retour est celui de hakrawler.
+      Contenu (le script fait foi, empreinte ci-dessus) :
+      « #!/bin/sh \n DIR=$(dirname "$0") \n printf '%s\n' "$1" | "$DIR/hakrawler"
+      -json -s -u -d 2 -t 4 -timeout 15 > "$2" » (précédé du commentaire
+      d'usage VERSIONNÉ de 10 lignes).
 
   haveibeensquatted:
     version: "0.1.0"
@@ -904,11 +984,21 @@ binaires:
     taille_approx: 10M
 
   katana:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=katana
+    version: "1.7.0"
+    sha256: 2dd9024907d656235409dea7aac18d3cdd88f8a8da332494113a69bff4c295d6
+    tarball_sha256: fe1142d92f418549338ea46d67a472124878482e225d279e9a42700c75d76a4d
+    source: https://github.com/projectdiscovery/katana/releases/download/v1.7.0/katana_1.7.0_linux_amd64.zip
     licence: MIT
-    taille_approx: 10M
+    taille_approx: 32M (zip)
+    role: outil
+    note: >
+      Épingle remplacée (placeholder 0.1.0/000…, 2026-09-05, vague-web/g2). Empreinte
+      du zip mesurée localement ET publiée par le projet
+      (katana-1.7.0-checksums.txt) — coïncidence vérifiée. Crawler (le maillon
+      httpx→katana→ffuf→nuclei) : suit les liens d'une page, sort en JSONL
+      request/response (-jsonl) — url = request.endpoint, pas de sévérité déclarée
+      chez l'outil (jamais inventée). Aucune wordlist : son entrée est la page
+      elle-même.
 
   lambda_proxy:
     version: "0.1.0"

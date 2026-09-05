@@ -1,0 +1,26 @@
+# ATTENDUS — katana sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g2)
+#
+# katana est un CRAWLER : il trouve les chemins LIÉS depuis la page d'entrée,
+# pas les chemins non liés (travail du fuzzer : ffuf/gobuster/dirsearch).
+# La page d'accueil de THAUMAS-WEB porte exactement 3 liens (serveur.py, PAGE).
+cible: http://127.0.0.1:8807
+mode: crawl (-d 2, sans wordlist)
+attendus:
+  # Les 3 liens de la page d'accueil (balises <a href>).
+  - url: http://127.0.0.1:8807/search?q=THAUMAS
+    statut: 200
+    route_epreuve: T-XSS-001 (lien vers la route XSS réfléchie)
+  - url: http://127.0.0.1:8807/users?id=1
+    statut: 200
+    route_epreuve: T-SQLI-001 (lien vers la route SQLi)
+  - url: http://127.0.0.1:8807/download?file=notes.txt
+    statut: 404            # la ROUTE /download existe ; notes.txt n'existe pas
+    route_epreuve: T-TRAVERSAL-001 (lien vers la route traversal)
+  # La page d'entrée elle-même (graine du crawl, tag/attribute absents).
+  - url: http://127.0.0.1:8807
+    statut: 200
+non_attendus:
+  - "/.env, /.git, /admin : NON liés depuis la page d'accueil — hors portée d'un
+     crawler ; les trouver relève du fuzzer (comparaison inter-outils voulue)."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "4 endpoints (qualif/katana/katana.jsonl) — attendus COINCIDENTS"

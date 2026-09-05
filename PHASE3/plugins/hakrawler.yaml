@@ -1,0 +1,44 @@
+# Plugin AGNT — hakrawler, crawler web (G2, vague-web/g2, 2026-09-05).
+#
+# Deux faits d'exécution MESURÉS (hakrawler 2.1) qui modèlent ce plugin :
+#   1. hakrawler ne lit ses cibles QUE sur stdin (aucun drapeau d'URL) — le
+#      binaire exécuté est le WRAPPER hakrawler_scan (épinglé séparément,
+#      convention shellcheck_scan/hadolint_scan) qui écrit {URL} dans son stdin
+#      et redirige la sortie vers {OUT} ;
+#   2. sa sortie -json est du JSONL {"Source": href, "URL": …} — chaque ligne
+#      est un lien trouvé, avec sa balise d'origine.
+# Épreuve THAUMAS-WEB (qualif/hakrawler/) : les 3 liens de la page d'accueil
+# retrouvés (/search?q=, /users?id=, /download?file=). Pas de statut HTTP ni de
+# sévérité chez l'outil : absents, jamais inventés.
+id: hakrawler
+capacites:
+  - WEB_ENDPOINT_DISCOVERY_ACTIVE
+entrees:
+  - url
+binaire: hakrawler_scan
+version_min: "2.1"
+licence: GPL-3.0
+priorite: 125                  # cinquième lecteur de WEB_ENDPOINT_DISCOVERY_ACTIVE
+cout: faible
+risque: ACTIVE
+description: >
+  Crawler web (hakrawler) : lit la page d'entrée et rend chaque URL de lien
+  trouvée (href/script/form) avec sa source. Ce que l'outil détecte réellement :
+  les chemins LIÉS depuis la page fournie — complémentaire du fuzzer, qui trouve
+  les chemins non liés ; pas des vulnérabilités.
+execution:
+  args:
+    - "{URL}"
+    - "{OUT}"
+  code_succes: [0]
+sortie:
+  format: jsonl
+lecture:
+  modele: lignes_json
+  champs:
+    regle: Source              # balise d'origine du lien (href) → original_rule_id
+    url: URL                   # URL complète → location.url (oracle)
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300

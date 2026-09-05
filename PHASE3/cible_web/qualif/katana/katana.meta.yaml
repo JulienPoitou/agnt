@@ -1,0 +1,31 @@
+# Métadonnées de l'exécution de qualification (G2, 2026-09-05).
+# argv = argv résolu par fournisseurs_web.planifier('katana', …) ;
+# {BIN} résolu par le PATH du staging (~/.cache/arena_secops/staging).
+{
+  "outil": "katana",
+  "argv": [
+    "katana",
+    "-u",
+    "http://127.0.0.1:8807",
+    "-jsonl",
+    "-o",
+    "/home/julie/agnt-g2/PHASE3/cible_web/qualif/katana/katana.jsonl",
+    "-nc",
+    "-silent",
+    "-d",
+    "2",
+    "-c",
+    "4",
+    "-rl",
+    "40",
+    "-timeout",
+    "10"
+  ],
+  "code_retour": 0,
+  "duree_s": 11.28,
+  "sortie_origine": "/home/julie/agnt-g2/PHASE3/cible_web/qualif/katana/katana.jsonl",
+  "cible": "http://127.0.0.1:8807",
+  "sandbox": "exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre",
+  "date": "2026-09-05",
+  "timeout_s": 240
+}
