@@ -1,0 +1,20 @@
+# ATTENDUS — dirsearch sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g2)
+#
+# dirsearch fuzzer la wordlist ÉPINGLÉE regles_web/dossiers-mini.txt (10 mots).
+# Le serveur répond 404 nu pour les chemins inconnus : seuls les 200 sont rendus
+# (pas d'auto-calibration demandée, pas d'extension ajoutée : -w nu).
+cible: http://127.0.0.1:8807
+mode: fuzzer (wordlist épinglée, -O json --full-url)
+attendus:
+  - chemin: /admin
+    statut: 200
+    type_contenu: text/html
+    route_epreuve: T-ADMIN-001
+  - chemin: /.env
+    statut: 200
+    type_contenu: text/plain
+    route_epreuve: T-ENV-001
+non_attendus:
+  - "/.git : 404 nu (voir gobuster) ; les 8 autres mots : 404 réels."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "2 chemins (qualif/dirsearch/dirsearch.json) — attendus COINCIDENTS"

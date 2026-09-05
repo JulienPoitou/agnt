@@ -1,0 +1,29 @@
+# Métadonnées de l'exécution de qualification (G2, 2026-09-05).
+# argv = argv résolu par fournisseurs_web.planifier('dirsearch', …) ;
+# {BIN} résolu par le PATH du staging (~/.cache/arena_secops/staging).
+{
+  "outil": "dirsearch",
+  "argv": [
+    "dirsearch",
+    "-u",
+    "http://127.0.0.1:8807",
+    "-w",
+    "/home/julie/agnt-g2/PHASE3/regles_web/dossiers-mini.txt",
+    "-t",
+    "4",
+    "-q",
+    "--no-color",
+    "--full-url",
+    "-O",
+    "json",
+    "-o",
+    "/home/julie/agnt-g2/PHASE3/cible_web/qualif/dirsearch/dirsearch.json"
+  ],
+  "code_retour": 0,
+  "duree_s": 0.3,
+  "sortie_origine": "/home/julie/agnt-g2/PHASE3/cible_web/qualif/dirsearch/dirsearch.json",
+  "cible": "http://127.0.0.1:8807",
+  "sandbox": "exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre",
+  "date": "2026-09-05",
+  "timeout_s": 240
+}

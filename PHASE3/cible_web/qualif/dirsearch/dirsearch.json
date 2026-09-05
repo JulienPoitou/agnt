@@ -1,0 +1,24 @@
+{
+    "info": {
+        "args": "/home/julie/.cache/arena_secops/staging/dirsearch/venv/bin/dirsearch -u http://127.0.0.1:8807 -w /home/julie/agnt-g2/PHASE3/regles_web/dossiers-mini.txt -t 4 -q --no-color --full-url -O json -o /home/julie/agnt-g2/PHASE3/cible_web/qualif/dirsearch/dirsearch.json",
+        "time": "2026-09-05 18:34:47"
+    },
+    "results": [
+        {
+            "contentLength": 62,
+            "contentType": "text/html",
+            "elapsed": 0.004,
+            "redirect": "",
+            "status": 200,
+            "url": "http://127.0.0.1:8807/admin"
+        },
+        {
+            "contentLength": 115,
+            "contentType": "text/plain",
+            "elapsed": 0.004,
+            "redirect": "",
+            "status": 200,
+            "url": "http://127.0.0.1:8807/.env"
+        }
+    ]
+}

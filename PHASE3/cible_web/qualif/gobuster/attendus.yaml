@@ -1,0 +1,22 @@
+# ATTENDUS — gobuster sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g2)
+#
+# gobuster dir fuzzer la wordlist ÉPINGLÉE regles_web/dossiers-mini.txt
+# (10 mots : admin, .env, .git, backup, config, login, dashboard, test, api,
+# uploads). Le serveur répond 404 nu pour les chemins inconnus, exclu par le
+# filtre par défaut (-b 404) : seuls les 200 apparaissent.
+cible: http://127.0.0.1:8807
+mode: dir (wordlist épinglée, -e pour les URLs complètes)
+attendus:
+  - chemin: /.env
+    statut: 200
+    route_epreuve: T-ENV-001
+  - chemin: /admin
+    statut: 200
+    route_epreuve: T-ADMIN-001
+non_attendus:
+  - "/.git : le mot nu répond 404 (le serveur ne sert 200 que sur /.git/config) —
+     exclu par le filtre de l'outil. /.git/config n'est PAS testable par cette
+     wordlist : limite documentée, pas un échec."
+  - "backup, config, login, dashboard, test, api, uploads : 404 réels."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "2 chemins (qualif/gobuster/gobuster.custom) — attendus COINCIDENTS"

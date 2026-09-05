@@ -1,0 +1,14 @@
+404      GET        1l        1w       11c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+
+200      GET        1l        3w       62c http://127.0.0.1:8807/admin
+
+200      GET        3l        3w      115c http://127.0.0.1:8807/.env
+
+200      GET        1l        5w       50c http://127.0.0.1:8807/search
+
+500      GET        1l        5w       29c http://127.0.0.1:8807/users
+
+404      GET        1l        2w       19c http://127.0.0.1:8807/download
+
+200      GET        4l       19w      364c http://127.0.0.1:8807/
+

@@ -1,0 +1,24 @@
+# ATTENDUS — hakrawler sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g2)
+#
+# hakrawler est un CRAWLER (via le wrapper hakrawler_scan : l'outil ne lit ses
+# cibles QUE sur stdin — mesuré). Il trouve les chemins LIÉS depuis la page
+# d'entrée : exactement les 3 liens de la page d'accueil (serveur.py, PAGE).
+cible: http://127.0.0.1:8807
+mode: crawl (wrapper : URL sur stdin, -json -s -u -d 2)
+attendus:
+  - url: http://127.0.0.1:8807/search?q=THAUMAS
+    source: href
+    route_epreuve: T-XSS-001 (lien vers la route XSS réfléchie)
+  - url: http://127.0.0.1:8807/users?id=1
+    source: href
+    route_epreuve: T-SQLI-001 (lien vers la route SQLi)
+  - url: http://127.0.0.1:8807/download?file=notes.txt
+    source: href
+    route_epreuve: T-TRAVERSAL-001 (lien vers la route traversal)
+non_attendus:
+  - "/.env, /.git, /admin : NON liés depuis la page d'accueil — hors portée d'un
+     crawler (comparaison inter-outils voulue avec katana, même lecture)."
+  - "aucun statut HTTP : hakrawler ne sonde pas les URLs — champ message absent,
+     sévérité absente, jamais inventées."
+severite: null
+mesure_reelle: "3 liens (qualif/hakrawler/hakrawler.jsonl) — attendus COINCIDENTS"

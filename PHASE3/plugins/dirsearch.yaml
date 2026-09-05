@@ -1,0 +1,54 @@
+# Plugin AGNT — dirsearch, fuzzer de chemins web (G2, vague-web/g2, 2026-09-05).
+#
+# Épreuve THAUMAS-WEB (qualif/dirsearch/) : /admin et /.env retrouvés (200).
+# Format MESURÉ sur v0.5.0 (-O json -o) : {"info": {args, time}, "results":
+# [{url, status, contentType, contentLength, elapsed, redirect}]} — modèle plat,
+# items sous `results`. La version PyPI fossile (≤0.4.3) rendait un autre format :
+# d'où le rang de version épinglé (0.5.0 = réécriture publiée le 2026-08-14).
+# La sévérité n'existe pas chez l'outil — absente, jamais inventée.
+id: dirsearch
+capacites:
+  - WEB_ENDPOINT_DISCOVERY_ACTIVE
+entrees:
+  - url
+binaire: dirsearch
+version_min: "0.5.0"
+licence: GPL-2.0-only
+priorite: 124                  # quatrième lecteur de WEB_ENDPOINT_DISCOVERY_ACTIVE
+cout: faible
+risque: ACTIVE
+description: >
+  Fuzzer de chemins web (dirsearch) : teste la liste de mots épinglée contre la
+  cible et rend les chemins qui répondent avec statut, type de contenu et
+  éventuelle redirection. Ce que l'outil détecte réellement : l'existence d'un
+  chemin HTTP — surface d'attaque, pas des vulnérabilités.
+execution:
+  args:
+    - "-u"
+    - "{URL}"
+    - "-w"
+    - "{REGLES}/dossiers-mini.txt"
+    - "-t"
+    - "4"
+    - "-q"
+    - "--no-color"
+    - "--full-url"
+    - "-O"
+    - "json"
+    - "-o"
+    - "{OUT}"
+  code_succes: [0]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  items_from: results
+  champs:
+    regle: url                 # le chemin découvert (URL complète) → original_rule_id
+    nom_regle: contentType     # type de contenu rendu (text/html, text/plain…)
+    url: url                   # URL complète → location.url (oracle)
+    message: status            # code HTTP observé
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300

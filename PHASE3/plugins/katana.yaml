@@ -1,0 +1,61 @@
+# Plugin AGNT — katana, crawler web (G2, vague-web/g2, 2026-09-05).
+#
+# Le maillon manquant de la chaîne httpx→katana→ffuf→nuclei : httpx VÉRIFIE une
+# URL, ffuf ÉNUMÈRE une liste de mots, katana SUIT LES LIENS d'une page — il
+# trouve ce qui est LIÉ depuis la page d'entrée, le fuzzer ce qui existe sans
+# être lié. Épreuve THAUMAS-WEB (qualif/katana/) : les 3 liens de la page
+# d'accueil retrouvés (/search?q=, /users?id=, /download?file=).
+#
+# Format MESURÉ sur v1.7.0 (-jsonl -o) : un objet JSON par ligne
+# {"timestamp", "request": {method, endpoint, tag, attribute, source, raw},
+#  "response": {status_code, headers, body, raw}}. Le corps de réponse n'est
+# PAS projeté : seul le champ d'URL l'est (location.url, lu par l'oracle).
+id: katana
+capacites:
+  - WEB_ENDPOINT_DISCOVERY_ACTIVE
+entrees:
+  - url
+binaire: katana
+version_min: "1.7.0"
+licence: MIT
+priorite: 121                  # derrière ffuf (120, cœur) : même capacité, lecture par crawl
+cout: faible
+risque: ACTIVE
+description: >
+  Crawler web (katana) : part de l'URL fournie, suit les liens déclarés dans
+  les pages (balises a/script/form) et rend chaque URL visitée avec son code de
+  statut. Ce que l'outil détecte réellement : les chemins LIÉS depuis la page
+  d'entrée — pas les chemins non liés (travail du fuzzer), pas des
+  vulnérabilités.
+execution:
+  args:
+    - "-u"
+    - "{URL}"
+    - "-jsonl"
+    - "-o"
+    - "{OUT}"
+    - "-nc"
+    - "-silent"
+    - "-d"
+    - "2"
+    - "-c"
+    - "4"
+    - "-rl"
+    - "40"
+    - "-timeout"
+    - "10"
+  code_succes: [0]
+sortie:
+  format: jsonl
+lecture:
+  modele: lignes_json
+  champs:
+    regle: request.method      # la requête qui a touché l'endpoint (GET)
+    nom_regle: request.tag     # porteur HTML du lien ("a") ; absent sur la page d'entrée
+    url: request.endpoint      # URL complète visitée → location.url (oracle)
+    message: response.status_code
+    preuve: request.source     # page d'où le lien a été découvert
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300

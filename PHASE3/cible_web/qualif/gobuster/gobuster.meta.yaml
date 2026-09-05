@@ -1,0 +1,29 @@
+# Métadonnées de l'exécution de qualification (G2, 2026-09-05).
+# argv = argv résolu par fournisseurs_web.planifier('gobuster', …) ;
+# {BIN} résolu par le PATH du staging (~/.cache/arena_secops/staging).
+{
+  "outil": "gobuster",
+  "argv": [
+    "gobuster",
+    "dir",
+    "-u",
+    "http://127.0.0.1:8807",
+    "-w",
+    "/home/julie/agnt-g2/PHASE3/regles_web/dossiers-mini.txt",
+    "-t",
+    "4",
+    "-q",
+    "--no-error",
+    "--no-progress",
+    "-e",
+    "-o",
+    "/home/julie/agnt-g2/PHASE3/cible_web/qualif/gobuster/gobuster.custom"
+  ],
+  "code_retour": 0,
+  "duree_s": 0.22,
+  "sortie_origine": "/home/julie/agnt-g2/PHASE3/cible_web/qualif/gobuster/gobuster.custom",
+  "cible": "http://127.0.0.1:8807",
+  "sandbox": "exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre",
+  "date": "2026-09-05",
+  "timeout_s": 240
+}

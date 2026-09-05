@@ -1,0 +1,33 @@
+# ATTENDUS — feroxbuster sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g2)
+#
+# feroxbuster fuzzer la wordlist ÉPINGLÉE regles_web/dossiers-mini.txt, avec
+# calibration + collecte de mots ACTIVES PAR DÉFAUT et inabordables en CLI
+# (mesuré : --no-collect-words → « unexpected argument », note de l'épingle).
+# Les mots tirés des réponses de la cible s'ajoutent à la liste : les résultats
+# débordent donc la wordlist — comportement documenté de l'outil, pas un écart.
+cible: http://127.0.0.1:8807
+mode: fuzzer (--json, calibration auto, collecte de mots par défaut)
+attendus_via_wordlist:
+  - chemin: /admin
+    statut: 200
+    route_epreuve: T-ADMIN-001
+  - chemin: /.env
+    statut: 200
+    route_epreuve: T-ENV-001
+attendus_via_mots_collectes:
+  # Mots extraits des liens de la page d'accueil (collect-words, défaut).
+  - chemin: /search
+    statut: 200            # /search sans q → page « Résultats pour : »
+  - chemin: /users
+    statut: 500            # /users sans id → erreur SQL brute exposée (T-SQLI-002)
+  - chemin: /download
+    statut: 404            # /download sans file valide — TAILLE distincte du wildcard,
+                           # donc non filtrée par la calibration (comportement réel)
+  - chemin: /             # la racine est revue par le scan
+    statut: 200
+non_attendus:
+  - "/.git : 404 identique au wildcard (11 o) — filtré par la calibration de
+     l'outil, absent de ses événements response. Pas un échec : ce que le parser
+     retient est ce que l'OUTIL rapporte."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "6 événements response (qualif/feroxbuster/feroxbuster.custom) — attendus COINCIDENTS"

@@ -1,0 +1,57 @@
+# Plugin AGNT — gobuster, fuzzer de chemins web (G2, vague-web/g2, 2026-09-05).
+#
+# Épreuve THAUMAS-WEB (qualif/gobuster/) : /admin et /.env retrouvés (200) ;
+# /.git NON — le serveur ne répond 200 que sur /.git/config et la wordlist
+# épinglée teste le mot nu « .git » (404, exclu par le filtre par défaut -b 404).
+# PAS DE SORTIE JSON en 3.8.2 (mesuré : aucune option) — le texte
+# « <url> (Status: N) [Size: M] » est lu par le parser nommé `gobuster`
+# (parsers_gobuster.py) ; le drapeau -e est OBLIGATOIRE : sans lui les lignes ne
+# portent que le chemin relatif, et location.url — la coordonnée lue par
+# l'oracle — serait vide.
+id: gobuster
+capacites:
+  - WEB_ENDPOINT_DISCOVERY_ACTIVE
+entrees:
+  - url
+binaire: gobuster
+version_min: "3.8.2"
+licence: Apache-2.0
+priorite: 122                  # derrière katana (121) : même capacité, lecture par liste de mots
+cout: faible
+risque: ACTIVE
+description: >
+  Fuzzer de chemins web (gobuster dir) : teste chaque mot de la liste épinglée
+  contre la cible et rend les chemins qui répondent hors exclusions (404 par
+  défaut, l'outil auto-exclut). Ce que l'outil détecte réellement : l'existence
+  d'un chemin HTTP, pas une vulnérabilité — /admin, /.env, /.git sont des
+  observations de surface d'attaque.
+execution:
+  args:
+    - "dir"
+    - "-u"
+    - "{URL}"
+    - "-w"
+    - "{REGLES}/dossiers-mini.txt"
+    - "-t"
+    - "4"
+    - "-q"
+    - "--no-error"
+    - "--no-progress"
+    - "-e"
+    - "-o"
+    - "{OUT}"
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  modele: plat
+  parser: gobuster
+  items_from: items
+  champs:
+    regle: regle               # le chemin testé (ex. /.env) → original_rule_id
+    url: url                   # URL complète → location.url (oracle)
+    message: message           # statut HTTP observé + taille de réponse
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300
