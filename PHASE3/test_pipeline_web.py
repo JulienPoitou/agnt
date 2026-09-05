@@ -83,6 +83,15 @@ def main() -> int:
             PR.verifier(rap.get("preuve", {}))[0] is True)
         # --- reprise : diff de re-scan (empreintes stables inter-runs, mesuré)
         cas("reprise absente sans précédent fourni", "reprise" not in rap)
+        # --- phases : l'ordre des tâches suit surface → endpoints → vuln,
+        #     même quand l'engagement les demande dans un autre ordre
+        rap_o = PW.derouler(engagement(providers_prevus=["nuclei", "httpx"]),
+                            faux_ok({"nuclei": (0, NUCLEI_OK), "httpx": (0, "{}")}),
+                            registre=reg, out_dir="/tmp/aw", verifier_oracle=False)
+        cas("phases : la surface (httpx) passe avant la vuln (nuclei) même si "
+            "demandée en dernier",
+            [d["provider"] for d in rap_o["details"]] == ["httpx", "nuclei"],
+            json.dumps([d["provider"] for d in rap_o["details"]]))
         fp0 = rap["findings"][0]["identity"]["fingerprint"]
         rap_r = PW.derouler(engagement(), faux_ok({"nuclei": (0, NUCLEI_OK),
                                                   "zap_baseline": (1, ZAP_OK)}),

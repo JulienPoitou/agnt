@@ -90,8 +90,8 @@ def main() -> int:
                 and eng.get("id") and eng.get("execution") == "non_demandee",
                 f"code={code} corps={json.dumps(eng, ensure_ascii=False)[:160]}")
         if isinstance(eng, dict) and eng.get("id"):
-            verifie("le plan liste la chaîne dans l'ordre",
-                    eng.get("providers_prevus") == ["httpx", "katana", "ffuf", "nuclei"],
+            verifie("le plan liste la chaîne intégrée dans l'ordre des phases",
+                    eng.get("providers_prevus") == list(api.WEB_PROVIDERS_ORDRE),
                     json.dumps(eng.get("providers_prevus")))
             verifie("vérification Oracle annoncée (replay 3 en normal)",
                     (eng.get("verification") or {}).get("oracle") == "http_response"
@@ -187,7 +187,10 @@ def main() -> int:
                 f"code={code} corps={json.dumps(eng, ensure_ascii=False)[:160]}")
         if isinstance(eng, dict) and eng.get("id"):
             terminal, lu = None, None
-            for _ in range(120):
+            # 240 itérations : la chaîne par défaut compte désormais plusieurs
+            # outils réels qui échouent chacun sur leur tour — le run peut
+            # prendre plus de temps qu'un seul binaire absent.
+            for _ in range(240):
                 code, lu = http(base, f"/api/runs/{eng['id']}")
                 if isinstance(lu, dict) and lu.get("statut") in ("termine", "refuse", "erreur"):
                     terminal = lu.get("statut")

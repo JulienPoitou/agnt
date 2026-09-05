@@ -42,7 +42,21 @@ from orchestrateur import executer_plan
 
 RUNTIME_VERIFIED = False
 
-ORDRE_CHAINE = ["httpx", "katana", "ffuf", "nuclei"]
+# Phases de la chaîne web (spec docs/WEB_PENTEST_V1_SPEC.md) : l'ordre des tâches
+# suit les phases — surface (ce qui répond), endpoints (ce qui existe), vuln (ce
+# qui est cassé). Un outil qui échoue n'arrête PLUS la chaîne (stop_on_failure
+# false à l'appel de l'orchestrateur) : l'épreuve du 2026-09-05 a montré qu'un
+# binaire absent gelait tout ce qui le suivait. L'échec reste NOMMÉ dans les
+# détails du rapport ; le run continue avec les suivants. Les outils hors phases
+# (engagements plus anciens, extensions) partent en queue d'ordre.
+PHASES = {
+    "surface":   ["httpx", "whatweb", "webanalyze", "wafw00f", "gowitness"],
+    "endpoints": ["katana", "ffuf", "gobuster", "feroxbuster", "dirsearch",
+                  "hakrawler", "arjun", "x8"],
+    "vuln":      ["nuclei", "sqlmap", "dalfox", "commix", "crlfuzz",
+                  "dotdotpwn", "wpscan", "testssl.sh", "sslyze", "sslscan"],
+}
+ORDRE_CHAINE = [pid for outils in PHASES.values() for pid in outils]
 
 
 class ErreurPipeline(Exception):
@@ -233,7 +247,7 @@ def derouler(engagement: dict, executer_tache, registre=None,
                        "tache": TA.Tache(provider_id=nid, argv=plan["argv"],
                                          timeout_s=float(plan["timeout_s"] or 300))})
         precedent = nid
-    run = executer_plan(noeuds, executer_tache)
+    run = executer_plan(noeuds, executer_tache, stop_on_failure=False)
     findings, details = [], []
     for res in run["taches"]:
         if res["etat"] != TA.TERMINEE:

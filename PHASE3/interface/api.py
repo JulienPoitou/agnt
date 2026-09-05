@@ -59,7 +59,13 @@ PLAFOND_CORPS = 262_144     # plafond de lecture du corps AVANT rfile.read : Con
 
 # Chaîne web V1 (docs/WEB_PENTEST_V1_SPEC.md) : ordre d'exécution x débit max
 # déclaratif. DOCUMENTED ONLY : ces débits sont la spec, pas une mesure.
-WEB_PROVIDERS_ORDRE = {"httpx": 50, "katana": 20, "ffuf": 30, "nuclei": 30}
+# Seuls les providers INTÉGRÉS (épinglés + promus en bin/) sont listés : un
+# provider sans manifest serait écarté à chaque engagement, ce serait du bruit.
+WEB_PROVIDERS_ORDRE = {"httpx": 50, "katana": 20, "ffuf": 30, "nuclei": 30,
+                       "gobuster": 30, "feroxbuster": 30, "dirsearch": 30,
+                       "hakrawler": 20,
+                       "dotdotpwn": 20, "testssl.sh": 30, "sslyze": 30,
+                       "sslscan": 30, "tlsx": 30}
 
 # Règles épinglées montées à {REGLES} pour les providers web (template nuclei
 # d'épreuve, wordlist ffuf) — empreintes dans manifeste_dependances.yaml, preuves
