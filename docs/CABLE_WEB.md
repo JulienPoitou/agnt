@@ -45,7 +45,17 @@ les batteries de ce dépôt : on s'y réfère, on ne les refait pas.
       épingle mise à jour) + id corrigé testssl_sh ; **chaîne : 13 providers,
       12 réels, 23 constats en un engagement** ; restent SQLi (sqlmap) et XSS
       (dalfox) — G3 en vol
-- [ ] **G1 vague-web/g1 — whatweb, webanalyze, wafw00f, nikto, gowitness** (agent en vol)
+- [x] **G1 vague-web/g1 — whatweb, webanalyze, wafw00f, nikto** (2026-09-05,
+      commit 6d5315e rebase propre) : 4/5 qualifiés (batterie
+      test_plugins_g1 101/101) ; gowitness REFUSÉ nommément (chrome absent,
+      canal hors règles, image non projetable — refus vérifié par la
+      batterie) ; nikto retrouve /.env, /.git, bannière obsolète + en-têtes
+      (11 constats) ; corrections du travail de l'agent tué (JSON invalide
+      régénéré, webanalyze location.url via lecture imbriquée) ; wrapper
+      nikto_scan symlink-safe + PERL5LIB perl_lib/usr/share/perl5 ; id
+      provider `nikto` (le wrapper porte le suffixe) ; **intégration :
+      22/22 providers dans le détail, 0 écarté, 0 hors cage, 33 constats,
+      26 VERIFIED par 15 outils**
 - [x] **G3 vague-web/g3 — sqlmap, dalfox, commix, crlfuzz, arjun**
       (2026-09-05) : 5/5 qualifiés (batterie test_plugins_g3 58/58) ;
       **sqlmap trouve T-SQLI-001** (3 techniques : boolean blind, time blind,
