@@ -46,7 +46,21 @@ les batteries de ce dépôt : on s'y réfère, on ne les refait pas.
       12 réels, 23 constats en un engagement** ; restent SQLi (sqlmap) et XSS
       (dalfox) — G3 en vol
 - [ ] **G1 vague-web/g1 — whatweb, webanalyze, wafw00f, nikto, gowitness** (agent en vol)
-- [ ] **G3 vague-web/g3 — sqlmap, dalfox, commix, crlfuzz, arjun** (agent en vol)
+- [x] **G3 vague-web/g3 — sqlmap, dalfox, commix, crlfuzz, arjun**
+      (2026-09-05) : 5/5 qualifiés (batterie test_plugins_g3 58/58) ;
+      **sqlmap trouve T-SQLI-001** (3 techniques : boolean blind, time blind,
+      UNION — toutes VERIFIED par l'oracle après relève du plafond stdout
+      4000→20000, le journal coupait la ligne cible) ; **dalfox trouve
+      T-XSS-001** (sévérité High DÉCLARÉE, CWE-79, VERIFIED) ; commix/crlfuzz :
+      résultats vides HONNÊTES motivés ; arjun découvre le paramètre q ;
+      intégration : merge + wrappers symlink-safe + promotion + épingles.
+- [x] **★ CRITÈRE D'ARRIVÉE ATTEINT — 9/9 failles de THAUMAS-WEB détectées et
+      confirmées par l'oracle** (2026-09-05) : T-SRV-001 bannière (httpx) ·
+      T-ENV-001 /.env (ffuf, gobuster, feroxbuster, dirsearch) · T-GIT-001/002
+      /.git (ffuf, feroxbuster + git-dumper) · T-ADMIN-001 /admin (idem) ·
+      T-TRAVERSAL-001 (dotdotpwn) · T-SQLI-001/002 (sqlmap) · T-XSS-001
+      (dalfox) — le tout SOUS CAGE bwrap, preuve scellée par engagement,
+      reprise diff stable.
 - [ ] **G5 vague-web/g5 — wpscan, kiterunner, dirhunt, gospider, x8** (file d'attente)
 - [ ] ①-b tranche **git-dumper** : hors `WEB_PROVIDERS_ORDRE` (découverte ≠ sonde) —
       décider de son entrée dans la chaîne (provider d'appoint ? capacité à part ?)
