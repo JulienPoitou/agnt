@@ -55,7 +55,7 @@ PHASES = {
                   "hakrawler", "arjun", "x8"],
     "vuln":      ["nuclei", "sqlmap", "dalfox", "commix", "crlfuzz",
                   "dotdotpwn", "wpscan", "testssl.sh", "sslyze", "sslscan",
-                  "nikto_scan"],
+                  "nikto"],
 }
 ORDRE_CHAINE = [pid for outils in PHASES.values() for pid in outils]
 
