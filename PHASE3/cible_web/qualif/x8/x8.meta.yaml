@@ -1,0 +1,30 @@
+# Métadonnées de l'exécution de qualification (G5, 2026-09-05).
+# argv = argv résolu par fournisseurs_web.planifier('x8', …) ;
+# {BIN} résolu par le PATH du staging (~/.cache/arena_secops/staging).
+{
+  "outil": "x8",
+  "argv": [
+    "x8",
+    "-u",
+    "http://127.0.0.1:8807/search?q=THAUMAS",
+    "-w",
+    "/home/julie/agnt-g5/PHASE3/regles_web/parametres-mini.txt",
+    "-c",
+    "2",
+    "--timeout",
+    "10",
+    "--disable-progress-bar",
+    "--disable-colors",
+    "-O",
+    "json",
+    "-o",
+    "/home/julie/agnt-g5/PHASE3/cible_web/qualif/x8/x8.custom"
+  ],
+  "code_retour": 0,
+  "duree_s": 1.45,
+  "sortie_origine": "/home/julie/agnt-g5/PHASE3/cible_web/qualif/x8/x8.custom",
+  "cible": "http://127.0.0.1:8807",
+  "sandbox": "exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre",
+  "date": "2026-09-05",
+  "timeout_s": 240
+}

@@ -1,0 +1,72 @@
+# Plugin AGNT — cmseek, audit CMS (vague web G5, 2026-09-05).
+#
+# POURQUOI CMSEEK ET PAS WPSCAN (décision nommée, mesurée le 2026-09-05) :
+# wpscan 4.1.0 (gem) exige des extensions natives Ruby (yajl-ruby, ffi…) et donc
+# ruby-dev — ABSENT de cette machine, installation sudo impossible. Tentative
+# mesurée : « mkmf.rb can't find header files for ruby at
+# /usr/lib/ruby/include/ruby.h » (gem install wpscan, échec nommé, consigné dans
+# l'épingle wpscan du manifeste). CMSeeK 1.1.3 (Python, GPL-3.0) porte la MÊME
+# capacité — l'audit CMS : détection parmi 400+ CMS, version, bruteforce dédié
+# WordPress/Joomla/Drupal — sans toolchain Ruby. L'objectif est la capacité,
+# pas l'outil.
+#
+# ÉPREUVE HONNÊTEMENT VIDE (mesuré sur THAUMAS-WEB) : « CMS Detection failed » —
+# la cible n'est PAS un CMS (cf. README_ATTENDUS). C'est l'épreuve attendue :
+# un détecteur qui « trouverait » un CMS partout serait un menteur. La preuve
+# positive (CMS planté) reste À PRODUIRE sur une cible dédiée — jamais sur
+# THAUMAS, qui ne porte pas de CMS.
+id: cmseek
+capacites:
+  - WEB_VULN_SCAN_ACTIVE
+entrees:
+  - url
+binaire: cmseek
+version_min: "1.1.3"
+licence: GPL-3.0
+priorite: 137                  # lecteur WEB_VULN_SCAN_ACTIVE, spécialisé audit CMS
+cout: faible
+risque: ACTIVE
+description: >
+  Audit CMS (CMSeeK 1.1.3) : sonde la cible (robots, générateur, chemins
+  caractéristiques, entêtes) et déclare le CMS détecté avec la méthode qui l'a
+  établi (« CMS Detected, CMS ID: …, Detection method: … ») — puis, sur les CMS
+  reconnus, version et scans dédiés. Un échec de détection est rendu comme tel
+  (« CMS Detection failed ») : le constat porte ce que l'outil a MESURÉ, jamais
+  une supposition de famille de logiciel.
+execution:
+  args:
+    - "-u"
+    - "{URL}"
+    - "--random-agent"
+    - "--batch"
+  # Mesuré 1.1.3 : code 0 avec détection ET code 0 sans (« CMS Detection
+  # failed ») — le code ne distingue rien, c'est le PARSER qui lit la sortie.
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  # Journal terminal (ANSI retirés par le parser ; SyntaxWarnings Python sur
+  # stderr, hors autorité). L'autorité :
+  #  · « Scanning Site: <url> » porte l'URL sonnée ;
+  #  · « [*] CMS Detected, CMS ID: <id>, Detection method: <meth> » = UN constat ;
+  #  · « [x] CMS Detection failed » = résultat vide NOMMÉ (0 item).
+  parser: cmseek
+  champs:
+    regle: regle              # cms-detect (constat du parser)
+    nom_regle: nom_regle      # l'ID du CMS déclaré par l'outil (wordpress…)
+    url: url                  # l'URL sonnée (ligne Scanning Site) → location.url
+    message: message          # la méthode de détection déclarée par l'outil
+    confiance: confiance      # « confirmée » (déclaration explicite de l'outil)
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300
+a_verifier:
+  - "cmseek écrit un rapport JSON sous <cwd du scan>/Result/<hôte_port>/cms.json
+     — chemin NON paramétrable par l'outil (mesuré) : le stdout est l'AUTORITÉ de
+     lecture ; le rapport n'est pas lu, sa présence ne fait pas foi."
+  - "un CMS détecté n'est PAS une vulnérabilité : c'est une caractérisation
+     d'empreinte — les CVE éventuelles viennent des bases dédiées, jamais d'une
+     inférence du parser (pas de sévérité déclarée ici, jamais inventée)."
+  - "la bannière de l'outil imprime une invitation GitHub en cas d'échec — ce
+     texte n'est PAS un constat et ne doit jamais être relu comme tel."

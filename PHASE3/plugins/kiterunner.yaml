@@ -1,0 +1,78 @@
+# Plugin AGNT — kiterunner, fuzzer de chemins et d'API (vague web G5, 2026-09-05).
+#
+# kr (assetnote) EST le fuzzer de la chaîne API : là où ffuf/gobuster/dirsearch
+# testent une liste de mots contre un serveur web, kr porte la sémantique des
+# ROUTES d'API (méthodes, skims, knowledgebases). L'épreuve utilise `kr brute`
+# (wordlist brute épinglée — pas une .kite, qui demanderait un artefact construit
+# de plus) : /admin et /.env retrouvés (200) sur THAUMAS-WEB, les deux chemins NON
+# liés depuis la page d'accueil (complément exact du crawl katana/gospider).
+#
+# PARSER NOMMÉ (mesuré 1.0.2) : le JSONL de kr sépare `target` et `path` — aucun
+# champ ne porte l'URL complète, et l'oracle (location.url) exige une URL absolue
+# (une URL relative est classée hors_scope au rejeu, pipeline_web). Le parser
+# reconstruit target+path ; c'est une RECONSTRUCTION déclarée, pas une invention :
+# les deux composants viennent de la sortie de l'outil.
+id: kiterunner
+capacites:
+  - WEB_ENDPOINT_DISCOVERY_ACTIVE
+entrees:
+  - url
+binaire: kr                # épingle `kr` (nom d'exécutable publié) — le projet est assetnote/kiterunner
+version_min: "1.0.2"
+licence: Apache-2.0
+priorite: 128                  # huitième lecteur de WEB_ENDPOINT_DISCOVERY_ACTIVE (après arjun 134, avant x8)
+cout: faible
+risque: ACTIVE
+description: >
+  Fuzzer de chemins et de routes d'API (kiterunner 1.0.2, mode brute) : envoie les
+  chemins de la wordlist épinglée contre la cible et rend ceux qui répondent avec
+  code de statut et taille de réponse. Ce que l'outil détecte réellement : l'existence
+  d'un chemin HTTP (surface d'attaque — /.env, /admin sur l'épreuve) — pas des
+  vulnérabilités. --success-status-codes borné à la liste utile ; préchecks et
+  wildcard-detection laissés au réglage de l'outil.
+execution:
+  args:
+    - "brute"
+    - "{URL}"
+    - "-w"
+    - "{REGLES}/dossiers-mini.txt"
+    - "-x"
+    - "3"
+    - "-j"
+    - "2"
+    - "-t"
+    - "5s"
+    - "--success-status-codes"
+    - "200,204,301,302,307,401,403,405,500"
+    - "-o"
+    - "json"
+    - "-q"
+  # Mesuré 1.0.2 : code 0 avec résultats ET code 0 sans aucun (« results: 0 » du
+  # journal stderr) — le résultat vide reste « pas une preuve d'absence ».
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  # stdout JSONL (-o json -q) : {"method", "target", "path", "responses":
+  # [{"uri","sc","len"}], "time"} par résultat. Le parser est l'autorité :
+  # il reconstruit l'URL complète (target+path) pour location.url.
+  parser: kiterunner
+  champs:
+    regle: regle              # la méthode mesurée (GET)
+    nom_regle: nom_regle      # le code HTTP observé (200)
+    url: url                  # target+path reconstruit → location.url (oracle)
+    message: message          # la taille de réponse
+    preuve: preuve            # le chemin brut rendu par kr
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300
+a_verifier:
+  - "{REGLES} doit pointer sur le répertoire des règles épinglées (dossiers-mini.txt,
+     empreinte en section regles) — sans regles= à la planification, l'argv porte
+     « /dossiers-mini.txt » et l'exécution échoue NOMMÉMENT (fichier absent)."
+  - "--success-status-codes est une liste VIRGULES (mesuré : la forme « 200 204 … »
+     est consommée comme arguments positionnels par cobra — l'URL cible disparaît
+     et kr refuse « accepts 1 arg(s), received 9 »)."
+  - "un chemin découvert est de la SURFACE : /admin trouvé ne dit rien du contenu
+     du panneau — c'est le travail des lecteurs WEB_VULN_SCAN_ACTIVE."

@@ -1,0 +1,24 @@
+# ATTENDUS — x8 sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g5)
+#
+# x8 cherche les paramètres CACHÉS : il injecte des lots de la wordlist épinglée
+# (parametres-mini.txt, 30 noms) dans l'URL et compare les réponses à la page de
+# référence. ÉPREUVE HONNÊTEMENT VIDE (mesuré 4.3.0) : found_params: [] —
+# cohérent avec la cible : q est un paramètre VISIBLE (réfléchi, lié depuis
+# l'accueil), pas un paramètre fantôme ignoré par le serveur. arjun (G3) l'avait
+# détecté par heuristique de longueur — deux heuristiques différentes, deux
+# lectures : l'une ne remplace pas l'autre.
+cible: http://127.0.0.1:8807/search?q=THAUMAS
+mode: fuzz paramètres (wordlist épinglée, 1 URL, ~120 requêtes)
+attendus:
+  - found_params: []
+    url: http://127.0.0.1:8807/search?q=THAUMAS
+    statut: 200
+    raison: >-
+      aucun paramètre CACHÉ sur /search — q est visible et réfléchi ; x8 rend
+      l'URL sonnée avec sa liste vide, le parser en fait 0 item (jamais un item
+      « vide » déguisé en découverte)
+non_attendus:
+  - "q comme « paramètre découvert » : le rôle d'arjun (G3, heuristique
+     body length) — x8 ne le rend pas parce qu'il n'est pas caché."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "0 item, code 0 (qualif/x8/x8.custom : found_params []) — vide motivé"

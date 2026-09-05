@@ -1,0 +1,72 @@
+# Plugin AGNT — gospider, crawler web (vague web G5, 2026-09-05).
+#
+# Sixième lecteur de WEB_ENDPOINT_DISCOVERY_ACTIVE. Sur THAUMAS-WEB (épreuve
+# qualif/gospider/, --json) : la graine + les 3 liens de la page d'accueil
+# (/search?q=THAUMAS, /users?id=1 → 200 ; /download?file=notes.txt → type form,
+# statut 0). Complément de katana (même famille crawl) : gospider extrait AUSSI
+# les chaînes des scripts et les formulaires, pas seulement les balises <a>.
+#
+# MESURÉ 1.1.6 — deux pièges de l'outil, consignés :
+#  · gospider lit STDIN quand il n'est pas un TTY (mode « sites via pipe ») : sous
+#    un harnais heredoc, il consomme le script pour une liste d'URLs. Le wrapper
+#    du staging ferme stdin — usage déclaré -s {URL} uniquement.
+#  · `--json` rend le JSONL sur stdout ; `-o` écrit des fichiers PAR HÔTE dans un
+#    dossier — pas utilisé : le stdout est l'autorité (une ligne par URL vue).
+id: gospider
+capacites:
+  - WEB_ENDPOINT_DISCOVERY_ACTIVE
+entrees:
+  - url
+binaire: gospider
+version_min: "1.1.6"
+licence: MIT
+priorite: 126                  # sixième lecteur de WEB_ENDPOINT_DISCOVERY_ACTIVE (après hakrawler 125)
+cout: faible
+risque: ACTIVE
+description: >
+  Crawler web (gospider 1.1.6) : part de l'URL fournie, suit les liens et
+  formulaires des pages, extrait les chaînes URL des scripts, et rend chaque URL
+  vue avec le statut HTTP observé (0 tant que la page n'a pas été récupérée).
+  Ce que l'outil détecte réellement : les chemins LIÉS depuis la page d'entrée —
+  pas les chemins non liés (travail du fuzzer), pas des vulnérabilités.
+execution:
+  args:
+    - "-s"
+    - "{URL}"
+    - "-d"
+    - "2"
+    - "-c"
+    - "2"
+    - "-t"
+    - "2"
+    - "-m"
+    - "8"
+    - "--json"
+    - "--no-redirect"
+  # Mesuré 1.1.6 : code 0 avec URLs et code 0 sans aucune — le résultat vide
+  # reste « pas une preuve d'absence » (motif du cœur).
+  code_succes: [0]
+sortie:
+  format: jsonl
+lecture:
+  # Une ligne = {"input" (graine), "source" (body/robots/javascript…),
+  # "type" (url/form…), "output" (URL trouvée), "status", "length"}.
+  modele: lignes_json
+  champs:
+    regle: type                # porteur de la découverte (« url », « form »…)
+    nom_regle: source          # d'où elle vient (« body », « robots »…)
+    url: output                # URL complète → location.url (oracle)
+    message: status            # statut HTTP observé (0 = pas encore récupérée)
+    preuve: input              # la graine d'où l'URL a été extraite
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300
+a_verifier:
+  - "le statut 0 (« form ») ne dit PAS que l'URL est morte : gospider l'a extraite
+     du corps sans l'avoir récupérée — ne jamais le lire comme un code d'erreur."
+  - "les sources tierces (-a/--other-source : Archive.org, CommonCrawl…) restent
+     DESACTIVÉES : non bornées (trafic externe non maîtrisé) — le crawl se borne
+     au domaine fourni."
+  - "robots.txt est sondé par défaut (--robots true) : une route robots sur une
+     cible générique est attendue et n'est pas une découverte d'épreuve."

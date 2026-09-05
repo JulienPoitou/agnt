@@ -1,0 +1,27 @@
+# Métadonnées de l'exécution de qualification (G5, 2026-09-05).
+# argv = argv résolu par fournisseurs_web.planifier('dirhunt', …) ;
+# {BIN} résolu par le PATH du staging (~/.cache/arena_secops/staging).
+{
+  "outil": "dirhunt",
+  "argv": [
+    "dirhunt",
+    "http://127.0.0.1:8807",
+    "--threads",
+    "4",
+    "--timeout",
+    "8",
+    "--exclude-sources",
+    "robots,virustotal,google,commoncrawl,crtsh,certificatessl,wayback",
+    "--progress-disabled",
+    "--not-follow-subdomains",
+    "--to-file",
+    "/home/julie/agnt-g5/PHASE3/cible_web/qualif/dirhunt/dirhunt.json"
+  ],
+  "code_retour": 0,
+  "duree_s": 0.42,
+  "sortie_origine": "/home/julie/agnt-g5/PHASE3/cible_web/qualif/dirhunt/dirhunt.json",
+  "cible": "http://127.0.0.1:8807",
+  "sandbox": "exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre",
+  "date": "2026-09-05",
+  "timeout_s": 240
+}

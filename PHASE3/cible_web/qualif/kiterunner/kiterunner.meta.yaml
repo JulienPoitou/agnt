@@ -1,0 +1,31 @@
+# Métadonnées de l'exécution de qualification (G5, 2026-09-05).
+# argv = argv résolu par fournisseurs_web.planifier('kiterunner', …) ;
+# {BIN} résolu par le PATH du staging (~/.cache/arena_secops/staging).
+{
+  "outil": "kiterunner",
+  "argv": [
+    "kr",
+    "brute",
+    "http://127.0.0.1:8807",
+    "-w",
+    "/home/julie/agnt-g5/PHASE3/regles_web/dossiers-mini.txt",
+    "-x",
+    "3",
+    "-j",
+    "2",
+    "-t",
+    "5s",
+    "--success-status-codes",
+    "200,204,301,302,307,401,403,405,500",
+    "-o",
+    "json",
+    "-q"
+  ],
+  "code_retour": 0,
+  "duree_s": 0.13,
+  "sortie_origine": "stdout:kiterunner.jsonl",
+  "cible": "http://127.0.0.1:8807",
+  "sandbox": "exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre",
+  "date": "2026-09-05",
+  "timeout_s": 240
+}

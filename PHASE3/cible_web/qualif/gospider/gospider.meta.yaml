@@ -1,0 +1,28 @@
+# Métadonnées de l'exécution de qualification (G5, 2026-09-05).
+# argv = argv résolu par fournisseurs_web.planifier('gospider', …) ;
+# {BIN} résolu par le PATH du staging (~/.cache/arena_secops/staging).
+{
+  "outil": "gospider",
+  "argv": [
+    "gospider",
+    "-s",
+    "http://127.0.0.1:8807",
+    "-d",
+    "2",
+    "-c",
+    "2",
+    "-t",
+    "2",
+    "-m",
+    "8",
+    "--json",
+    "--no-redirect"
+  ],
+  "code_retour": 0,
+  "duree_s": 0.02,
+  "sortie_origine": "stdout:gospider.jsonl",
+  "cible": "http://127.0.0.1:8807",
+  "sandbox": "exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre",
+  "date": "2026-09-05",
+  "timeout_s": 240
+}
