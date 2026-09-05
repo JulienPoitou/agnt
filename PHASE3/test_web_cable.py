@@ -158,6 +158,12 @@ def main() -> int:
                 (f0.get("verification") or {}).get("recette") == "statut_declare"
                 and ((f0.get("verification") or {}).get("jugement") or {}).get("replay") == "3/3",
                 json.dumps(f0.get("verification"), ensure_ascii=False)[:240])
+        verifie("seconde recette ARMÉE : le titre déclaré par le manifest doit être "
+                "dans le corps (leçon XBOW — preuve mesurée, jamais auto-évaluation)",
+                "THAUMAS" in str((f0.get("evidence") or {}).get("extrait_attendu") or "")
+                and str((f0.get("verification") or {}).get("extrait_attendu") or "") != ""
+                and all(o.get("extrait") is True for o in (f0.get("verification") or {}).get("observations") or []),
+                json.dumps(f0.get("verification"), ensure_ascii=False)[:280])
         verifie("finding porte la sonde réelle (statut 200, titre, bannière)",
                 "200" in brut and "THAUMAS" in brut and "Python" in brut,
                 brut[:220])

@@ -731,7 +731,14 @@ def depuis_manifest(brut, mani, outil: str, racines=()) -> list:
                       # `extracted-results` de nuclei, `evidence` de semgrep…) : valeur
                       # de l'outil, projetée telle quelle et passée par le masquage
                       # large si le manifest le déclare. Jamais réécrite, jamais devinée.
-                      **({"preuve": c.get("preuve")} if c.get("preuve") else {})},
+                      **({"preuve": c.get("preuve")} if c.get("preuve") else {}),
+                      # la RECETTE de vérification déclarée : `extrait_corps` nomme
+                      # un champ de l'outil dont la VALEUR doit apparaître dans le
+                      # corps de la réponse (ex. httpx: title). Second signal
+                      # indépendant exigé par l'oracle pour VERIFIED — déclaré par
+                      # le manifest, jamais deviné par le cœur.
+                      **({"extrait_attendu": c.get("extrait_corps")}
+                         if c.get("extrait_corps") else {})},
         ))
     return out
 

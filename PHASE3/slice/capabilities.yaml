@@ -1091,6 +1091,7 @@ capabilities:
               url: url
               regle: status_code
               nom_regle: title
+              extrait_corps: title
               message: webserver
               preuve: input
           risk: ACTIVE

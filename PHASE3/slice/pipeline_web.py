@@ -63,12 +63,15 @@ class ErreurPipeline(Exception):
     """Engagement inexploitable : scope, plan ou exécution nommés."""
 
 
-def _rejouer(url: str, fois: int, timeout_s: float = 10.0):
+def _rejouer(url: str, fois: int, extrait: str = "", timeout_s: float = 10.0):
     """N GET réels sur l'URL + 1 témoin (chemin aléatoire du même hôte).
 
     Hygiène oracle_web : le corps n'est JAMAIS conservé — digest + taille
-    (ObservationRejeu). Une observation en erreur reste une observation : le
-    jugement la compte, jamais l'inverse.
+    (ObservationRejeu). `extrait` : le token que le manifest déclare attendu
+    dans le corps (`extrait_corps`) — le SECOND signal indépendant de la
+    recette (leçon XBOW : la validation vient d'une preuve mesurée, jamais
+    d'une auto-évaluation). Une observation en erreur reste une observation :
+    le jugement la compte, jamais l'inverse.
     """
     observations = []
     for _ in range(fois):
@@ -76,18 +79,21 @@ def _rejouer(url: str, fois: int, timeout_s: float = 10.0):
             req = urllib.request.Request(url, method="GET",
                                          headers={"User-Agent": "agnt-oracle/1 (rejeu)"})
             with urllib.request.urlopen(req, timeout=timeout_s) as r:
-                observations.append(OW.ObservationRejeu.depuis_corps(r.status, r.read()))
+                observations.append(
+                    OW.ObservationRejeu.depuis_corps(r.status, r.read(), extrait=extrait))
         except urllib.error.HTTPError as e:
             try:
                 corps = e.read()
             except Exception:                       # noqa: BLE001
                 corps = None
-            observations.append(OW.ObservationRejeu.depuis_corps(e.code, corps))
+            observations.append(
+                OW.ObservationRejeu.depuis_corps(e.code, corps, extrait=extrait))
         except Exception as e:                      # noqa: BLE001
             observations.append(
                 OW.ObservationRejeu(None, "", 0, False, f"{type(e).__name__}"))
     # Témoin : un chemin qui ne devrait rien porter sur le MÊME hôte. S'il répond
-    # comme la cible, la « preuve » est générique → le jugement la réfute.
+    # (statut ET extrait) comme la cible, la « preuve » est générique → le
+    # jugement la réfute.
     parties = urlsplit(url)
     temoin_url = f"{parties.scheme}://{parties.netloc}/temoin-agnt-{uuid.uuid4().hex[:8]}"
     try:
@@ -135,7 +141,10 @@ def _verifier_par_oracle(findings: list[dict], engagement: dict) -> dict:
                                  "motif": f"URL hors de l'hôte engagé ({hote_engage}) : rejeu refusé"}
             compte["non_verifiables"] += 1
             continue
-        observations, temoin, temoin_url = _rejouer(url_f, fois)
+        observations, temoin, temoin_url = _rejouer(url_f, fois,
+                                                    extrait=str((f.get("evidence")
+                                                                 or {}).get("extrait_attendu")
+                                                                or ""))
         regle = str((f.get("source") or {}).get("original_rule_id") or "")
         recette = "statut_declare" if regle.isdigit() else "stabilite"
         if recette == "statut_declare":
@@ -146,16 +155,21 @@ def _verifier_par_oracle(findings: list[dict], engagement: dict) -> dict:
                 expect = 200                            # tout a échoué : juger le rendra INCONCLUSIVE
             else:
                 expect = premier
+        extrait = str((f.get("evidence") or {}).get("extrait_attendu") or "")
         demande = OW.DemandeVerification(url=url_f, expect_status=expect,
+                                         expect_body_contains=extrait,
                                          control_url=temoin_url,
                                          intensity=str(engagement.get("intensity") or "normal"))
         jugement = OW.juger(demande, observations, temoin)
         f["verification"] = {"oracle": "http_response", "recette": recette,
                              "url_rejouee": url_f, "temoin": temoin_url,
                              "jugement": jugement.to_dict(),
+                             # le second signal, rendu armé ou absent (jamais « off » muet)
+                             **({"extrait_attendu": extrait} if extrait else {}),
                              "observations": [{"status": o.status,
                                                "digest": o.body_digest[:12],
                                                "taille": o.body_taille,
+                                               "extrait": o.contient_extrait,
                                                "erreur": o.erreur} for o in observations]}
         v = jugement.verdict.value
         if v == "confirmed":
