@@ -70,32 +70,35 @@ def main() -> int:
     if reg_ok:
         rap = PW.derouler(engagement(), faux_ok({"nuclei": (0, NUCLEI_OK),
                                                  "zap_baseline": (1, ZAP_OK)}),
-                          registre=reg, out_dir="/tmp/aw")
+                          registre=reg, out_dir="/tmp/aw", verifier_oracle=False)
         cas("2 providers → findings agrégés, run terminé",
             rap["statut_run"] == "termine" and len(rap["findings"]) == 2
             and rap["providers_ecartes"] == [],
             f"run={rap['statut_run']} findings={len(rap['findings'])}")
         cas("findings naissent OBSERVED (jamais confirmés)",
             all(f.get("cycle", {}).get("etat") == "observed" for f in rap["findings"]))
+        cas("oracle désactivé en unitaire : aucun rejeu réseau (verifications absent)",
+            "verifications" not in rap)
         cas("rapport scellé vérifiable",
             PR.verifier(rap.get("preuve", {}))[0] is True)
         rap = PW.derouler(engagement(providers_prevus=["nuclei", "bandit"]),
                           faux_ok({"nuclei": (0, NUCLEI_OK)}),
-                          registre=reg, out_dir="/tmp/aw")
+                          registre=reg, out_dir="/tmp/aw", verifier_oracle=False)
         cas("provider inapplicable écarté avec motif, pas d'arrêt",
             rap["statut_run"] == "termine" and len(rap["findings"]) == 1
             and len(rap["providers_ecartes"]) == 1
             and "non applicable" in rap["providers_ecartes"][0]["motif"],
             json.dumps(rap["providers_ecartes"], ensure_ascii=False)[:140])
         rap = PW.derouler(engagement(), faux_ok({"nuclei": (5, "boom")}), registre=reg,
-                          out_dir="/tmp/aw")
+                          out_dir="/tmp/aw", verifier_oracle=False)
         det = [d for d in rap["details"] if d["provider"] == "nuclei"][0]
         cas("code hors succès → run continue, échec provider enregistré honnêtement",
             rap["statut_run"] == "termine" and rap["findings"] == []
             and "code 5" in det.get("motif", ""),
             json.dumps(det, ensure_ascii=False)[:140])
         rap = PW.derouler(engagement(egress=False),
-                          faux_ok({"nuclei": (0, NUCLEI_OK)}), registre=reg, out_dir="/tmp/aw")
+                          faux_ok({"nuclei": (0, NUCLEI_OK)}), registre=reg,
+                          out_dir="/tmp/aw", verifier_oracle=False)
         cas("sans egress → tout écarté, run refusé nommé",
             rap["statut_run"] == "refuse" and rap["findings"] == []
             and all("egress" in e["motif"] for e in rap["providers_ecartes"]),

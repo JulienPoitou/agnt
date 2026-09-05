@@ -145,12 +145,28 @@ def main() -> int:
         findings = rap.get("findings") or []
         f0 = findings[0] if findings else None
         brut = json.dumps(f0, ensure_ascii=False) if f0 else ""
-        verifie("finding httpx OBSERVED (cycle de vie joint)",
-                bool(f0) and (f0.get("cycle") or {}).get("etat") == "observed",
-                brut[:200])
-        verifie("finding httpx porte la sonde réelle (statut 200, titre, bannière)",
+        verifie("finding httpx VÉRIFIÉ par l'oracle : rejeu réel confirmé + témoin respecté",
+                bool(f0) and (f0.get("cycle") or {}).get("etat") == "verified"
+                and ((f0.get("verification") or {}).get("jugement") or {}).get("verdict") == "confirmed"
+                and ((f0.get("verification") or {}).get("jugement") or {}).get("temoin_respecte") is True,
+                brut[:260])
+        verifie("cycle de vie complet : observer → candidater → verifier_ok",
+                [h.get("evenement") for h in ((f0.get("cycle") or {}).get("historique") or [])]
+                == ["observer", "candidater", "verifier_ok"],
+                json.dumps((f0.get("cycle") or {}).get("historique"), ensure_ascii=False)[:220])
+        verifie("recette = statut DÉCLARÉ (httpx → 200), rejeu 3/3 en normal",
+                (f0.get("verification") or {}).get("recette") == "statut_declare"
+                and ((f0.get("verification") or {}).get("jugement") or {}).get("replay") == "3/3",
+                json.dumps(f0.get("verification"), ensure_ascii=False)[:240])
+        verifie("finding porte la sonde réelle (statut 200, titre, bannière)",
                 "200" in brut and "THAUMAS" in brut and "Python" in brut,
                 brut[:220])
+        verifie("rapport porte les comptes de vérification (rejeu_reel, tout vérifié)",
+                (rap.get("verifications") or {}).get("rejeu_reel") is True
+                and (rap.get("verifications") or {}).get("verifies", 0) >= 1
+                and (rap.get("verifications") or {}).get("non_verifiables") == 0
+                and (rap.get("verifications") or {}).get("inconclusifs") == 0,
+                json.dumps(rap.get("verifications"), ensure_ascii=False))
 
         preuve = rap.get("preuve")
         verifie("preuve scellée et vérifiable",

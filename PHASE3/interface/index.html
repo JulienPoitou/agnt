@@ -98,6 +98,42 @@
 </section>
 <div id="web-zone" class="cache" aria-label="résultat de l'engagement web"></div>
 
+<!-- Correspondance : l'IA opératrice. Elle parle librement (failles, exploits,
+     théorie, tout) et peut PROPOSER un engagement web — l'exécution reste un clic
+     humain. BYOK : la clé part du navigateur directement chez le fournisseur,
+     jamais par le moteur. Aucun filtre ajouté par cette console. -->
+<section class="brief" aria-label="correspondance IA">
+  <div class="titre">
+    <h1>Correspondance <i>/</i></h1>
+    <p class="serif">Une IA à qui parler — de tout. Elle peut proposer un engagement
+      web ; rien ne part sans ton clic.</p>
+  </div>
+  <div id="chat-fil" aria-live="polite"></div>
+  <form class="lancer" id="chatform" onsubmit="return false">
+    <label class="q"><span>message</span>
+      <textarea id="chat-texte" rows="2" disabled
+        placeholder="scanne http://127.0.0.1:8807 puis explique-moi ce que tu trouves"></textarea>
+    </label>
+    <button id="chat-go" disabled title="régler ta clé dans « réglages »">Envoyer<kbd>↵</kbd></button>
+  </form>
+  <details class="chat-reglages" id="chat-reglages">
+    <summary>réglages — clé, modèle, consigne permanente (l'IA est la tienne)</summary>
+    <label><span>clé API Groq · reste dans ce navigateur</span>
+      <input id="chat-cle" type="password" placeholder="gsk_…"></label>
+    <label><span>modèle</span>
+      <input id="chat-modele" placeholder="openai/gpt-oss-120b (défaut moteur)"></label>
+    <label class="q"><span>consigne permanente</span>
+      <textarea id="chat-prompt" rows="4"></textarea></label>
+    <p class="note">La clé reste dans le localStorage de ce navigateur et va directement
+      chez Groq — elle ne transite jamais par le moteur, qui n'en garde aucune copie.
+      Aucun filtre de sujet ajouté par cette console : les seules règles en vigueur
+      sont celles du fournisseur, et l'exécution d'outils reste confirmée par un clic
+      humain (fail-closed du moteur, inchangé).</p>
+  </details>
+  <p class="pied-brief">l'IA propose · l'opérateur dispose · les constats affichés
+    viennent du moteur, jamais d'elle</p>
+</section>
+
 <!-- Ledger VIVANT : ce que le journal de mission a d&eacute;j&agrave; &eacute;crit, relu en cours
      d'ex&eacute;cution. Rempli par app.js &agrave; partir de `/api/runs/<id>.vivante`, donc vide
      et masqu&eacute; tant qu'aucune mission n'a consign&eacute; d'&eacute;tat. -->

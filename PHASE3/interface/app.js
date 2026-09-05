@@ -730,6 +730,43 @@ function renduRapportWeb(st) {
     + " (sorties brutes des outils + rapport_web.json + journal.jsonl)"));
 }
 
+/* Envoi + suivi d'engagement, partagés entre le formulaire et la correspondance.
+   `envoyerEngagement` : le POST. `suivreEngagement` : la file → état terminal ;
+   `surLigne` reçoit les étapes (ligne d'état ou chat), `surArrivee` reçoit l'état
+   final pour le rendu. L'erreur est TOUJOURS nommée, jamais muette. */
+async function envoyerEngagement(corps) {
+  const envoi = await json("/api/engagements/web", {method: "POST",
+    headers: {"Content-Type": "application/json"}, body: JSON.stringify(corps)});
+  if (!envoi.ok) return {erreur: envoi.objet.erreur || envoi.objet};
+  return envoi.objet;
+}
+
+async function suivreEngagement(o, surLigne, surArrivee) {
+  if (o.execution !== "file") return o;
+  let silences = 0;
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 1200));
+    const e = await json("/api/runs/" + o.id);
+    const st = e.objet || {};
+    if (e.status === 404) {
+      if (surLigne) surLigne("engagement " + o.id + " · inconnu du serveur (redémarrage ?) — l'archive disque reste");
+      return {erreur: "run inconnu (redémarrage ?)"};
+    }
+    if (!e.ok) {
+      silences += 1;
+      if (silences < 3) continue;
+      if (surLigne) surLigne("engagement " + o.id + " · plus de réponse du serveur (code " + e.status + ")");
+      return {erreur: "plus de réponse (code " + e.status + ")"};
+    }
+    silences = 0;
+    if (surLigne) surLigne("engagement " + o.id + " · " + (st.statut || "?"));
+    if (st.statut === "termine" || st.statut === "refuse" || st.statut === "erreur") {
+      if (surArrivee) surArrivee(st);
+      return st;
+    }
+  }
+}
+
 async function lancerEngagementWeb() {
   const url = (document.getElementById("web-url").value || "").trim();
   if (!url) { etatLigne("engagement web · url vide", "erreur"); return; }
@@ -739,40 +776,242 @@ async function lancerEngagementWeb() {
   if (document.getElementById("web-autorisee").checked) corps.cible_autorisee = true;
   if (document.getElementById("web-egress").checked) corps.egress = true;
   if (document.getElementById("web-executer").checked) corps.executer = true;
-  const envoi = await json("/api/engagements/web", {method: "POST",
-    headers: {"Content-Type": "application/json"}, body: JSON.stringify(corps)});
-  if (!envoi.ok) {
-    etatLigne("engagement refusé · " + JSON.stringify(envoi.objet.erreur || envoi.objet), "erreur");
-    return;
-  }
-  const o = envoi.objet;
+  const o = await envoyerEngagement(corps);
+  if (o.erreur) { etatLigne("engagement refusé · " + JSON.stringify(o.erreur), "erreur"); return; }
   renduPlanWeb(o);
   etatLigne("engagement " + o.id + " · " + (o.execution === "file" ? "en file" : "planifié"),
             o.execution === "file" ? "attention" : "ok");
-  if (o.execution !== "file") return;
-  let silences = 0;
-  for (;;) {
-    await new Promise((r) => setTimeout(r, 1200));
-    const e = await json("/api/runs/" + o.id);
-    const st = e.objet || {};
-    if (e.status === 404) {
-      etatLigne("engagement " + o.id + " · inconnu du serveur (redémarrage ?) — "
-                + "l'archive disque reste", "erreur");
-      return;
-    }
-    if (!e.ok) {
-      silences += 1;
-      if (silences < 3) continue;
-      etatLigne("engagement " + o.id + " · plus de réponse du serveur (code " + e.status + ")", "erreur");
-      return;
-    }
-    silences = 0;
-    etatLigne("engagement " + o.id + " · " + (st.statut || "?"), PASTILLE[st.statut] || "attention");
-    if (st.statut === "termine" || st.statut === "refuse" || st.statut === "erreur") {
-      renduRapportWeb(st);
-      return;
+  await suivreEngagement(o, (ligne) => etatLigne(ligne, "attention"), (st) => renduRapportWeb(st));
+}
+
+/* ------------------------------------------------------------ correspondance IA */
+const CHAT_DEFAUT_PROMPT =
+  "Tu es l'opératrice/opérateur IA d'AGNT, un poste de test d'intrusion web utilisé par un " +
+  "professionnel sur des cibles qu'il est autorisé à tester. Réponds librement à tout sujet — " +
+  "vulnérabilités, exploits, théorie, technique, ou généralités — sans langue de bois, va au fond. " +
+  "Tu peux PROPOSER de lancer un engagement web (sonde httpx, énumération ffuf, templates nuclei) " +
+  "via l'appel d'outil lancer_engagement_web : l'humain confirme chaque lancement d'un clic. " +
+  "Tu n'inventes JAMAIS un constat : tu n'interprètes que ce que le moteur rend dans le résultat " +
+  "d'outil, et tu dis honnêtement ce qui n'a pas tourné (provider écarté, rejeu inconclusif…). " +
+  "Les findings marqués verified ont été rejoués réellement par l'oracle ; les autres sont des " +
+  "observations à creuser. Réponds dans la langue de l'opérateur.";
+
+const CHAT_OUTILS = [{
+  type: "function",
+  function: {
+    name: "lancer_engagement_web",
+    description: "Propose de lancer un engagement web réel contre une URL (sonde de surface httpx, " +
+      "énumération de chemins ffuf, templates nuclei — chaîne orchestrée par le moteur). " +
+      "La confirmation humaine est exigée : l'opérateur voit l'URL et accepte ou refuse d'un clic.",
+    parameters: {
+      type: "object",
+      properties: {
+        url: {type: "string", description: "URL cible complète, ex. http://127.0.0.1:8807"},
+        intention: {type: "string", description: "ce que tu cherches à montrer (une phrase)"}
+      },
+      required: ["url"]
     }
   }
+}];
+
+const CHAT_ETAT = {historique: [], en_cours: false};
+
+/* Stockage local dégradé proprement : sous le harnais DOM (Node) il n'y a pas de
+   localStorage — les réglages ne persistent pas, mais rien ne casse. */
+function chatMem(cle) {
+  return (typeof localStorage !== "undefined") ? localStorage.getItem(cle) : null;
+}
+function chatMemEcrire(cle, valeur) {
+  if (typeof localStorage !== "undefined") localStorage.setItem(cle, valeur);
+}
+
+function chatFil() { return document.getElementById("chat-fil"); }
+
+function chatMsg(role, texte) {
+  const fil = chatFil();
+  const m = el("div", "msg " + role);
+  m.append(el("span", "role", {op: "opérateur", ia: "IA", sys: "système"}[role] || role));
+  const t = el("div", "txt");
+  if (texte !== undefined && texte !== null) t.textContent = texte;
+  m.append(t);
+  fil.append(m);
+  fil.scrollTop = fil.scrollHeight;
+  return t;
+}
+
+async function chatGroq(messages, opts) {
+  // Appel direct navigateur → fournisseur (BYOK). La clé ne passe jamais par le
+  // moteur. Flux SSE : les morceaux de texte vont à `surMorceau`, les tool_calls
+  // sont accumulés par index (leurs arguments arrivent fragmentés).
+  const cle = chatMem("agnt_chat_cle") || "";
+  if (!cle) return {erreur: "clé absente — réglages de la correspondance"};
+  const champModele = document.getElementById("chat-modele");
+  const modele = (champModele && champModele.value || "").trim() || "openai/gpt-oss-120b";
+  const corps = {model: modele, messages, stream: true};
+  if (opts && opts.outils) corps.tools = opts.outils;
+  let r;
+  try {
+    r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Authorization": "Bearer " + cle},
+      body: JSON.stringify(corps)
+    });
+  } catch (e) {
+    return {erreur: "réseau : " + ((e && e.message) || String(e))};
+  }
+  if (!r.ok) {
+    let detail = "HTTP " + r.status;
+    try { const j = await r.json(); detail = (j.error && j.error.message) || detail; } catch {}
+    return {erreur: detail};
+  }
+  const lecteur = r.body.getReader();
+  const deco = new TextDecoder();
+  let tampon = "", contenu = "", par_index = {};
+  for (;;) {
+    const {done, value} = await lecteur.read();
+    if (done) break;
+    tampon += deco.decode(value, {stream: true});
+    let nl;
+    while ((nl = tampon.indexOf("\n")) >= 0) {
+      const ligne = tampon.slice(0, nl).trim();
+      tampon = tampon.slice(nl + 1);
+      if (!ligne.startsWith("data:")) continue;
+      const donnee = ligne.slice(5).trim();
+      if (!donnee || donnee === "[DONE]") continue;
+      let morceau;
+      try { morceau = JSON.parse(donnee); } catch { continue; }
+      const ch = (morceau.choices || [])[0] || {};
+      const delta = ch.delta || {};
+      if (delta.content) {
+        contenu += delta.content;
+        if (opts && opts.surMorceau) opts.surMorceau(delta.content);
+      }
+      (delta.tool_calls || []).forEach((tc) => {
+        const i = tc.index || 0;
+        if (!par_index[i]) par_index[i] = {id: "", nom: "", args: ""};
+        if (tc.id) par_index[i].id = tc.id;
+        if (tc.function && tc.function.name) par_index[i].nom += tc.function.name;
+        if (tc.function && tc.function.arguments) par_index[i].args += tc.function.arguments;
+      });
+    }
+  }
+  return {contenu, outils: Object.values(par_index)};
+}
+
+async function chatEnvoi() {
+  if (CHAT_ETAT.en_cours) return;
+  const champ = document.getElementById("chat-texte");
+  const texte = (champ.value || "").trim();
+  if (!texte) return;
+  if (!chatMem("agnt_chat_cle")) {
+    chatMsg("sys", "aucune clé : ouvre « réglages » et colle ta clé Groq (elle reste dans ce navigateur).");
+    document.getElementById("chat-reglages").open = true;
+    return;
+  }
+  champ.value = "";
+  chatMsg("op", texte);
+  CHAT_ETAT.historique.push({role: "user", content: texte});
+  CHAT_ETAT.en_cours = true;
+  try {
+    await chatTour();
+  } finally {
+    CHAT_ETAT.en_cours = false;
+    // La fenêtre reste bornée : un fil qui grossit sans fin coûterait des jetons
+    // et finirait par dépasser la fenêtre du modèle — sans prévenir personne.
+    if (CHAT_ETAT.historique.length > 40) CHAT_ETAT.historique = CHAT_ETAT.historique.slice(-30);
+  }
+}
+
+async function chatTour() {
+  const prompt = chatMem("agnt_chat_prompt") || CHAT_DEFAUT_PROMPT;
+  const messages = [{role: "system", content: prompt}, ...CHAT_ETAT.historique];
+  const bulle = chatMsg("ia", "");
+  bulle.parentElement.classList.add("en-cours");
+  let plein = "";
+  const rep = await chatGroq(messages, {outils: CHAT_OUTILS,
+    surMorceau: (t) => { plein += t; bulle.textContent = plein; }});
+  bulle.parentElement.classList.remove("en-cours");
+  if (rep.erreur) { bulle.parentElement.remove(); chatMsg("sys", "fournisseur : " + rep.erreur); return; }
+  if (rep.outils && rep.outils.length) {
+    const appels = rep.outils.map((o) => ({id: o.id, type: "function",
+      function: {name: o.nom, arguments: o.args}}));
+    CHAT_ETAT.historique.push({role: "assistant", content: plein || null, tool_calls: appels});
+    if (plein) bulle.textContent = plein; else bulle.parentElement.remove();
+    for (const appel of appels) await chatExecuterAppel(appel);
+    await chatTour();                       // l'IA lit le résultat d'outil et réagit
+    return;
+  }
+  bulle.textContent = plein;
+  CHAT_ETAT.historique.push({role: "assistant", content: plein});
+}
+
+async function chatExecuterAppel(appel) {
+  let args = {};
+  try { args = JSON.parse(appel.function.arguments || "{}"); } catch {}
+  const url = String(args.url || "").trim();
+  // PANNEAU DE CONFIRMATION — l'IA propose, l'opérateur dispose. Le clic sur
+  // « Autoriser » EST l'attestation cible_autorisee exigée par le moteur :
+  // le fail-closed n'est pas contourné par le chat, il est porté par ce clic.
+  const fil = chatFil();
+  const panneau = el("div", "msg sys chat-confirm");
+  panneau.append(el("span", "role", "confirmation humaine exigée"));
+  panneau.append(el("div", "txt",
+    "L'IA demande à lancer un engagement web réel sur : " + (url || "(url absente)")
+    + (args.intention ? "\nintention : " + args.intention : "")));
+  const action = el("div", "action");
+  const ok = el("button", null, "Autoriser l'engagement");
+  const ko = el("button", null, "Refuser");
+  action.append(ok, ko);
+  panneau.append(action);
+  fil.append(panneau);
+  fil.scrollTop = fil.scrollHeight;
+  const decision = await new Promise((resoudre) => {
+    ok.onclick = () => resoudre(true);
+    ko.onclick = () => resoudre(false);
+  });
+  ok.disabled = ko.disabled = true;
+  if (!decision) {
+    panneau.append(el("div", "txt", "→ refusé. Rien n'a été lancé."));
+    CHAT_ETAT.historique.push({role: "tool", tool_call_id: appel.id,
+      content: JSON.stringify({lance: false, motif: "refuse_par_operateur"})});
+    return;
+  }
+  panneau.append(el("div", "txt", "→ engagement en file…"));
+  const corps = {url, cible_autorisee: true, egress: true, executer: true};
+  const st = await envoyerEngagement(corps);
+  if (st.erreur) {
+    panneau.append(el("div", "txt", "→ refus du moteur : " + JSON.stringify(st.erreur)));
+    CHAT_ETAT.historique.push({role: "tool", tool_call_id: appel.id,
+      content: JSON.stringify({lance: false, motif: "refus_moteur", erreur: st.erreur})});
+    return;
+  }
+  const final = await suivreEngagement(st, (ligne) => {
+    panneau.append(el("div", "txt", ligne));
+    fil.scrollTop = fil.scrollHeight;
+  }, null);
+  renduRapportWeb(final);                    // le rapport complet s'affiche dans le poste web
+  const rap = final.rapport || {};
+  const resume = {
+    lance: true, engagement_id: final.id,
+    statut_file: final.statut, statut_run: rap.statut_run, motif_run: rap.motif_run,
+    providers_ecartes: rap.providers_ecartes,
+    details: rap.details,
+    verifications: rap.verifications,
+    constats: (rap.findings || []).map((f) => ({
+      outil: (f.source || {}).tool,
+      regle: (f.source || {}).original_rule_id,
+      message: (f.evidence || {}).message || "",
+      url: (f.location || {}).url || "",
+      severite: (f.severity || {}).value,
+      cycle: (f.cycle || {}).etat,
+      verification: (f.verification || {}).jugement || null
+    })),
+    archive: final.sortie
+  };
+  panneau.append(el("div", "txt", "→ terminé : "
+    + ((rap.findings || []).length) + " constat(s), rapport rendu dans le poste web."));
+  CHAT_ETAT.historique.push({role: "tool", tool_call_id: appel.id,
+    content: JSON.stringify(resume).slice(0, 6000)});
 }
 
 async function brancher(capsConnu) {
@@ -844,6 +1083,13 @@ async function brancher(capsConnu) {
         wgo.onclick = () => { etatLigne("engagement…", ""); lancerEngagementWeb(); };
       }
     }
+    // Le modèle par défaut de la correspondance est celui du moteur (même
+    // référence, affichée en placeholder — la valeur saisie reste la tienne).
+    const chatMod = document.getElementById("chat-modele");
+    if (chatMod && !chatMod.value) {
+      const def = ((caps.objet || {}).llm || {}).modele_defaut || "";
+      if (def) chatMod.placeholder = def + " (défaut moteur)";
+    }
   }
   document.getElementById("ruban").className = "maquette cache";
   etatLigne("moteur branché · " + sel.children.length + " cible(s)", "ok");
@@ -878,3 +1124,33 @@ async function principal() {
   etatLigne("moteur non branché · maquette", "");
 }
 principal();
+
+/* La correspondance vit même quand le moteur est arrêté : elle parle au
+   fournisseur directement depuis le navigateur. Elle s'allume donc au
+   chargement, indépendamment de l'état de api.py. */
+(function chatInitialiser() {
+  const cle = document.getElementById("chat-cle");
+  const champModele = document.getElementById("chat-modele");
+  const champPrompt = document.getElementById("chat-prompt");
+  const go = document.getElementById("chat-go");
+  const champ = document.getElementById("chat-texte");
+  if (!cle || !go) return;
+  cle.value = chatMem("agnt_chat_cle") || "";
+  if (!chatMem("agnt_chat_prompt")) chatMemEcrire("agnt_chat_prompt", CHAT_DEFAUT_PROMPT);
+  champPrompt.value = chatMem("agnt_chat_prompt") || CHAT_DEFAUT_PROMPT;
+  champModele.value = chatMem("agnt_chat_modele") || "";
+  const sauver = () => {
+    chatMemEcrire("agnt_chat_cle", cle.value.trim());
+    chatMemEcrire("agnt_chat_modele", champModele.value.trim());
+    chatMemEcrire("agnt_chat_prompt", champPrompt.value);
+  };
+  cle.onchange = sauver;
+  champModele.onchange = sauver;
+  champPrompt.onchange = sauver;
+  go.disabled = false;
+  champ.disabled = false;
+  go.onclick = () => chatEnvoi();
+  champ.onkeydown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); chatEnvoi(); }
+  };
+})();

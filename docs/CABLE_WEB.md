@@ -12,15 +12,29 @@ les batteries de ce dépôt : on s'y réfère, on ne les refait pas.
 - [x] ①-b tranche **httpx** : `executer: true` → file → `pipeline_web.derouler` →
       `ExecuteurLocal` → findings OBSERVED affichés + `rapport_web.json` scellé
       (batterie machine de référence : `PHASE3/test_web_cable.py`) — 2026-09-05
-- [ ] ①-b tranche **ffuf** : visible au cockpit (manifest épinglé `{REGLES}/dossiers-mini.txt`,
-      déjà qualifié sandbox — reste la preuve au cockpit + case batterie réelle)
-- [ ] ①-b tranche **nuclei** : idem, template local épinglé `{REGLES}/nuclei-epreuve.yaml`
+- [x] ①-b tranche **ffuf** : tourne dans la chaîne au cockpit (wordlist épinglée
+      `{REGLES}/dossiers-mini.txt`) — démo 2026-09-05 : `admin` et `.env` confirmés 3/3
+- [x] ①-b tranche **nuclei** : tourne dans la chaîne au cockpit (template local
+      épinglé `{REGLES}/nuclei-epreuve.yaml`) — démo 2026-09-05 : `epreuve-thaumas-info` confirmé
+- [x] **oracle** : branché dans `pipeline_web` (`_rejouer`) — rejeu RÉEL ×N
+      (3 normal / 5 aggressive) + témoin (chemin aléatoire du même hôte) ;
+      recette = statut déclaré quand le tool en porte un, sinon « stabilité »
+      (anti-soft-404) ; CONFIRMED → candidater + verifier_ok (VERIFIED),
+      REFUTED → rejeter (REJECTED), POTENTIAL/INCONCLUSIVE → reste OBSERVED
+      avec la raison ; hors scope = pas de rejeu (raison nommée) ;
+      test_web_cable 12/12, démo : 4/4 vérifiés — 2026-09-05
+- [x] **correspondance IA** : chat BYOK (Groq) dans la console — parle librement
+      de tout, peut PROPOSER un engagement via appel d'outil, CONFIRMATION
+      HUMAINE obligatoire (le clic est l'attestation cible_autorisee), explique
+      les constats rendus par le moteur (jamais inventés) ; clé + consigne
+      permanente éditables, localStorage navigateur — 2026-09-05
 - [ ] ①-b tranche **katana** : MANIFEST À ÉCRIRE d'abord (aucun au registre aujourd'hui) ;
       qualif sandbox à produire, puis tranche cockpit
 - [ ] ①-b tranche **git-dumper** : hors `WEB_PROVIDERS_ORDRE` (découverte ≠ sonde) —
       décider de son entrée dans la chaîne (provider d'appoint ? capacité à part ?)
-- [ ] **oracle** : rejeu ×N (`verification.replay`) + jugement `oracle_web` branché
-      sur les findings web → CONFIRMED seulement là où il le dit
+- [ ] **corrélation** : étude des pratiques concurrentes (DefectDojo dedup-hash,
+      Burp consolidation, ZAP…) → recommandations vers `clusterer.py`
+      (doc : `docs/RECHERCHE_CORRELATION.md` quand validée)
 - [ ] **cage** : exécution web sous bwrap au runtime (aujourd'hui `ExecuteurLocal`
       exécute hors cage — les qualifications sous cage existent, le runtime pas encore)
 
