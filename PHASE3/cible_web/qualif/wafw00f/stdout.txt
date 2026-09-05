@@ -1,0 +1,14 @@
+
+                 ?              ,.   (   .      )        .      "
+         __        ??          ("     )  )'     ,'        )  . (`     '`
+    (___()'`;   ???          .; )  ' (( (" )    ;(,     ((  (  ;)  "  )")
+    /,___ /`                 _"., ,._'_.,)_(..,( . )_  _' )_') (. _..( ' )
+    \\   \\                 |____|____|____|____|____|____|____|____|____|
+
+                                ~ WAFW00F : v2.3.0 ~
+                    ~ Sniffing Web Application Firewalls since 2014 ~
+
+[*] Checking http://127.0.0.1:8807
+[+] Generic Detection results:
+[-] No WAF detected by the generic detection
+[~] Number of requests: 7

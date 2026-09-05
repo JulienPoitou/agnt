@@ -1,0 +1,18 @@
+# Métadonnées de la décision gowitness (G1, vague-web/g1, 2026-09-05).
+# Décision : REFUS — voir REFUS.md ci-contre pour les motifs et les pièces.
+{
+  "outil": "gowitness",
+  "decision": "REFUSE",
+  "version_mesuree": "3.1.1 (git df54b38, build go1.25.4 darwin/arm64, 2025-11-24)",
+  "binaire_stagie": "/home/julie/.cache/arena_secops/staging/gowitness/gowitness",
+  "binaire_sha256": "57b3188e24782c27fdf72493ce599537efd3187d03b80f8afe733c72d68c5517",
+  "motifs": [
+    "aucun navigateur sur la machine : échec nommé des deux épreuves (run par défaut : exec \"google-chrome\" not found in $PATH ; épreuve contrôlée : fork/exec /nonexistent/chrome), rc=1",
+    "canal d'acquisition du navigateur hors règles : chromium-browser-snapshots (storage.googleapis.com / registry.npmmirror.com) mesurés dans le binaire — pas des releases GitHub officielles",
+    "artefact primaire = image (JPEG/PNG) : non projetable en finding honnête ; les métadonnées --write-jsonl dupliquent httpx (déjà qualifié)"
+  ],
+  "epingle_manifeste": false,
+  "plugin_ecrit": false,
+  "cible_mesures": "http://127.0.0.1:8807",
+  "date": "2026-09-05"
+}

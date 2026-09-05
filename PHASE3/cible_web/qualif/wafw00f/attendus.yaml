@@ -1,0 +1,20 @@
+# ATTENDUS — wafw00f sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g1)
+#
+# wafw00f sonde la COUCHE DE DÉFENSE (présence/absence d'un WAF en amont du
+# serveur) avec ~200 signatures. THAUMAS-WEB est un http.server nu, sans WAF :
+# la MESURE attendue est un constat detected=false, firewall "None" — une
+# mesure, pas une vulnérabilité et pas une garantie d'absence (signatures non
+# exhaustives, documenté dans le plugin).
+cible: http://127.0.0.1:8807
+mode: sonde unique (-a toutes les signatures, --no-colors, -f json)
+attendus:
+  - url: http://127.0.0.1:8807
+    detected: false
+    firewall: "None"
+    manufacturer: "None"
+non_attendus:
+  - "Aucune famille WAF matchée (mesuré) : trigger_url reste null."
+  - "detected=false n'est PAS une preuve d'absence de WAF : ~200 signatures
+     connues seulement — l'item est une mesure bornée, jamais une garantie."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "1 item (qualif/wafw00f/wafw00f.json) — attendus COINCIDENTS"

@@ -1,0 +1,55 @@
+# Plugin AGNT — wafw00f, détecteur de WAF (G1, vague-web/g1, 2026-09-05).
+#
+# Attaché à WEB_HTTP_PROBE (sonde de surface) : wafw00f sonde la COUCHE DE
+# DÉFENSE en amont du serveur (présence/absence d'un WAF), pas des chemins
+# (ffuf) ni des technologies du serveur lui-même (whatweb/webanalyze). Une
+# capacité dédiée WEB_WAF_DETECT serait la cible naturelle si d'autres
+# détecteurs arrivent — signalée dans le rapport de la vague G1.
+#
+# Format MESURÉ sur 2.3.0 (-o <fichier> -f json) : une LISTE JSON racine
+# [{detected, firewall, manufacturer, trigger_url, url}]. Sur une cible SANS
+# WAF (THAUMAS-WEB, épreuve 2026-09-05) : 1 item, detected=false, firewall
+# "None", code 0 — c'est la MESURE (pas une vulnérabilité, pas non plus une
+# garantie d'absence : ~200 signatures, pas toutes les familles de WAF).
+# La sévérité n'existe pas chez cet outil — absente, jamais inventée.
+id: wafw00f
+capacites:
+  - WEB_HTTP_PROBE
+entrees:
+  - url
+binaire: wafw00f
+version_min: "2.3.0"
+licence: BSD-3-Clause
+priorite: 128                  # sonde de surface : couche de défense WAF
+cout: faible
+risque: ACTIVE
+description: >
+  Détection de WAF (wafw00f) : sonde l'URL avec les signatures de ~200
+  pare-feux applicatifs et déclare, par URL, si un WAF est détecté (nom +
+  fabricant) ou non (firewall "None", detected false). Constat de surface sur
+  la couche de défense — l'absence détectée n'est pas une garantie, la
+  présence détectée n'est pas une vulnérabilité.
+execution:
+  args:
+    - "-a"
+    - "--no-colors"
+    - "-o"
+    - "{OUT}"
+    - "-f"
+    - "json"
+    - "{URL}"
+  code_succes: [0]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  items_from: "$"
+  champs:
+    url: url                   # URL sonnée → location.url (oracle)
+    regle: firewall            # nom du WAF matché, "None" sinon
+    nom_regle: manufacturer    # fabricant déclaré par la signature
+    message: detected          # booléen de mesure (True/False)
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300

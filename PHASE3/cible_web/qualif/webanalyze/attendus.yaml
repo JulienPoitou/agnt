@@ -1,0 +1,22 @@
+# ATTENDUS — webanalyze sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g1)
+#
+# webanalyze est un DÉTECTEUR de technologies (port Go de Wappalyzer) : en-têtes,
+# HTML, scripts, cookies — indépendant des plugins ruby de WhatWeb. La base
+# technologies.json est ÉPINGLÉE (regles_web/, empreinte au manifeste). Un item
+# par TECHNOLOGIE détectée ; l'URL vient de la racine du rapport (hostname,
+# recopiée par le contexte du manifest).
+cible: http://127.0.0.1:8807
+mode: sonde unique (-host, base épinglée via {REGLES})
+attendus:
+  - url: http://127.0.0.1:8807
+    technologie: Python
+    version: "3.12.3"
+    preuve_en_tete: "Server: THAUMAS-WEB/1.0 Python/3.12.3"
+    route_epreuve: T-SRV-001 (version lue dans l'en-tête Server, signature
+      webanalyze "Python(?:/([\d.]+))?\;version:\1")
+non_attendus:
+  - "Une seule technologie détectée sur la page d'accueil (mesuré : 1 match) —
+     ni framework, ni CMS, ni serveur nommé au-delà de la bannière."
+  - "Aucune vulnérabilité détectable par webanalyze : détection ≠ exploitation."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "1 item (qualif/webanalyze/webanalyze.json) — attendus COINCIDENTS"

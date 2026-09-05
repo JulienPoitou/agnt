@@ -1,0 +1,3 @@
+[
+{"target":"http://127.0.0.1:8807","http_status":200,"request_config":{"headers":{"User-Agent":"WhatWeb/0.6.4"}},"plugins":{"Country":{"string":["RESERVED"],"module":["ZZ"]},"HTML5":{},"HTTPServer":{"string":["THAUMAS-WEB/1.0 Python/3.12.3"]},"IP":{"string":["127.0.0.1"]},"Python":{"version":["3.12.3"]},"Title":{"string":["THAUMAS-WEB — cible d'épreuve"]}}}
+]

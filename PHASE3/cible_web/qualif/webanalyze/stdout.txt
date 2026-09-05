@@ -1,0 +1,1 @@
+{"hostname":"http://127.0.0.1:8807","matches":[{"app":{"cats":["27"],"category_names":["Programming languages"],"cookies":null,"headers":{"Server":"(?:^|\\s)Python(?:/([\\d.]+))?\\;version:\\1"},"meta":null,"html":[""],"scripts":[""],"url":[""],"website":"https://python.org","implies":[""]},"app_name":"Python","matches":[[" Python/3.12.3","3.12.3"]],"version":"3.12.3"}]}

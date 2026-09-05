@@ -1,0 +1,72 @@
+# Plugin AGNT — webanalyze, détection de technologies web (G1, vague-web/g1, 2026-09-05).
+#
+# Deuxième lecteur de technologies sur WEB_HTTP_PROBE (à côté de whatweb 126 et
+# httpx 130) : la base webanalyze est un port Go de Wappalyzer (en-têtes, HTML,
+# scripts, cookies) — indépendante des plugins ruby de WhatWeb, les désaccords
+# sont une information. Épreuve THAUMAS-WEB (qualif/webanalyze/) : Python 3.12.3
+# détecté via l'en-tête Server: — 1 item.
+#
+# Trois faits mesurés sur v0.4.5 :
+#   · PAS de drapeau -o : la sortie -output json va sur STDOUT (l'épreuve
+#     sauvegarde le stdout ; sortie_origine documentée dans la meta) ;
+#   · la base technologies.json est une DONNÉE ÉPINGLÉE (section regles du
+#     manifeste, empreinte) montée à {REGLES} — sans elle l'outil refuse de
+#     tourner (fichier requis, mesuré) ;
+#   · le rapport porte l'URL cible à la RACINE SEULEMENT (clé "hostname") —
+#     les items sont les matches. D'où le modèle imbriqué : nested_from "$"
+#     (le rapport est UN dict racine) et nested_key "matches" rendent chaque
+#     match un item, et le contexte recopie hostname dans CHACUN — sans lui,
+#     location.url valait None sur tous les constats (mesuré au rejeu du
+#     2026-09-05) et le finding était muet pour l'oracle. Un item par
+#     TECHNOLOGIE détectée : sur une cible qui en déclare cinq, cinq items —
+#     un item racine unique n'aurait porté que matches[0] (silencieusement).
+# La sévérité n'existe pas chez cet outil — absente, jamais inventée.
+id: webanalyze
+capacites:
+  - WEB_HTTP_PROBE
+entrees:
+  - url
+binaire: webanalyze
+version_min: "0.4.5"
+licence: MIT
+priorite: 127                  # sonde de surface : port Go de Wappalyzer
+cout: faible
+risque: ACTIVE
+description: >
+  Détection de technologies web (webanalyze, port de Wappalyzer en Go) : sonde
+  l'URL et identifie les technologies d'après les en-têtes, le HTML, les scripts
+  et les cookies, avec version quand la réponse la déclare (ex. Python/3.12.3
+  via Server:). Cartographie de surface — ce que le serveur se déclare, pas des
+  vulnérabilités.
+execution:
+  args:
+    - "-host"
+    - "{URL}"
+    - "-apps"
+    - "{REGLES}/technologies.json"
+    - "-output"
+    - "json"
+    - "-worker"
+    - "2"
+    - "-silent"
+  code_succes: [0]
+sortie:
+  format: json
+lecture:
+  modele: imbriqué
+  nested_from: "$"             # le rapport est UN dict {hostname, matches}
+  nested_key: matches          # un item par technologie détectée
+  contexte:
+    url: hostname              # URL sonnée, racine du rapport → chaque item
+  champs:
+    url: url                   # posé par le contexte ci-dessus → location.url
+    regle: app_name            # technologie détectée (ex. "Python")
+    nom_regle: app_name
+    message: version           # version déclarée par le serveur ("" si absente)
+    preuve: matches            # correspondances brutes de l'outil
+  masquer_large:
+    - preuve
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300

@@ -556,11 +556,66 @@ binaires:
     taille_approx: 5M
 
   nikto:
-    version: "2.5.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/sullo/nikto
-    licence: GPL-2.0
-    taille_approx: 10M
+    version: "2.6.1"
+    # Empreinte du PROGRAMME program/nikto.pl (l'outil est un dépôt perl, pas un
+    # binaire unique) ; audit du canal : empreinte du tarball de la release GitHub
+    # officielle, mesurée au téléchargement du 2026-09-05.
+    sha256: 3da3f6a1f5ceb4eb69ff889ed1f2b43a30c6337203cb494ae5a44b441a0e8091
+    tarball_sha256: d1ca1acb05d81a5a6f374c0afdd76b33afa0089278631a20673c0210a71d992f
+    source: https://github.com/sullo/nikto (tag 2.6.1)
+    licence: GPL-3.0
+    taille_approx: 9M (dépôt)
+    note: >
+      Épingle remplacée (placeholder 2.5.0/000…, 2026-09-05, vague-web/g1). Dépendance
+      perl XML::Writer exigée au DÉMARRAGE (exit 1 sans, mesuré) : fournie hors système
+      par le paquet Debian libxml-writer-perl 0.900-2 (all, canal archive Ubuntu)
+      extrait dans staging/nikto/perl_lib — empreinte du .deb :
+      e06cf706847ac4898be105017b4b9c38c86732319706f35c6a8550579f0ac2aa. Exécution par
+      le wrapper nikto_scan (épinglé séparément, convention hakrawler_scan). Rapport
+      -F json : liste de blocs {host, ip, port, server_banner, vulnerabilities:[{id,
+      method, msg, references, url}]} — ni schéma ni URL complète dans le rapport
+      (mesuré), pas de sévérité (absente, jamais inventée). Épreuve THAUMAS-WEB du
+      2026-09-05 : 11 constats sur deux runs (8140 requêtes ~8 s, puis 8139
+      requêtes ~10 s — le compte de requêtes varie avec les tests de cadence,
+      le total de constats non) : /.env T-ENV-001, /.git/HEAD T-GIT-001,
+      /.git/index T-GIT-002, en-têtes de sécurité manquants, Python obsolète
+      T-SRV-001. NB : les fichiers de base de nikto ne sont pas GPL
+      (licence spéciale cirt.net, README.md) — redistribution via le package
+      officiel du tag GitHub uniquement.
+
+  nikto_scan:
+    version: "2.6.1"
+    sha256: 22c13d5d262463e5c92e8a1c167e2b9a04e06c74e3c1661d2b0b1995bb9790d9
+    source: composant vague-web/g1 — contenu VERSIONNÉ reproduit ci-dessous (convention
+      shellcheck_scan/hadolint_scan/hakrawler_scan), installé à côté du dépôt nikto
+    licence: GPL-3.0 (le wrapper suit le dépôt ; il appelle nikto GPL-3.0)
+    taille_approx: 1,7 Ko (script)
+    role: outil
+    note: >
+      Deux faits mesurés imposent le wrapper : nikto exige XML::Writer au démarrage
+      (exit 1 sans, mesuré) et son rapport JSON ne porte ni le schéma ni l'URL cible
+      (clés host/ip/port, mesuré). Le wrapper reçoit {URL} et {OUT}, exécute nikto
+      (-F json -ask no -nointeractive -timeout 3) avec PERL5LIB pointant sur la lib
+      extraite à côté (paquet Debian libxml-writer-perl, épingle nikto), ajoute
+      « sitename » = URL d'argv à chaque bloc hôte et écrit le rapport augmenté ;
+      le code retour est celui de nikto. nikto AJOUTE l'extension .json au nom de
+      sortie (mesuré), d'où le fichier temporaire suffixé. Contenu (le script fait
+      foi, empreinte ci-dessus) :
+      « #!/bin/sh / commentaires d'usage versionnés (12 lignes) /
+      DIR=$(dirname "$0") / URL="$1" / OUT="$2" /
+      TMP=$(mktemp "${TMPDIR:-/tmp}/nikto_scan.XXXXXX") /
+      PERL5LIB="$DIR/perl_lib/usr/share/perl5${PERL5LIB:+:$PERL5LIB}" perl
+      "$DIR/nikto-2.6.1/program/nikto.pl" -h "$URL" -o "$TMP" -F json -ask no
+      -nointeractive -timeout 3 / RC=$? /
+      python3 - "$TMP.json" "$OUT" "$URL" <<'PYEOF' /
+      import json, sys / tmp, out, url = sys.argv[1:4] /
+      try: with open(tmp, encoding="utf-8") as f: data = json.load(f) /
+      except Exception: data = [] /
+      if not isinstance(data, list): data = [] /
+      for bloc in data: if isinstance(bloc, dict): bloc["sitename"] = url /
+      with open(out, "w", encoding="utf-8") as f: json.dump(data, f, indent=1,
+      ensure_ascii=False) / PYEOF /
+      rm -f "$TMP" "$TMP.json" / exit $RC ».
 
   sqlmate:
     version: "0.1.0"
@@ -1484,11 +1539,45 @@ binaires:
     taille_approx: 10M
 
   wafw00f:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=wafw00f
+    package: wafw00f
+    version: "2.3.0"
+    source: https://pypi.org/project/wafw00f/
+    licence: BSD-3-Clause
+    distribution: pip
+    distribution_hash: b02029ea8f8e20b2b5ed691f4b7c468d88f003935106405051cc4651594562c9
+    verification: >
+      Empreinte SHA-256 du fichier RECORD de la distribution installée (convention
+      documentée de bandit/git-dumper : ce champ identifie le paquet Python réellement
+      utilisé), en venv dédié ~/.cache/arena_secops/staging/wafw00f/venv, binaire au
+      PATH : venv/bin/wafw00f.
+    note: >
+      Épingle remplacée (placeholder 0.1.0/000…, 2026-09-05, vague-web/g1). Détecteur
+      de WAF (~200 signatures, licence relue sur l'outil : « BSD 3-Clause »). Sortie
+      -o <fichier> -f json : liste racine [{detected, firewall, manufacturer,
+      trigger_url, url}] — sur une cible SANS WAF (THAUMAS-WEB, épreuve du 2026-09-05)
+      : 1 item detected=false, firewall "None", code 0. La sévérité n'existe pas chez
+      cet outil — absente, jamais inventée.
+
+  webanalyze:
+    version: "0.4.5"
+    # Empreinte du BINAIRE installé ; audit du canal : empreinte du tarball de la
+    # release GitHub officielle, mesurée au téléchargement du 2026-09-05 (et conforme
+    # au checksums.txt de la release).
+    sha256: 49981c5d7ff33dc6fa81765d581411ef0815a7fa032f3833a0a5f93d1f3d1c0f
+    tarball_sha256: 8d3fa6ebe4cd328d476dcfcfe800fb4eecd8ec690cf6ce7fc8ab6c34eb2bdd2f
+    source: https://github.com/rverton/webanalyze (tag v0.4.5)
     licence: MIT
-    taille_approx: 10M
+    taille_approx: 21M (binaire + base technologies.json)
+    note: >
+      Ajouté le 2026-09-05 (vague-web/g1). Port Go de Wappalyzer : détection de
+      technologies par en-têtes/HTML/scripts/cookies. La base technologies.json est
+      une DONNÉE ÉPINGLÉE séparément (section regles ci-dessous, empreinte) — l'outil
+      la lit via -apps {REGLES}/technologies.json ; sans elle il refuse de tourner
+      (mesuré) ; le canal d'actualisation officiel est -update (dépôt rverton/
+      webanalyze). Sortie -output json sur STDOUT (PAS de drapeau -o, mesuré) :
+      {"hostname", "matches": [{app, app_name, matches, version}]}. Épreuve
+      THAUMAS-WEB du 2026-09-05 : Python 3.12.3 détecté via l'en-tête Server: —
+      sévérité absente (jamais inventée).
 
   wapiti:
     version: "0.1.0"
@@ -1533,11 +1622,22 @@ binaires:
     taille_approx: 10M
 
   whatweb:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=whatweb
-    licence: MIT
-    taille_approx: 10M
+    version: "0.6.4"
+    # Empreinte du SCRIPT exécuté (dépôt ruby, shebang #!/usr/bin/env ruby, exécutable)
+    # ; audit du canal : empreinte du tarball de la release GitHub officielle, mesurée
+    # au téléchargement du 2026-09-05.
+    sha256: 20236cc8528bc9b6ff79a6622518b59a6b32269c22598cc233bbe5b7d3249718
+    tarball_sha256: 611cde154ad864ffc430ac34e87ca746dbe0f0cc47a116ba06de3cb61e923b15
+    source: https://github.com/urbanadventurer/WhatWeb (tag v0.6.4)
+    licence: GPL-2.0-only
+    taille_approx: 4M (dépôt)
+    note: >
+      Épingle remplacée (placeholder 0.1.0/000…, 2026-09-05, vague-web/g1). Empreinteur
+      de technologies (~1800 plugins ruby ; aucun gem externe pour un scan standard,
+      mesuré). Sortie --log-json : liste racine [{target, http_status, request_config,
+      plugins}] — la bannière serveur est plugins.HTTPServer.string[0]. Épreuve
+      THAUMAS-WEB du 2026-09-05 : HTTPServer « THAUMAS-WEB/1.0 Python/3.12.3 »
+      (T-SRV-001), Python 3.12.3, titre de page — sévérité absente (jamais inventée).
 
   wpsploit:
     version: "0.1.0"
@@ -1574,6 +1674,11 @@ regles:
   # remplace la wordlist embarquée par défaut db/large.txt — 25 889 noms, non bornée).
   parametres-mini.txt: "7ba90be51eb07b7b8998ef37abe77cbc841a7675c5d9bdec8a7490101d7f787e"
   nuclei-epreuve.yaml: "7200ef717050e49b649ac0ac231269d0d60fae759778d194105ecded2366ae53"
+  # Base de technologies webanalyze (vague-web/g1, 2026-09-05) : téléchargée par
+  # `webanalyze -update` depuis le dépôt officiel du projet (canal mesuré :
+  # raw.githubusercontent.com/rverton/webanalyze), épinglée ici — l'outil la lit via
+  # -apps {REGLES}/technologies.json ; sans elle, l'outil refuse de tourner (mesuré).
+  technologies.json: "b7a61b5a4dd9045a982ff9345befde4560a47ea4d389c746ae6af6705c78fa07"
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.
   python.yaml:

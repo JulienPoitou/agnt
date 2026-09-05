@@ -1,0 +1,62 @@
+# Plugin AGNT — nikto, scanner de vulnérabilités web (G1, vague-web/g1, 2026-09-05).
+#
+# Premier DÉTECTEUR actif hors templates sur WEB_VULN_SCAN_ACTIVE (nuclei 110
+# et zap_baseline 105 viennent du cœur) : ~7000 tests de la base nikto —
+# fichiers sensibles exposés (/.env T-ENV-001, /.git/HEAD T-GIT-001,
+# /.git/index T-GIT-002), en-têtes de sécurité manquants, bannière serveur
+# obsolète (T-SRV-001 via « Python appears to be outdated »). Épreuve
+# THAUMAS-WEB (qualif/nikto/) : 8140 requêtes, ~8 s, 11 constats.
+#
+# Deux faits mesurés imposent le wrapper nikto_scan (épinglé séparément,
+# convention hakrawler_scan) :
+#   · nikto exige XML::Writer au démarrage (exit 1 sans, mesuré) — le wrapper
+#     fournit PERL5LIB (paquet Debian libxml-writer-perl, empreinte au
+#     manifeste) ;
+#   · le rapport JSON ne porte ni schéma ni URL complète (clés host/ip/port,
+#     mesuré) — le wrapper écrit « sitename » = URL d'argv dans chaque bloc
+#     hôte ; le parser lit ce champ, rien n'est déduit.
+#
+# Format MESURÉ sur 2.6.1 : liste de blocs {host, ip, port, server_banner,
+# sitename, vulnerabilities: [{id, method, msg, references, url}]} — lu par le
+# parser nommé « nikto » (slice/parsers_nikto.py, second niveau de la promesse).
+# La sévérité n'existe pas dans le rapport JSON de nikto 2.6.1 — absente,
+# jamais inventée. Un constat nikto est un MATCH de test (id + message +
+# chemin), jamais une preuve d'exploitabilité.
+id: nikto
+capacites:
+  - WEB_VULN_SCAN_ACTIVE
+entrees:
+  - url
+binaire: nikto_scan
+outillage: nikto_scan
+version_min: "2.6.1"
+licence: GPL-3.0
+priorite: 140                  # détecteur actif : base nikto (~7000 tests)
+cout: faible
+risque: ACTIVE
+description: >
+  Scanner de vulnérabilités web (nikto, via le wrapper nikto_scan) : fichiers
+  sensibles exposés (/.env, /.git/HEAD, /.git/index), en-têtes de sécurité
+  manquants, bannière serveur obsolète. Ce que l'outil détecte réellement : des
+  MATCHS de sa base de tests contre la cible — surface et configuration, pas
+  des preuves d'exploitabilité.
+execution:
+  args:
+    - "{URL}"
+    - "{OUT}"
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  modele: plat
+  items_from: items
+  parser: nikto
+  champs:
+    regle: regle               # id de test nikto (ex. 007226)
+    url: url                   # URL complète (sitename + chemin déclaré) → oracle
+    message: message           # texte du constat (ex. « .env file found… »)
+    preuve: preuve             # méthode HTTP + chemin brut déclaré par l'outil
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 600
