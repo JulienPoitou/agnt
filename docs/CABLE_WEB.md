@@ -61,13 +61,18 @@ les batteries de ce dépôt : on s'y réfère, on ne les refait pas.
       persistants / nouveaux / non_releves dans `rapport.reprise`, affiché au
       cockpit et rendu au chat ; « non relevé » est un FAIT rendu, jamais un
       verdict corrigé (pas de transition cycle_vie sans preuve — leçon DefectDojo)
+- [x] **corrélation — seconde recette pour VERIFIED** (2026-09-05, leçon XBOW) :
+      `extraction.champs` accepte `extrait_corps: <champ>` — le manifest déclare
+      un token attendu DANS le corps (httpx : le titre) ; routé vers
+      `evidence.extrait_attendu` ; l'oracle l'exige en plus du statut à CHAQUE
+      rejeu (et le témoin ne doit pas l'avoir) ; corps sans le token → rejeu
+      partiel → POTENTIAL → reste OBSERVED (dégradation honnête). Mesuré live :
+      titre déclaré, présent 3/3, témoin propre. test_web_cable 13/13
 - [ ] **corrélation — suite** (dans l'ordre de la priorisation) :
       identifiant primaire (CVE/GHSA > règle canonique > empreinte, leçon GitLab)
-      → confiance à deux étages (déclarée au manifest × verdict oracle, leçon
-      Burp) → seconde recette indépendante pour VERIFIED (piloter
-      `contient_extrait`, leçon XBOW : validation par exploitation, jamais
-      auto-évaluation) → plafond SYSTEMIC affiché (conventions ZAP 2.17) →
-      vers `clusterer.py`
+      → plafond SYSTEMIC affiché (conventions ZAP 2.17) → vers `clusterer.py`
+      (la confiance à deux étages Burp est couverte : sévérité/origine déclarée
+      + verdict oracle rendus séparément)
 - [ ] **cage** : exécution web sous bwrap au runtime (aujourd'hui `ExecuteurLocal`
       exécute hors cage — les qualifications sous cage existent, le runtime pas encore)
 
