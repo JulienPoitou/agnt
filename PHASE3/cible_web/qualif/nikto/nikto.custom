@@ -1,0 +1,90 @@
+[
+ {
+  "end_time": "2026-09-05 20:42:09 +0200",
+  "host": "127.0.0.1",
+  "ip": "127.0.0.1",
+  "port": 8807,
+  "server_banner": null,
+  "start_time": "2026-09-05 20:41:59 +0200",
+  "vulnerabilities": [
+   {
+    "id": "600652",
+    "method": "HEAD",
+    "msg": "Python/3.12.3 appears to be outdated (current is at least 3.14.6).",
+    "references": "",
+    "url": "/"
+   },
+   {
+    "id": "013587",
+    "method": "GET",
+    "msg": "Suggested security header missing: x-content-type-options.",
+    "references": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options",
+    "url": "/"
+   },
+   {
+    "id": "013587",
+    "method": "GET",
+    "msg": "Suggested security header missing: referrer-policy.",
+    "references": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy",
+    "url": "/"
+   },
+   {
+    "id": "013587",
+    "method": "GET",
+    "msg": "Suggested security header missing: content-security-policy.",
+    "references": "https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP",
+    "url": "/"
+   },
+   {
+    "id": "013587",
+    "method": "GET",
+    "msg": "Suggested security header missing: permissions-policy.",
+    "references": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy",
+    "url": "/"
+   },
+   {
+    "id": "013587",
+    "method": "GET",
+    "msg": "Suggested security header missing: strict-transport-security.",
+    "references": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security",
+    "url": "/"
+   },
+   {
+    "id": "006530",
+    "method": "GET",
+    "msg": "Git Index file may contain directory listing information.",
+    "references": "",
+    "url": "/.git/index"
+   },
+   {
+    "id": "006609",
+    "method": "GET",
+    "msg": "Git HEAD file found. Full repo details may be present.",
+    "references": "",
+    "url": "/.git/HEAD"
+   },
+   {
+    "id": "007226",
+    "method": "GET",
+    "msg": ".env file found. The .env file may contain credentials.",
+    "references": "",
+    "url": "/.env"
+   },
+   {
+    "id": "007342",
+    "method": "GET",
+    "msg": "X-Frame-Options header is deprecated and was replaced with the Content-Security-Policy HTTP header with the frame-ancestors directive.",
+    "references": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Frame-Options",
+    "url": "/"
+   },
+   {
+    "id": "007352",
+    "method": "GET",
+    "msg": "The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type.",
+    "references": "https://www.netsparker.com/web-vulnerability-scanner/vulnerabilities/missing-content-type-header/",
+    "url": "/"
+   }
+  ],
+  "sitename": "http://127.0.0.1:8807"
+ }
+]

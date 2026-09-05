@@ -1,0 +1,25 @@
+- Nikto v2.6.1
+---------------------------------------------------------------------------
++ Target IP:          127.0.0.1
++ Target Hostname:    127.0.0.1
++ Target Port:        8807
++ Platform:           Unknown
++ Start Time:         2026-09-05 20:41:59 (GMT2)
+---------------------------------------------------------------------------
++ Server: THAUMAS-WEB/1.0 Python/3.12.3
++ No CGI Directories found (use '-C all' to force check all possible dirs). CGI tests skipped.
++ [600652] Python/3.12.3 appears to be outdated (current is at least 3.14.6).
++ [013587] /: Suggested security header missing: x-content-type-options. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
++ [013587] /: Suggested security header missing: referrer-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
++ [013587] /: Suggested security header missing: content-security-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
++ [013587] /: Suggested security header missing: permissions-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy
++ [013587] /: Suggested security header missing: strict-transport-security. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
++ [006530] /.git/index: Git Index file may contain directory listing information.
++ [006609] /.git/HEAD: Git HEAD file found. Full repo details may be present.
++ [007226] /.env: .env file found. The .env file may contain credentials.
++ [007342] /: X-Frame-Options header is deprecated and was replaced with the Content-Security-Policy HTTP header with the frame-ancestors directive. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Frame-Options
++ [007352] /: The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type. See: https://www.netsparker.com/web-vulnerability-scanner/vulnerabilities/missing-content-type-header/
++ 8139 requests: 0 errors and 11 items reported on the remote host
++ End Time:           2026-09-05 20:42:09 (GMT2) (10 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested

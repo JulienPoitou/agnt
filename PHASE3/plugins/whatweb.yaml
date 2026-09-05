@@ -1,0 +1,50 @@
+# Plugin AGNT — whatweb, empreinteur de technologies web (G1, vague-web/g1, 2026-09-05).
+#
+# Ce que whatweb apporte à côté de httpx (cœur, 130) et webanalyze (127) : une
+# empreinte par PLUGIN RUBYS (~1800) — la bannière HTTPServer est lue par un
+# plugin dédié, pas par un dictionnaire généraliste. Épreuve THAUMAS-WEB
+# (qualif/whatweb/) : HTTPServer "THAUMAS-WEB/1.0 Python/3.12.3" (T-SRV-001),
+# Python 3.12.3, titre de page — 1 item par URL sonnée.
+#
+# Format MESURÉ sur 0.6.4 (--log-json) : un tableau JSON [{target, http_status,
+# request_config, plugins}] — la RACINE est la liste (items_from: "$", jeton
+# prévu par extraction._chemin). Les valeurs de plugin sont des listes :
+# plugins.HTTPServer.string[0] est la bannière. La sévérité n'existe pas chez
+# cet outil — absente, jamais inventée.
+id: whatweb
+capacites:
+  - WEB_HTTP_PROBE
+entrees:
+  - url
+binaire: whatweb
+version_min: "0.6.4"
+licence: GPL-2.0-only
+priorite: 126                  # sonde de surface : fingerprinting ruby (httpx=130 au cœur)
+cout: faible
+risque: ACTIVE
+description: >
+  Empreinte de technologies web (WhatWeb) : sonde l'URL et identifie des
+  technologies d'après la réponse HTTP — bannière de serveur (plugin HTTPServer),
+  langage et version (Python 3.12.3 sur la cible d'épreuve), titre de page,
+  HTML5. Ce que l'outil détecte réellement : ce que le serveur se DÉCLARE —
+  cartographie de surface, pas des vulnérabilités.
+execution:
+  args:
+    - "--log-json={OUT}"
+    - "--no-errors"
+    - "{URL}"
+  code_succes: [0]
+sortie:
+  format: json
+lecture:
+  modele: plat
+  items_from: "$"
+  champs:
+    url: target                          # URL sonnée → location.url (oracle)
+    regle: http_status                   # code HTTP observé (200)
+    nom_regle: plugins.Title.string[0]   # titre de page (absent si non HTML)
+    message: plugins.HTTPServer.string[0]  # bannière serveur (T-SRV-001)
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300

@@ -1,0 +1,43 @@
+# ATTENDUS — nikto (via le wrapper nikto_scan) sur THAUMAS-WEB
+# (épreuve du 2026-09-05, vague-web/g1)
+#
+# nikto est un DÉTECTEUR actif : ses ~7000 tests cherchent des fichiers
+# sensibles exposés, des en-têtes de sécurité manquants, une bannière obsolète.
+# Un constat = un MATCH de test (id + message + chemin), jamais une preuve
+# d'exploitabilité. Mesuré : 8139-8140 requêtes, 8-10 s, 11 constats.
+cible: http://127.0.0.1:8807
+mode: scan complet (wrapper nikto_scan : -F json, PERL5LIB staging, sitename injecté)
+attendus:
+  - url: http://127.0.0.1:8807/.env
+    id: "007226"
+    msg: ".env file found. The .env file may contain credentials."
+    route_epreuve: T-ENV-001
+  - url: http://127.0.0.1:8807/.git/HEAD
+    id: "006609"
+    msg: "Git HEAD file found. Full repo details may be present."
+    route_epreuve: T-GIT-001
+  - url: http://127.0.0.1:8807/.git/index
+    id: "006530"
+    msg: "Git Index file may contain directory listing information."
+    route_epreuve: T-GIT-002
+  - url: http://127.0.0.1:8807/
+    id: "600652"
+    msg: "Python/3.12.3 appears to be outdated (current is at least 3.14.6)."
+    route_epreuve: T-SRV-001
+  # Cinq en-têtes de sécurité manquants (même id 013587, un constat chacun) :
+  - { id: "013587", msg: "Suggested security header missing: x-content-type-options." }
+  - { id: "013587", msg: "Suggested security header missing: strict-transport-security." }
+  - { id: "013587", msg: "Suggested security header missing: permissions-policy." }
+  - { id: "013587", msg: "Suggested security header missing: referrer-policy." }
+  - { id: "013587", msg: "Suggested security header missing: content-security-policy." }
+  # Deux constats de configuration d'en-têtes :
+  - { id: "007342", msg: "X-Frame-Options header is deprecated…" }
+  - { id: "007352", msg: "The X-Content-Type-Options header is not set…" }
+non_attendus:
+  - "XSS /search?q=, SQLi /users?id=, traversal /download?file= : NON détectés
+     par ce run (11 constats seulement) — l'exploitation de ces failles plante
+     relève de sqlmap/dotdotpwn/nuclei, pas de la base de MATCHES nikto."
+  - "La sévérité n'existe pas dans le rapport JSON nikto 2.6.1 : absente du
+     constat, jamais inventée."
+severite: null
+mesure_reelle: "11 constats (qualif/nikto/nikto.custom) — attendus COINCIDENTS"

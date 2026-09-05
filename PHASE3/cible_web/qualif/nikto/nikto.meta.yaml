@@ -1,0 +1,19 @@
+# Métadonnées de l'exécution de qualification (G1, 2026-09-05).
+# argv = rendu EXACT de fournisseurs_web.planifier('nikto', …) ;
+# {BIN} résolu par le PATH du staging (~/.cache/arena_secops/staging).
+{
+  "outil": "nikto",
+  "argv": [
+    "nikto_scan",
+    "http://127.0.0.1:8807",
+    "/home/julie/agnt-g1/PHASE3/cible_web/qualif/nikto/nikto.custom"
+  ],
+  "argv_source": "fournisseurs_web.planifier (validation registre : valider_registre_g1.py) — {BIN} résolu par le PATH du staging",
+  "code_retour": 0,
+  "duree_s": 10.34,
+  "sortie_origine": "/home/julie/agnt-g1/PHASE3/cible_web/qualif/nikto/nikto.custom",
+  "cible": "http://127.0.0.1:8807",
+  "sandbox": "exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre",
+  "date": "2026-09-05",
+  "timeout_s": 600
+}

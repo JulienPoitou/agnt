@@ -1,0 +1,63 @@
+Usage:
+  gowitness scan single [flags]
+
+Examples:
+
+                                                                              
+  • gowitness scan single -u https://sensepost.com                            
+  • gowitness scan single -u https://sensepost.com --write-jsonl              
+
+
+
+Flags:
+  -h, --help         help for single
+  -u, --url string   The target to screenshot
+
+Global Flags:
+      --chrome-header stringArray     Extra headers to add to requests. Supports multiple --chrome-header flags
+      --chrome-path string            The path to a Google Chrome binary to use (downloads a platform-appropriate binary by default)
+      --chrome-proxy string           An HTTP/SOCKS5 proxy server to use. Specify the proxy using this format: proto://address:port
+      --chrome-user-agent string      The user-agent string to use (default "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36")
+      --chrome-window-x int           The Chrome browser window width, in pixels (default 1280)
+      --chrome-window-y int           The Chrome browser window height, in pixels (default 720)
+      --chrome-wss-url string         A websocket URL to connect to a remote, already running Chrome DevTools instance (i.e., Chrome started with --remote-debugging-port)
+  -D, --debug-log                     Enable debug logging
+      --delay int                     Number of seconds delay between navigation and screenshotting (default 3)
+      --driver string                 The scan driver to use. Can be one of [gorod, chromedp] (default "chromedp")
+      --http-code-filter ints         Http response codes to screenshot. This is a filter (by default all codes are screenshotted)
+      --javascript string             A JavaScript function to evaluate on every page, before a screenshot. Note: It must be a JavaScript function! e.g., () => console.log('gowitness');
+      --javascript-file string        A file containing a JavaScript function to evaluate on every page, before a screenshot. See --javascript
+      --log-scan-errors               Log scan errors (timeouts, DNS errors, etc.) to stderr (warning: can be verbose!)
+      --profile                       Enable CPU, memory, and trace profiling (writes to profiles/<timestamp>/)
+  -q, --quiet                         Silence (almost all) logging
+      --save-content                  Save content from network requests to the configured writers. WARNING: This flag has the potential to make your storage explode in size
+      --screenshot-format string      Format to save screenshots as. Valid formats are: jpeg, png (default "jpeg")
+      --screenshot-fullpage           Do full-page screenshots, instead of just the viewport
+      --screenshot-jpeg-quality int   The quality of JPEG screenshots (1-100) (default 60)
+  -s, --screenshot-path string        Path to store screenshots (default "./screenshots")
+      --screenshot-skip-save          Do not save screenshots to the screenshot-path (useful together with --write-screenshots)
+      --skip-html                     Don't include the first request's HTML response when writing results
+      --skip-network-logs             Don't include per-request network logs when writing results (also disables save-content)
+  -t, --threads int                   Number of concurrent threads (goroutines) to use (default 6)
+  -T, --timeout int                   Number of seconds before considering a page timed out (default 60)
+      --uri-filter strings            Valid URIs to pass to the scanning process (default [http,https])
+      --write-csv                     Write results as CSV (has limited columns)
+      --write-csv-file string         The file to write CSV rows to (default "gowitness.csv")
+      --write-db                      Write results to a SQLite database
+      --write-db-enable-debug         Enable database query debug logging (warning: vebose!)
+      --write-db-uri string           The database URI to use. Supports SQLite, MySQL, and PostgreSQL. Examples: sqlite://gowitness.sqlite3, mysql://user:pass@localhost:3306/gowitness, postgres://user:pass@localhost:5432/gowitness (default "sqlite://gowitness.sqlite3")
+      --write-jsonl                   Write results as JSON lines
+      --write-jsonl-file string       The file to write JSON lines to (default "gowitness.jsonl")
+      --write-none                    Use an empty writer to silence warnings
+      --write-screenshots             Store screenshots with writers in addition to filesystem storage
+      --write-stdout                  Write successful results to stdout (usefull in a shell pipeline)
+
+
+  An error occured running the single command                                 
+  The error was:                                                              
+                                                                              
+  failed to initialize chrome context: exec: "google-chrome": executable file 
+  not found in $PATH                                                          
+
+
+rc=1

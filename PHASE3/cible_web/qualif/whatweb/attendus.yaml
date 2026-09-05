@@ -1,0 +1,22 @@
+# ATTENDUS — whatweb sur THAUMAS-WEB (épreuve du 2026-09-05, vague-web/g1)
+#
+# whatweb est un EMPRINTEUR : il rend ce que le serveur se DÉCLARE (bannière,
+# en-têtes, HTML) via ~1800 plugins ruby — il ne détecte aucune vulnérabilité.
+# Un run {URL} = UN item (la page d'accueil sonnée).
+cible: http://127.0.0.1:8807
+mode: sonde unique (--log-json, un URL par run)
+attendus:
+  - url: http://127.0.0.1:8807
+    statut: 200
+    banniere: "THAUMAS-WEB/1.0 Python/3.12.3"
+    route_epreuve: T-SRV-001 (bannière serveur lue par le plugin ruby HTTPServer)
+    python: "3.12.3"
+    titre: "THAUMAS-WEB — cible d'épreuve"
+non_attendus:
+  - "Country/IP/HTML5 sont lus par whatweb (sortie brute) mais ne sont pas
+     projetés en constats : champs déclarés = target, http_status, Title,
+     HTTPServer seulement — le reste reste dans la sortie sauvegardée."
+  - "Aucune vulnérabilité détectable par whatweb : /.env, /.git, XSS, SQLi,
+     traversal sont hors de son portée (travail de nikto/nuclei/sqlmap/…)."
+severite: null               # l'outil ne déclare pas de sévérité — jamais inventée
+mesure_reelle: "1 item (qualif/whatweb/whatweb.json) — attendus COINCIDENTS"
