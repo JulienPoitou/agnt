@@ -292,6 +292,47 @@ def _marquer(rid: str, **champs) -> None:
         ETATS.setdefault(rid, {}).update(champs)
 
 
+def _engagement_precedent(url_canonique: str, exclure: str):
+    """Le rapport de l'engagement précédent sur la MÊME cible (le plus récent,
+    hors le courant). Rend (id, {empreinte: {regle, url, etat}}) ou (None, None).
+
+    La lecture est DISQUE seule : les archives survivent au processus (loi 1) et
+    c'est elles qui portent l'historique — ETATS ne se souvient de rien. Une
+    archive illisible est sautée, pas une panne."""
+    racine = RACINE / "artifacts" / "engagements"
+    if not racine.is_dir():
+        return None, None
+    candidats = []
+    for d in racine.iterdir():
+        if not d.is_dir() or d.is_symlink() or d.name == exclure:
+            continue
+        f = d / "rapport_web.json"
+        if not f.is_file():
+            continue
+        try:
+            ent = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if ent.get("url_canonique") != url_canonique:
+            continue
+        try:
+            candidats.append((f.stat().st_mtime, d.name, ent))
+        except OSError:
+            continue
+    if not candidats:
+        return None, None
+    candidats.sort()
+    _, mid, ent = candidats[-1]
+    precedents: dict = {}
+    for f in ent.get("findings") or []:
+        fp = ((f.get("identity") or {}).get("fingerprint")) or ""
+        if fp:
+            precedents[fp] = {"regle": (f.get("source") or {}).get("original_rule_id"),
+                              "url": (f.get("location") or {}).get("url"),
+                              "etat": (f.get("cycle") or {}).get("etat")}
+    return mid, precedents
+
+
 def _travail_web(rid: str, engagement: dict) -> None:
     """Exécute un engagement web mis en file (câblage ①-b, 2026-09-05).
 
@@ -316,9 +357,12 @@ def _travail_web(rid: str, engagement: dict) -> None:
         return
     try:
         exe = ExecuteurLocal(dossier)
+        precedent_id, precedents = _engagement_precedent(
+            str(engagement.get("url_canonique") or ""), rid)
         rapport = PW.derouler(engagement, exe.executer,
                               regles=str(REGLES_WEB) if REGLES_WEB.is_dir() else "",
-                              out_dir=str(dossier))
+                              out_dir=str(dossier),
+                              precedent_id=precedent_id, precedents=precedents)
         (dossier / "rapport_web.json").write_text(
             json.dumps(rapport, ensure_ascii=False, indent=2, default=str),
             encoding="utf-8")

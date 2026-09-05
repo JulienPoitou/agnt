@@ -691,6 +691,14 @@ function renduRapportWeb(st) {
                  "chaîne · " + rap.statut_run));
   if (existe(rap.url_canonique)) ou.append(el("span", "pastille", "cible · " + rap.url_canonique));
   if (existe(rap.motif_run)) ou.append(el("span", "pastille erreur", rap.motif_run));
+  if (existe(rap.reprise)) {
+    // Diff de re-scan (modèle DefectDojo) : l'empreinte stable rattache ce run
+    // au précédent. « non relevé » est un FAIT rendu, jamais « corrigé ».
+    const rp = rap.reprise;
+    ou.append(el("span", "pastille", "reprise · " + (rp.engagement_precedent || "?")
+      + " : " + rp.persistants + " persistant(s), " + rp.nouveaux + " nouveau(x), "
+      + rp.non_releves + " non relevé(s)"));
+  }
   tete.append(ou);
   s.append(tete);
   if (Array.isArray(rap.providers_ecartes) && rap.providers_ecartes.length) {
@@ -994,6 +1002,7 @@ async function chatExecuterAppel(appel) {
   const resume = {
     lance: true, engagement_id: final.id,
     statut_file: final.statut, statut_run: rap.statut_run, motif_run: rap.motif_run,
+    reprise: rap.reprise || null,
     providers_ecartes: rap.providers_ecartes,
     details: rap.details,
     verifications: rap.verifications,

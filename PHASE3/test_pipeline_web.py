@@ -81,6 +81,31 @@ def main() -> int:
             "verifications" not in rap)
         cas("rapport scellé vérifiable",
             PR.verifier(rap.get("preuve", {}))[0] is True)
+        # --- reprise : diff de re-scan (empreintes stables inter-runs, mesuré)
+        cas("reprise absente sans précédent fourni", "reprise" not in rap)
+        fp0 = rap["findings"][0]["identity"]["fingerprint"]
+        rap_r = PW.derouler(engagement(), faux_ok({"nuclei": (0, NUCLEI_OK),
+                                                  "zap_baseline": (1, ZAP_OK)}),
+                            registre=reg, out_dir="/tmp/aw", verifier_oracle=False,
+                            precedent_id="e-avant",
+                            precedents={fp0: {"regle": "t1", "url": "https://target.tld/",
+                                              "etat": "verified"}})
+        cas("reprise : empreinte re-détectée → persistant, référence au précédent",
+            rap_r["reprise"]["persistants"] == 1 and rap_r["reprise"]["nouveaux"] == 0
+            and rap_r["reprise"]["non_releves"] == 0
+            and rap_r["reprise"]["engagement_precedent"] == "e-avant",
+            json.dumps(rap_r["reprise"], ensure_ascii=False)[:160])
+        rap_r2 = PW.derouler(engagement(), faux_ok({"nuclei": (0, NUCLEI_OK),
+                                                    "zap_baseline": (1, ZAP_OK)}),
+                             registre=reg, out_dir="/tmp/aw", verifier_oracle=False,
+                             precedents={"vieux-fp": {"regle": "ancienne-regle",
+                                                      "url": "https://target.tld/a",
+                                                      "etat": "observed"}})
+        cas("reprise : empreinte du précédent absente → « non relevé », un fait rendu "
+            "(jamais un verdict corrigé)",
+            rap_r2["reprise"]["non_releves"] == 1 and rap_r2["reprise"]["persistants"] == 2
+            and rap_r2["reprise"]["details_non_releves"][0]["regle"] == "ancienne-regle",
+            json.dumps(rap_r2["reprise"], ensure_ascii=False)[:200])
         rap = PW.derouler(engagement(providers_prevus=["nuclei", "bandit"]),
                           faux_ok({"nuclei": (0, NUCLEI_OK)}),
                           registre=reg, out_dir="/tmp/aw", verifier_oracle=False)

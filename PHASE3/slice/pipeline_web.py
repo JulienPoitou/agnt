@@ -163,9 +163,40 @@ def _verifier_par_oracle(findings: list[dict], engagement: dict) -> dict:
     return compte
 
 
+def _diff_reprise(findings: list[dict], precedents: dict) -> dict:
+    """Diff contre l'engagement précédent sur la même cible (modèle DefectDojo).
+
+    L'empreinte stable inter-runs est déjà portée par chaque finding
+    (`identity.fingerprint`, mesuré 2026-09-05 : identique sur deux runs
+    consécutifs). Trois comptes + le détail des absences :
+      persistants   l'empreinte est re-détectée ;
+      nouveaux      l'empreinte était absente du précédent ;
+      non_releves   l'empreinte du précédent n'apparaît PAS ici — un FAIT rendu,
+                    jamais un verdict : « non relevé » ne veut pas dire « corrigé »
+                    (une transition cycle_vie exige une preuve ; l'absence n'en
+                    est pas une — c'est exactement le piège DefectDojo documenté).
+    """
+    actuelles: dict[str, dict] = {}
+    for f in findings:
+        fp = ((f.get("identity") or {}).get("fingerprint")) or ""
+        if fp:
+            actuelles[fp] = f
+    persistants = sorted(fp for fp in actuelles if fp in precedents)
+    nouveaux = sorted(fp for fp in actuelles if fp not in precedents)
+    non_releves = sorted(fp for fp in precedents if fp not in actuelles)
+    return {"persistants": len(persistants), "nouveaux": len(nouveaux),
+            "non_releves": len(non_releves),
+            "details_non_releves": [
+                {"empreinte": fp, "regle": (precedents.get(fp) or {}).get("regle"),
+                 "url": (precedents.get(fp) or {}).get("url"),
+                 "etat_precedent": (precedents.get(fp) or {}).get("etat")}
+                for fp in non_releves]}
+
+
 def derouler(engagement: dict, executer_tache, registre=None,
              out_dir: str = "/tmp/agnt-web", regles: str = "",
-             verifier_oracle: bool = True) -> dict:
+             verifier_oracle: bool = True,
+             precedent_id: str | None = None, precedents: dict | None = None) -> dict:
     """Déroule un engagement web planifié. Rend le rapport de mission (dict)."""
     if not isinstance(engagement, dict) or engagement.get("type") != "web":
         raise ErreurPipeline("engagement web attendu")
@@ -261,6 +292,10 @@ def derouler(engagement: dict, executer_tache, registre=None,
                    "absence de correspondance ≠ absence de vulnérabilité"]}
     if verifications is not None:
         rapport["verifications"] = verifications
+    if precedents is not None:
+        rapport["reprise"] = _diff_reprise(findings, precedents)
+        if precedent_id:
+            rapport["reprise"]["engagement_precedent"] = precedent_id
     if not plans:
         rapport["statut_run"] = "refuse"
         rapport["motif_run"] = "; ".join(e["motif"] for e in ecartes) or "aucun plan"
