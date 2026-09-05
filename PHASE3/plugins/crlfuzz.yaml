@@ -1,0 +1,65 @@
+# Plugin AGNT — crlfuzz, fuzzing d'injection CRLF (vague web G3, 2026-09-05).
+#
+# THAUMAS-WEB n'a AUCUNE injection CRLF plantée : l'épreuve attend un résultat
+# vide HONNÊTE avec la raison écrite — mesuré : crlfuzz n'écrit RIEN sur stdout
+# quand il n'y a aucun VLN (ni sur cible propre, ni sur cible morte, code 0
+# dans les deux cas) ; son journal payload-par-payload va sur stderr. Le cœur
+# nomme donc ce vide « sortie vide : échec d'exécution, pas un scan propre » —
+# limite de l'OUTIL consignée (pas un écart de l'épreuve) : crlfuzz ne sait pas
+# distinguer « propre » d'« injoignable » sur sa sortie standard.
+# Le wrapper épinglé ferme stdin (l'outil lit ses cibles sur le tube quand il
+# n'est pas un TTY — sans fermeture, il attend indéfiniment, mesuré).
+id: crlfuzz
+capacites:
+  - WEB_VULN_SCAN_ACTIVE
+entrees:
+  - url
+binaire: crlfuzz
+version_min: "1.4.1"
+licence: MIT
+priorite: 133
+cout: faible
+risque: ACTIVE
+description: >
+  Fuzzing d'injection CRLF (crlfuzz v1.4.1, chaîne auto-déclarée 1.4.0) :
+  substitue des séquences \r\n encodées dans le chemin et un paramètre de
+  l'URL et cherche un header Set-Cookie réellement injecté dans la réponse.
+  Un constat est l'URL marquée [VLN] sur stdout — format lu dans le SOURCE
+  épinglé (runner.go : Print « [VLN] <url> ») et vérifié contre la cible.
+  L'outil ne déclare ni sévérité ni CWE — absents, jamais inventés.
+execution:
+  args:
+    - "-u"
+    - "{URL}"
+    - "-c"
+    - "5"
+  # MESURÉ : crlfuzz sort 0 dans TOUS les cas observés (propre, cible morte).
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  # stdout : une ligne « [VLN] <url> » par injection confirmée (marqueur lu
+  # dans le source épinglé), rien sinon — séquences ANSI retirées par le
+  # parser nommé (bannière verte/rouge de l'outil).
+  parser: crlfuzz
+  champs:
+    regle: regle              # crlf-injection (constat du parser, un seul type)
+    nom_regle: nom_regle      # position de l'injection (chemin/paramètre)
+    url: url                  # → location.url — l'URL VLN rendue par l'outil
+    message: message
+    confiance: confiance
+    cwe: cwe
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300
+a_verifier:
+  - "sortie vide = cas NORMAL d'un scan propre ET d'une cible morte (mesuré,
+     code 0 dans les deux cas) : le cœur nommera un échec de sortie vide —
+     c'est la limite de l'outil, elle doit être relue comme telle et jamais
+     convertie en « cible propre »."
+  - "la cible d'épreuve étant HTTP pur sans reflet CRLF, le chemin [VLN] n'a
+     PAS pu être mesuré sur la cible ; le format vient du SOURCE épinglé
+     (runner.go) et de la documentation de l'outil — consigné, non deviné."
+  - "-c 5 borne la concurrence (défaut 20) ; ~18 payloads engendrés par URL
+     mesurés, une seule cible 127.0.0.1."

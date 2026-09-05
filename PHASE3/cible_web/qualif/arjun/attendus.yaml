@@ -1,0 +1,22 @@
+# ATTENDUS — arjun contre THAUMAS-WEB (http://127.0.0.1:8807, 2026-09-05)
+cible: http://127.0.0.1:8807
+resultat_attendu: >
+  PARAMÈTRE DÉCOUVERT — surface, pas une vulnérabilité. /search?q= réfléchit
+  la valeur de q : arjun (wordlist épinglée parametres-mini.txt, 30 noms)
+  détecte le paramètre q par heuristique de longueur de corps (épreuve de
+  calibration : « parameter detected: q, based on: body length », ~2 lots,
+  < 1 s contre 127.0.0.1). Les paramètres id et file existent sur d'autres
+  routes — l'épreuve vise /search comme le plugin le déclare. BORNES :
+  wordlist épinglée (la wordlist embarquée par défaut, 25 889 noms, n'est
+  PAS utilisée), -t 4, -T 10.
+code_retour: 0
+code_succes_plugin: [0]
+constats:
+  - parametre_attendu: q
+    heuristique_mesuree_calibration: "body length"
+items_attendus: 1
+echec_attendu: false
+verification_honnete: >
+  Un paramètre découvert est de la SURFACE (entrée candidate), pas une
+  vulnérabilité : pas de sévérité, jamais inventée — l'heuristique de
+  détection est le message de l'outil, porté tel quel.

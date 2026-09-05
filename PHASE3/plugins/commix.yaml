@@ -1,0 +1,70 @@
+# Plugin AGNT — commix, injection de commandes OS (vague web G3, 2026-09-05).
+#
+# THAUMAS-WEB n'a AUCUNE faille d'injection de commandes plantée : l'épreuve
+# attend un résultat vide HONNÊTE (heuristic tests menés, rien identifié,
+# code 0 — mesuré). L'URL vise le paramètre GET existant /users?id=1 pour que
+# l'outil ait un paramètre à tester. `--ignore-stdin` est une option CACHÉE
+# de commix (help SUPPRESS) : sans elle, commix lit ses cibles sur stdin dès
+# que celui-ci n'est pas un TTY — et sort immédiatement, code 0, sans
+# scanner (mesuré) : dans l'isolateur, stdin n'est jamais un TTY.
+id: commix
+capacites:
+  - WEB_VULN_SCAN_ACTIVE
+entrees:
+  - url
+binaire: commix
+version_min: "4.1"
+licence: GPL-3.0
+priorite: 132
+cout: faible
+risque: ACTIVE
+description: >
+  Injection de commandes OS (commix 4.1) : teste le paramètre GET marqué par
+  des techniques classic (results-based), dynamic code evaluation, time-based
+  blind et file-based, et affirme l'injection seulement quand l'exécution est
+  vérifiée (sortie de commande observée ou temporisation reproductible). La
+  phrase de constat lue dans le SOURCE épinglé : « … appears to be injectable
+  via (…) … » suivie du payload — pas un reflet simple.
+execution:
+  args:
+    - "-u"
+    - "{URL}/users?id=1"
+    - "--batch"
+    - "--ignore-stdin"
+    - "--time-limit=120"
+    - "--output-dir={OUT_DIR}"
+  # Mesuré 4.1 : code 0 sur cible sans faille (heuristic tests menés, ~5 s).
+  # Le code de retour ne distingue pas cible propre / cible muette (mesuré) :
+  # le résultat vide reste « pas une preuve d'absence ».
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  # Journal terminal, séquences ANSI retirées par le parser nommé : un constat
+  # est la ligne « appears to be injectable via … » (marqueur lu dans le
+  # SOURCE épinglé, checks.identified_vulnerable_param) + le payload imprimé
+  # à la ligne suivante. Sur l'épreuve (aucune faille), sortie = 0 item.
+  parser: commix
+  champs:
+    regle: regle              # le type/technique déclarés par l'outil
+    nom_regle: nom_regle      # le paramètre injectable (ex. id)
+    message: message          # la phrase de constat de l'outil
+    confiance: confiance
+    cwe: cwe
+    preuve: preuve            # le payload prouvant (texte libre → masqué)
+  masquer_large:
+    - message
+    - preuve
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 600
+a_verifier:
+  - "commix n'imprime PAS l'URL cible dans son journal terminal (mesuré) :
+     l'item de constat n'a donc pas de champ url — l'URL vient de l'argv de
+     la mission ; sur une cible à constats, l'oracle location.url reste vide."
+  - "--time-limit=120 borne le run (défaut : sans limite) ; --batch répond
+     automatiquement à la question « underlying operating system » (N,
+     mesuré) — sans quoi un TTY serait requis."
+  - "le code de retour ne distingue rien de mesuré (0 avec ou sans faille) :
+     un résultat vide n'est jamais une preuve d'absence."

@@ -1,0 +1,22 @@
+# ATTENDUS — commix contre THAUMAS-WEB (http://127.0.0.1:8807, 2026-09-05)
+cible: http://127.0.0.1:8807
+resultat_attendu: >
+  RÉSULTAT VIDE HONNÊTE — THAUMAS-WEB n'a AUCUNE faille d'injection de
+  commandes plantée (README_ATTENDUS.md) : commix mène ses tests heuristiques
+  sur le paramètre id (GET) et n'identifie rien. Mesuré en calibration :
+  code 0 en ~5 s (heuristic passive + basic tests, réponse --batch N à la
+  question « underlying operating system »), aucun constat. La raison est
+  écrite : l'ABSENCE de faille sur la cible, pas un échec d'exécution — la
+  sortie est lue (journal complet) et le motif du cœur reste « résultat vide,
+  pas une preuve d'absence ».
+code_retour: 0
+code_succes_plugin: [0]
+constats: []                 # aucune faille d'injection de commandes sur la cible
+items_attendus: 0
+echec_attendu: false
+verification_honnete: >
+  L'absence de constat est ce qui est attendu : la cible n'a pas cette faille.
+  Aucune sévérité, aucun CWE inventé — aucun constat du tout. Le marqueur de
+  constat (« appears to be injectable via … ») vient du SOURCE épinglé
+  (checks.identified_vulnerable_param) ; il n'a pas pu être mesuré sur une
+  détection réelle (pas de faille plantée) — consigné, non deviné.

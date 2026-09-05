@@ -1,0 +1,29 @@
+# Meta d'épreuve — sqlmap contre THAUMAS-WEB (2026-09-05, vague web G3)
+tool: sqlmap
+binaire: sqlmap
+version_binaire_sha256: bc01f379197b6b82690d2b51923401a9075357d192ea946baf33b09a1359a131
+argv:
+- /home/julie/.cache/arena_secops/staging/sqlmap/sqlmap
+- -u
+- http://127.0.0.1:8807/users?id=1
+- --batch
+- --level=1
+- --risk=1
+- --threads=1
+- --flush-session
+- --output-dir=/home/julie/agnt-g3/PHASE3/cible_web/qualif/sqlmap
+env: {}
+code_retour: 0
+timeout: false
+duree_ms: 12245
+sortie_origine: stdout:sqlmap.txt (5119 o ; stderr sqlmap.stderr : 0 o)
+cible: http://127.0.0.1:8807
+sandbox: exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre
+stderr_extrait: ''
+notes: >  LE détecteur SQLi de la vague — il TROUVE la faille plantée T-SQLI-001.
+  Détection en ~7 s (48 requêtes) puis exploitation --batch (comportement par
+  défaut de l'outil). Le journal porte aussi T-SQLI-002 (codes 500 relevés).
+  Le code de retour ne distingue rien (0 partout, mesuré) : la lecture vient
+  du bloc « Parameter: … » du journal, jamais du code. Sessions, log, target.txt et results-09052026_0739pm.csv
+  archivés TELS QU'ÉCRITS par {OUT_DIR} (127.0.0.1/ ; la ligne
+  « BTU » du CSV : boolean, time-based, union — triple preuve).

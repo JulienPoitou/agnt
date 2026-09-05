@@ -1,0 +1,72 @@
+# Plugin AGNT — dalfox, scanner XSS (vague web G3, 2026-09-05).
+#
+# THAUMAS-WEB plante T-XSS-001 : /search?q= réfléchit la requête SANS
+# échappement. L'épreuve vise ce paramètre — même convention que dotdotpwn :
+# sur une cible générique, le paramètre à sonder n'existe pas sans suffixe.
+# CLI v3 à sous-commandements : `dalfox url -u <URL>` est mesuré fonctionnel
+# (le `scan` documenté attend une cible positionnelle et se comporte de façon
+# indéterminée hors TTY — non retenu, consigné au manifeste).
+id: dalfox
+capacites:
+  - WEB_VULN_SCAN_ACTIVE
+entrees:
+  - url
+binaire: dalfox
+version_min: "3.2.2"
+licence: MIT
+priorite: 131
+cout: faible
+risque: ACTIVE
+description: >
+  Scanner XSS réfléchie (dalfox 3.2.2) : génère des payloads par paramètre
+  d'URL, vérifie leur reflet et leur position exécutable (DOM marker), et
+  rend un constat par finding — paramètre vulnérable, payload déclenché, URL
+  preuve, sévérité DÉCLARÉE par l'outil (High sur le constat V mesuré) et
+  CWE-79 porté par l'outil lui-même. Un reflet simple n'est pas un constat :
+  seul le type V (vérifié) a été mesuré sur l'épreuve.
+execution:
+  args:
+    - "url"
+    - "-u"
+    - "{URL}/search?q=XSS"
+    - "-f"
+    - "jsonl"
+    - "--no-color"
+    - "-S"
+  # Codes MESURÉS 3.2.2 : 1 = findings (faille trouvée), 0 = scan propre
+  # (meta seule en sortie), 2 = cible injoignable/skippée → échec nommé.
+  code_succes: [0, 1]
+sortie:
+  format: custom
+lecture:
+  # JSONL sur stdout (-S : « silence all logs except POC output ») : la
+  # première ligne est une méta {findings_count, targets…}, les suivantes
+  # sont les findings {type, param, payload, data, severity, cwe…}. Le
+  # parser nommé ne retient que les findings (présence de type+param) —
+  # la ligne méta ne doit jamais devenir un item.
+  parser: dalfox
+  champs:
+    regle: regle              # le type de finding de l'outil (V mesuré)
+    nom_regle: nom_regle      # le paramètre vulnérable (q sur l'épreuve)
+    url: url                  # → location.url (URL avec payload, preuve)
+    message: message          # message_str de l'outil
+    severite: severite        # High — DÉCLARÉ par dalfox, porté tel quel
+    confiance: confiance      # high (raison de l'outil dans le constat)
+    cwe: cwe                  # CWE-79 porté par l'outil
+    preuve: preuve            # le payload déclenché (texte libre → masqué)
+  masquer_large:
+    - message
+    - preuve
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300
+a_verifier:
+  - "le type V (vérifié) est le seul mesuré sur l'épreuve ; les types R
+     (reflet simple), A (AST DOM) et I (informationnel) existent dans la
+     sortie de l'outil et seraient portés TELS QUELS avec leur sévérité
+     déclarée — un reflet simple n'est pas une XSS prouvée."
+  - "méta « incomplete » : un scan interrompu peut ne pas avoir tout testé ;
+     le parser lit la sortie comme elle est, sans extrapoler."
+  - "bornes : un seul paramètre marqué, aucun dictionnaire de payload
+     personnalisé ; ~170 requêtes mesurées contre 127.0.0.1."

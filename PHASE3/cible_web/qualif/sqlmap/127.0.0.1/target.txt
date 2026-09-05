@@ -1,0 +1,1 @@
+http://127.0.0.1:8807/users?id=1 (GET)  # /home/julie/.cache/arena_secops/staging/sqlmap/repo/sqlmap.py -u http://127.0.0.1:8807/users?id=1 --batch --level=1 --risk=1 --threads=1 --flush-session --output-dir=/home/julie/agnt-g3/PHASE3/cible_web/qualif/sqlmap

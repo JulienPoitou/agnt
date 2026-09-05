@@ -525,6 +525,29 @@ binaires:
     licence: Apache-2.0
     taille_approx: 50M
 
+  arjun:
+    package: arjun
+    version: "2.2.7"
+    source: https://pypi.org/project/arjun/
+    licence: GPL-3.0
+    distribution: pip
+    distribution_hash: "1067c34892b9a03e7d50e5aa9b5beca872f2c2f503c9b4fa96b7bac8a0afbf23"
+    verification: >
+      Empreinte SHA-256 du fichier RECORD de la distribution installée (même
+      convention que bandit/git-dumper/dirsearch) — identifie le paquet Python
+      réellement utilisé, en venv dédié (~/.cache/arena_secops/staging/arjun/venv,
+      binaire au PATH : venv/bin/arjun).
+    note: >
+      Ajouté le 2026-09-05 (vague-web/g3). Découverte de paramètres web (arjun 2.2.7,
+      PyPI, licence lue dans les métadonnées du paquet installé : GPLv3). Sortie
+      stdout texte : « parameter detected: <param>, based on: <heuristique> » par
+      paramètre + « Parameters found: … » — lu par le parser nommé `arjun`. -o JSON
+      non retenu : le fichier n'est PAS créé quand aucun paramètre n'est trouvé
+      (mesuré) — le stdout, lui, est toujours produit. Wordlist épinglée
+      regles_web/parametres-mini.txt (empreinte en section regles) montée à {REGLES}
+      ; la wordlist embarquée par défaut (db/large.txt, 25 889 noms) serait
+      multi-milliers de requêtes — l'épreuve reste bornée.
+
   jcs:
     version: "0.1.0"
     sha256: "0000000000000000000000000000000000000000000000000000000000000000"
@@ -624,11 +647,25 @@ binaires:
     taille_approx: 10M
 
   commix:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=commix
-    licence: MIT
-    taille_approx: 10M
+    version: "4.1"
+    # L'exécutable est un wrapper sh (convention shellcheck_scan/hadolint_scan/
+    # dotdotpwn) : commix est une application Python distribuée comme source ; le
+    # wrapper lance commix.py du dépôt épinglé (v4.1).
+    sha256: ff305e5e7b3e27805aec6a77306259e498f60d38153b9ed748c03f6e3849d9e3
+    tarball_sha256: 4b8cc36bf1d773378ebd1c1d1294e13056071c1007764398868c6af4061e3f7f
+    source: https://github.com/commixproject/commix (archive du tag v4.1)
+    licence: GPL-3.0
+    taille_approx: 3M (dépôt) ; zip 308 Ko
+    role: outil
+    note: >
+      Épingle remplacée (placeholder 0.1.0/000…, 2026-09-05, vague-web/g3). Injection
+      de commandes OS. L'archive n'a pas de checksums publiés (mesuré : la release ne
+      publie aucun asset) — tarball_sha256 est l'audit du canal de distribution, mesuré
+      au téléchargement, le tag v4.1 étant l'ancre. Licences lues dans le dépôt
+      épinglé (LICENSE.txt : GPLv3). `--ignore-stdin` est une option CACHÉE (help
+      SUPPRESS, src/utils/menu.py) : sans elle, commix lit ses cibles sur stdin dès
+      que celui-ci n'est pas un TTY — et sort immédiatement, code 0, sans scanner
+      (mesuré) — le plugin la passe systématiquement.
 
   crackpkcs12:
     version: "0.1.0"
@@ -636,6 +673,27 @@ binaires:
     source: https://github.com/search?q=crackpkcs12
     licence: MIT
     taille_approx: 10M
+
+  crlfuzz:
+    version: "1.4.1"
+    # L'exécutable est un wrapper sh qui ferme stdin avant d'exécuter le binaire
+    # épinglé (crlfuzz.bin) : crlfuzz lit ses cibles sur stdin quand il n'est pas un
+    # TTY — sans stdin fermé, il attend indéfiniment (mesuré).
+    sha256: efd009fae8508bae54ecdf48cd4c6ab98d28dbfa51d123be216b941ba6d03e0d
+    tarball_sha256: 033e97108f1ead4dbd810843316ca3eb9e7be48bb27e058010bd3d919a0a6235
+    source: https://github.com/dwisiswant0/crlfuzz/releases/download/v1.4.1/crlfuzz_1.4.1_linux_amd64.tar.gz
+    licence: MIT
+    taille_approx: 5M (binaire) ; tarball 2,2 Mo
+    role: outil
+    note: >
+      Ajouté le 2026-09-05 (vague-web/g3). Fuzzing d'injection CRLF. FAIT
+      D'APPROVISIONNEMENT MESURÉ : le tarball_sha256 coïncide avec le
+      crlfuzz_1.4.1_checksums.txt publié par le projet — double attestation. Le
+      sha256 fait foi pour le WRAPPER exécuté ; l'empreinte du binaire épinglé
+      (crlfuzz.bin) est c91b4cae7b557e860392c235910a4772b361463a1da7ce2508d9e946ff0517d4.
+      DISCREPANCE CONSIGNÉE : la release tag v1.4.1 s'auto-déclare « CRLFuzz 1.4.0 »
+      (mesuré : bannière et `--version`, chaîne non bumpée en amont) — la version
+      épinglée est celle du TAG de l'asset installé, vérifié par le checksums publié.
 
   cryptolyzer:
     version: "0.1.0"
@@ -645,11 +703,23 @@ binaires:
     taille_approx: 10M
 
   dalfox:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=dalfox
+    version: "3.2.2"
+    sha256: 0da7002be13723f54cebc99a3bf601be502c72f7a64f2fc7dc3164f804b92c47
+    tarball_sha256: 7f9621090ab2c5ef48dbab3e2d7a9de81a54390efee2aaa0b431130df629715e
+    source: https://github.com/hahwul/dalfox/releases/download/v3.2.2/dalfox-v3.2.2-linux-x86_64.tar.gz
     licence: MIT
-    taille_approx: 10M
+    taille_approx: 14M (binaire) ; tarball 6,2 Mo
+    role: outil
+    note: >
+      Épingle remplacée (placeholder 0.1.0/000…, 2026-09-05, vague-web/g3). Scanner
+      XSS. tarball_sha256 coïncide avec le fichier .sha256 PUBLIÉ par la release
+      (dalfox-v3.2.2-linux-x86_64.tar.gz.sha256) — double attestation ; le
+      checksum.txt global de la release ne couvre que les archives source (mesuré).
+      Empreinte du BINAIRE extrait relevée localement (fait foi pour l'exécution).
+      CLI v3 à sous-commandements : `dalfox url -u <URL>` (mesuré fonctionnel ; le
+      `scan` documenté attend une cible positionnelle et une entrée auto indéterminée
+      hors TTY — non retenu). Codes de sortie MESURÉS : 1 = findings, 0 = scan propre,
+      2 = cible injoignable/skippée.
 
   daws:
     version: "0.1.0"
@@ -1213,11 +1283,28 @@ binaires:
     taille_approx: 10M
 
   sqlmap:
-    version: "0.1.0"
-    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    source: https://github.com/search?q=sqlmap
-    licence: MIT
-    taille_approx: 10M
+    version: "1.10"
+    # L'exécutable est un wrapper sh (convention shellcheck_scan/hadolint_scan/
+    # dotdotpwn) : sqlmap est une application Python distribuée comme source ; le
+    # wrapper lance sqlmap.py du dépôt épinglé (tag 1.10).
+    sha256: bc01f379197b6b82690d2b51923401a9075357d192ea946baf33b09a1359a131
+    tarball_sha256: 97b8fe8e06ed8b6c75c234f111393bae79e2c3d3283c086351354716277dfff1
+    source: https://github.com/sqlmapproject/sqlmap (archive du tag 1.10)
+    licence: GPL-2.0
+    taille_approx: 40M (dépôt) ; zip 7,6 Mo
+    role: outil
+    note: >
+      Épingle remplacée (placeholder 0.1.0/000…, 2026-09-05, vague-web/g3). Détecteur
+      d'injection SQL. L'archive du tag n'a pas de checksums publiés (GitHub ne
+      fournit que l'archive auto-générée) — tarball_sha256 est l'audit du canal de
+      distribution, mesuré au téléchargement, le tag 1.10 étant l'ancre. Le sha256
+      fait foi pour le WRAPPER exécuté ; le contenu du dépôt est un état de tag.
+      Licence lue dans le dépôt épinglé (LICENSE : GPL Version 2, avec
+      clarifications). Version auto-déclarée « 1.10#stable » (mesuré, --version).
+      L'outil sort code 0 dans TOUS les cas mesurés (findings, cible propre, cible
+      injoignable) : le code de retour ne distingue rien — le résultat vide reste
+      « pas une preuve d'absence » (motif du cœur) et la sortie porte les
+      [CRITICAL]/[ERROR] le cas échéant.
 
   ssh_mitm:
     version: "0.1.0"
@@ -1403,6 +1490,10 @@ binaires:
 regles:
   # Web (2026-09-05) — épreuves sandbox harnais_web.py
   dossiers-mini.txt: "59a2d4c919fa9845147c33eadd4dc79a87956cdf0cf6e260fcd500b5dc318097"
+  # Web (2026-09-05, vague-web/g3) — wordlist épinglée du provider arjun
+  # (30 noms de paramètres courants, dont les 3 paramètres de la cible d'épreuve ;
+  # remplace la wordlist embarquée par défaut db/large.txt — 25 889 noms, non bornée).
+  parametres-mini.txt: "7ba90be51eb07b7b8998ef37abe77cbc841a7675c5d9bdec8a7490101d7f787e"
   nuclei-epreuve.yaml: "7200ef717050e49b649ac0ac231269d0d60fae759778d194105ecded2366ae53"
   # Le jeu de règles est ÉPINGLÉ : p/ci produit un scan vide sur nos fixtures
   # (160 règles, 0 résultat). Changer de jeu change ce qui est détecté.

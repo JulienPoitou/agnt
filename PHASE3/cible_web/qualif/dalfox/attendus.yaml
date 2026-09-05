@@ -1,0 +1,22 @@
+# ATTENDUS — dalfox contre THAUMAS-WEB (http://127.0.0.1:8807, 2026-09-05)
+cible: http://127.0.0.1:8807
+resultat_attendu: >
+  FAILLE TROUVÉE — T-XSS-001 prouvé. /search?q= réfléchit la requête SANS
+  échappement (serveur.py) : dalfox 3.2.2 déclenche un payload vérifié sur le
+  paramètre q (épreuve de calibration : type V, sévérité High DÉCLARÉE par
+  l'outil, CWE-79 porté par l'outil, confiance high, DOM marker vérifié —
+  ~168 requêtes). BORNES : un seul paramètre marqué, aucune wordlist externe,
+  une seule cible 127.0.0.1.
+code_retour: 1               # mesuré 3.2.2 : 1 = findings, 0 = propre, 2 = skippé
+code_succes_plugin: [0, 1]
+constats:
+  - parametre_attendu: q
+    type_attendu: V
+    severite_declaree_outil: High
+    cwe_outil: CWE-79
+items_attendus: 1
+echec_attendu: false
+verification_honnete: >
+  La sévérité High vient de la SORTIE de l'outil (champ severity du finding) —
+  elle est portée telle quelle, jamais traduite ni choisie par la plateforme.
+  La preuve est l'URL avec payload (champ data) et le payload lui-même, mesurés.

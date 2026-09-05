@@ -1,0 +1,74 @@
+# Plugin AGNT — sqlmap, détecteur d'injection SQL (vague web G3, 2026-09-05).
+#
+# LE détecteur SQLi de la vague : THAUMAS-WEB plante T-SQLI-001 (SQLite par
+# concaténation sur /users?id=) et T-SQLI-002 (erreur SQL brute sur id=').
+# L'épreuve vise le paramètre planté — même convention que dotdotpwn (template
+# nuclei local) : sur une cible générique, {URL} sans suffixe peut ne porter
+# aucun paramètre à tester. Bornes imposées : --level=1 --risk=1 --threads=1
+# (mesuré : 48 requêtes de détection, ~7 s contre 127.0.0.1) ; --batch rend le
+# run non interactif (il répond Y à « do you want to exploit » — comportement
+# par défaut de l'outil, qui ajoute quelques requêtes d'exploitation).
+id: sqlmap
+capacites:
+  - WEB_VULN_SCAN_ACTIVE
+entrees:
+  - url
+binaire: sqlmap
+version_min: "1.10"
+licence: GPL-2.0
+priorite: 130
+cout: faible
+risque: ACTIVE
+description: >
+  Détecteur d'injection SQL (sqlmap 1.10, SQLite confirmé sur l'épreuve) :
+  sonde le paramètre GET marqué de l'URL avec des payloads booléens, d'erreur
+  et d'union, et affirme l'injection seulement quand une technique est
+  vérifiée (différence de réponse ou erreur SQL reproductible). Un constat
+  porte la technique mesurée (boolean-based blind, time-based blind, UNION
+  query…), le payload prouvant et l'URL testée — pas une supposition.
+execution:
+  args:
+    - "-u"
+    - "{URL}/users?id=1"
+    - "--batch"
+    - "--level=1"
+    - "--risk=1"
+    - "--threads=1"
+    - "--flush-session"
+    - "--output-dir={OUT_DIR}"
+  # Mesuré 1.10 : code 0 avec findings, code 0 sur cible propre ET code 0 sur
+  # cible injoignable — le code ne distingue rien (consigné au manifeste et
+  # dans a_verifier) ; c'est le PARSER qui lit le bloc d'injection du journal.
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  # Journal terminal (sqlmap n'a pas de sortie JSON de détection) : parser
+  # nommé, autorité sur les items — le bloc « Parameter: … / Type: … / Title: …
+  # / Payload: … » du résumé final, et la cible lue sur « testing URL '…' ».
+  parser: sqlmap
+  champs:
+    regle: regle              # la technique mesurée (boolean-based blind…)
+    nom_regle: nom_regle      # le paramètre vulnérable (ex. « id (GET) »)
+    url: url                  # → location.url — l'oracle retrouve la cible
+    message: message          # le Title sqlmap de la technique
+    confiance: confiance
+    cwe: cwe
+    preuve: preuve            # le payload sqlmap (texte libre → masqué)
+  masquer_large:
+    - message
+    - preuve
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 600
+a_verifier:
+  - "le code de retour ne distingue RIEN (mesuré 1.10 : 0 avec findings, 0
+     propre, 0 cible injoignable avec [CRITICAL] unable to connect) : le
+     résultat vide n'est jamais une preuve d'absence, et un [CRITICAL] dans
+     la sortie doit se lire comme échec d'exécution nommé."
+  - "bornes : --level=1 --risk=1 --threads=1 — le défaut (level 5, risk 3,
+     threads mult) multiplierait les requêtes ; --batch exploite après
+     détection (comportement par défaut, ~7 s mesurés sur l'épreuve)."
+  - "la sortie journal contient des séquences ANSI (sqlmap colorise hors
+     TTY, mesuré) : le parser les retire avant lecture."
