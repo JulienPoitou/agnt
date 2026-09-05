@@ -1,0 +1,25 @@
+# Meta d'épreuve — sslscan contre THAUMAS-WEB (2026-09-05, vague web G4)
+tool: sslscan
+binaire: sslscan
+version_binaire_sha256: 0c53988fdbe4ee94e9b6ae3315de4d0c91f54b70ba3cc615f9a2196691101de6
+argv:
+- sslscan
+- --xml=-
+- http://127.0.0.1:8807
+env: {}
+code_retour: 1
+timeout: false
+duree_ms: 6
+sortie_origine: stdout:vide (sslscan.xml 0 o ; stderr 42 o)
+cible: http://127.0.0.1:8807
+sandbox: exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre
+stderr_extrait: 'ERROR: Invalid target specified.'
+notes: >
+  Épreuve du REFUS NOMMÉ (cible HTTP pur). sslscan n'accepte pas d'URL (hôte:port
+  uniquement) : la cible {URL} est refusée nommément (code 1, stderr). Ordre des
+  arguments MESURÉ : options avant la cible ; cible en premier → sslscan imprime son
+  help en code 0 (usage ambigu), forme écartée du manifeste. Le XML complet d'un refus
+  de négociation (tous protocoles enabled=0, aucun cipher — structure mesurée) a été
+  relevé séparément avec la cible en forme hôte:port 127.0.0.1:8807 hors manifeste
+  (aucun jeton hôte:port au cœur) ; il sert de structure de référence au parser
+  (qualif/sslscan/sslscan_xml_hostport_reference.txt).

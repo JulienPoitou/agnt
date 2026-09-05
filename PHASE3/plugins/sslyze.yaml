@@ -1,0 +1,60 @@
+# Plugin AGNT — sslyze, audit TLS par bibliothèque nassl (vague web G4, 2026-09-05).
+#
+# Cible d'épreuve HTTP pur : l'épreuve prouve l'exécution et le refus nommé de l'outil
+# (cible refusée DANS le JSON), pas un constat TLS.
+id: sslyze
+capacites:
+  - WEB_VULN_SCAN_ACTIVE
+entrees:
+  - url
+binaire: sslyze
+version_min: "6.3.1"
+licence: AGPL-3.0
+priorite: 135
+cout: faible
+risque: ACTIVE
+description: >
+  Audit de configuration TLS (sslyze) : versions TLS supportées, suites de chiffrement,
+  certificat et chaîne de confiance, renégociation, compression, Heartbleed, en-têtes
+  HTTP de sécurité. sslyze ne déclare AUCUNE sévérité : il décrit la configuration
+  mesurée — les constats restent des observations, jamais un exploit prouvé.
+execution:
+  args:
+    # « - » = JSON sur stdout (mesuré) : uniforme quelle que soit la cible. Avec
+    # --json_out <fichier>, le fichier reste VIDE quand toutes les cibles sont
+    # invalides (mesuré) — le JSON sur stdout est la seule forme lisible partout.
+    - "{URL}"
+    - "--json_out"
+    - "-"
+  # Mesuré : sslyze rend 0 en mode --json_out, même quand la cible est refusée — le refus
+  # est porté par le CONTENU JSON (invalid_server_strings), lu par le parser nommé.
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  # Le JSON sslyze (racine {invalid_server_strings, server_scan_results, sslyze_version…})
+  # n'est ni plat ni imbriqué au sens du cœur : parser nommé, autorité sur les items.
+  parser: sslyze
+  champs:
+    regle: regle
+    nom_regle: nom_regle
+    url: url
+    message: message
+    confiance: confiance
+    reference: reference
+    preuve: preuve
+  masquer_large:
+    - message
+    - preuve
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 600
+a_verifier:
+  - "sslyze exige hôte:port : une URL http(s):// est refusée nommément DANS le JSON
+     (invalid_server_strings[0].error_message = 'Not a valid host:port', code 0 — mesuré
+     le 2026-09-05 contre THAUMAS-WEB). La plateforme devrait passer une cible hôte:port ;
+     la limite est nommée, non contournée."
+  - "le mapping des scan_result (certificate_info, tls_versions…) est dérivé du schéma du
+     paquet épinglé (sslyze/json/json_output.py, ServerScanResultAsJson) : il n'est PAS
+     mesuré sur une cible TLS — aucune cible TLS autorisée dans cette qualification."

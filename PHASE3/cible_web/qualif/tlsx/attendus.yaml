@@ -1,0 +1,19 @@
+# ATTENDUS — tlsx contre THAUMAS-WEB (http://127.0.0.1:8807, 2026-09-05)
+cible: http://127.0.0.1:8807
+resultat_attendu: >
+  VIDE NOMMÉ (cas particulier du refus nommé). tlsx ignore silencieusement une cible
+  http:// : 0 connexion (stderr « Connections made … : 0 »), tous les fichiers de sortie
+  vides, code 0. Le cœur lit « sortie vide : échec d'exécution, pas un scan propre » —
+  ce vide est NOMMÉ, jamais converti en « aucun problème TLS ».
+code_retour: 0
+code_succes_plugin: [0]
+constats: []                # aucun enregistrement JSONL produit
+items_attendus: 0
+echec_attendu: true
+motif_echec_attendu: "sortie vide : échec d'exécution, pas un scan propre"
+verification_honnete: >
+  Le mapping des champs JSONL (host, tls_version, cipher_suite, issuer_cn,
+  probe_status — tags json extraits du binaire épinglé) n'est PAS mesuré sur une cible
+  TLS (aucune cible TLS autorisée) : la batterie l'exerce sur un FIXTURE à la structure
+  du binaire, valeurs synthétiques — étiqueté comme tel. La référence hôte:port
+  (tlsx_hostport_stderr_reference.txt) montre le refus de négociation NOMMÉ par l'outil.

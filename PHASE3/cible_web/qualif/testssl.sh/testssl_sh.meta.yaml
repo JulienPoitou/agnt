@@ -1,0 +1,32 @@
+# Meta d'épreuve — testssl.sh contre THAUMAS-WEB (2026-09-05, vague web G4)
+tool: testssl_sh
+binaire: testssl.sh
+version_binaire_sha256: 9a42b203edaf8cfdd19cdca7c3cf16c78668bdc88cd656cf2cae0ec6e43129e4
+argv:
+- testssl.sh
+- --jsonfile
+- /home/julie/agnt-g4/PHASE3/cible_web/qualif/testssl.sh/testssl_sh.json
+- --color
+- '0'
+- --quiet
+- --warnings
+- 'off'
+- http://127.0.0.1:8807
+env: {}
+code_retour: 254
+timeout: false
+duree_ms: 5624
+sortie_origine: fichier:testssl_sh.json (781 o ; stdout 4 o vides, stderr 162 o)
+cible: http://127.0.0.1:8807
+sandbox: exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre
+stderr_extrait: 'testssl.sh: line 20939: 127.0.0.1:0: command not found · Fatal error:
+  "http" is not what you meant probably'
+notes: >
+  Épreuve du REFUS NOMMÉ (cible HTTP pur, aucun TLS à sonder). testssl.sh exige https://
+  ou hôte:port : la cible http:// est refusée au sens usage (fatal 254) et l'outil écrit
+  son JSON d'état (engine_problem WARN, scanProblem FATAL, scanTime WARN — mesuré). La
+  ligne 20939 sur stderr est un défaut d'affichage de testssl.sh 3.2.4, présent à chaque
+  invocation (mesuré aussi sur --version). L'ordre options-avant-cible est requis pour
+  que le JSON d'état soit écrit (mesuré : cible en premier → fatal avant l'ouverture du
+  jsonfile, aucun JSON). testssl.sh refuse aussi un --jsonfile non vide sans --append
+  (mesuré) — le pipeline doit fournir un {OUT} frais, ce qu'il fait (dossier par run).

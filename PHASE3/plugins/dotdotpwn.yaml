@@ -1,0 +1,73 @@
+# Plugin AGNT — dotdotpwn, fuzzing de path traversal (vague web G4, 2026-09-05).
+#
+# Contrairement aux quatre outils TLS de la vague G4, dotdotpwn (module http-url) DOIT
+# trouver la faille plantée T-TRAVERSAL-001 : /download?file= lit hors de la racine servie.
+# Le -f/-k ci-dessous vise le fixture d'épreuve (sauvegarde hors racine, marqueur public
+# du README) — même convention que le template nuclei local épinglé pour l'épreuve : sur
+# une cible générique, omettre -f/-k (défauts de l'outil : /etc/passwd, motif root:).
+id: dotdotpwn
+capacites:
+  - WEB_VULN_SCAN_ACTIVE
+entrees:
+  - url
+binaire: dotdotpwn
+version_min: "3.0.2"
+licence: GPL-3.0
+priorite: 155
+cout: faible
+risque: ACTIVE
+description: >
+  Fuzzing de path traversal (dotdotpwn, module http-url) : substitue des séquences ../
+  encodées dans le paramètre marqué TRAVERSAL d'une URL et cherche un motif de réponse
+  caractéristique du fichier visé. Un match prouve que le serveur a servi un fichier
+  hors racine avec l'URL affichée — la preuve est la liste des URL, pas une supposition.
+execution:
+  args:
+    - "-m"
+    - "http-url"
+    - "-u"
+    - "{URL}/download?file=TRAVERSAL"
+    - "-f"
+    - "cible_web_secret/sauvegarde.txt"
+    - "-k"
+    - "SAUVEGARDE-CONFIDENTIELLE-QUALIF"
+    - "-d"
+    - "1"
+    - "-t"
+    - "100"
+  # Code mesuré ET lu dans la source épinglée : un run mené à son terme se termine par
+  # `exit 31337` (dotdotpwn.pl ligne 298), tronqué à 105 par le shell (31337 & 0xFF).
+  # Abort Ctrl+C → `exit` (0, run partiel : pas un succès). die (serveur muet…) → 255.
+  code_succes: [105]
+sortie:
+  format: custom
+lecture:
+  # Sortie texte (« [*] Testing URL: … <- VULNERABLE ») : parser nommé, autorité sur
+  # les items — les URL vulnérables sont agrégées en UN constat (CWE-22), preuve en tête.
+  parser: dotdotpwn
+  champs:
+    regle: regle
+    nom_regle: nom_regle
+    url: url
+    message: message
+    confiance: confiance
+    remediation: remediation
+    reference: reference
+    cwe: cwe
+    preuve: preuve
+  masquer_large:
+    - message
+    - preuve
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 600
+a_verifier:
+  - "profondeur bornée à 1 (-d 1), cadence 100 ms : le défaut (-d 6, 300 ms) produit
+     plusieurs milliers de requêtes ; l'épreuve reste bornée (~900 requêtes, une seule
+     cible 127.0.0.1)."
+  - "dotdotpwn.pl exige un CWD = racine du dépôt (use lib qw(.), User-Agents.txt,
+     Reports/ relatifs) : l'exécutable épinglé est un wrapper sh qui s'y place
+     (convention shellcheck_scan/hadolint_scan)."
+  - "le mode -m tftp est inutilisable sur cette machine (module Perl Net::TFTP absent) —
+     le mode http-url qualifié ici ne le requiert pas (consigné au manifeste)."

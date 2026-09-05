@@ -1,0 +1,57 @@
+# Plugin AGNT — sslscan, sondage TLS rapide (vague web G4, 2026-09-05).
+#
+# Cible d'épreuve HTTP pur : sslscan rend son XML avec tous les protocoles enabled=0 et
+# aucun cipher — le parser ne retient RIEN comme surface (zéro item, nommé) : c'est la
+# lecture honnête d'une cible sans TLS, pas un « scan propre » déguisé.
+id: sslscan
+capacites:
+  - WEB_VULN_SCAN_ACTIVE
+entrees:
+  - url
+binaire: sslscan
+version_min: "2.1.5"
+licence: GPL-3.0
+priorite: 145
+cout: faible
+risque: ACTIVE
+description: >
+  Sondage TLS (sslscan) : protocoles négociables, suites de chiffrement offertes,
+  renégociation, certificat. Lecture DÉCLARÉE de la surface TLS OFFERTE par le serveur :
+  un protocole activé, une suite accepted/preferred, une renégociation insécurisée.
+  Observations de configuration — sslscan ne porte aucune sévérité, jamais inventée.
+execution:
+  args:
+    # Ordre mesuré : les options AVANT la cible. Avec la cible http:// en premier,
+    # sslscan imprime son help en code 0 (usage ambigu) ; avec les options d'abord,
+    # il refuse la cible nommément (« ERROR: Invalid target specified. », code 1).
+    - "--xml=-"
+    - "{URL}"
+  # sslscan rend son XML sur stdout (« - ») : l'artefact est stdout, comme git-dumper
+  # (aucun fichier {OUT} — le repli stdout du cœur lit la même source).
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  parser: sslscan
+  champs:
+    regle: regle
+    nom_regle: nom_regle
+    url: url
+    message: message
+    reference: reference
+    preuve: preuve
+  masquer_large:
+    - preuve
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300
+a_verifier:
+  - "sslscan n'accepte pas d'URL (hôte:port uniquement) : {URL} http:// répond « ERROR:
+     Invalid target specified. » code 1 — mesuré le 2026-09-05 contre THAUMAS-WEB ; la
+     limite est nommée, non contournée."
+  - "binaire construit localement contre l'OpenSSL système (3.0.13) : protocoles legacy
+     (SSLv2/SSLv3) et compression non testables — limite du build, consignée au manifeste."
+  - "le chemin « surface TLS présente » (protocols enabled=1, ciphers accepted) n'est pas
+     mesuré sur une cible TLS réelle — aucune cible TLS autorisée ; il lit les attributs
+     du XML produit par sslscan 2.1.5 (structure mesurée sur cible HTTP pur)."

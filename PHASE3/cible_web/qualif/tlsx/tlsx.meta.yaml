@@ -1,0 +1,31 @@
+# Meta d'épreuve — tlsx contre THAUMAS-WEB (2026-09-05, vague web G4)
+tool: tlsx
+binaire: tlsx
+version_binaire_sha256: 6d1e79ca0c18fc7d29bc5c92b8f0b4c1f5ed64298bbbdb6855f2c31efa324594
+argv:
+- tlsx
+- -u
+- http://127.0.0.1:8807
+- -j
+- -o
+- /home/julie/agnt-g4/PHASE3/cible_web/qualif/tlsx/tlsx.jsonl
+- -nc
+- -duc
+env: {}
+code_retour: 0
+timeout: false
+duree_ms: 104
+sortie_origine: fichier:tlsx.jsonl (0 o ; stdout 0 o ; stderr 198 o)
+cible: http://127.0.0.1:8807
+sandbox: exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre
+stderr_extrait: '[INF] Current tlsx version v1.3.0 (latest) · [INF] Connections made
+  using crypto/tls: 0, zcrypto/tls: 0, openssl: 0'
+notes: >
+  Épreuve du refus nommé — cas PARTICULIER : tlsx ignore SILENCIEUSEMENT une cible
+  http:// (0 connexion, sorties toutes vides, code 0 — mesuré). Le cœur nomme ce vide
+  (« sortie vide : échec d'exécution, pas un scan propre ») : c'est la lecture honnête,
+  pas un scan propre déguisé. En forme hôte:port (hors manifeste, référence archivée :
+  tlsx_hostport_stderr_reference.txt), tlsx nomme l'échec de négociation sur stderr
+  (« could not connect to host … first record does not look like a TLS handshake »).
+  stdin fermé requis : les outils projectdiscovery lisent stdin (mesuré — la cible a
+  avalé le stdin du shell hôte lors d'un premier essai).

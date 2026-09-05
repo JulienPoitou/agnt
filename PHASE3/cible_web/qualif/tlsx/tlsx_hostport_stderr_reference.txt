@@ -1,0 +1,9 @@
+# Référence — tlsx 1.3.0 (binaire épinglé) contre 127.0.0.1:8807 en forme HÔTE:PORT
+# (argv : tlsx -u 127.0.0.1:8807 -j -nc -v, stdin /dev/null), hors manifeste (aucun
+# jeton hôte:port au cœur). Mesuré le 2026-09-05 : code 0, stdout VIDE, et le refus de
+# négociation TLS nommé sur stderr (extrait ci-dessous, trace openssl s_client
+# comprise). En forme {URL} (http://…), tlsx ignore silencieusement la cible
+# (0 connexion, code 0, sorties vides — artefact qualif/tlsx/).
+[INF] Processing input 127.0.0.1:8807
+[WRN] Could not connect input 127.0.0.1:8807: cause="could not connect to host" chain="cause=\"could not do handshake\" chain=\"tls: first record does not look like a TLS handshake\"; cause=\"could not do tls handshake\" chain=\"tls: oversized record received with length 20291\"; cause=\"no server certificates found\" chain=\"failed to parse openssl response. original response is:\n{/usr/bin/openssl s_client -connect 127.0.0.1:8807 -servername 127.0.0.1 -tls1_2 CONNECTED(00000003)\n---\nno peer certificate available\n---\nNo client certificate CA names sent\n---\nSSL handshake has read 5 bytes and written 212 bytes\nVerification: OK\n---\nNew, (NONE), Cipher is (NONE)\nSecure Renegotiation IS NOT supported\nCompression: NONE\nExpansion: NONE\nNo ALPN negotiated\nSSL-Session:\n    Protocol  : TLSv1.2\n    Cipher    : 0000\n    Session-ID: \n    Session-ID-ctx: \n    Master-Key: \n    PSK identity: None\n    PSK identity hint: None\n    SRP username: None\n    Start Time: 1788625356\n    Timeout   : 7200 (sec)\n    Verify return code: 0 (ok)\n    Extended master secret: no\n---\n 403704A07F7D0000:error:0A00010B:SSL routines:ssl3_get_record:wrong version number:../ssl/record/ssl3_record.c:354:\n}; Command: /usr/bin/openssl s_client -connect 127.0.0.1:8807 -servername 127.0.0.1 -tls1_2; failed to response from openssl\""
+[INF] Connections made using crypto/tls: 0, zcrypto/tls: 0, openssl: 0
