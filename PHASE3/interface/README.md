@@ -40,7 +40,8 @@ pas celui qu'on veut offrir.
 | `GET /api/cibles` | les dépôts que le cœur accepte de scanner (mêmes règles que la CLI) |
 | `GET /api/capacites` | le catalogue publié, pour remplir le sélecteur |
 | `POST /api/runs` | `{cible: CHEMIN absolu (pas le nom), question, modele, confiance, moteur}` → `{run_id, statut}` |
-| `GET /api/runs/<id>` | l'état, puis les artefacts de la mission quand elle est terminée |
+| `POST /api/engagements/web` | `{url, cible_autorisee: true, egress: true, executer: true, providers?}` → plan (202) puis exécution SOUS CAGE (18 providers en phases surface→endpoints→vuln) ; sans `executer`, plan seul |
+| `GET /api/runs/<id>` | l'état, puis les artefacts de la mission / le rapport de l'engagement quand il est terminé (findings + vérifications oracle + reprise) |
 
 Une **file à un consommateur** : les montages de `Sandbox` partagent `PHASE3/run`, donc deux
 RUN en parallèle se marcheraient dessus. Le parallélisme est un choix à faire, pas un réglage.
