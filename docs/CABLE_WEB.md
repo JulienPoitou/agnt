@@ -68,11 +68,15 @@ les batteries de ce dépôt : on s'y réfère, on ne les refait pas.
       rejeu (et le témoin ne doit pas l'avoir) ; corps sans le token → rejeu
       partiel → POTENTIAL → reste OBSERVED (dégradation honnête). Mesuré live :
       titre déclaré, présent 3/3, témoin propre. test_web_cable 13/13
-- [ ] **corrélation — suite** (dans l'ordre de la priorisation) :
-      identifiant primaire (CVE/GHSA > règle canonique > empreinte, leçon GitLab)
-      → plafond SYSTEMIC affiché (conventions ZAP 2.17) → vers `clusterer.py`
-      (la confiance à deux étages Burp est couverte : sévérité/origine déclarée
-      + verdict oracle rendus séparément)
+- [x] **corrélation — plafond SYSTEMIC** (2026-09-05, leçon ZAP 2.17) :
+      `pipeline_web._systemique` — une même règle d'un même outil au-delà de
+      5 URLs distinctes devient UN agrégat dans `rapport.systemique`
+      (occurrences, URLs distinctes, échantillon de 5, troncature affichée) ;
+      les findings restent intacts (empreintes → diff de re-scan) ; bloc
+      « Motifs systémiques » au cockpit. test_pipeline_web 15/15
+- [ ] **corrélation — fin** : identifiant primaire (CVE/GHSA > règle
+      canonique > empreinte, leçon GitLab) — mineur tant que les outils web
+      n'émettent pas de CVE ; vers `clusterer.py` quand le volume l'exigera
 - [ ] **cage** : exécution web sous bwrap au runtime (aujourd'hui `ExecuteurLocal`
       exécute hors cage — les qualifications sous cage existent, le runtime pas encore)
 
