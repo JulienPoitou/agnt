@@ -52,10 +52,11 @@ RUNTIME_VERIFIED = False
 PHASES = {
     "surface":   ["httpx", "whatweb", "webanalyze", "wafw00f"],
     "endpoints": ["katana", "ffuf", "gobuster", "feroxbuster", "dirsearch",
-                  "hakrawler", "arjun", "x8"],
+                  "hakrawler", "arjun", "x8", "kiterunner", "gospider",
+                  "dirhunt"],
     "vuln":      ["nuclei", "sqlmap", "dalfox", "commix", "crlfuzz",
                   "dotdotpwn", "wpscan", "testssl.sh", "sslyze", "sslscan",
-                  "nikto"],
+                  "nikto", "cmseek"],
 }
 ORDRE_CHAINE = [pid for outils in PHASES.values() for pid in outils]
 
