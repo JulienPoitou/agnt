@@ -65,21 +65,28 @@ class ErreurPipeline(Exception):
     """Engagement inexploitable : scope, plan ou exécution nommés."""
 
 
-def _rejouer(url: str, fois: int, extrait: str = "", timeout_s: float = 10.0):
+def _rejouer(url: str, fois: int, extrait: str = "", timeout_s: float = 10.0,
+             cookies: str = ""):
     """N GET réels sur l'URL + 1 témoin (chemin aléatoire du même hôte).
 
     Hygiène oracle_web : le corps n'est JAMAIS conservé — digest + taille
     (ObservationRejeu). `extrait` : le token que le manifest déclare attendu
     dans le corps (`extrait_corps`) — le SECOND signal indépendant de la
     recette (leçon XBOW : la validation vient d'une preuve mesurée, jamais
-    d'une auto-évaluation). Une observation en erreur reste une observation :
-    le jugement la compte, jamais l'inverse.
+    d'une auto-évaluation). `cookies` : le rejeu réplique la VUE du scan — un
+    constat authentifié est rejoué avec le cookie de l'engagement (mesuré
+    2026-09-05 : rejouer sans, l'oracle réfute ce que l'outil a réellement vu).
+    La valeur ne quitte PAS le rejeu : les observations portent statut + digest.
+    Une observation en erreur reste une observation : le jugement la compte,
+    jamais l'inverse.
     """
+    entetes = {"User-Agent": "agnt-oracle/1 (rejeu)"}
+    if cookies:
+        entetes["Cookie"] = cookies
     observations = []
     for _ in range(fois):
         try:
-            req = urllib.request.Request(url, method="GET",
-                                         headers={"User-Agent": "agnt-oracle/1 (rejeu)"})
+            req = urllib.request.Request(url, method="GET", headers=entetes)
             with urllib.request.urlopen(req, timeout=timeout_s) as r:
                 observations.append(
                     OW.ObservationRejeu.depuis_corps(r.status, r.read(), extrait=extrait))
@@ -99,8 +106,7 @@ def _rejouer(url: str, fois: int, extrait: str = "", timeout_s: float = 10.0):
     parties = urlsplit(url)
     temoin_url = f"{parties.scheme}://{parties.netloc}/temoin-agnt-{uuid.uuid4().hex[:8]}"
     try:
-        req = urllib.request.Request(temoin_url, method="GET",
-                                     headers={"User-Agent": "agnt-oracle/1 (temoin)"})
+        req = urllib.request.Request(temoin_url, method="GET", headers=entetes)
         with urllib.request.urlopen(req, timeout=timeout_s) as r:
             temoin = OW.ObservationRejeu.depuis_corps(r.status, r.read())
     except urllib.error.HTTPError as e:
@@ -114,7 +120,8 @@ def _rejouer(url: str, fois: int, extrait: str = "", timeout_s: float = 10.0):
     return observations, temoin, temoin_url
 
 
-def _verifier_par_oracle(findings: list[dict], engagement: dict) -> dict:
+def _verifier_par_oracle(findings: list[dict], engagement: dict,
+                         auth_cookies: str = "") -> dict:
     """Rejeu RÉEL des findings web porteurs d'une URL (oracle http_response).
 
     Recette : le statut déclaré par le tool quand il en porte un (httpx → « 200 ») ;
@@ -143,10 +150,10 @@ def _verifier_par_oracle(findings: list[dict], engagement: dict) -> dict:
                                  "motif": f"URL hors de l'hôte engagé ({hote_engage}) : rejeu refusé"}
             compte["non_verifiables"] += 1
             continue
-        observations, temoin, temoin_url = _rejouer(url_f, fois,
-                                                    extrait=str((f.get("evidence")
-                                                                 or {}).get("extrait_attendu")
-                                                                or ""))
+        observations, temoin, temoin_url = _rejouer(
+            url_f, fois,
+            extrait=str((f.get("evidence") or {}).get("extrait_attendu") or ""),
+            cookies=auth_cookies)
         regle = str((f.get("source") or {}).get("original_rule_id") or "")
         recette = "statut_declare" if regle.isdigit() else "stabilite"
         if recette == "statut_declare":
@@ -332,12 +339,38 @@ class ExecuteurCage:
         return self.sbx.commande(self._traduire(argv_hote))
 
 
+def _motif_auth(plan: dict | None, auth_cookies: str) -> str:
+    """Le motif d'authentification HONNÊTE d'un provider, pour details[].
+
+    Trois faits, jamais un flou : le provider déclare {COOKIES} ET un cookie est
+    fourni → authentifié ; un cookie est fourni mais le manifest ne déclare pas
+    le jeton → l'outil a tourné SANS authentification, et ça se lit ; sinon →
+    aucun cookie fourni. La VALEUR du cookie n'entre jamais ici — un motif est
+    une phrase, pas un secret.
+    """
+    declare = bool(((plan or {}).get("auth") or {}).get("declare"))
+    fournie = bool(auth_cookies)
+    if declare and fournie:
+        return "authentifié"
+    if fournie:
+        return "non authentifié : outil sans déclaration auth"
+    return "non authentifié : aucun cookie fourni"
+
+
 def derouler(engagement: dict, executer_tache, registre=None,
              out_dir: str = "/tmp/agnt-web", regles: str = "",
              verifier_oracle: bool = True,
              precedent_id: str | None = None, precedents: dict | None = None,
-             cage: bool = True) -> dict:
-    """Déroule un engagement web planifié. Rend le rapport de mission (dict)."""
+             cage: bool = True, auth_cookies: str = "") -> dict:
+    """Déroule un engagement web planifié. Rend le rapport de mission (dict).
+
+    `auth_cookies` (scan authentifié v1) : la VALEUR du cookie d'application,
+    transmise aux seuls providers dont le manifest déclare `{COOKIES}`
+    (opt-in). Elle n'apparaît NULLE PART dans le rapport rendu — ni dans
+    `auth` (qui porte le booléen `fournie`), ni dans `details` (motifs
+    textuels), ni dans la preuve scellée (type/url/statut/providers/détails) —
+    et n'est pas persistée : elle vit dans l'argv transitoire de l'outil.
+    """
     if not isinstance(engagement, dict) or engagement.get("type") != "web":
         raise ErreurPipeline("engagement web attendu")
     url = engagement.get("url_canonique") or ""
@@ -360,7 +393,8 @@ def derouler(engagement: dict, executer_tache, registre=None,
         try:
             plans.append({**FW.planifier(pid, canonique, out_dir,
                                          egress=egress_accorde, registre=registre,
-                                         regles=regles),
+                                         regles=regles,
+                                         auth_cookies=auth_cookies),
                           "provider_id": pid})
         except FW.ErreurPlanification as e:
             ecartes.append({"provider": pid, "motif": str(e)})
@@ -384,9 +418,11 @@ def derouler(engagement: dict, executer_tache, registre=None,
     run = executer_plan(noeuds, executer_tache, stop_on_failure=False)
     findings, details = [], []
     for res in run["taches"]:
+        plan = next((p for p in plans if p["provider_id"] == res["provider"]), None)
+        motif_auth = _motif_auth(plan, auth_cookies)
         if res["etat"] != TA.TERMINEE:
             details.append({"provider": res["provider"], "etat": res["etat"],
-                            "cage": cage,
+                            "cage": cage, "auth": motif_auth,
                             "motif": (res["resultat"] or {}).get("erreur", "")})
             continue
         r = res["resultat"] or {}
@@ -411,7 +447,7 @@ def derouler(engagement: dict, executer_tache, registre=None,
                                     stdout, registre=registre)
         except FW.ErreurPlanification as e:
             details.append({"provider": res["provider"], "etat": "interpretation_impossible",
-                            "motif": str(e)})
+                            "auth": motif_auth, "motif": str(e)})
             continue
         for f in interp["findings"]:
             d = f.to_dict() if hasattr(f, "to_dict") else dict(f)
@@ -420,38 +456,66 @@ def derouler(engagement: dict, executer_tache, registre=None,
                                           "vers": transition(DISCOVERED, "observer")}]}
             findings.append(d)
         details.append({"provider": res["provider"], "etat": res["etat"],
-                        "cage": cage,
+                        "cage": cage, "auth": motif_auth,
                         "findings": len(interp["findings"]), "motif": interp["motif"]})
     verifications = None
     if verifier_oracle and findings:
         # L'oracle ne doit jamais tuer un scan : un incident est NOMMÉ dans le
         # rapport, jamais un 500 ni un findings perdu.
         try:
-            verifications = _verifier_par_oracle(findings, engagement)
+            verifications = _verifier_par_oracle(findings, engagement,
+                                                 auth_cookies=auth_cookies)
         except Exception as e:                      # noqa: BLE001
             verifications = {"oracle": "http_response", "erreur":
                              f"{type(e).__name__} : {str(e)[:200]}"}
+    limites = ([
+        "exécution SOUS CAGE bwrap (cible_distante, egress selon "
+        "l'engagement) ; l'exécuteur reste injecté",
+        "oracle http_response : rejeu réel ×N + témoin ; les findings "
+        "sans URL ou hors scope restent OBSERVED (raison nommée)",
+        "absence de correspondance ≠ absence de vulnérabilité"]
+        if cage else [
+        "oracle http_response : rejeu réel ×N + témoin ; les findings "
+        "sans URL ou hors scope restent OBSERVED (raison nommée)",
+        "absence de correspondance ≠ absence de vulnérabilité"])
+    if auth_cookies:
+        # Scan authentifié v1 : la limite se lit DANS le rapport, pas dans une
+        # docstring — l'opérateur doit savoir où vit la valeur du cookie.
+        limites = limites + [
+            "auth_cookies v1 : la valeur transite dans l'argv de l'outil "
+            "(visible dans /proc localement uniquement) et n'est jamais rendue "
+            "par l'API ni scellée dans la preuve"]
     rapport = {"type": "rapport_web", "url_canonique": canonique,
                "statut_run": run["statut"], "motif_run": run["motif"],
                "providers_demandes": list(engagement.get("providers_prevus") or []),
                "providers_ecartes": ecartes, "details": details,
                "findings": findings,
-               "limites_connues": ([
-                   "exécution SOUS CAGE bwrap (cible_distante, egress selon "
-                   "l'engagement) ; l'exécuteur reste injecté",
-                   "oracle http_response : rejeu réel ×N + témoin ; les findings "
-                   "sans URL ou hors scope restent OBSERVED (raison nommée)",
-                   "absence de correspondance ≠ absence de vulnérabilité"]
-                   if cage else [
-                   "oracle http_response : rejeu réel ×N + témoin ; les findings "
-                   "sans URL ou hors scope restent OBSERVED (raison nommée)",
-                   "absence de correspondance ≠ absence de vulnérabilité"])}
+               "auth": {"fournie": bool(auth_cookies)},
+               "limites_connues": limites}
     if verifications is not None:
         rapport["verifications"] = verifications
     if precedents is not None:
         rapport["reprise"] = _diff_reprise(findings, precedents)
         if precedent_id:
             rapport["reprise"]["engagement_precedent"] = precedent_id
+    if auth_cookies:
+        # La SORTIE de l'outil peut ÉCHO le secret : ffuf écrit sa commandline dans
+        # son propre JSON de sortie (mesuré le 2026-09-05 : commandline contient
+        # -b SESSION=...). Aucun motif d'assainissement ne peut deviner un token
+        # arbitraire : la valeur DÉCLARÉE est passée à l'examen des sorties brutes
+        # du run (mécanique examiner(valeurs=...) du slice/assainissement) — la
+        # valeur n'est jamais conservée en clair dans l'archive, sous aucun nom.
+        import assainissement as AS
+        racine_sortie = Path(out_dir)
+        for brut in (racine_sortie.iterdir() if racine_sortie.is_dir() else []):
+            if not brut.is_file():
+                continue
+            try:
+                v = AS.examiner_fichier(brut, valeurs=[auth_cookies])
+            except Exception:                          # noqa: BLE001
+                continue
+            if not v.sur and v.assaini:
+                brut.write_text(v.texte_masque, encoding="utf-8")
     systemique = _systemique(findings)
     if systemique:
         rapport["systemique"] = systemique

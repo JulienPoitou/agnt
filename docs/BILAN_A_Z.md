@@ -82,16 +82,23 @@ check-list (`docs/CABLE_WEB.md`) à jour.
 
 ## 4. CE QUI MANQUE POUR LE « A→Z MÉTIER » COMPLET (honnête)
 
-1. ❌ **Scan authentifié** : aucun outil ne gère sessions/cookies/login — un
-   pentest web réel passe la moitié de son temps DERRIÈRE une authentification.
-   C'est LE trou métier n°1. (À faire : support de credentials dans
-   l'engagement + injection de session dans les argv des outils qui le
-   supportent — sqlmap `--cookie`, katana `-H`, nuclei `-H`…)
+1. ✅ **Scan authentifié v1 (cookie)** — BOUCHÉ le 2026-09-05 : `auth_cookies` dans
+   l'engagement (jamais rendu, jamais scellé, jamais sur disque — testé), injection
+   opt-in `{COOKIES}` par manifest (8 outils, flags vérifiés au --help), THAUMAS gagne
+   T-AUTH-001/002 (session factice + IDOR), ÉPREUVE DE VALEUR ×2 mesurée (sans cookie :
+   la ressource protégée est invisible ; avec : constaté puis VERIFIED par l'oracle
+   authentifié, diff de re-scan +1). Reste pour v2 : login form multi-étapes, sessions
+   applicatives complexes (CSRF, JWT, rafraîchissement), credentials utilisateur/pass
+   au-delà du cookie brut.
 2. ❌ **Rapport humain exportable** : les engagements rendent `rapport_web.json`
    + console, pas de RAPPORT.md/PDF final signé comme les missions dépôt.
-3. ❌ **Épreuve TLS positive** : les 4 outils TLS sont qualifiés sur refus nommé
-   (la cible n'a pas de TLS). Il faut une cible HTTPS d'épreuve pour prouver
-   des findings TLS positifs.
+3. ✅ **Épreuve TLS positive** — FAITE le 2026-09-05 : la cible a un mode `--tls`
+   (certificat auto-signé généré au boot, CN=thaumas-web-epreuve) ; jeton `{HOSTPORT}`
+   dans le cœur ; sslscan 18 items (TLS 1.2/1.3 + 16 suites), testssl.sh 166 entrées
+   (sévérités DÉCLARÉES, CRITICAL sur chaîne auto-signée), tlsx 1 JSONL (mapping
+   corrigé sur structure réelle), sslyze 6 commandes runtime (`--certinfo` volontaire-
+   ment hors manifeste : le PEM déclenche le masquage qui rend le JSON illisible —
+   capacité complète prouvée hors manifeste). Démo réelle SOUS CAGE : 185 constats TLS.
 4. ❌ **Qualification bwrap par outil** : les épreuves G1-G5 ont tourné hors
    cage ; la cage runtime est branchée, la preuve qualif sous cage par outil
    reste « à centraliser » (le harnais_web existe).
@@ -109,7 +116,10 @@ check-list (`docs/CABLE_WEB.md`) à jour.
 - **Cible HTTP autorisée, non authentifiée, sur ta machine/lab** : **OUI, A→Z** —
   de l'URL tapée aux constats vérifiés, expliqués par l'IA, archivés, scellés,
   comparables entre eux. C'est démontré, pas promis.
-- **Pentest professionnel complet (authentifié, rapport client, exploitation
-  profonde, TLS réel)** : **pas encore** — les 4 premiers points du §4.
-- **Le chemin** : chaque ❌ du §4 est un chantier borné, dans l'ordre : scan
-  authentifié > rapport exportable > cible HTTPS > qualif bwrap centralisée.
+- **Cible HTTP/HTTPS d'épreuve AUTORISÉE, authentifiée par cookie** : **OUI, A→Z** —
+  l'épreuve de valeur ×2 (sans cookie : invisible ; avec : constaté et confirmé par
+  l'oracle) est mesurée, archivée, scellée.
+- **Pentest professionnel complet (authentifications complexes, rapport client,
+  exploitation profonde, TLS de production)** : **pas encore** — points restants du §4.
+- **Le chemin** : chaque ❌ du §4 est un chantier borné, dans l'ordre : rapport
+  exportable > qualif bwrap centralisée > authentifications complexes.

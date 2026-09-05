@@ -31,7 +31,17 @@ from pathlib import Path
 # {OUT_DIR} (étape 4) : certains outils écrivent dans un RÉPERTOIRE de sortie
 # (kics --output-path) plutôt que dans un fichier ({OUT}). Occurrence observée,
 # extension générique du vocabulaire — le cœur fournit le chemin, jamais le manifest.
-PLACEHOLDERS = ("{BIN}", "{TARGET}", "{URL}", "{OUT}", "{OUT_DIR}", "{REGLES}", "{DB}")
+PLACEHOLDERS = ("{BIN}", "{TARGET}", "{URL}", "{OUT}", "{OUT_DIR}", "{REGLES}", "{DB}",
+                # 2026-09-05 — forme hôte:port de {URL} (port par défaut du schéma
+                # restauré) : sslscan et sslyze REFUSENT une URL (mesuré contre
+                # THAUMAS-WEB) ; la cible TLS doit leur passer par ce jeton.
+                "{HOSTPORT}",
+                # 2026-09-05 — scan authentifié v1 (cookies d'application) : OPT-IN
+                # par manifest — un outil ne reçoit un cookie QUE s'il déclare ce
+                # jeton, et la valeur vient de l'engagement (chemin trusted), jamais
+                # du manifest. Sans cookie fourni, résolu en chaîne vide — JAMAIS
+                # rendu par l'API ni scellé dans une preuve.
+                "{COOKIES}")
 
 # Fragments interdits dans un argument, indépendamment d'OPA : seconde barrière.
 FRAGMENTS_INTERDITS = (";", "&&", "||", "|", "`", "$(", ">", "<", "\n", "\r", "\x00")

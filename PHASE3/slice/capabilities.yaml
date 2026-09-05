@@ -867,6 +867,10 @@ capabilities:
             - "{BIN}"
             - "-target"
             - "{URL}"
+            # Scan authentifié v1 : {COOKIES} = valeur de l'engagement ("" si
+            # aucune). OPT-IN — flag -H vérifié au --help du binaire épinglé.
+            - "-H"
+            - "Cookie: {COOKIES}"
             - "-t"
             - "{REGLES}/nuclei-epreuve.yaml"
             - "-duc"
@@ -910,7 +914,10 @@ capabilities:
             la sévérité est celle du TEMPLATE (déclaration de son auteur), pas une
             mesure sur la cible : un template « critical » qui matche prouve la
             correspondance, pas l'exploitabilité. Les findings nuclei ne sont jamais
-            « vérifiés » — observation d'un matching.
+            « vérifiés » — observation d'un matching. À vérifier : {COOKIES} injecté
+            seulement si l'engagement fournit auth_cookies, sinon chaîne vide ; flag
+            -H vérifié au --help du binaire épinglé, non mesuré de bout en bout
+            (structure --help).
 
       - id: zap_baseline
         kind: tool
@@ -1001,6 +1008,18 @@ capabilities:
             - "{REGLES}/dossiers-mini.txt"
             - "-u"
             - "{URL}/FUZZ"
+            # Scan authentifié v1 : {COOKIES} = valeur de l'engagement ("" si
+            # aucune). OPT-IN — flag -b vérifié au --help du binaire épinglé.
+            - "-b"
+            - "{COOKIES}"
+            # Frontière d'authentification : les redirections 302 sont FILTRÉES —
+            # une réponse de redirection (login) n'est pas une ressource servie,
+            # c'est le signe d'une zone protégée. C'est l'épreuve du scan
+            # authentifié : sans cookie, la ressource protégée n'est PAS une
+            # surface ; avec le cookie (200), elle le devient. Mesuré THAUMAS
+            # 2026-09-05 : /admin/secret-session = 302 sans cookie, 200 avec.
+            - "-fc"
+            - "302"
             - "-of"
             - "json"
             - "-o"
@@ -1036,7 +1055,11 @@ capabilities:
             une correspondance ffuf est un statut HTTP dans une liste de mots : c'est de
             l'énumération de surface d'attaque, pas une vulnérabilité. La « confiance »
             portée est le verdict du MATCHER de ffuf (matcherstatus), pas une évaluation
-            du contenu ; un 200 générique (soft-404) reste un finding ici.
+            du contenu ; un 200 générique (soft-404) reste un finding ici. À vérifier :
+            {COOKIES} injecté seulement si l'engagement fournit auth_cookies, sinon
+            chaîne vide ; flag -b vérifié au --help du binaire épinglé. -fc 302 filtre
+            les redirections (frontière d'authentification — mesuré THAUMAS 2026-09-05 :
+            /admin/secret-session invisible sans cookie, constatée avec).
 
   # === Étape web (2026-09-05) : première sonde de surface HTTP ===
   # Pourquoi une capacité et pas un provider de plus sur WEB_ENDPOINT_DISCOVERY_ACTIVE :
@@ -1075,6 +1098,10 @@ capabilities:
             - "{BIN}"
             - "-u"
             - "{URL}"
+            # Scan authentifié v1 : {COOKIES} = valeur de l'engagement ("" si
+            # aucune). OPT-IN — flag -H vérifié au --help du binaire épinglé.
+            - "-H"
+            - "Cookie: {COOKIES}"
             - "-json"
             - "-o"
             - "{OUT}"
@@ -1103,6 +1130,9 @@ capabilities:
             une sonde httpx est une URL vivante avec son statut, son titre et ses
             technologies : de la cartographie de surface, pas une vulnérabilité. La
             sévérité n'existe pas chez cet outil — elle reste absente, jamais inventée.
+            À vérifier : {COOKIES} injecté seulement si l'engagement fournit
+            auth_cookies, sinon chaîne vide ; flag -H vérifié au --help du binaire
+            épinglé, non mesuré de bout en bout (structure --help).
 
   # === Étape web (2026-09-05) : exploitation d'un dépôt VCS exposé ===
   # git-dumper complète la sonde : httpx dit « /.git/config répond », git-dumper

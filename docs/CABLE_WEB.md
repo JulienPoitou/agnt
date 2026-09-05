@@ -83,6 +83,46 @@ les batteries de ce dépôt : on s'y réfère, on ne les refait pas.
 - [x] **★ VAGUE COMPLÈTE — 27 providers qualifiés et actifs dans la chaîne en
       phases** (surface 4 · endpoints 11 · vuln 12), tous SOUS CAGE bwrap,
       épinglés, promus, testés (batteries g1-g5 : 101+94+58+50+57 cas)
+- [x] **★ CIBLE HTTPS D'ÉPREUVE — les 4 outils TLS prouvés POSITIVEMENT** (2026-09-05,
+      fin des refus nommés comme seule épreuve) : `serveur.py --tls` (certificat
+      auto-signé GÉNÉRÉ AU BOOT via openssl dans certs/ gitignoré, CN=thaumas-web-epreuve,
+      handshake par connexion — une sonde HTTP pur ne tue pas le serveur, multi-slash
+      normalisés) ; jeton `{HOSTPORT}` dans le cœur (fournisseurs_web._hote_port : port
+      par défaut du schéma RESTAURÉ — sslscan/sslyze refusent les URL, mesuré) ;
+      manifests requalifiés (sslscan/sslyze en {HOSTPORT}, mapping tlsx CORRIGÉ sur
+      structure réelle : `cipher` PAS `cipher_suite`, probe_status booléen) ;
+      **sslyze : --certinfo volontairement hors manifeste** (le PEM déclenche le
+      masquage des blobs base64 ≥ 40 qui rend le JSON capturé illisible → 0 item,
+      mesuré et assumé — capacité complète prouvée hors manifeste dans
+      sslyze_complet.json, 15 constats réels sur 18 commandes, result None écartés
+      par le parser) ; archives qualif/*_https.* + attendus_tls.yaml ×4 +
+      executer_qualif_tls.py ; **démo réelle SOUS CAGE : engagement https://127.0.0.1:8443
+      → 185 constats TLS (sslscan 18, testssl.sh 166 avec sévérités déclarées dont
+      CRITICAL cert_chain_of_trust sur auto-signé, tlsx tls13/CN)** ; batterie
+      test_plugins_g4 69/69
+- [x] **★ SCAN AUTHENTIFIÉ v1 (cookie)** — le trou n°1 du bilan est BOUCHÉ (2026-09-05) :
+      `POST /api/engagements/web` accepte `auth_cookies` (SECRET : jamais rendu par
+      l'API, jamais dans ETATS, jamais dans la preuve scellée — la VALEUR transite par
+      les options de file → derouler(auth_cookies=…), testé en batteries) ; injection
+      PAR MANIFEST opt-in `{COOKIES}` (httpx/nuclei/katana/dalfox en -H « Cookie: … »,
+      sqlmap/dirsearch --cookie=, ffuf -b, gobuster --cookies — flags vérifiés au
+      --help des binaires épinglés ; les 4 TLS et whatweb restent non déclarants, NOMMÉS
+      au rapport) ; sans cookie fourni la paire flag/arg-vide est retirée DÉTERMINISTE-
+      MENT (Tache exige des chaînes non vides — un arg {COOKIES} vide est inconstructible)
+      ; THAUMAS gagne T-AUTH-001/002 (POST /login → Set-Cookie SESSION générée au boot ;
+      /admin/secret-session : 302 sans cookie, 200 + secret factice avec ; IDOR
+      ?user=oscar ; lien Sessions sur /admin pour la découvrabilité) ; **ÉPREUVE DE
+      VALEUR ×2 mesurée** (ffuf -fc 302 filtre la frontière d'auth, wordlist
+      admin/secret-session) : engagement A sans cookie (68e9174a1b2b : 4 constats,
+      secret-session INVISIBLE) → engagement B avec cookie (f48e8003b3ec : 5 constats,
+      /admin/secret-session **VERIFIED oracle confirmed**, reprise : +1 nouveau) ;
+      **oracle authentifié** : le rejeu porte le cookie de l'engagement (sans lui il
+      réfute ce que l'outil a réellement vu — mesuré) ; **non-fuite prouvée** : ffuf
+      écho sa commandline dans son propre JSON de sortie → les sorties brutes du run
+      sont masquées avec la valeur DÉCLARÉE (examiner valeurs=…), token absent de
+      GET /api/runs ET de tous les artefacts disque ; batteries : test_web_auth 27/27
+      (nouveau), test_engagements_web 40/40, test_pipeline_web 22/22, test_web_cable
+      14/14, test_cible_auth 8/8 (nouveau), g1-g3 inchangées
 - [ ] ①-b tranche **git-dumper** : hors `WEB_PROVIDERS_ORDRE` (découverte ≠ sonde) —
       décider de son entrée dans la chaîne (provider d'appoint ? capacité à part ?)
 - [x] **corrélation — étude** : `docs/RECHERCHE_CORRELATION.md` (Burp, ZAP,

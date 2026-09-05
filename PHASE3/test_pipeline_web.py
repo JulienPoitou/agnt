@@ -92,6 +92,37 @@ def main() -> int:
             "demandée en dernier",
             [d["provider"] for d in rap_o["details"]] == ["httpx", "nuclei"],
             json.dumps([d["provider"] for d in rap_o["details"]]))
+        # --- scan authentifié v1 : rapport auth + motifs honnêtes (sans cookie)
+        rap_a = PW.derouler(engagement(providers_prevus=["nuclei"]),
+                            faux_ok({"nuclei": (0, NUCLEI_OK)}),
+                            registre=reg, out_dir="/tmp/aw", verifier_oracle=False,
+                            cage=False)
+        cas("auth v1 : sans cookie → rapport auth.fournie false, motif nommé dans details",
+            (rap_a.get("auth") or {}).get("fournie") is False
+            and [d for d in rap_a["details"] if d["provider"] == "nuclei"][0]["auth"]
+            == "non authentifié : aucun cookie fourni",
+            json.dumps(rap_a.get("auth")) + " / "
+            + json.dumps(rap_a["details"], ensure_ascii=False)[:140])
+        # --- scan authentifié v1 AVEC cookie : fournie true, ZÉRO fuite de la valeur
+        SECRET = "SESSION=secret-pipeline-77"
+        rap_s = PW.derouler(engagement(providers_prevus=["nuclei", "whatweb"]),
+                            faux_ok({"nuclei": (0, NUCLEI_OK)}),
+                            registre=reg, out_dir="/tmp/aw", verifier_oracle=False,
+                            cage=False, auth_cookies=SECRET)
+        det_s = {d["provider"]: d for d in rap_s["details"]}
+        cas("auth v1 : avec cookie → auth.fournie true, VALEUR absente du rapport "
+            "sérialisé (preuve scellée incluse)",
+            (rap_s.get("auth") or {}).get("fournie") is True
+            and SECRET not in json.dumps(rap_s, default=str),
+            json.dumps(rap_s.get("auth")) + " / " + json.dumps(rap_s)[:160])
+        cas("auth v1 : motifs différenciés déclarant / non-déclarant",
+            det_s.get("nuclei", {}).get("auth") == "authentifié"
+            and det_s.get("whatweb", {}).get("auth")
+            == "non authentifié : outil sans déclaration auth",
+            json.dumps(rap_s["details"], ensure_ascii=False)[:180])
+        cas("auth v1 : la note de limite v1 accompagne un run authentifié",
+            any("auth_cookies v1" in str(l) for l in rap_s.get("limites_connues", [])),
+            json.dumps(rap_s.get("limites_connues"), ensure_ascii=False)[:160])
         # --- plafond SYSTEMIC (leçon ZAP 2.17) : vue agrégée, findings intacts
         def faux_finding(n):
             return {"id": "x-%04d" % n,

@@ -169,6 +169,90 @@ def main() -> int:
                 and (eng.get("verification") or {}).get("replay") == 5
                 and eng.get("egress") is True,
                 f"code={code} corps={json.dumps(eng, ensure_ascii=False)[:160]}")
+        # ---------------------------------------------------------- scan authentifié v1
+        # Le secret du test est VOLONTAIREMENT distinctif : toute fuite vers la
+        # réponse, l'état de file ou le rapport doit le faire apparaître.
+        SECRET = "SESSION=secret-auth-v1-42"
+        # plan seul : accepté, validé, valeur JETÉE (rien ne s'exécute)
+        code, eng = http(base, "/api/engagements/web",
+                         {"url": "https://auth-plan.tld", "cible_autorisee": True,
+                          "auth_cookies": SECRET})
+        verifie("plan seul + auth_cookies → 202, auth.fournie rendu",
+                code == 202 and isinstance(eng, dict)
+                and (eng.get("auth") or {}).get("fournie") is True,
+                f"code={code} auth={json.dumps((eng or {}).get('auth'))}")
+        verifie("plan seul : la VALEUR du cookie n'est jamais rendue",
+                isinstance(eng, dict) and SECRET not in json.dumps(eng),
+                json.dumps(eng, ensure_ascii=False)[:160] if isinstance(eng, dict) else "eng")
+        verifie("plan seul : le refus honnête dit que la valeur n'est pas conservée",
+                isinstance(eng, dict)
+                and any("auth_cookies non conservé" in str(l)
+                        for l in (eng.get("limites_connues") or [])),
+                json.dumps(eng.get("limites_connues"), ensure_ascii=False)[:200])
+        code, eng = http(base, "/api/engagements/web",
+                         {"url": "https://auth-run.tld", "cible_autorisee": True,
+                          "executer": True, "providers": ["httpx"],
+                          "egress": True, "auth_cookies": SECRET})
+        verifie("executer: true + auth_cookies → 202, auth.fournie true dans la réponse",
+                code == 202 and isinstance(eng, dict)
+                and (eng.get("auth") or {}).get("fournie") is True,
+                f"code={code} auth={json.dumps((eng or {}).get('auth'))}")
+        verifie("executer: true : la VALEUR du cookie n'est jamais rendue par le POST",
+                isinstance(eng, dict) and SECRET not in json.dumps(eng),
+                json.dumps(eng, ensure_ascii=False)[:160] if isinstance(eng, dict) else "eng")
+        eid_auth = eng.get("id") if isinstance(eng, dict) else None
+        if eid_auth:
+            terminal, lu = None, None
+            for _ in range(240):
+                code, lu = http(base, f"/api/runs/{eid_auth}")
+                if isinstance(lu, dict) and lu.get("statut") in ("termine", "refuse", "erreur"):
+                    terminal = lu.get("statut")
+                    break
+                time.sleep(0.5)
+            verifie("run authentifié atteint un état terminal",
+                    terminal in ("termine", "refuse", "erreur"),
+                    f"terminal={terminal} dernier={json.dumps(lu, ensure_ascii=False)[:160]}")
+            verifie("GET /api/runs/{id} : la VALEUR du cookie n'apparaît nulle part "
+                    "(état, rapport, preuve — rien)",
+                    isinstance(lu, dict) and SECRET not in json.dumps(lu),
+                    json.dumps(lu, ensure_ascii=False)[:200] if isinstance(lu, dict) else "lu")
+            rapport = (lu or {}).get("rapport") if isinstance(lu, dict) else None
+            verifie("le rapport web porte auth.fournie true et aucun secret",
+                    isinstance(rapport, dict)
+                    and (rapport.get("auth") or {}).get("fournie") is True
+                    and SECRET not in json.dumps(rapport),
+                    json.dumps(rapport, ensure_ascii=False)[:200] if isinstance(rapport, dict) else "pas de rapport")
+            verifie("le rapport porte la limite v1 (argv transitoire, jamais rendu)",
+                    isinstance(rapport, dict)
+                    and any("auth_cookies v1" in str(l)
+                            for l in (rapport.get("limites_connues") or [])),
+                    json.dumps((rapport or {}).get("limites_connues"), ensure_ascii=False)[:200])
+        # refus nommés : la valeur ne doit JAMAIS passer avec un caractère de contrôle
+        for nom, secret, frag in [
+            ("auth_cookies avec saut de ligne → 400 (injection d'en-tête)",
+             "SESSION=abc" + chr(10) + "X-Inject: y", "contrôle"),
+            ("auth_cookies avec NUL → 400", "SESSION=ab" + chr(0) + "c", "contrôle"),
+            ("auth_cookies > 4096 octets → 400", "SESSION=" + "a" * 5000, "4096"),
+        ]:
+            c, refus = http(base, "/api/engagements/web",
+                            {"url": "https://auth-refus.tld", "cible_autorisee": True,
+                             "auth_cookies": secret})
+            verifie(nom, c == 400 and isinstance(refus, dict) and "erreur" in refus
+                    and frag in json.dumps(refus, ensure_ascii=False),
+                    f"code={c} corps={json.dumps(refus, ensure_ascii=False)[:140]}")
+        code, refus = http(base, "/api/engagements/web",
+                           {"url": "https://auth-refus.tld", "cible_autorisee": True,
+                            "auth_cookies": "   "})
+        verifie("auth_cookies vide/blanc → 400 nommé",
+                code == 400 and isinstance(refus, dict) and "auth_cookies" in json.dumps(refus),
+                f"code={code} corps={json.dumps(refus, ensure_ascii=False)[:140]}")
+        # sans auth_cookies : inchangé (auth absent, aucun comportement nouveau)
+        code, eng = http(base, "/api/engagements/web",
+                         {"url": "https://sans-auth.tld", "cible_autorisee": True})
+        verifie("sans auth_cookies → auth.fournie false, comportement inchangé",
+                code == 202 and isinstance(eng, dict)
+                and (eng.get("auth") or {}).get("fournie") is False,
+                f"code={code} auth={json.dumps((eng or {}).get('auth'))}")
         # ---------------------------------------------------------- exécution demandée
         code, refus = http(base, "/api/engagements/web",
                            {"url": "https://target.tld", "executer": True})

@@ -8,3 +8,4 @@ dashboard
 test
 api
 uploads
+admin/secret-session

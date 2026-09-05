@@ -1774,7 +1774,9 @@ binaires:
     taille_approx: 10M
 regles:
   # Web (2026-09-05) — épreuves sandbox harnais_web.py
-  dossiers-mini.txt: "59a2d4c919fa9845147c33eadd4dc79a87956cdf0cf6e260fcd500b5dc318097"
+  # 2026-09-05 : + secret-session — épreuve du scan authentifié (T-AUTH-001) : la
+  # ressource protégée devient énumérable, sa REDIRECTION reste filtrée (-fc 302).
+  dossiers-mini.txt: "662d77756a7510ba1ab2a3b3707bd4a11505d6eee0a621fc6a6631f919bbc4fa"
   # Web (2026-09-05, vague-web/g3) — wordlist épinglée du provider arjun
   # (30 noms de paramètres courants, dont les 3 paramètres de la cible d'épreuve ;
   # remplace la wordlist embarquée par défaut db/large.txt — 25 889 noms, non bornée).

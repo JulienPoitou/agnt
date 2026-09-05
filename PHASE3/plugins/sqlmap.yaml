@@ -30,6 +30,9 @@ execution:
   args:
     - "-u"
     - "{URL}/users?id=1"
+    # Scan authentifié v1 : {COOKIES} = valeur de l'engagement ("" si aucune).
+    # OPT-IN — flag --cookie vérifié au --help du binaire épinglé (1.10).
+    - "--cookie={COOKIES}"
     - "--batch"
     - "--level=1"
     - "--risk=1"
@@ -72,3 +75,6 @@ a_verifier:
      détection (comportement par défaut, ~7 s mesurés sur l'épreuve)."
   - "la sortie journal contient des séquences ANSI (sqlmap colorise hors
      TTY, mesuré) : le parser les retire avant lecture."
+  - "{COOKIES} injecté seulement si l'engagement fournit auth_cookies, sinon
+     chaîne vide ; flag --cookie vérifié au --help du binaire épinglé (1.10),
+     non mesuré de bout en bout (structure --help)."

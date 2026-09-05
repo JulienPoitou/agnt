@@ -29,6 +29,11 @@ execution:
     - "url"
     - "-u"
     - "{URL}/search?q=XSS"
+    # Scan authentifié v1 : {COOKIES} = valeur de l'engagement ("" si aucune).
+    # OPT-IN — flag -H vérifié au --help du binaire épinglé (v3.2.2,
+    # sous-commandement `url` : -H, --headers).
+    - "-H"
+    - "Cookie: {COOKIES}"
     - "-f"
     - "jsonl"
     - "--no-color"
@@ -70,3 +75,6 @@ a_verifier:
      le parser lit la sortie comme elle est, sans extrapoler."
   - "bornes : un seul paramètre marqué, aucun dictionnaire de payload
      personnalisé ; ~170 requêtes mesurées contre 127.0.0.1."
+  - "{COOKIES} injecté seulement si l'engagement fournit auth_cookies, sinon
+     chaîne vide ; flag -H vérifié au --help du binaire épinglé (v3.2.2,
+     sous-commandement url), non mesuré de bout en bout (structure --help)."

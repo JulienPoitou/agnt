@@ -31,6 +31,10 @@ execution:
   args:
     - "-u"
     - "{URL}"
+    # Scan authentifié v1 : {COOKIES} = valeur de l'engagement ("" si aucune).
+    # OPT-IN — flag -H vérifié au --help du binaire épinglé (v1.7.0).
+    - "-H"
+    - "Cookie: {COOKIES}"
     - "-jsonl"
     - "-o"
     - "{OUT}"
@@ -59,3 +63,7 @@ requirements:
   reseau: true
   privileges: aucun
   timeout_s: 300
+a_verifier:
+  - "{COOKIES} injecté seulement si l'engagement fournit auth_cookies, sinon
+     chaîne vide ; flag -H vérifié au --help du binaire épinglé (v1.7.0),
+     non mesuré de bout en bout (structure --help)."

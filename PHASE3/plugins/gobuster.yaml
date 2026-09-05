@@ -30,6 +30,11 @@ execution:
     - "dir"
     - "-u"
     - "{URL}"
+    # Scan authentifié v1 : {COOKIES} = valeur de l'engagement ("" si aucune).
+    # OPT-IN — flag --cookies vérifié au `gobuster dir --help` du binaire
+    # épinglé (3.8.2), sans ambiguïté dans le mode déclaré par l'argv.
+    - "--cookies"
+    - "{COOKIES}"
     - "-w"
     - "{REGLES}/dossiers-mini.txt"
     - "-t"
@@ -55,3 +60,7 @@ requirements:
   reseau: true
   privileges: aucun
   timeout_s: 300
+a_verifier:
+  - "{COOKIES} injecté seulement si l'engagement fournit auth_cookies, sinon
+     chaîne vide ; flag --cookies vérifié au `gobuster dir --help` du binaire
+     épinglé (3.8.2), non mesuré de bout en bout (structure --help)."

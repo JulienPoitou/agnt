@@ -26,6 +26,9 @@ execution:
   args:
     - "-u"
     - "{URL}"
+    # Scan authentifié v1 : {COOKIES} = valeur de l'engagement ("" si aucune).
+    # OPT-IN — flag --cookie vérifié au --help du binaire épinglé (v0.5.0).
+    - "--cookie={COOKIES}"
     - "-w"
     - "{REGLES}/dossiers-mini.txt"
     - "-t"
@@ -52,3 +55,7 @@ requirements:
   reseau: true
   privileges: aucun
   timeout_s: 300
+a_verifier:
+  - "{COOKIES} injecté seulement si l'engagement fournit auth_cookies, sinon
+     chaîne vide ; flag --cookie vérifié au --help du binaire épinglé (v0.5.0),
+     non mesuré de bout en bout (structure --help)."

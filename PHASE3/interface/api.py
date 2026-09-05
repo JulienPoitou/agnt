@@ -345,7 +345,7 @@ def _engagement_precedent(url_canonique: str, exclure: str):
     return mid, precedents
 
 
-def _travail_web(rid: str, engagement: dict) -> None:
+def _travail_web(rid: str, engagement: dict, auth_cookies: str = "") -> None:
     """Exécute un engagement web mis en file (câblage ①-b, 2026-09-05).
 
     Toute la logique vit dans `pipeline_web.derouler` (scope → plans par manifest
@@ -355,6 +355,11 @@ def _travail_web(rid: str, engagement: dict) -> None:
     les runs dépôt, jamais un 200 muet. Les sorties brutes des outils et le
     rapport restent sur disque (artifacts/engagements/<id>/) : l'engagement ne
     survit pas au processus, ses PREUVES oui (loi 1).
+
+    `auth_cookies` (scan authentifié v1) : la VALEUR du cookie, reçue des
+    OPTIONS de la file (jamais de l'engagement stocké dans ETATS) et passée à
+    `derouler` — qui ne la rend nulle part. `_marquer` ne reçoit que le
+    rapport : aucun état de file ne porte la valeur.
     """
     _marquer(rid, statut="en_cours")
     dossier = RACINE / "artifacts" / "engagements" / rid
@@ -374,7 +379,8 @@ def _travail_web(rid: str, engagement: dict) -> None:
         rapport = PW.derouler(engagement, exe.executer,
                               regles=str(REGLES_WEB) if REGLES_WEB.is_dir() else "",
                               out_dir=str(dossier),
-                              precedent_id=precedent_id, precedents=precedents)
+                              precedent_id=precedent_id, precedents=precedents,
+                              auth_cookies=str(auth_cookies or ""))
         (dossier / "rapport_web.json").write_text(
             json.dumps(rapport, ensure_ascii=False, indent=2, default=str),
             encoding="utf-8")
@@ -401,7 +407,8 @@ def _travail() -> None:
         rid, question, cible, options = FILE.get()
         if options.get("genre") == "web":
             try:
-                _travail_web(rid, options.get("engagement") or {})
+                _travail_web(rid, options.get("engagement") or {},
+                             auth_cookies=str(options.get("auth_cookies") or ""))
             finally:
                 FILE.task_done()
             continue
@@ -822,6 +829,29 @@ class Gestionnaire(BaseHTTPRequestHandler):
         executer = corps.get("executer")
         if executer is not None and not isinstance(executer, bool):
             return self._json({"erreur": "executer : attendu true, false, ou absent"}, 400)
+        # Scan authentifié v1 : `auth_cookies` (chaîne "NOM=valeur; …", opt-in).
+        # LA VALEUR NE SERA JAMAIS RENDUE : elle est validée ICI, ne va PAS dans
+        # l'engagement stocké dans ETATS (GET /api/runs/{id} le rend tel quel —
+        # il ne porterait que `auth.fournie`), et transite uniquement par les
+        # OPTIONS de la file jusqu'à `pipeline_web.derouler`. Un saut de ligne
+        # dans un cookie = injection d'en-tête chez l'outil : refus nommé, pas
+        # de masquage a posteriori. Absent → comportement inchangé.
+        auth_cookies = corps.get("auth_cookies")
+        if auth_cookies is not None:
+            if not isinstance(auth_cookies, str) or not auth_cookies.strip():
+                return self._json({"erreur": "auth_cookies : chaîne non vide attendue "
+                                             "(ex. \"SESSION=…; autre=valeur\")"}, 400)
+            taille = len(auth_cookies.encode("utf-8"))
+            if taille > 4096:
+                return self._json({"erreur": f"auth_cookies trop longs "
+                                             f"({taille} > 4096 octets)"}, 400)
+            controle = next((ord(c) for c in auth_cookies
+                             if ord(c) < 32 or ord(c) == 127), None)
+            if controle is not None:
+                return self._json({"erreur": "auth_cookies : caractère de contrôle "
+                                             f"(code {controle}) refusé — un saut de "
+                                             "ligne dans un cookie est une injection "
+                                             "d'en-tête chez l'outil"}, 400)
         intensity = str(corps.get("intensity") or "normal")
         if intensity not in ("normal", "aggressive"):
             return self._json({"erreur": f"intensity inconnue : {intensity}",
@@ -855,6 +885,7 @@ class Gestionnaire(BaseHTTPRequestHandler):
                       "intensity": intensity,
                       "egress": egress, "cible_autorisee": True,
                       "executer": executer is True,
+                      "auth": {"fournie": auth_cookies is not None},
                       "providers_prevus": [p["id"] for p in plan_providers],
                       "verification": {
                           "oracle": "http_response",
@@ -881,10 +912,14 @@ class Gestionnaire(BaseHTTPRequestHandler):
                 ETATS[eid] = engagement
                 reponse = {"id": eid, **engagement}
                 if executer:
-                    # Même file que les missions dépôt (loi 1 : une exécution à la
-                    # fois) — c'est un choix d'ordonnancement, pas un garde-fou.
+                    # Même file que les missions dépôt (loi 1 : une exécution à
+                    # la fois) — c'est un choix d'ordonnancement, pas un
+                    # garde-fou. La VALEUR du cookie passe par les OPTIONS de la
+                    # file, jamais par l'engagement stocké dans ETATS.
                     FILE.put((eid, None, None,
-                              {"genre": "web", "engagement": engagement}))
+                              {"genre": "web", "engagement": engagement,
+                               **({"auth_cookies": auth_cookies}
+                                  if auth_cookies is not None else {})}))
         limites = (["exécution réelle demandée : SOUS CAGE bwrap (cible_distante, "
                     "egress selon l'engagement), binaires épinglés et promus",
                     "absence de correspondance ≠ absence de vulnérabilité"]
@@ -892,6 +927,17 @@ class Gestionnaire(BaseHTTPRequestHandler):
                    ["plan seul : demander executer: true pour lancer la chaîne "
                     "httpx→katana→ffuf→nuclei (cible_autorisee reste exigée)",
                     "absence de correspondance ≠ absence de vulnérabilité"])
+        # Scan authentifié v1 : la limite est dite au client, qu'un cookie ait
+        # été fourni ou non (il décrit la mécanique, pas un état).
+        limites = limites + [
+            "auth_cookies v1 : la valeur transite dans l'argv de l'outil "
+            "(visible dans /proc localement uniquement) et n'est jamais rendue "
+            "par l'API ni scellée dans la preuve"]
+        if auth_cookies is not None and not executer:
+            # Honnêteté du plan seul : la valeur a été VALIDÉE puis JETÉE —
+            # rien ne s'exécute ici, elle ne sera pas rejouée par magie.
+            limites = limites + [
+                "plan seul : auth_cookies non conservé, fournir à l'exécution"]
         return self._json({**reponse,
                            "verification": reponse.get("verification") or {
                                "oracle": "http_response",
