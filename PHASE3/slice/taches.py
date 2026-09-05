@@ -47,8 +47,13 @@ class ResultatExecution:
     erreur: str = ""
 
     def to_dict(self) -> dict:
-        return {"code": self.code, "stdout": self.stdout[-4000:],
-                "stderr": self.stderr[-4000:], "duree_s": round(self.duree_s, 3),
+        # Plafond relevé 4000 → 20000 (mesuré le 2026-09-05) : le journal sqlmap
+        # dépasse 4000 caractères et la ligne « testing URL '…' » — en TÊTE de
+        # journal — était tronquée, privant les findings d'URL (oracle non
+        # vérifiable). 20000 × 18 tâches reste borné (~360 Ko) ; les outils
+        # écrivent surtout dans {OUT}, le stdout est le complément.
+        return {"code": self.code, "stdout": self.stdout[-20000:],
+                "stderr": self.stderr[-20000:], "duree_s": round(self.duree_s, 3),
                 "timeout": self.timeout, "annulee": self.annulee, "erreur": self.erreur}
 
 
