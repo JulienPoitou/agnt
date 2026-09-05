@@ -1,0 +1,22 @@
+# ATTENDUS — crlfuzz contre THAUMAS-WEB (http://127.0.0.1:8807, 2026-09-05)
+cible: http://127.0.0.1:8807
+resultat_attendu: >
+  RÉSULTAT VIDE HONNÊTE avec la raison écrite — THAUMAS-WEB n'a AUCUNE
+  injection CRLF plantée, ET crlfuzz n'écrit RIEN sur stdout en l'absence de
+  constat : le journal payload-par-payload va sur stderr (mesuré, 18 lignes
+  ERR), code 0, stdout vide — y compris sur cible MORTE (mesuré, code 0
+  aussi). Le cœur nomme donc « sortie vide : échec d'exécution, pas un scan
+  propre » : c'est la LIMITE DE L'OUTIL (il ne sait pas distinguer propre de
+  injoignable sur sa sortie standard), consignée au plugin et au manifeste —
+  jamais convertie en « cible propre ».
+code_retour: 0               # crlfuzz sort 0 dans tous les cas mesurés
+code_succes_plugin: [0]
+constats: []                 # aucune faille CRLF sur la cible ; stdout vide (outil)
+items_attendus: 0
+echec_attendu: "sortie vide" # l'interpréteur le nomme — limite de l'OUTIL, pas un accident
+verification_honnete: >
+  Le marqueur de constat ([VLN] <url>) vient du SOURCE épinglé (runner.go) et
+  de la documentation de l'outil : il n'a PAS pu être mesuré sur une détection
+  réelle (pas de faille CRLF plantée sur la cible) — consigné au plugin
+  (a_verifier), non deviné. Le CWE-93 du parser est une classification, il ne
+  se déclare que sur un constat mesuré.

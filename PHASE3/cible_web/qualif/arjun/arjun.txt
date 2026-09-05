@@ -1,0 +1,22 @@
+[92m    _
+   /_| _ '
+  (  |/ /(//) v2.2.7
+      _/      [0m
+
+[1;97m[*][0m Scanning 0/1: http://127.0.0.1:8807/search?q=THAUMAS
+[1;97m[*][0m Probing the target for stability
+[1;97m[*][0m Analysing HTTP response for anomalies
+[1;97m[*][0m Logicforcing the URL endpoint
+[1;93m[!][0m Processing chunks: 1/2     
+[1;93m[!][0m Processing chunks: 2/2     
+[1;93m[!][0m Processing chunks: 1/2     
+[1;93m[!][0m Processing chunks: 2/2     
+[1;93m[!][0m Processing chunks: 1/2     
+[1;93m[!][0m Processing chunks: 2/2     
+[1;93m[!][0m Processing chunks: 1/2     
+[1;93m[!][0m Processing chunks: 2/2     
+[1;93m[!][0m Processing chunks: 1/2     
+[1;93m[!][0m Processing chunks: 2/2     
+[1;92m[✓][0m parameter detected: q, based on: body length
+[1;32m[+][0m Parameters found: q   
+

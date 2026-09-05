@@ -1,0 +1,26 @@
+# Meta d'épreuve — arjun contre THAUMAS-WEB (2026-09-05, vague web G3)
+tool: arjun
+binaire: arjun
+version_binaire_sha256: 1067c34892b9a03e7d50e5aa9b5beca872f2c2f503c9b4fa96b7bac8a0afbf23
+argv:
+- /home/julie/.cache/arena_secops/staging/arjun/venv/bin/arjun
+- -u
+- http://127.0.0.1:8807/search?q=THAUMAS
+- -w
+- /home/julie/agnt-g3/PHASE3/regles_web/parametres-mini.txt
+- -t
+- 4
+- -T
+- 10
+env: {}
+code_retour: 0
+timeout: false
+duree_ms: 507
+sortie_origine: stdout:arjun.txt (808 o ; stderr arjun.stderr : 0 o)
+cible: http://127.0.0.1:8807
+sandbox: exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre
+stderr_extrait: ''
+notes: >  Il DÉCOUVRE le paramètre q (heuristique « body length » déclarée par
+  l'outil). Wordlist épinglée {REGLES}/parametres-mini.txt (30 noms) : la
+  wordlist par défaut (25 889 noms) serait non bornée. Stdout lu (le fichier
+  -o JSON n'est pas créé sans résultat, mesuré).

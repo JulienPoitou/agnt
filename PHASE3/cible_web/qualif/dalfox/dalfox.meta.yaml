@@ -1,0 +1,25 @@
+# Meta d'épreuve — dalfox contre THAUMAS-WEB (2026-09-05, vague web G3)
+tool: dalfox
+binaire: dalfox
+version_binaire_sha256: 0da7002be13723f54cebc99a3bf601be502c72f7a64f2fc7dc3164f804b92c47
+argv:
+- /home/julie/.cache/arena_secops/staging/dalfox/dalfox
+- url
+- -u
+- http://127.0.0.1:8807/search?q=XSS
+- -f
+- jsonl
+- --no-color
+- -S
+env: {}
+code_retour: 1
+timeout: false
+duree_ms: 4820
+sortie_origine: stdout:dalfox.txt (983 o ; stderr dalfox.stderr : 0 o)
+cible: http://127.0.0.1:8807
+sandbox: exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre
+stderr_extrait: ''
+notes: >  Il TROUVE la faille plantée T-XSS-001 : payload vérifié (type V) sur q,
+  sévérité High DÉCLARÉE par l'outil. Sortie JSONL sur stdout avec -S : ligne
+  méta (findings_count, total_requests) + findings — le parser ne retient que
+  les findings. Code 1 = findings (mesuré), dans code_succes [0, 1].

@@ -1,0 +1,28 @@
+
+   _____ _____ __    _____             
+  |     | __  |  |  |   __|_ _ ___ ___ 
+  |   --|    -|  |__|   __| | |- _|- _|
+  |_____|__|__|_____|__|  |___|___|___|
+
+      v1.4.0 - @dwisiswant0
+
+[[33mWRN[0m] Use with caution. You are responsible for your actions
+[[33mWRN[0m] Developers assume no liability and are not responsible for any misuse or damage.
+[[31mERR[0m] http://127.0.0.1:8807/\rSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/\r%20Set-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/\r\nSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/\r\n%20Set-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/\r\n\tSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/\r\tSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/crlfuzz\rSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/crlfuzz\r%20Set-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/crlfuzz\r\nSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/crlfuzz\r\n%20Set-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/crlfuzz\r\n\tSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/crlfuzz\r\tSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/?crlfuzz=\rSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/?crlfuzz=\r%20Set-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/?crlfuzz=\r\nSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/?crlfuzz=\r\n%20Set-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/?crlfuzz=\r\n\tSet-Cookie:param=crlfuzz;
+[[31mERR[0m] http://127.0.0.1:8807/?crlfuzz=\r\tSet-Cookie:param=crlfuzz;

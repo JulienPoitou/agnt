@@ -1,0 +1,25 @@
+# ATTENDUS — sqlmap contre THAUMAS-WEB (http://127.0.0.1:8807, 2026-09-05)
+cible: http://127.0.0.1:8807
+resultat_attendu: >
+  FAILLE TROUVÉE — T-SQLI-001 prouvé. /users?id= construit sa requête SQLite par
+  CONCATÉNATION (serveur.py) : sqlmap identifie le paramètre id (GET) injectable
+  et nomme les techniques vérifiées (épreuve de calibration du 2026-09-05 :
+  boolean-based blind, time-based blind, UNION query — 3 techniques, 48 requêtes
+  de détection). T-SQLI-002 se lit dans le journal de l'outil : codes 500 relevés
+  (erreur SQL brute sur les payloads de syntaxe). BORNES : --level=1 --risk=1
+  --threads=1, --batch, --flush-session — une seule cible 127.0.0.1.
+code_retour: 0               # sqlmap sort 0 dans TOUS les cas mesurés (voir notes)
+code_succes_plugin: [0]
+constats:
+  - parametre_attendu: "id (GET)"
+    techniques_mesurees_calibration:
+      - boolean-based blind
+      - time-based blind
+      - UNION query
+items_attendus: ">=3"        # un item PAR (paramètre, technique)
+echec_attendu: false
+verification_honnete: >
+  La sévérité n'est PAS inventée (sqlmap n'en porte pas) ; le CWE-89 est une
+  classification, le payload sqlmap est la preuve. Le code 0 ne distingue rien
+  (mesuré : 0 avec findings, 0 propre, 0 cible morte) — l'interprétation vient
+  du bloc « Parameter: … / Type: … » du journal, pas du code de retour.

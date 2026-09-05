@@ -1,0 +1,25 @@
+# Meta d'épreuve — commix contre THAUMAS-WEB (2026-09-05, vague web G3)
+tool: commix
+binaire: commix
+version_binaire_sha256: ff305e5e7b3e27805aec6a77306259e498f60d38153b9ed748c03f6e3849d9e3
+argv:
+- /home/julie/.cache/arena_secops/staging/commix/commix
+- -u
+- http://127.0.0.1:8807/users?id=1
+- --batch
+- --ignore-stdin
+- --time-limit=120
+- --output-dir=/home/julie/agnt-g3/PHASE3/cible_web/qualif/commix
+env: {}
+code_retour: 0
+timeout: false
+duree_ms: 5224
+sortie_origine: stdout:commix.txt (1663 o ; stderr commix.stderr : 0 o)
+cible: http://127.0.0.1:8807
+sandbox: exécution DIRECTE hors cage (staging) — qualification bwrap centralisée à suivre
+stderr_extrait: ''
+notes: >  Résultat vide HONNÊTE : la cible n'a pas de faille de commande. Les tests
+  heuristiques ont bien été menés (journal complet archivé) ; --ignore-stdin
+  (option cachée) requis hors TTY — sans elle, commix sort immédiatement code
+  0 sans scanner (mesuré en calibration). Session et logs archivés tels qu'écrits par
+  {OUT_DIR} (127.0.0.1_8807/ : logs.txt, session.db, cli_history).

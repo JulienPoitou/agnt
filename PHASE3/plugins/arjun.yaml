@@ -1,0 +1,72 @@
+# Plugin AGNT — arjun, découverte de paramètres web (vague web G3, 2026-09-05).
+#
+# THAUMAS-WEB plante trois paramètres (q sur /search, id sur /users, file sur
+# /download). L'épreuve vise /search?q= : arjun y détecte q par heuristique de
+# longueur de corps (mesuré). La wordlist est ÉPINGLÉE
+# (regles_web/parametres-mini.txt, 30 noms, empreinte en section regles du
+# manifeste) : la wordlist embarquée par défaut (db/large.txt, 25 889 noms)
+# serait multi-milliers de requêtes — l'épreuve reste bornée. Sur une cible
+# générique, {URL} sans suffixe peut ne porter aucun paramètre réflecteur.
+id: arjun
+capacites:
+  - WEB_ENDPOINT_DISCOVERY_ACTIVE
+entrees:
+  - url
+binaire: arjun
+version_min: "2.2.7"
+licence: GPL-3.0
+priorite: 134
+cout: faible
+risque: ACTIVE
+description: >
+  Découverte de paramètres web (arjun 2.2.7) : envoie les noms de la wordlist
+  épinglée en lots contre l'URL et détecte les paramètres qui changent la
+  réponse (longueur de corps, code HTTP, temporisation) — un paramètre
+  découvert est celui que l'outil rend avec son heuristique (« based on: body
+  length », « http code »). Un paramètre détecté est de la SURFACE (entrée
+  candidate pour les autres lecteurs), pas une vulnérabilité : pas de
+  sévérité, jamais inventée. CINQUIÈME lecteur de WEB_ENDPOINT_DISCOVERY_ACTIVE
+  (ffuf/katana/gobuster/feroxbuster/dirsearch découvrent des chemins, arjun
+  des paramètres — deux lectures différentes du même périmètre).
+execution:
+  args:
+    - "-u"
+    - "{URL}/search?q=THAUMAS"
+    - "-w"
+    - "{REGLES}/parametres-mini.txt"
+    - "-t"
+    - "4"
+    - "-T"
+    - "10"
+  # Mesuré 2.2.7 : code 0 avec paramètres détectés ET code 0 sans aucun
+  # (« No parameters were discovered. ») — le résultat vide reste « pas une
+  # preuve d'absence » (motif du cœur).
+  code_succes: [0]
+sortie:
+  format: custom
+lecture:
+  # stdout texte (séquences ANSI retirées par le parser) : une ligne
+  # « parameter detected: <nom>, based on: <heuristique> » PAR paramètre
+  # + « Scanning N/M: <url> » qui porte l'URL de l'épreuve. Le fichier -o
+  # JSON n'est PAS créé quand aucun paramètre n'est trouvé (mesuré) — le
+  # stdout, lui, est toujours produit : c'est lui l'autorité.
+  parser: arjun
+  champs:
+    regle: regle              # parametre-decouvert (constat du parser)
+    nom_regle: nom_regle      # le nom du paramètre découvert
+    url: url                  # → location.url (URL sonnée, ligne Scanning)
+    message: message          # l'heuristique déclarée par l'outil
+requirements:
+  reseau: true
+  privileges: aucun
+  timeout_s: 300
+a_verifier:
+  - "{REGLES} doit pointer sur le répertoire des règles épinglées : sans
+     regles= à la planification, l'argv porte « /parametres-mini.txt » et
+     l'exécution échouera NOMMÉMENT (fichier de wordlist absent) — jamais
+     silencieusement (le repli db/large.txt embarqué est volontairement
+     inaccessible : non borné)."
+  - "un paramètre détecté par longueur/code n'est PAS une XSS ni une SQLi :
+     la surface trouvée alimente les lecteurs actifs, elle ne les remplace pas."
+  - "bornes : wordlist épinglée 30 noms, -t 4, -T 10 s ; ~2 lots mesurés
+     contre 127.0.0.1."
