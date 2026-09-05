@@ -70,7 +70,7 @@ def main() -> int:
     if reg_ok:
         rap = PW.derouler(engagement(), faux_ok({"nuclei": (0, NUCLEI_OK),
                                                  "zap_baseline": (1, ZAP_OK)}),
-                          registre=reg, out_dir="/tmp/aw", verifier_oracle=False)
+                          registre=reg, out_dir="/tmp/aw", verifier_oracle=False, cage=False)
         cas("2 providers → findings agrégés, run terminé",
             rap["statut_run"] == "termine" and len(rap["findings"]) == 2
             and rap["providers_ecartes"] == [],
@@ -87,7 +87,7 @@ def main() -> int:
         #     même quand l'engagement les demande dans un autre ordre
         rap_o = PW.derouler(engagement(providers_prevus=["nuclei", "httpx"]),
                             faux_ok({"nuclei": (0, NUCLEI_OK), "httpx": (0, "{}")}),
-                            registre=reg, out_dir="/tmp/aw", verifier_oracle=False)
+                            registre=reg, out_dir="/tmp/aw", verifier_oracle=False, cage=False)
         cas("phases : la surface (httpx) passe avant la vuln (nuclei) même si "
             "demandée en dernier",
             [d["provider"] for d in rap_o["details"]] == ["httpx", "nuclei"],
@@ -109,10 +109,33 @@ def main() -> int:
         cas("systemique : règle sous le seuil → pas d'agrégat",
             all(s["regle"] != "ffuf:y" for s in sysv),
             json.dumps(sysv, ensure_ascii=False)[:120])
+        # --- cage : la commande construite est du bwrap, egress paramétrable
+        import shutil as _sh
+        _httpx = _sh.which("httpx")
+        if _httpx:
+            exe_ok = PW.ExecuteurCage(lambda t: t, "/tmp/aw-cage", regles="",
+                                      egress=True, racine_ph3=RACINE)
+            argv_ok = exe_ok.prefixe([_httpx, "-u", "https://target.tld/"])
+            cas("cage : argv wrappé par bwrap, réseau NON coupé (egress accordé)",
+                argv_ok[0].endswith("bwrap") and "--unshare-net" not in argv_ok
+                and _httpx in argv_ok,
+                " ".join(argv_ok)[:180])
+            exe_ko = PW.ExecuteurCage(lambda t: t, "/tmp/aw-cage", regles="",
+                                      egress=False, racine_ph3=RACINE)
+            argv_ko = exe_ko.prefixe([_httpx, "-u", "https://target.tld/"])
+            cas("cage : egress refusé → --unshare-net présent (réseau coupé)",
+                "--unshare-net" in argv_ko,
+                " ".join(argv_ko)[:180])
+            cas("cage : la sortie est montée en ÉCRITURE",
+                any("--bind" in a for a in argv_ok),
+                " ".join(argv_ok)[:180])
+        else:
+            cas("cage : httpx absent → construction NON ÉVALUÉE ici", None,
+                "machine sans binaire, la preuve cage vit en test_web_cable")
         fp0 = rap["findings"][0]["identity"]["fingerprint"]
         rap_r = PW.derouler(engagement(), faux_ok({"nuclei": (0, NUCLEI_OK),
                                                   "zap_baseline": (1, ZAP_OK)}),
-                            registre=reg, out_dir="/tmp/aw", verifier_oracle=False,
+                            registre=reg, out_dir="/tmp/aw", verifier_oracle=False, cage=False,
                             precedent_id="e-avant",
                             precedents={fp0: {"regle": "t1", "url": "https://target.tld/",
                                               "etat": "verified"}})
@@ -123,7 +146,7 @@ def main() -> int:
             json.dumps(rap_r["reprise"], ensure_ascii=False)[:160])
         rap_r2 = PW.derouler(engagement(), faux_ok({"nuclei": (0, NUCLEI_OK),
                                                     "zap_baseline": (1, ZAP_OK)}),
-                             registre=reg, out_dir="/tmp/aw", verifier_oracle=False,
+                             registre=reg, out_dir="/tmp/aw", verifier_oracle=False, cage=False,
                              precedents={"vieux-fp": {"regle": "ancienne-regle",
                                                       "url": "https://target.tld/a",
                                                       "etat": "observed"}})
@@ -135,14 +158,14 @@ def main() -> int:
             json.dumps(rap_r2["reprise"], ensure_ascii=False)[:200])
         rap = PW.derouler(engagement(providers_prevus=["nuclei", "bandit"]),
                           faux_ok({"nuclei": (0, NUCLEI_OK)}),
-                          registre=reg, out_dir="/tmp/aw", verifier_oracle=False)
+                          registre=reg, out_dir="/tmp/aw", verifier_oracle=False, cage=False)
         cas("provider inapplicable écarté avec motif, pas d'arrêt",
             rap["statut_run"] == "termine" and len(rap["findings"]) == 1
             and len(rap["providers_ecartes"]) == 1
             and "non applicable" in rap["providers_ecartes"][0]["motif"],
             json.dumps(rap["providers_ecartes"], ensure_ascii=False)[:140])
         rap = PW.derouler(engagement(), faux_ok({"nuclei": (5, "boom")}), registre=reg,
-                          out_dir="/tmp/aw", verifier_oracle=False)
+                          out_dir="/tmp/aw", verifier_oracle=False, cage=False)
         det = [d for d in rap["details"] if d["provider"] == "nuclei"][0]
         cas("code hors succès → run continue, échec provider enregistré honnêtement",
             rap["statut_run"] == "termine" and rap["findings"] == []
@@ -150,7 +173,7 @@ def main() -> int:
             json.dumps(det, ensure_ascii=False)[:140])
         rap = PW.derouler(engagement(egress=False),
                           faux_ok({"nuclei": (0, NUCLEI_OK)}), registre=reg,
-                          out_dir="/tmp/aw", verifier_oracle=False)
+                          out_dir="/tmp/aw", verifier_oracle=False, cage=False)
         cas("sans egress → tout écarté, run refusé nommé",
             rap["statut_run"] == "refuse" and rap["findings"] == []
             and all("egress" in e["motif"] for e in rap["providers_ecartes"]),

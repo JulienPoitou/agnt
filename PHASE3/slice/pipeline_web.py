@@ -250,10 +250,91 @@ def _systemique(findings: list[dict], seuil: int = 5) -> list[dict]:
     return out
 
 
+class ExecuteurCage:
+    """Exécuteur web SOUS CAGE : chaque tâche passe par bwrap (slice/sandbox.py,
+    `cible_distante=True` — la machinerie du harnais, assemblée et non dupliquée).
+
+    · {BIN} est résolu AVANT l'entrée en cage : bwrap ne fait pas de lookup PATH
+      interne, le binaire doit être nommé par son chemin hôte (accessible via
+      `--ro-bind / /`) ;
+    · l'egress est celui de l'engagement : accordé → `--unshare-net` retiré ;
+      refusé → la cage coupe le réseau et l'outil échouera nommément ;
+    · `verifie()` court AVANT chaque lancement : montages et empreintes du cache
+      hors conformité → tâche REFUSÉE nommément, jamais un lancement en cachette ;
+    · garde anti-double-cage : l'orchestrateur recrée un Tache sur timeout avec
+      l'argv COURANT — déjà wrappé. On ne re-cage pas une cage.
+
+    L'exécuteur interne reste injecté (ExecuteurLocal en prod, faux en tests) :
+    le cycle de vie, le timeout et le journal ne changent pas.
+    """
+
+    def __init__(self, executer_interne, out_dir: str, regles: str,
+                 egress: bool, racine_ph3):
+        from sandbox import Sandbox
+        self._interne = executer_interne
+        # Sans règles déclarées, on monte le dossier PHASE3 lui-même : la cage
+        # exige un point de montage règles valide, et un provider sans {REGLES}
+        # n'en lit jamais le contenu.
+        self.sbx = Sandbox(cible_distante=True,
+                           sortie=Path(out_dir),
+                           racine_regles=Path(regles) if regles else racine_ph3,
+                           gitconfig=Path(racine_ph3) / "gitconfig",
+                           egress_autorise=egress)
+        # Traduction hôte → cage : la sandbox monte la SORTIE au point M_OUT et
+        # les RÈGLES au point M_REGLES — l'argv résolu par le manifest porte les
+        # chemins HÔTES ({OUT} = out_dir/<fichier>, {REGLES} = regles_web/…).
+        # Sans cette traduction, l'outil écrit dans un / en lecture seule et
+        # rend « code 1 » sans explication (mesuré le 2026-09-05).
+        self._traductions = [(str(Path(out_dir)), self.sbx.M_OUT)]
+        if regles:
+            self._traductions.append((str(Path(regles)), self.sbx.M_REGLES))
+
+    def _traduire(self, argv_hote: list) -> list:
+        out = []
+        for a in argv_hote:
+            a = str(a)
+            for hote, cage_pt in self._traductions:
+                if a == hote:
+                    a = cage_pt
+                    break
+                if a.startswith(hote + "/"):
+                    a = cage_pt + a[len(hote):]
+                    break
+            out.append(a)
+        return out
+
+    def executer(self, tache):
+        import shutil
+        if tache.argv and str(tache.argv[0]).endswith("bwrap"):
+            return self._interne(tache)             # déjà en cage (relance orchestrée)
+        binaire = shutil.which(tache.argv[0])
+        if binaire is None:
+            tache.etat = TA.ECHOUEE
+            tache.resultat = TA.ResultatExecution(
+                None, "", "", 0.0, erreur=f"executable_introuvable : {tache.argv[0]}")
+            return tache
+        problemes = self.sbx.verifie()
+        if problemes:
+            tache.etat = TA.REFUSEE
+            tache.resultat = TA.ResultatExecution(
+                None, "", "", 0.0,
+                erreur="cage : " + "; ".join(problemes)[:180])
+            return tache
+        tache.argv = self.prefixe([binaire] + list(tache.argv[1:]))
+        return self._interne(tache)
+
+    def prefixe(self, argv_hote: list) -> list:
+        """La commande bwrap pour un argv hôte résolu — pure, testable sans bwrap.
+        Les chemins hôte de sortie/règles sont traduits vers leurs points de
+        montage (`_traduire`)."""
+        return self.sbx.commande(self._traduire(argv_hote))
+
+
 def derouler(engagement: dict, executer_tache, registre=None,
              out_dir: str = "/tmp/agnt-web", regles: str = "",
              verifier_oracle: bool = True,
-             precedent_id: str | None = None, precedents: dict | None = None) -> dict:
+             precedent_id: str | None = None, precedents: dict | None = None,
+             cage: bool = True) -> dict:
     """Déroule un engagement web planifié. Rend le rapport de mission (dict)."""
     if not isinstance(engagement, dict) or engagement.get("type") != "web":
         raise ErreurPipeline("engagement web attendu")
@@ -290,11 +371,20 @@ def derouler(engagement: dict, executer_tache, registre=None,
                        "tache": TA.Tache(provider_id=nid, argv=plan["argv"],
                                          timeout_s=float(plan["timeout_s"] or 300))})
         precedent = nid
+    # La cage est la nouvelle doctrine runtime : chaque tâche passe par bwrap
+    # (cible_distante, egress selon l'engagement). L'exécuteur injecté reste la
+    # source du cycle de vie — la cage ne fait que PREFIXER la commande, après
+    # résolution du binaire et vérification des montages (refus nommé sinon).
+    if cage:
+        racine_ph3 = Path(__file__).resolve().parent.parent
+        executer_tache = ExecuteurCage(
+            executer_tache, out_dir, regles, egress_accorde, racine_ph3).executer
     run = executer_plan(noeuds, executer_tache, stop_on_failure=False)
     findings, details = [], []
     for res in run["taches"]:
         if res["etat"] != TA.TERMINEE:
             details.append({"provider": res["provider"], "etat": res["etat"],
+                            "cage": cage,
                             "motif": (res["resultat"] or {}).get("erreur", "")})
             continue
         r = res["resultat"] or {}
@@ -328,6 +418,7 @@ def derouler(engagement: dict, executer_tache, registre=None,
                                           "vers": transition(DISCOVERED, "observer")}]}
             findings.append(d)
         details.append({"provider": res["provider"], "etat": res["etat"],
+                        "cage": cage,
                         "findings": len(interp["findings"]), "motif": interp["motif"]})
     verifications = None
     if verifier_oracle and findings:
@@ -343,10 +434,16 @@ def derouler(engagement: dict, executer_tache, registre=None,
                "providers_demandes": list(engagement.get("providers_prevus") or []),
                "providers_ecartes": ecartes, "details": details,
                "findings": findings,
-               "limites_connues": [
+               "limites_connues": ([
+                   "exécution SOUS CAGE bwrap (cible_distante, egress selon "
+                   "l'engagement) ; l'exécuteur reste injecté",
                    "oracle http_response : rejeu réel ×N + témoin ; les findings "
                    "sans URL ou hors scope restent OBSERVED (raison nommée)",
-                   "absence de correspondance ≠ absence de vulnérabilité"]}
+                   "absence de correspondance ≠ absence de vulnérabilité"]
+                   if cage else [
+                   "oracle http_response : rejeu réel ×N + témoin ; les findings "
+                   "sans URL ou hors scope restent OBSERVED (raison nommée)",
+                   "absence de correspondance ≠ absence de vulnérabilité"])}
     if verifications is not None:
         rapport["verifications"] = verifications
     if precedents is not None:

@@ -879,9 +879,8 @@ class Gestionnaire(BaseHTTPRequestHandler):
                     # fois) — c'est un choix d'ordonnancement, pas un garde-fou.
                     FILE.put((eid, None, None,
                               {"genre": "web", "engagement": engagement}))
-        limites = (["exécution réelle demandée : binaires résolus dans le PATH du "
-                    "service, hors cage bwrap à ce stade (limite du runtime web, "
-                    "qualifications sous cage : cible_web/qualif/)",
+        limites = (["exécution réelle demandée : SOUS CAGE bwrap (cible_distante, "
+                    "egress selon l'engagement), binaires épinglés et promus",
                     "absence de correspondance ≠ absence de vulnérabilité"]
                    if executer else
                    ["plan seul : demander executer: true pour lancer la chaîne "

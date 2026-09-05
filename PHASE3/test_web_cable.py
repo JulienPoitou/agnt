@@ -141,10 +141,18 @@ def main() -> int:
                 any(d.get("provider") == "httpx" and d.get("etat") == "terminee"
                     and d.get("findings", 0) >= 1 for d in details),
                 json.dumps(details, ensure_ascii=False)[:200])
+        verifie("httpx a tourné SOUS CAGE (bwrap au runtime, détail porte le drapeau)",
+                all(d.get("cage") is True for d in details),
+                json.dumps(details, ensure_ascii=False)[:200])
 
         findings = rap.get("findings") or []
         f0 = findings[0] if findings else None
-        brut = json.dumps(f0, ensure_ascii=False) if f0 else ""
+        if f0 is None:
+            verifie("au moins un finding (cage)", False,
+                    "findings vides — détails : "
+                    + json.dumps(rap.get("details"), ensure_ascii=False)[:300])
+            return _bilan()
+        brut = json.dumps(f0, ensure_ascii=False)
         verifie("finding httpx VÉRIFIÉ par l'oracle : rejeu réel confirmé + témoin respecté",
                 bool(f0) and (f0.get("cycle") or {}).get("etat") == "verified"
                 and ((f0.get("verification") or {}).get("jugement") or {}).get("verdict") == "confirmed"
