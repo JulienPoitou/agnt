@@ -43,9 +43,29 @@ class Tool:
 REGIMES_GESTIONNAIRE = ("pip", "npm")
 
 
+_CACHE_REGISTRE: dict[Path, dict] = {}
+
+
+def registre_cache_vider() -> None:
+    """Vide le cache de `registre()` — pour les tests qui mutent le manifeste
+    entre deux appels. En production, le manifeste ne change pas pendant la vie
+    d'un process : le cache est permanent."""
+    _CACHE_REGISTRE.clear()
+
+
 def registre(chemin: Path | None = None) -> dict[str, Tool]:
-    """Charge les tools déclarés. Échoue bruyamment si une entrée est incomplète :
-    un tool sans licence ou sans source n'est pas traçable."""
+    """Charge les tools déclarés, MÉMOÏSÉ par chemin résolu. Échoue bruyamment si
+    une entrée est incomplète : un tool sans licence ou sans source n'est pas
+    traçable.
+
+    Le cache n'est pas un confort : `binaire_autorise` (provider_manifest.valider)
+    revient ici POUR CHAQUE provider validé — sans mémoïsation, chaque
+    `Registry()` re-parse le manifeste O(providers²) — mesuré le 2026-09-05 :
+    26 s à 22 providers (la console /api/capacites dépassait son timeout),
+    ~0,5 s mémoïsé."""
+    cle = (chemin or MANIFESTE).resolve()
+    if cle in _CACHE_REGISTRE:
+        return _CACHE_REGISTRE[cle]
     doc = yaml.safe_load((chemin or MANIFESTE).read_text(encoding="utf-8")) or {}
     out: dict[str, Tool] = {}
     for tid, e in (doc.get("binaires") or {}).items():
@@ -76,6 +96,7 @@ def registre(chemin: Path | None = None) -> dict[str, Tool]:
         if gestionnaire and not (t.distribution_hash or t.note):
             raise ToolError(f"tool {tid!r} : installation {regime} sans empreinte ni note")
         out[tid] = t
+    _CACHE_REGISTRE[cle] = out
     return out
 
 
