@@ -77,8 +77,16 @@ les batteries de ce dépôt : on s'y réfère, on ne les refait pas.
 - [ ] **corrélation — fin** : identifiant primaire (CVE/GHSA > règle
       canonique > empreinte, leçon GitLab) — mineur tant que les outils web
       n'émettent pas de CVE ; vers `clusterer.py` quand le volume l'exigera
-- [ ] **cage** : exécution web sous bwrap au runtime (aujourd'hui `ExecuteurLocal`
-      exécute hors cage — les qualifications sous cage existent, le runtime pas encore)
+- [x] **cage** : exécution web SOUS CAGE bwrap au runtime (2026-09-05,
+      commit cd022c6) — `pipeline_web.ExecuteurCage` assemble `slice/sandbox.py`
+      (`cible_distante=True`, machinerie du harnais assemblée pas dupliquée) ;
+      {BIN} résolu en chemin hôte (bwrap n'a pas de lookup PATH interne),
+      `verifie()` avant chaque lancement (refus nommé sinon), traduction
+      hôte→cage OBLIGATOIRE pour {OUT}/{REGLES} (sans elle : écriture dans un
+      / ro → code 1 muet, mesuré), garde anti-double-cage sur les relances ;
+      cage=True par défaut, drapeau par provider dans les détails ; démo :
+      13 providers cage=True partout, 26 constats. unitaires 18/18,
+      test_web_cable 14/14 (httpx réel sous bwrap)
 
 ## ② Qualifications sandbox — TERMINÉ ✅ (ne pas refaire)
 
