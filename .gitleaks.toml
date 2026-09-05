@@ -20,9 +20,16 @@ regexes = ['''ghp_16C7e42F292c6912E7710c838347Ae178B4a''']
 
 [[allowlists]]
 description = """
-Secrets FACTICES de la cible d'épreuve web THAUMAS-WEB (PHASE3/cible_web/serveur.py
-: /.env ; fixture git). Valeurs inventées pour la qualification, liées à aucun
-compte — voir PHASE3/cible_web/README_ATTENDUS.md.
+Cible d'épreuve web THAUMAS-WEB : TOUT le contenu de PHASE3/cible_web/ est
+fictif et versionné exprès (serveur.py : /.env ; fixture git) — valeurs
+inventées pour la qualification, liées à aucun compte. Voir
+PHASE3/cible_web/README_ATTENDUS.md. Deux entrées SÉPARÉES (chemin, puis
+valeurs exactes) : la combinaison path+regex dans UNE entrée n'est pas
+appliquée pareillement par toutes les versions de gitleaks (constaté :
+8.24.3 en CI vs 8.30.1 épinglé — mesuré le 2026-09-05).
 """
 paths = ['''PHASE3/cible_web/.*''']
+
+[[allowlists]]
+description = "Valeurs factices exactes de la cible d'épreuve (globales, uniques, documentées)."
 regexes = ['''AKIAFAUXQUALIFICATION''', '''faux-mot-de-passe-qualif-2026''', '''cible-epreuve-factice''']
